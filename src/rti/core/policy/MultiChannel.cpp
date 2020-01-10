@@ -39,12 +39,16 @@ void pyrti::init_class_defs(py::class_<MultiChannel>& cls) {
         )
         .def_property_readonly_static(
             "sql_filter_name",
-            &rti::topic::sql_filter_name,
+            [](py::object&) {
+                return rti::topic::sql_filter_name();
+            },
             "The name of the SQL filter."
         )
         .def_property_readonly_static(
             "stringmatch_filter_name",
-            &rti::topic::stringmatch_filter_name,
+            [](py::object&) {
+                return rti::topic::stringmatch_filter_name();
+            },
             "The name of the string match filter."
         )
         .def(

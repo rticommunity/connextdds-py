@@ -42,7 +42,7 @@ void pyrti::init_class_defs(py::class_<ReceiverPool>& cls) {
         )
         .def_property_readonly_static(
             "LENGTH_AUTO",
-            [](){
+            [](py::object&){
                 return ReceiverPool::LENGTH_AUTO;
             },
             "Indicates that the length will be automatically resolved."

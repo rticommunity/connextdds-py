@@ -8,6 +8,7 @@
 #include <dds/sub/cond/ReadCondition.hpp>
 #include <dds/sub/cond/QueryCondition.hpp>
 #include <dds/sub/Query.hpp>
+#include <dds/sub/find.hpp>
 #include "PyEntity.hpp"
 #include "PyCondition.hpp"
 #include "PyAnyDataReader.hpp"
@@ -161,31 +162,6 @@ namespace pyrti {
                 }),
                 py::arg("entity"),
                 "Create a typed DataReader from an Entity."
-            )
-            .def(
-                "enable",
-                &pyrti::PyDataReader<T>::enable,
-                "Enables this entity (if it was created disabled)."
-            )
-            .def_property_readonly(
-                "status_changes",
-                &pyrti::PyDataReader<T>::status_changes,
-                "The list of communication statuses that are triggered."
-            )
-            .def_property_readonly(
-                "instance_handle",
-                &pyrti::PyDataReader<T>::instance_handle,
-                "The instance handle that represents this entity."
-            )
-            .def(
-                "close",
-                &pyrti::PyDataReader<T>::close,
-                "Forces the destruction of this entity."
-            )
-            .def(
-                "retain",
-                &pyrti::PyDataReader<T>::retain,
-                "Disables the automatic destruction of this entity."
             )
             .def_property(
                 "default_filter_state",
@@ -490,6 +466,50 @@ namespace pyrti {
                     dr->close();
                 },
                 "Exit the context for this DataReader, cleaning up resources."
+            )
+            .def_static(
+                "find_all_by_topic",
+                [](pyrti::PySubscriber& sub, const std::string& topic_name) {
+                    std::vector<pyrti::PyDataReader<T>> v;
+                    dds::sub::find<pyrti::PyDataReader<T>>(sub, topic_name, std::back_inserter(v));
+                    return v;
+                },
+                py::arg("subscriber"),
+                py::arg("topic_name"),
+                "Retrieve all DataReaders for the given topic name in the subscriber."
+            )
+            .def_static(
+                "find_by_name",
+                [](pyrti::PySubscriber& sub, const std::string& name) -> py::object {
+                    auto dr = rti::sub::find_datareader_by_name<pyrti::PyDataReader<T>>(sub, name);
+                    return (dr == dds::core::null) ? py::cast(nullptr) : py::cast(dr);
+                },
+                py::arg("subscriber"),
+                py::arg("name"),
+                "Find DataReader in Subscriber with the DataReader's name, "
+                "returning the first found."
+            )
+            .def_static(
+                "find_by_name",
+                [](pyrti::PyDomainParticipant& dp, const std::string name) ->py::object {
+                    auto dr = rti::sub::find_datareader_by_name<pyrti::PyDataReader<T>>(dp, name);
+                    return (dr == dds::core::null) ? py::cast(nullptr) : py::cast(dr);
+                },
+                py::arg("participant"),
+                py::arg("name"),
+                "Find DataReader in DomainParticipant with the DataReader's "
+                "name, returning the first found."
+            )
+            .def_static(
+                "find_by_topic",
+                [](pyrti::PySubscriber& sub, const std::string& topic_name) -> py::object {
+                    auto dr = rti::sub::find_datareader_by_topic_name<pyrti::PyDataReader<T>>(sub, topic_name);
+                    return (dr == dds::core::null) ? py::cast(nullptr) : py::cast(dr);
+                },
+                py::arg("subscriber"),
+                py::arg("name"),
+                "Find DataReader in Subscriber with a topic name, "
+                "returning the first found."
             );
 
         py::class_<typename pyrti::PyDataReader<T>::Selector>(cls, "Selector")

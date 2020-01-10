@@ -5,6 +5,7 @@
 #include <dds/pub/DataWriter.hpp>
 #include <dds/pub/discovery.hpp>
 #include <dds/topic/TopicInstance.hpp>
+#include <dds/pub/find.hpp>
 #include "PyEntity.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyDynamicTypeMap.hpp"
@@ -578,6 +579,50 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Get the SubscriptionBuiltinTopicData for a subscription matched to this DataWriter."
+            )
+            .def_static(
+                "find_all_by_topic",
+                [](pyrti::PyPublisher& pub, const std::string& topic_name) {
+                    std::vector<pyrti::PyDataWriter<T>> v;
+                    dds::pub::find<pyrti::PyDataWriter<T>>(pub, topic_name, std::back_inserter(v));
+                    return v;
+                },
+                py::arg("publisher"),
+                py::arg("topic_name"),
+                "Retrieve all DataWriters for the given topic name in the publisher."
+            )
+            .def_static(
+                "find_by_name",
+                [](pyrti::PyPublisher& pub, const std::string& name) -> py::object {
+                    auto dw = rti::pub::find_datawriter_by_name<pyrti::PyDataWriter<T>>(pub, name);
+                    return (dw == dds::core::null) ? py::cast(nullptr) : py::cast(dw);
+                },
+                py::arg("publisher"),
+                py::arg("name"),
+                "Find DataWriter in Publisher with the DataReader's name, "
+                "returning the first found."
+            )
+            .def_static(
+                "find_by_name",
+                [](pyrti::PyDomainParticipant& dp, const std::string name) ->py::object {
+                    auto dw = rti::pub::find_datawriter_by_name<pyrti::PyDataWriter<T>>(dp, name);
+                    return (dw == dds::core::null) ? py::cast(nullptr) : py::cast(dw);
+                },
+                py::arg("participant"),
+                py::arg("name"),
+                "Find DataWriter in DomainParticipant with the provided name, "
+                "returning the first found."
+            )
+            .def_static(
+                "find_by_topic",
+                [](pyrti::PyPublisher& pub, const std::string& topic_name) -> py::object {
+                    auto dw = rti::pub::find_datawriter_by_topic_name<pyrti::PyDataWriter<T>>(pub, topic_name);
+                    return (dw == dds::core::null) ? py::cast(nullptr) : py::cast(dw);
+                },
+                py::arg("publisher"),
+                py::arg("name"),
+                "Find DataWriter in publisher with a topic name, "
+                "returning the first found."
             )
             .def(
                 py::self == py::self,

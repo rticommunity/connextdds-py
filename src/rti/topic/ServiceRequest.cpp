@@ -24,7 +24,9 @@ void pyrti::init_class_defs(py::class_<ServiceRequest>& cls) {
         )
         .def_property_readonly_static(
             "topic_name",
-            &rti::topic::service_request_topic_name,
+            [](py::object&) {
+                return rti::topic::service_request_topic_name();
+            },
             "ServiceRequest built-in topic name."
         )
         .def(

@@ -108,7 +108,9 @@ void pyrti::init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
         )
         .def_property_readonly_static(
             "topic_name",
-            &dds::topic::topic_topic_name,
+            [](py::object&) {
+                return dds::topic::topic_topic_name();
+            },
             "Topic builtin topic name."
         )
         .def(

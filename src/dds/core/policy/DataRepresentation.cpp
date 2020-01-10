@@ -31,22 +31,30 @@ void pyrti::init_class_defs(py::class_<DataRepresentation>& cls) {
         )
         .def_property_readonly_static(
             "XCDR",
-            &DataRepresentation::xcdr,
+            [](py::object&) {
+                return DataRepresentation::xcdr();
+            },
             "Extended Common Data Representation ID for encoding version 1."
         )
         .def_property_readonly_static(
             "XML",
-            &DataRepresentation::xml,
+            [](py::object&) {
+                return DataRepresentation::xml();
+            },
             "XML Data Representation ID (unsupported)."
         )
         .def_property_readonly_static(
             "XCDR2",
-            &DataRepresentation::xcdr2,
+            [](py::object&) {
+                return DataRepresentation::xcdr2();
+            },
             "Extended Common Data Representation ID for encoding version 2."
         )
         .def_property_readonly_static(
             "AUTO_ID",
-            &DataRepresentation::auto_id,
+            [](py::object&) {
+                return DataRepresentation::auto_id();
+            },
             "ID that makes representation automatically chosen based on the "
             "type."
         )

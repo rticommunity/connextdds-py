@@ -44,7 +44,7 @@ void pyrti::init_class_defs(py::class_<AllocationSettings>& cls) {
         )
         .def_property_readonly_static(
             "AUTO_COUNT",
-            []() {
+            [](py::object&) {
                 return AllocationSettings::AUTO_COUNT;
             },
             "A special value indicating that the quantity is derived from a "

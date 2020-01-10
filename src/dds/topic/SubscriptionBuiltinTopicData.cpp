@@ -218,7 +218,9 @@ void pyrti::init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
         )
         .def_property_readonly_static(
             "topic_name",
-            &dds::topic::subscription_topic_name,
+            [](py::object&) {
+                return dds::topic::subscription_topic_name();
+            },
             "Subscription builtin topic name."
         )
         .def(

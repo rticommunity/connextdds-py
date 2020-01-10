@@ -217,7 +217,7 @@ void pyrti::init_class_defs(py::class_<WireProtocol>& cls) {
         )
         .def_property_readonly_static(
             "RTPS_AUTO_ID",
-            []() {
+            [](py::object&) {
                 return WireProtocol::RTPS_AUTO_ID;
             },
             "Indicates that RTI Connext should choose an appropriate host, "

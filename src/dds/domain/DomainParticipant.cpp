@@ -2,6 +2,7 @@
 #include "PyEntity.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyDataReader.hpp"
+#include "PyDataReader.hpp"
 #include "PyDomainParticipantListener.hpp"
 #include <rti/rti.hpp>
 
@@ -323,8 +324,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "find",
             []() {
                 std::vector<pyrti::PyDomainParticipant> v;
-                std::back_insert_iterator<std::vector<pyrti::PyDomainParticipant>> it(v);
-                pyrti::find_participants(it);
+                pyrti::find_participants(std::back_inserter(v));
                 return v;
             },
             "Find all local DomainParticipants."
@@ -351,8 +351,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "find_publishers",
             [](const pyrti::PyDomainParticipant& dp) {
                 std::vector<pyrti::PyPublisher> v;
-                std::back_insert_iterator<std::vector<pyrti::PyPublisher>> it(v);
-                rti::pub::find_publishers(dp, it);
+                rti::pub::find_publishers(dp, std::back_inserter(v));
                 return v;
             },
             "Find all Publishers within the DomainParticipant."
@@ -383,8 +382,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "find_subscribers",
             [](pyrti::PyDomainParticipant& dp) {
                 std::vector<pyrti::PySubscriber> v;
-                std::back_insert_iterator<std::vector<pyrti::PySubscriber>> it(v);
-                rti::sub::find_subscribers(dp, it);
+                rti::sub::find_subscribers(dp, std::back_inserter(v));
                 return v;
             },
             "Find all subscribers within the DomainParticipant."
@@ -451,17 +449,10 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "Ignore a list of DataReaders specified by their handles."
         )
         .def(
-            "find_topic",
-            &dds::topic::find<dds::topic::AnyTopic>,
-            py::arg("topic_name"),
-            "Look up a Topic by its name in the DomainParticipant."
-        )
-        .def(
             "find_topics",
             [](pyrti::PyDomainParticipant& dp) {
                 std::vector<dds::topic::AnyTopic> v;
-                std::back_insert_iterator<std::vector<dds::topic::AnyTopic>> it(v);
-                rti::topic::find_topics(dp, it);
+                rti::topic::find_topics(dp, std::back_inserter(v));
                 return v;
             },
             "Find all Topics in the DomainParticipant."
@@ -470,8 +461,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "discovered_topics",
             [](const pyrti::PyDomainParticipant& dp) {
                 std::vector<dds::core::InstanceHandle> v;
-                std::back_insert_iterator<std::vector<dds::core::InstanceHandle>> it(v);
-                dds::topic::discover_any_topic(dp, it);
+                dds::topic::discover_any_topic(dp, std::back_inserter(v));
                 return v;
             },
             "Get all Topic handles discovered by this DomainParticipant."
@@ -494,8 +484,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "discovered_topic_data",
             [](const pyrti::PyDomainParticipant& dp) {
                 std::vector<dds::topic::TopicBuiltinTopicData> v;
-                std::back_insert_iterator<std::vector<dds::topic::TopicBuiltinTopicData>> it(v);
-                dds::topic::discover_topic_data(dp, it);
+                dds::topic::discover_topic_data(dp, std::back_inserter(v));
                 return v;
             },
             "Get information about all discovered topics."
@@ -530,36 +519,50 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             "find_registered_content_filters",
             [](pyrti::PyDomainParticipant& dp) {
                 std::vector<std::string> v;
-                std::back_insert_iterator<std::vector<std::string>> it(v);
-                rti::topic::find_registered_content_filters(dp, it);
+                rti::topic::find_registered_content_filters(dp, std::back_inserter(v));
                 return v;
             },
             "Retrieve a list of all registered content filter names."
         )
-        .def(
-            "enable",
-            &pyrti::PyDomainParticipant::enable,
-            "Enables this entity (if it was created disabled)."
+        .def_property_readonly(
+            "participant_reader",
+            [](pyrti::PyDomainParticipant& dp) {
+                std::vector<pyrti::PyDataReader<dds::topic::ParticipantBuiltinTopicData>> v;
+                dds::sub::find<pyrti::PyDataReader<dds::topic::ParticipantBuiltinTopicData>>
+                    (dds::sub::builtin_subscriber(dp), dds::topic::participant_topic_name(), std::back_inserter(v));
+                return v[0];
+            },
+            "Get the DomainParticipant built-in topic reader."
         )
         .def_property_readonly(
-            "status_changes",
-            &pyrti::PyDomainParticipant::status_changes,
-            "The list of communication statuses that are triggered."
+            "subscription_reader",
+            [](pyrti::PyDomainParticipant& dp) {
+                std::vector<pyrti::PyDataReader<dds::topic::SubscriptionBuiltinTopicData>> v;
+                dds::sub::find<pyrti::PyDataReader<dds::topic::SubscriptionBuiltinTopicData>>
+                    (dds::sub::builtin_subscriber(dp), dds::topic::subscription_topic_name(), std::back_inserter(v));
+                return v[0];
+            },
+            "Get the subscription built-in topic reader."
         )
         .def_property_readonly(
-            "instance_handle",
-            &pyrti::PyDomainParticipant::instance_handle,
-            "The instance handle that represents this entity."
+            "topic_reader",
+            [](pyrti::PyDomainParticipant& dp) {
+                std::vector<pyrti::PyDataReader<dds::topic::TopicBuiltinTopicData>> v;
+                dds::sub::find<pyrti::PyDataReader<dds::topic::TopicBuiltinTopicData>>
+                    (dds::sub::builtin_subscriber(dp), dds::topic::topic_topic_name(), std::back_inserter(v));
+                return v[0];
+            },
+            "Get the publication built-in topic reader."
         )
-        .def(
-            "close",
-            &pyrti::PyDomainParticipant::close,
-            "Forces the destruction of this entity."
-        )
-        .def(
-            "retain",
-            &pyrti::PyDomainParticipant::retain,
-            "Disables the automatic destruction of this entity."
+        .def_property_readonly(
+            "service_request_reader",
+            [](pyrti::PyDomainParticipant& dp) {
+                std::vector<pyrti::PyDataReader<rti::topic::ServiceRequest>> v;
+                dds::sub::find<pyrti::PyDataReader<rti::topic::ServiceRequest>>
+                    (dds::sub::builtin_subscriber(dp), rti::topic::service_request_topic_name(), std::back_inserter(v));
+                return v[0];
+            },
+            "Get the ServiceRequest built-in topic reader."
         )
         .def(
             py::self == py::self,

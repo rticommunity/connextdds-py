@@ -3,6 +3,7 @@
 #include "PyConnext.hpp"
 #include <pybind11/stl_bind.h>
 #include <dds/topic/Topic.hpp>
+#include <dds/topic/find.hpp>
 #include "PyEntity.hpp"
 #include "PyDynamicTypeMap.hpp"
 #include "PyTopicListener.hpp"
@@ -259,6 +260,16 @@ namespace pyrti {
                 "inconsistent_topic_status",
                 &pyrti::PyTopic<T>::inconsistent_topic_status,
                 "Get a copy of the current InconsistentTopicStatus for this Topic."
+            )
+            .def_static(
+                "find",
+                [](pyrti::PyDomainParticipant& dp, const std::string& name) -> py::object {
+                    auto t = dds::topic::find<dds::topic::Topic<T>>(dp, name);
+                    return (t == dds::core::null) ? py::cast(nullptr) : py::cast(pyrti::PyTopic<T>(t));
+                },
+                py::arg("participant"),
+                py::arg("name"),
+                "Look up a Topic by its name in the DomainParticipant."
             )
             .def(
                 py::self == py::self,

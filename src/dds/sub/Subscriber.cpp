@@ -83,27 +83,10 @@ void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
             "Get the parent DomainParticipant for this Subscriber."
         )
         .def(
-            "find_datareader",
-            [](pyrti::PySubscriber& sub, const std::string& name) {
-                return pyrti::PyAnyDataReader(rti::sub::find_datareader_by_name<AnyDataReader>(sub, name));
-            },
-            py::arg("name"),
-            "Find a DataReader in this Subscriber by its name."
-        )
-        .def(
-            "find_topic_datareader",
-            [](pyrti::PySubscriber& sub, const std::string& topic_name) {
-                return pyrti::PyAnyDataReader(rti::sub::find_datareader_by_topic_name<AnyDataReader>(sub, topic_name));
-            },
-            py::arg("topic_name"),
-            "Find a DataReader in this Subscriber by its topic name. If more than one exists for this Topic, the first one found is returned."
-        )
-        .def(
-            "find_datareader",
+            "find_datareaders",
             [](const pyrti::PySubscriber& sub) {
                 std::vector<pyrti::PyAnyDataReader> v;
-                std::back_insert_iterator<std::vector<pyrti::PyAnyDataReader>> it(v);
-                rti::sub::find_datareaders(sub, it);
+                rti::sub::find_datareaders(sub, std::back_inserter(v));
                 return v;
             },
             "Find all DataReaders in the Subscriber."

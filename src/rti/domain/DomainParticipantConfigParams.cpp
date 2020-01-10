@@ -72,7 +72,7 @@ void pyrti::init_class_defs(py::class_<DomainParticipantConfigParams>& cls) {
         )
         .def_property_readonly_static(
             "DOMAIN_ID_USE_XML_CONFIG",
-            []() {
+            [](py::object&) {
                 return DomainParticipantConfigParams::DOMAIN_ID_USE_XML_CONFIG;
             },
             "Special value to be used to indicate that a participant should "
@@ -81,7 +81,7 @@ void pyrti::init_class_defs(py::class_<DomainParticipantConfigParams>& cls) {
         )
         .def_property_readonly_static(
             "ENTITY_NAME_USE_XML_CONFIG",
-            []() {
+            [](py::object&) {
                 return DomainParticipantConfigParams::ENTITY_NAME_USE_XML_CONFIG;
             },
             "Special value to be used to indicate that a participant should "
@@ -89,7 +89,7 @@ void pyrti::init_class_defs(py::class_<DomainParticipantConfigParams>& cls) {
         )
         .def_property_readonly_static(
             "QOS_ELEMENT_NAME_USE_XML_CONFIG",
-            []() {
+            [](py::object&) {
                 return DomainParticipantConfigParams::QOS_ELEMENT_NAME_USE_XML_CONFIG;
             },
             "Special value to be used to indicate that entities should be "

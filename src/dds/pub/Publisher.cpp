@@ -135,8 +135,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyPublisher, pyrti::PyIEntity>& cl
             "find_datawriters",
             [](const pyrti::PyPublisher& pub) {
                 std::vector<pyrti::PyAnyDataWriter> v;
-                std::back_insert_iterator<std::vector<pyrti::PyAnyDataWriter>> it(v);
-                rti::pub::find_datawriters(pub, it);
+                rti::pub::find_datawriters(pub, std::back_inserter(v));
                 return v;
             },
             "Find all DataWriters in the Publisher."
