@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(connextdds)
 
-set(PYBIND11_CPP_STANDARD -std=c++14)
-
-set(CMAKE_BUILD_TYPE "MinSizeRel")
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake")
 find_package(
     RTIConnextDDS "6.0.0"

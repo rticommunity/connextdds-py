@@ -1,153 +1,85 @@
+import os
+import re
+import sys
+import platform
+import subprocess
+
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-import sys
-import setuptools
-import os
+from distutils.version import LooseVersion
 
-__version__ = '0.0.1'
+class CMakeExtension(Extension):
+    def __init__(self, name, sourcedir=''):
+        Extension.__init__(self, name, sources=[])
+        self.sourcedir = os.path.abspath(sourcedir)
 
+class CMakeBuild(build_ext):
+    def get_nddshome(self):
+        if 'NDDSHOME' in os.environ:
+            return os.environ['NDDSHOME']
+        raise EnvironmentError('NDDSHOME not set.')
 
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
+    def get_arch(self):
+        if 'CONNEXTDDS_ARCH' in os.environ:
+            return os.environ['CONNEXTDDS_ARCH']
+        raise EnvironmentError('CONNEXTDDS_ARCH not set.')
 
-    def __init__(self, user=False):
-        self.user = user
-
-    def __str__(self):
-        import pybind11
-        return pybind11.get_include(self.user)
-
-
-def get_connextdds_src_files():
-    src_files = []
-    for root, dirs, files in os.walk('src', False):
-        for filename in files:
-            _, ext = os.path.splitext(filename)
-            if ext == '.cpp':
-                src_files.append(os.path.join(root, filename))
-
-    return src_files
-
-def get_nddshome():
-    if 'NDDSHOME' in os.environ:
-        return os.environ['NDDSHOME']
-    raise EnvironmentError('NDDSHOME not set.')
-
-def get_rti_lib_path():
-    if 'RTI_LIBRARY_PATH' in os.environ:
-        return os.environ['RTI_LIBRARY_PATH']
-    raise EnvironmentError('RTI_LIBRARY_PATH not set.')
-
-
-ext_modules = [
-    Extension(
-        'connextdds',
-        get_connextdds_src_files(),
-        include_dirs=[
-            # Path to pybind11 headers
-            'include',
-            os.path.join(get_nddshome(), 'include'),
-            os.path.join(get_nddshome(), 'include', 'ndds'),
-            os.path.join(get_nddshome(), 'include', 'ndds', 'hpp'),
-            get_pybind_include(),
-            get_pybind_include(user=True)
-        ],
-        libraries=[
-            'rtidlc',
-            'nddscpp2',
-            'nddsc',
-            'nddscore',
-            'm',
-            'pthread',
-            'dl'
-        ],
-        library_dirs=[
-            get_rti_lib_path()
-        ],
-        language='c++'
-    ),
-]
-
-
-# As of Python 3.6, CCompiler has a `has_flag` method.
-# cf http://bugs.python.org/issue26689
-def has_flag(compiler, flagname):
-    """Return a boolean indicating whether a flag name is supported on
-    the specified compiler.
-    """
-    import tempfile
-    with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
-        f.write('int main (int argc, char **argv) { return 0; }')
+    def run(self):
         try:
-            compiler.compile([f.name], extra_postargs=[flagname])
-        except setuptools.distutils.errors.CompileError:
-            return False
-    return True
+            out = subprocess.check_output(['cmake', '--version'])
+        except OSError:
+            raise RuntimeError("CMake must be installed to build the following extensions: " +
+                               ", ".join(e.name for e in self.extensions))
 
+        nddshome = self.get_nddshome()
+        arch = self.get_arch()
+        
+        cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+        if cmake_version < '3.15.0':
+            raise RuntimeError("CMake >= 3.15.0 is required")
 
-def cpp_flag(compiler):
-    """Return the -std=c++[11/14/17] compiler flag.
-    The newer version is prefered over c++11 (when it is available).
-    """
-    #flags = ['-std=c++17', '-std=c++14', '-std=c++11']
-    flags = ['-std=c++14', '-std=c++11']
-
-    for flag in flags:
-        if has_flag(compiler, flag): return flag
-
-    raise RuntimeError('Unsupported compiler -- at least C++11 support '
-                       'is needed!')
-
-
-class BuildExt(build_ext):
-    """A custom build extension for adding compiler-specific options."""
-    c_opts = {
-        'msvc': ['/EHsc'],
-        'unix': ['-Os', '-fpic'],
-    }
-    l_opts = {
-        'msvc': [],
-        'unix': ['-fpic'],
-    }
-
-    darwin_opts = ['-stdlib=libc++', '-mmacosx-version-min=10.7']
-
-    if sys.platform == 'darwin':
-        darwin_opts = ['-stdlib=libc++', '-mmacosx-version-min=10.7', '-m64']
-        c_opts['unix'] += darwin_opts
-        c_opts['unix'].extend(['-DRTI_UNIX', '-DRTI_DARWIN', '-DRTI_64BIT', '-Wno-return-type-c-linkage'])
-        l_opts['unix'] += darwin_opts
-
-    def build_extensions(self):
-        ct = self.compiler.compiler_type
-        opts = self.c_opts.get(ct, [])
-        link_opts = self.l_opts.get(ct, [])
-        if ct == 'unix':
-            opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
-            opts.append(cpp_flag(self.compiler))
-            if has_flag(self.compiler, '-fvisibility=hidden'):
-                opts.append('-fvisibility=hidden')
-        elif ct == 'msvc':
-            opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
         for ext in self.extensions:
-            ext.extra_compile_args = opts
-            ext.extra_link_args = link_opts
-        build_ext.build_extensions(self)
+            self.build_extension(ext, nddshome, arch)
+
+    def build_extension(self, ext, nddshome, arch):
+
+        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                      '-DPYTHON_EXECUTABLE=' + sys.executable,
+                      '-DBUILD_SHARED_LIBS=ON',
+                      '-DCONNEXTDDS_DIR=' + nddshome,
+                      '-DCONNEXTDDS_ARCH=' + arch]
+
+        cfg = 'Debug' if self.debug else 'MinSizeRel'
+        build_args = ['--config', cfg]
+
+        if platform.system() == "Windows":
+            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            if sys.maxsize > 2**32:
+                cmake_args += ['-A', 'x64']
+            build_args += ['--', '/m']
+        else:
+            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+            build_args += ['--', '-j8']
+
+        env = os.environ.copy()
+        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
+                                                              self.distribution.get_version())
+        if not os.path.exists(self.build_temp):
+            os.makedirs(self.build_temp)
+        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
     name='rti',
-    version=__version__,
+    version='0.0.1',
     author='Marc Chiesa',
     author_email='marc@rti.com',
-    url='na',
     description='A full Python binding for RTI Connext DDS',
     long_description='',
-    ext_modules=ext_modules,
+    ext_modules=[CMakeExtension('rti.connextdds')],
     install_requires=['pybind11>=2.4'],
     setup_requires=['pybind11>=2.4'],
-    cmdclass={'build_ext': BuildExt},
+    cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )
