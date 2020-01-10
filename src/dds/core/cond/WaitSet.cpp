@@ -152,7 +152,7 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         .def(
             "__iadd__",
             [](WaitSet& ws, pyrti::PyICondition& c) {
-                ws += c.get_condition();
+                return ws += c.get_condition();
             },
             py::is_operator(),
             "Attach a condition to a WaitSet."
@@ -160,7 +160,7 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         .def(
             "__isub__",
             [](WaitSet& ws, pyrti::PyICondition& c) {
-                ws -= c.get_condition();
+               return  ws -= c.get_condition();
             },
             py::is_operator(),
             "Detach a condition from a WaitSet."
@@ -176,7 +176,7 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         .def(
             "detach_condition",
             [](WaitSet& ws, pyrti::PyICondition& c) {
-                ws.detach_condition(c.get_condition());
+                return ws.detach_condition(c.get_condition());
             },
             py::arg("condition"),
             "Detach a condition from the WaitSet."

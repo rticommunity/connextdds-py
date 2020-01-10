@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include <pybind11/functional.h>
 #include <dds/sub/cond/QueryCondition.hpp>
 #include "PyCondition.hpp"
 
@@ -15,21 +16,10 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         .def(
             py::init(
                 [](const dds::sub::Query& q, const dds::sub::status::DataState& ds, std::function<void()>& func) {
-                    return pyrti::PyQueryCondition(q, ds, func);
-                }
-            ),
-            "Create a QueryCondition."
-        )
-        .def(
-            py::init(
-                [](const dds::sub::Query& q, const dds::sub::status::DataState& ds, std::function<void(pyrti::PyICondition&)>& func) {
                     return pyrti::PyQueryCondition(
                         q, 
                         ds, 
-                        [func](dds::core::cond::Condition c){ 
-                            auto py_c = pyrti::PyCondition(c);
-                            func(py_c); 
-                        }
+                        func
                     );
                 }
             ),
@@ -46,26 +36,15 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         .def(
             py::init(
                 [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds, std::function<void()>& func) {
-                    return pyrti::PyQueryCondition(rti::sub::cond::create_query_condition_ex(q, ds, func));
-                }
-            ),
-            "Create a QueryCondition."
-        )
-        .def(
-            py::init(
-                [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds, std::function<void(pyrti::PyICondition&)>& func) {
                     return pyrti::PyQueryCondition(
                         rti::sub::cond::create_query_condition_ex(
                             q, 
                             ds, 
-                            [func](dds::core::cond::Condition c){ 
-                                auto py_c = pyrti::PyCondition(c);
-                                func(py_c);
-                             }
+                            func
                         )
                     );
-                })
-            ,
+                }
+            ),
             "Create a QueryCondition."
         )
         .def(

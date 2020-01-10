@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include <pybind11/functional.h>
 #include <dds/sub/cond/ReadCondition.hpp>
 #include <dds/sub/cond/QueryCondition.hpp>
 #include "PyCondition.hpp"
@@ -13,37 +14,24 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
             }),
             py::arg("reader"),
             py::arg("status"),
-            py::keep_alive<1, 2>(),
-            "Create a ReadCondition."
-        )
-        .def(
-            py::init([](pyrti::PyIAnyDataReader& adr, const dds::sub::status::DataState& ds, std::function<void()>& func) {
-                return pyrti::PyReadCondition(rti::sub::cond::create_read_condition_ex(adr.get_any_datareader(), ds, func));
-            }),
-            py::arg("reader"),
-            py::arg("status"),
-            py::arg("handler"),
-            py::keep_alive<1, 2>(),
             "Create a ReadCondition."
         )
         .def(
             py::init(
-                [](pyrti::PyIAnyDataReader& dr, const dds::sub::status::DataState& ds, std::function<void(pyrti::PyCondition&)>& func) {
+                [](pyrti::PyIAnyDataReader& dr, const dds::sub::status::DataState& ds, std::function<void()>& func) {
                     return pyrti::PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
-                            ds, 
-                            [func](dds::core::cond::Condition c) { 
-                                auto py_condition = pyrti::PyCondition(c);
-                                func(py_condition); 
-                            }
-                        ));
+                            ds,
+                            func
+                        )
+                    );
                 }
             ),
             py::arg("reader"),
             py::arg("status"),
             py::arg("handler"),
-            py::keep_alive<1, 2>(),
+            py::keep_alive<1, 3>(),
             "Create a ReadCondition."
         )
         .def(
@@ -59,7 +47,6 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
             ),
             py::arg("reader"),
             py::arg("status"),
-            py::keep_alive<1, 2>(),
             "Create a ReadCondition."
         )
         .def(
@@ -68,7 +55,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
                     return pyrti::PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
-                            ds, 
+                            ds,
                             func
                         )
                     );
@@ -77,26 +64,6 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
             py::arg("reader"),
             py::arg("status"),
             py::arg("handler"),
-            py::keep_alive<1, 2>(),
-            "Create a ReadCondition."
-        )
-        .def(
-            py::init([](pyrti::PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds, std::function<void(pyrti::PyCondition&)>& func) {
-                return pyrti::PyReadCondition(
-                    rti::sub::cond::create_read_condition_ex(
-                        dr.get_any_datareader(), 
-                        ds, 
-                        [func](dds::core::cond::Condition c) {
-                            auto py_condition = pyrti::PyCondition(c);
-                            func(py_condition); 
-                        }
-                    )
-                );
-            }),
-            py::arg("reader"),
-            py::arg("status"),
-            py::arg("handler"),
-            py::keep_alive<1, 2>(),
             "Create a ReadCondition."
         )
         .def(

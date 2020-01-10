@@ -1,5 +1,6 @@
 #include "PyConnext.hpp"
 #include "PyCondition.hpp"
+#include <pybind11/functional.h>
 
 template<>
 void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondition>& cls) {
@@ -20,20 +21,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondit
         )
         .def(
             "handler",
-            [](pyrti::PyGuardCondition& gc, std::function<void()>& func_obj) {
-                gc->handler(func_obj);
-            },
-            py::arg("func"),
-            "Set a handler function for this GuardCondition."
-        )
-        .def(
-            "handler",
-            [](pyrti::PyGuardCondition& gc, std::function<void(pyrti::PyICondition&)>& func_obj) {
-                gc->handler(
-                    [func_obj](dds::core::cond::Condition c) {
-                        auto py_c = pyrti::PyCondition(c);
-                        func_obj(py_c);
-                    });
+            [](pyrti::PyGuardCondition& gc, std::function<void()>& func) {
+                gc->handler(func);
             },
             py::arg("func"),
             "Set a handler function for this GuardCondition."

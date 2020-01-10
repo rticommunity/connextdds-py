@@ -1,6 +1,7 @@
 #include "PyConnext.hpp"
 #include "PyEntity.hpp"
 #include "PyCondition.hpp"
+#include <pybind11/functional.h>
 
 template<>
 void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondition>& cls) {
@@ -40,20 +41,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondi
         )
         .def(
             "handler",
-            [](pyrti::PyStatusCondition& sc, std::function<void()>& func_obj) {
-                sc->handler(func_obj);
-            },
-            py::arg("func"),
-            "Set a handler function for this StatusCondition."
-        )
-        .def(
-            "handler",
-            [](pyrti::PyStatusCondition& sc, std::function<void(pyrti::PyICondition&)>& func_obj) {
-                sc->handler(
-                    [func_obj](dds::core::cond::Condition c) {
-                        auto py_c = pyrti::PyCondition(c);
-                        func_obj(py_c);
-                    });
+            [](pyrti::PyStatusCondition& sc, std::function<void()>& func) {
+                sc->handler(func);
             },
             py::arg("func"),
             "Set a handler function for this StatusCondition."
