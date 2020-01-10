@@ -31,7 +31,6 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
             py::arg("reader"),
             py::arg("status"),
             py::arg("handler"),
-            py::keep_alive<1, 3>(),
             "Create a ReadCondition."
         )
         .def(

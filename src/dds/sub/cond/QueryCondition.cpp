@@ -11,6 +11,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
                 const dds::sub::Query&,
                 const dds::sub::status::DataState&
             >(),
+            py::arg("query"),
+            py::arg("status"),
             "Create a QueryCondition."
         )
         .def(
@@ -23,6 +25,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
                     );
                 }
             ),
+            py::arg("query"),
+            py::arg("status"),
+            py::arg("handler"),
             "Create a QueryCondition."
         )
         .def(
@@ -31,6 +36,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
                     return pyrti::PyQueryCondition(rti::sub::cond::create_query_condition_ex(q, ds));
                 }
             ),
+            py::arg("query"),
+            py::arg("status"),
             "Create a QueryCondition."
         )
         .def(
@@ -45,6 +52,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
                     );
                 }
             ),
+            py::arg("query"),
+            py::arg("status"),
+            py::arg("handler"),
             "Create a QueryCondition."
         )
         .def(
@@ -54,7 +64,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
                     return pyrti::PyQueryCondition(dds::core::polymorphic_cast<dds::sub::cond::QueryCondition>(condition));
                 }
             ),
-            "Create a QueryCondition."
+            py::arg("condition"),
+            "Cast a condition to a QueryCondition."
         )
         .def_property_readonly(
             "expression",
