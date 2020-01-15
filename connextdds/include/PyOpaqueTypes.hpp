@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include "PyEntity.hpp"
 #include "PyOpaqueTypes.hpp"
 #include <dds/core/Time.hpp>
 #include <dds/sub/DataReader.hpp>
@@ -10,7 +11,6 @@
 #include <dds/sub/Sample.hpp>
 #include <dds/core/InstanceHandle.hpp>
 #include <dds/topic/TopicInstance.hpp>
-#include "PyEntity.hpp"
 #include "PyAnyDataReader.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyTopic.hpp"

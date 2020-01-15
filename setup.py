@@ -65,10 +65,12 @@ class CMakeBuild(build_ext):
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
                                                               self.distribution.get_version())
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+
+        module_build_dir = os.path.join(self.build_temp, ext.name)
+        if not os.path.exists(module_build_dir):
+            os.makedirs(module_build_dir)
+        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=module_build_dir, env=env)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=module_build_dir)
 
 setup(
     name='rti',
@@ -77,7 +79,8 @@ setup(
     author_email='marc@rti.com',
     description='A full Python binding for RTI Connext DDS',
     long_description='',
-    ext_modules=[CMakeExtension('rti.connextdds')],
+    packages=['rti', 'rti.logging'],
+    ext_modules=[CMakeExtension('rti.connextdds', 'connextdds'), CMakeExtension('rti.logging.distlog', 'distlog')],
     install_requires=['pybind11>=2.4'],
     setup_requires=['pybind11>=2.4'],
     cmdclass=dict(build_ext=CMakeBuild),

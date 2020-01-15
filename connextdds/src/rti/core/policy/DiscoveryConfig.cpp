@@ -17,12 +17,20 @@ void pyrti::init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cl
         .def_static(
             "none",
             &DiscoveryConfigBuiltinPluginKindMask::none,
-            "Create a mask that selects the Simple Discovery Protocol (SDP)."
+            "Create a mask with no bits set."
         )
         .def_static(
             "sdp",
             &DiscoveryConfigBuiltinPluginKindMask::SDP,
-            "Create a mask with no bits set."
+            "Create a mask that selects the Simple Discovery Protocol (SDP)."
+        )
+        .def_static(
+            "spdp",
+            &DiscoveryConfigBuiltinPluginKindMask::SPDP
+        )
+        .def_static(
+            "sedp",
+            &DiscoveryConfigBuiltinPluginKindMask::SEDP
         );
 }
 
