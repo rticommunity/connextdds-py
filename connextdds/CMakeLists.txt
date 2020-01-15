@@ -10,7 +10,7 @@ find_package(
         routing_service
     )
 
-find_package(pybind11 REQUIRED)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
 
 add_library(
     connextdds 
