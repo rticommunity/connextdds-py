@@ -81,8 +81,6 @@ setup(
     long_description='',
     packages=['rti', 'rti.logging'],
     ext_modules=[CMakeExtension('rti.connextdds', 'connextdds'), CMakeExtension('rti.logging.distlog', 'distlog')],
-    install_requires=['pybind11>=2.4'],
-    setup_requires=['pybind11>=2.4'],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )

@@ -100,8 +100,8 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            )
-            .def(
+            );
+            /*.def(
                 "topic_instance_key_value",
                 [](pyrti::PyDataWriter<dds::core::xtypes::DynamicData>& dw, const dds::core::InstanceHandle& handle) {
                     dds::core::xtypes::DynamicData d(pyrti::PyDynamicTypeMap::get(dw->type_name()));
@@ -111,7 +111,7 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            );
+            );*/
     }
 
     template<>
@@ -129,7 +129,7 @@ namespace pyrti {
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
             )
-            .def(
+            /*.def(
                 "topic_instance_key_value",
                 [](pyrti::PyDataReader<dds::core::xtypes::DynamicData>& dr, const dds::core::InstanceHandle& handle) {
                     dds::core::xtypes::DynamicType dt(pyrti::PyDynamicTypeMap::get(dr->type_name()));
@@ -140,7 +140,7 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            )
+            )*/
             .def(
                 "read_next",
                 [](pyrti::PyDataReader<dds::core::xtypes::DynamicData>& dr) -> py::object {
@@ -169,10 +169,10 @@ namespace pyrti {
             );
     }
 
-    template<>
+    /*template<>
     void init_dds_typed_topic_instance_template(py::class_<dds::topic::TopicInstance<DynamicData>>& cls) {
         init_dds_typed_topic_instance_base_template(cls);
-    }
+    }*/
 
     template<>
     void init_dds_typed_sample_template(py::class_<dds::sub::Sample<DynamicData>>& cls) {
@@ -267,9 +267,9 @@ py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, T key) {
         case TypeKind::UINT_32_TYPE:
             return py::cast(dd.value<uint32_t>(key));
         case TypeKind::INT_64_TYPE:
-            return py::cast(dd.value<int64_t>(key));
+            return py::cast(dd.value<rti::core::int64>(key));
         case TypeKind::UINT_64_TYPE:
-            return py::cast(dd.value<uint64_t>(key));
+            return py::cast(dd.value<rti::core::uint64>(key));
         case TypeKind::FLOAT_32_TYPE:
             return py::cast(dd.value<float>(key));
         case TypeKind::FLOAT_64_TYPE:
@@ -319,10 +319,10 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, T key, py::object va
             dd.value<uint32_t>(key, py::cast<uint32_t>(value));
             break;
         case TypeKind::INT_64_TYPE:
-            dd.value<int64_t>(key, py::cast<int64_t>(value));
+            dd.value<rti::core::int64>(key, py::cast<rti::core::int64>(value));
             break;
         case TypeKind::UINT_64_TYPE:
-            dd.value<uint64_t>(key, py::cast<uint64_t>(value));
+            dd.value<rti::core::uint64>(key, py::cast<rti::core::uint64>(value));
             break;
         case TypeKind::FLOAT_32_TYPE:
             dd.value<float>(key, py::cast<float>(value));
@@ -374,9 +374,9 @@ bool test_index(const DynamicData& dd, TypeKind::inner_enum kind, int index, con
         case TypeKind::UINT_32_TYPE:
             return dd.value<uint32_t>(index) == py::cast<uint32_t>(obj);
         case TypeKind::INT_64_TYPE:
-            return dd.value<int64_t>(index) == py::cast<int64_t>(obj);
+            return dd.value<rti::core::int64>(index) == py::cast<rti::core::int64>(obj);
         case TypeKind::UINT_64_TYPE:
-            return dd.value<uint64_t>(index) == py::cast<uint64_t>(obj);
+            return dd.value<rti::core::uint64>(index) == py::cast<rti::core::uint64>(obj);
         case TypeKind::FLOAT_32_TYPE:
             return dd.value<float>(index) == py::cast<float>(obj);
         case TypeKind::FLOAT_64_TYPE:
@@ -577,8 +577,8 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
     pyrti::add_field_type<uint32_t>(dd_class, "uint32", "32-bit unsigned int");
     pyrti::add_field_type<int>(dd_class, "int", "int (signed)");
     pyrti::add_field_type<unsigned int>(dd_class, "uint", "32-bit unsigned int");
-    pyrti::add_field_type<int64_t>(dd_class, "int64", "64-bit signed int");
-    pyrti::add_field_type<uint64_t>(dd_class, "uint64", "64-bit unsigned int");
+    pyrti::add_field_type<rti::core::int64>(dd_class, "int64", "64-bit signed int");
+    pyrti::add_field_type<rti::core::uint64>(dd_class, "uint64", "64-bit unsigned int");
     pyrti::add_field_type<long long>(dd_class, "longlong", "64-bit signed int");
     pyrti::add_field_type<unsigned long long>(dd_class, "ulonglong", "64-bit unsigned int");
     pyrti::add_field_type<float>(dd_class, "float32", "32-bit floating point");

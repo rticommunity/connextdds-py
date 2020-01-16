@@ -38,8 +38,8 @@ void pyrti::process_inits<pyrti::PyPrimitiveType>(py::module& m, pyrti::ClassIni
     init_dds_dynamic_primitive<uint16_t>(m, "Uint16Type", "uint16_type", l);
     init_dds_dynamic_primitive<int32_t>(m, "Int32Type", "int32_type", l);
     init_dds_dynamic_primitive<uint32_t>(m, "Uint32Type", "int32_type", l);
-    init_dds_dynamic_primitive<int64_t>(m, "Int64Type", "int64_type", l);
-    init_dds_dynamic_primitive<uint64_t>(m, "Uint64Type", "uint64_type", l);
+    init_dds_dynamic_primitive<rti::core::int64>(m, "Int64Type", "int64_type", l);
+    init_dds_dynamic_primitive<rti::core::uint64>(m, "Uint64Type", "uint64_type", l);
     init_dds_dynamic_primitive<float>(m, "Float", "float_type", l);
     init_dds_dynamic_primitive<double>(m, "Double", "double_type", l);
     init_dds_dynamic_primitive<rti::core::LongDouble>(m, "LongDoubleType", "longdouble_type", l);

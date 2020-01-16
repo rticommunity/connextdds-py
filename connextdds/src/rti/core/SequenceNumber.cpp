@@ -20,8 +20,8 @@ void pyrti::init_class_defs(py::class_<SequenceNumber>& cls) {
         )
         .def_property(
             "value",
-            (int64_t (SequenceNumber::*)() const) &SequenceNumber::value,
-            (void (SequenceNumber::*)(int64_t value)) &SequenceNumber::value,
+            (long long (SequenceNumber::*)() const) &SequenceNumber::value,
+            (void (SequenceNumber::*)(long long)) &SequenceNumber::value,
             "Get/set the SequenceNumber value."
         )
         .def(
@@ -70,7 +70,7 @@ void pyrti::init_class_defs(py::class_<SequenceNumber>& cls) {
         )
         .def(
             "__int__",
-            (int64_t (SequenceNumber::*)() const) &SequenceNumber::value,
+            (long long (SequenceNumber::*)() const) &SequenceNumber::value,
             "Convert SequenceNumber to integer."
         )
         .def_static(
