@@ -3,8 +3,11 @@
 #include "PyOpaqueTypes.hpp"
 #include <pybind11/operators.h>
 #include <list>
+#include <dds/core/External.hpp>
 
 namespace py = pybind11;
+
+PYBIND11_DECLARE_HOLDER_TYPE(T, dds::core::external<T>);
 
 namespace pyrti {
     typedef std::function<void()> DefInitFunc;
@@ -64,6 +67,6 @@ namespace pyrti {
     // Dummy classes
     class PyVector{};
     class PyPrimitiveType{};
-    class PyBuiltinTopicTypes{};
+    class PyBuiltinProfiles{};
     class PyStreamManipulators{};
 }

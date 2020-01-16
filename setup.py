@@ -24,6 +24,11 @@ class CMakeBuild(build_ext):
             return os.environ['CONNEXTDDS_ARCH']
         raise EnvironmentError('CONNEXTDDS_ARCH not set.')
 
+    def get_job_count(self):
+        if 'NJOBS' in os.environ:
+            return os.environ['NJOBS']
+        return '1'
+
     def run(self):
         try:
             out = subprocess.check_output(['cmake', '--version'])
@@ -60,7 +65,7 @@ class CMakeBuild(build_ext):
             build_args += ['--', '/m']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j8']
+            build_args += ['--', '-j' + self.get_job_count()]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),

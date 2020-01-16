@@ -10,7 +10,7 @@
 #include <dds/core/xtypes/DynamicData.hpp>
 #include <dds/sub/Sample.hpp>
 #include <dds/core/InstanceHandle.hpp>
-//#include <dds/topic/TopicInstance.hpp>
+#include <dds/topic/TopicInstance.hpp>
 #include "PyAnyDataReader.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyTopic.hpp"

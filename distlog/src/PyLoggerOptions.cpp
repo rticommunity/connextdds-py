@@ -7,9 +7,7 @@ namespace pyrti {
     }
 
     PyLoggerOptions::~PyLoggerOptions() {
-        if (NULL != RTI_DL_Options_delete(this->_options)) {
-            throw dds::core::Error("Error deleting distributed logger options.");
-        }
+        RTI_DL_Options_delete(this->_options);
     }
 
     PyLoggerOptions::PyLoggerOptions(const PyLoggerOptions& other) {

@@ -656,7 +656,7 @@ namespace pyrti {
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
             )
-            /*.def(
+            .def(
                 "topic_instance_key_value",
                 [](pyrti::PyDataReader<T>& dr, const dds::core::InstanceHandle& handle) {
                     T d;
@@ -666,7 +666,7 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            )*/
+            )
             .def(
                 "read_next",
                 [](pyrti::PyDataReader<T>& dr) -> py::object {

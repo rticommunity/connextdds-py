@@ -5,7 +5,10 @@
 using namespace dds::core;
 
 void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l) {
-    pyrti::process_inits<pyrti::PyBuiltinTopicTypes>(m, l);
+    pyrti::process_inits<BytesTopicType>(m, l);
+    pyrti::process_inits<KeyedBytesTopicType>(m, l);
+    pyrti::process_inits<StringTopicType>(m, l);
+    pyrti::process_inits<KeyedStringTopicType>(m, l);
     pyrti::process_inits<Duration>(m, l);
     pyrti::process_inits<Entity>(m, l);
     pyrti::process_inits<Exception>(m, l);

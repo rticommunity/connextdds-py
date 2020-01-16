@@ -1,6 +1,7 @@
 #include "PyConnext.hpp"
 #include "PyNamespaces.hpp"
 
+
 PYBIND11_MODULE(connextdds, m) {
     pyrti::ClassInitList cls_init_funcs;
     pyrti::DefInitVector def_init_funcs;

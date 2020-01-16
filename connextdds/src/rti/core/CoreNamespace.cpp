@@ -5,6 +5,7 @@
 using namespace rti::core;
 
 void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l) {
+    pyrti::process_inits<pyrti::PyBuiltinProfiles>(m, l);
     pyrti::process_inits<AllocationSettings>(m, l);
     pyrti::process_inits<ChannelSettings>(m, l);
     pyrti::process_inits<ContentFilterProperty>(m, l);

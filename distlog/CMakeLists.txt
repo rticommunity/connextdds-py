@@ -42,7 +42,7 @@ set_target_properties(distlog PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
 set_target_properties(
     distlog
     PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 11
 )
 
 target_compile_options(

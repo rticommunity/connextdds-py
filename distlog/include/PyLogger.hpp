@@ -6,6 +6,7 @@
 #include "PyLoggerOptions.hpp"
 #include "PyLogLevel.hpp"
 #include "PyMessageParams.hpp"
+#include <mutex>
 
 namespace pyrti {
     class PyLoggerOptions;

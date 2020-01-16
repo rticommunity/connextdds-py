@@ -77,6 +77,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/Batch.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/AsynchronousPublisher.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/ExclusiveArea.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/BuiltinProfiles.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/QosProviderParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/LocatorFilterElement.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/ChannelSettings.cpp"
@@ -178,7 +179,10 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/UserData.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/QosProvider.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/Duration.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/BuiltinTopicTypes.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/BytesTopicType.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/KeyedBytesTopicType.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/StringTopicType.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/KeyedStringTopicType.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/Exception.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/Entity.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/CoreNamespace.cpp"
@@ -250,7 +254,7 @@ set_target_properties(connextdds PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
 
 set_target_properties(connextdds
     PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 11
 )
 
 target_compile_options(

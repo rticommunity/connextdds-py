@@ -2,6 +2,7 @@
 
 #include "PyConnext.hpp"
 #include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 #include "PyAnyDataReader.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyTopic.hpp"
@@ -10,7 +11,7 @@
 #include "PyDataWriter.hpp"
 #include "PyDataWriterListener.hpp"
 #include "PyTopic.hpp"
-//#include "PyTopicInstance.hpp"
+#include "PyTopicInstance.hpp"
 #include "PyTopicListener.hpp"
 #include "PySample.hpp"
 #include "PySharedSamples.hpp"
@@ -37,7 +38,7 @@ namespace pyrti {
         pyrti::init_datareader<T>(o);
         pyrti::init_datawriter<T>(o);
         pyrti::init_topic<T>(o);
-        //pyrti::init_topic_instance<T>(o);
+        pyrti::init_topic_instance<T>(o);
         pyrti::init_sample<T>(o);
         pyrti::init_shared_samples<T>(o);
         pyrti::init_loaned_samples<T>(o);

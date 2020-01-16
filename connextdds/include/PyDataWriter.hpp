@@ -4,7 +4,7 @@
 #include <pybind11/stl_bind.h>
 #include <dds/pub/DataWriter.hpp>
 #include <dds/pub/discovery.hpp>
-//#include <dds/topic/TopicInstance.hpp>
+#include <dds/topic/TopicInstance.hpp>
 #include <dds/pub/find.hpp>
 #include "PyEntity.hpp"
 #include "PyAnyDataWriter.hpp"
@@ -135,7 +135,7 @@ namespace pyrti {
                 py::arg("timestamp"),
                 "Write a sample with an instance handle and specified timestamp."
             )
-            /*.def(
+            .def(
                 "write",
                 (void (pyrti::PyDataWriter<T>::*)(const dds::topic::TopicInstance<T>&)) &pyrti::PyDataWriter<T>::write,
                 py::arg("topic_instance"),
@@ -147,7 +147,7 @@ namespace pyrti {
                 py::arg("topic_instance"),
                 py::arg("timestamp"),
                 "Write a sample given a topic instance and specified timestamp."
-            )*/
+            )
             .def(
                 "write",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<T>& values) {
@@ -156,7 +156,7 @@ namespace pyrti {
                 py::arg("samples"),
                 "Write a sequence of samples."
             )
-            /*.def(
+            .def(
                 "write",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<dds::topic::TopicInstance<T>>& values) {
                     for (auto ti : values) {
@@ -165,7 +165,7 @@ namespace pyrti {
                 },
                 py::arg("topic_instances"),
                 "Write a sequence of topic instances."
-            )*/
+            )
             .def(
                 "write",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<T>& values, const dds::core::Time& timestamp) {
@@ -175,7 +175,7 @@ namespace pyrti {
                 py::arg("timestamp"),
                 "Write a sequence of samples with a timestamp."
             )
-            /*.def(
+            .def(
                 "write",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<dds::topic::TopicInstance<T>>& values, const dds::core::Time& timestamp) {
                     for (auto ti : values) {
@@ -185,7 +185,7 @@ namespace pyrti {
                 py::arg("topic_instances"),
                 py::arg("timestamp"),
                 "Write a sequence of topic instances with a timestamp."
-            )*/
+            )
             .def(
                 "write",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<T>& values, const std::vector<dds::core::InstanceHandle>& handles) {
@@ -214,7 +214,7 @@ namespace pyrti {
                 py::is_operator(),
                 "Writes a sample."
             )
-            /*.def(
+            .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& dw, const dds::topic::TopicInstance<T>& ti) {
                     dw.write(ti);
@@ -222,7 +222,7 @@ namespace pyrti {
                 },
                 py::is_operator(),
                 "Writes a topic instance."
-            )*/
+            )
             .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& dw, const std::pair<T, dds::core::Time>& data) {
@@ -232,7 +232,7 @@ namespace pyrti {
                 py::is_operator(),
                 "Writes a paired sample with a timestamp."
             )
-            /*.def(
+            .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& dw, const std::pair<dds::topic::TopicInstance<T>, dds::core::Time>& p) {
                     dw.write(p.first, p.second);
@@ -240,7 +240,7 @@ namespace pyrti {
                 },
                 py::is_operator(),
                 "Writes a paired sample with a timestamp."
-            )*/
+            )
             .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& dw, const std::pair<T, dds::core::InstanceHandle>& data) {
@@ -259,7 +259,7 @@ namespace pyrti {
                 py::is_operator(),
                 "Writes a sequence of samples."
             )
-            /*.def(
+            .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<dds::topic::TopicInstance<T>>& data) {
                     for (auto ti : data) {
@@ -269,7 +269,7 @@ namespace pyrti {
                 },
                 py::is_operator(),
                 "Writes a sequence of topic instances."
-            )*/
+            )
             .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<std::pair<T, dds::core::Time>>& data) {
@@ -281,7 +281,7 @@ namespace pyrti {
                 py::is_operator(),
                 "Writes a sequence of pairs of samples with timestamps."
             )
-            /*.def(
+            .def(
                 "__lshift__",
                 [](pyrti::PyDataWriter<T>& writer, const std::vector<std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>& data) {
                     for (const std::pair<dds::topic::TopicInstance<T>, dds::core::Time>& d : data) {
@@ -291,7 +291,7 @@ namespace pyrti {
                 },
                 py::is_operator(),
                 "Writes a sequence of pairs of topic instances with timestamps."
-            )*/
+            )
             .def(
                 "register_instance",
                 (const dds::core::InstanceHandle (pyrti::PyDataWriter<T>::*)(const T&)) &pyrti::PyDataWriter<T>::register_instance,
@@ -350,13 +350,13 @@ namespace pyrti {
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
             )
-            /*.def(
+            .def(
                 "key_value",
                 (dds::topic::TopicInstance<T>& (pyrti::PyDataWriter<T>::*)(dds::topic::TopicInstance<T>&, const dds::core::InstanceHandle&)) &pyrti::PyDataWriter<T>::key_value,
                 py::arg("topic_instance"),
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            )*/
+            )
             .def(
                 "lookup_instance",
                 &pyrti::PyDataWriter<T>::lookup_instance,
@@ -660,8 +660,8 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            );
-            /*.def(
+            )
+            .def(
                 "topic_instance_key_value",
                 [](dds::pub::DataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
                     auto d = std::unique_ptr<T>(dw->create_data());
@@ -671,7 +671,7 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            );*/
+            );
     }
 
     template<typename T>

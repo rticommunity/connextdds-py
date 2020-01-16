@@ -35,9 +35,9 @@ namespace pyrti {
             .def(
                 "__rshift__",
 #if defined(_MS_VER) && _MS_VER <= 1900
-                (const T& (T::*)(U&)) &T::operator<U>>>,
+                (const T& (T::*)(U&) const) &T::operator<U>>>,
 #else
-                (const T& (T::*)(U&)) &T::template operator>><U>,
+                (const T& (T::*)(U&) const) &T::template operator>><U>,
 #endif
                 py::is_operator(),
                 ("Get the " + property_name + "QoS.").c_str()

@@ -32,7 +32,6 @@ namespace pyrti {
         public pyrti::PyNoOpAnyDataWriterListener {
     public:
         using pyrti::PyPublisherListener::PyPublisherListener;
-        using pyrti::PyNoOpAnyDataWriterListener::PyNoOpAnyDataWriterListener;
         
         using pyrti::PyNoOpAnyDataWriterListener::on_offered_deadline_missed;
         using pyrti::PyNoOpAnyDataWriterListener::on_offered_incompatible_qos;

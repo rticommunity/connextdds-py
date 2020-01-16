@@ -4,6 +4,15 @@
 #include <pybind11/stl_bind.h>
 #include <dds/topic/TopicInstance.hpp>
 
+namespace dds {
+    namespace topic {
+        template <typename T>
+        std::ostream& operator<<(std::ostream& out, const dds::topic::TopicInstance<T>& val) {
+            return (out << val.handle());
+        }
+    }
+}
+
 namespace pyrti {
     template<typename T>
     void init_dds_typed_topic_instance_base_template(py::class_<dds::topic::TopicInstance<T>>& cls) {

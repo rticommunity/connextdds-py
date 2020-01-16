@@ -100,8 +100,8 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            );
-            /*.def(
+            )
+            .def(
                 "topic_instance_key_value",
                 [](pyrti::PyDataWriter<dds::core::xtypes::DynamicData>& dw, const dds::core::InstanceHandle& handle) {
                     dds::core::xtypes::DynamicData d(pyrti::PyDynamicTypeMap::get(dw->type_name()));
@@ -111,7 +111,7 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            );*/
+            );
     }
 
     template<>
@@ -129,7 +129,7 @@ namespace pyrti {
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
             )
-            /*.def(
+            .def(
                 "topic_instance_key_value",
                 [](pyrti::PyDataReader<dds::core::xtypes::DynamicData>& dr, const dds::core::InstanceHandle& handle) {
                     dds::core::xtypes::DynamicType dt(pyrti::PyDynamicTypeMap::get(dr->type_name()));
@@ -140,7 +140,7 @@ namespace pyrti {
                 },
                 py::arg("handle"),
                 "Retrieve the instance key that corresponds to an instance handle."
-            )*/
+            )
             .def(
                 "read_next",
                 [](pyrti::PyDataReader<dds::core::xtypes::DynamicData>& dr) -> py::object {
@@ -169,10 +169,10 @@ namespace pyrti {
             );
     }
 
-    /*template<>
+    template<>
     void init_dds_typed_topic_instance_template(py::class_<dds::topic::TopicInstance<DynamicData>>& cls) {
         init_dds_typed_topic_instance_base_template(cls);
-    }*/
+    }
 
     template<>
     void init_dds_typed_sample_template(py::class_<dds::sub::Sample<DynamicData>>& cls) {
