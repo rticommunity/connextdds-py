@@ -215,7 +215,40 @@ namespace pyrti {
     }
 
     template<typename T>
-    void add_field_type_array(py::class_<DynamicData>& cls, const std::string& type_str, const std::string& type_info) {
+    std::vector<DynamicData> get_complex_values(const DynamicData& data, const T& key) {
+        std::vector<DynamicData> v;
+        auto info = data.member_info(key);
+        if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
+            !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE)) {
+            DynamicData member = data.value<DynamicData>(key);
+            for (uint32_t i = 1; i <= info.element_count(); ++i) {
+                v.push_back(member.value<DynamicData>(i));
+            }
+            return v;
+        }
+        else {
+            throw py::key_error("member is not a collection of non-primitive values.");
+        }
+    }
+
+    template<typename T>
+    void set_complex_values(DynamicData& data, const T& key, std::vector<DynamicData>& values) {
+        auto info = data.member_info(key);
+        if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
+            !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
+        {
+            DynamicData& member = data.loan_value(key).get();
+            for (uint32_t i = 0; i < values.size(); ++i) {
+                member.value<DynamicData>(i + 1, values[i]);
+            }
+        }
+        else {
+            throw py::key_error("member is not a collection of non-primitive values.");
+        }
+    }
+
+    template<typename T>
+    void add_field_type_collection(py::class_<DynamicData>& cls, const std::string& type_str, const std::string& type_info) {
         cls
             .def (
                 ("get_" + type_str + "_values").c_str(),
@@ -250,9 +283,10 @@ namespace pyrti {
     }
 }
 
+
 template<typename T>
 static
-py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, T key) {
+py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key) {
     switch (kind) {
         case TypeKind::BOOLEAN_TYPE:
             return py::cast(dd.value<bool>(key));
@@ -297,9 +331,119 @@ py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, T key) {
     }
 }
 
+
 template<typename T>
 static
-void set_member(DynamicData& dd, TypeKind::inner_enum kind, T key, py::object value) {
+void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object& values) {
+    switch (kind) {
+        case TypeKind::BOOLEAN_TYPE:
+            {
+                auto v = py::cast<std::vector<bool>>(values);
+                DynamicData& member = dd.loan_value(key).get();
+                size_t i = 1;
+                for (auto b : v) {
+                    member.value<bool>(i++, b);
+                }
+            }
+            break;
+        case TypeKind::UINT_8_TYPE:
+            dd.set_values<uint8_t>(key, py::cast<std::vector<uint8_t>>(values));
+            break;
+        case TypeKind::INT_16_TYPE:
+            dd.set_values<int16_t>(key, py::cast<std::vector<int16_t>>(values));
+            break;
+        case TypeKind::UINT_16_TYPE:
+            dd.set_values<uint16_t>(key, py::cast<std::vector<uint16_t>>(values));
+            break;
+        case TypeKind::INT_32_TYPE:
+        case TypeKind::ENUMERATION_TYPE:
+            dd.set_values<int32_t>(key, py::cast<std::vector<int32_t>>(values));
+            break;
+        case TypeKind::UINT_32_TYPE:
+            dd.set_values<uint32_t>(key, py::cast<std::vector<uint32_t>>(values));
+            break;
+        case TypeKind::INT_64_TYPE:
+            dd.set_values<rti::core::int64>(key, py::cast<std::vector<rti::core::int64>>(values));
+            break;
+        case TypeKind::UINT_64_TYPE:
+            dd.set_values<rti::core::uint64>(key, py::cast<std::vector<rti::core::uint64>>(values));
+            break;
+        case TypeKind::FLOAT_32_TYPE:
+            dd.set_values<float>(key, py::cast<std::vector<float>>(values));
+            break;
+        case TypeKind::FLOAT_64_TYPE:
+            dd.set_values<double>(key, py::cast<std::vector<double>>(values));
+            break;
+        case TypeKind::FLOAT_128_TYPE:
+            {
+                auto v = py::cast<std::vector<rti::core::LongDouble>>(values);
+                DynamicData& member = dd.loan_value(key).get();
+                size_t i = 1;
+                for (auto& ld : v) {
+                    member.value<rti::core::LongDouble>(i++, ld);
+                }
+            }
+            break;
+        case TypeKind::CHAR_8_TYPE:
+            dd.set_values<char>(key, py::cast<std::vector<char>>(values));
+            break;
+        case TypeKind::CHAR_16_TYPE:
+            {
+                auto s = py::cast<std::vector<wchar_t>>(values);
+                std::vector<DDS_Wchar> v;
+                for (auto c : s) {
+                    v.push_back(static_cast<DDS_Wchar>(c));
+                }
+                dd.set_values<DDS_Wchar>(key, v);
+            }
+            break;
+        case TypeKind::STRING_TYPE:
+            {
+                auto v = py::cast<std::vector<std::string>>(values);
+                DynamicData& member = dd.loan_value(key);
+                for (int i = 0; i < v.size(); ++i) {
+                    member.value<std::string>(i+1, v[i]);
+                }
+            }
+            break;
+        case TypeKind::WSTRING_TYPE:
+            {
+                auto v = py::cast<std::vector<std::wstring>>(values);
+                DynamicData& member = dd.loan_value(key).get();
+                for (int i = 0; i < v.size(); ++i) {
+                    std::vector<DDS_Wchar> str;
+                    for (auto c : v[i]) {
+                        str.push_back(static_cast<DDS_Wchar>(c));
+                    }
+                    member.set_values<DDS_Wchar>(i+1, str);
+                }
+            }
+            break;
+        case TypeKind::ARRAY_TYPE:
+        case TypeKind::SEQUENCE_TYPE: 
+            {
+                auto list = py::cast<py::list>(values);
+                auto member = dd.loan_value(key).get();
+                auto elem_kind = dd.member_info(key).element_kind().underlying();
+                size_t index = 1;
+                for (auto& collection : list) {
+                    py::object obj = py::cast<py::object>(collection);
+                    set_collection_member(member, elem_kind, index, obj);
+                }
+            }
+            break;
+        default:
+            {
+                auto v = py::cast<std::vector<DynamicData>>(values);
+                pyrti::set_complex_values(dd, key, v);
+            }
+    }
+}
+
+
+template<typename T>
+static
+void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object value) {
     switch (kind) {
         case TypeKind::BOOLEAN_TYPE:
             dd.value<bool>(key, py::cast<bool>(value));
@@ -354,6 +498,23 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, T key, py::object va
                 dd.set_values<DDS_Wchar>(key, v);
             }
             break;
+        case TypeKind::ARRAY_TYPE:
+        case TypeKind::SEQUENCE_TYPE: {
+            bool dd_cast = false;
+            try {
+                py::cast<DynamicData>(value);
+                dd_cast = true;
+            }
+            catch(py::builtin_exception::runtime_error e) {
+                auto info = dd.member_info(key);
+                auto elem_kind = info.element_kind().underlying();
+                set_collection_member(dd, elem_kind, key, value);
+            }
+            if (dd_cast) {
+                dd.value<DynamicData>(key, py::cast<DynamicData>(value));
+            }
+            break;
+        }
         default:
             dd.value<DynamicData>(key, py::cast<DynamicData>(value));
     }
@@ -594,17 +755,17 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
     //DYNAMIC_DATA_GET_SET_DECL(dd_class, std::wstring, "wstring", "wide string");
     pyrti::add_field_type<DynamicData>(dd_class, "complex", "complex data type");
 
-    pyrti::add_field_type_array<char>(dd_class, "int8", "8-bit signed int");
-    pyrti::add_field_type_array<uint8_t>(dd_class, "uint8", "8-bit unsigned int");
-    pyrti::add_field_type_array<int16_t>(dd_class, "int16", "16-bit signed int");
-    pyrti::add_field_type_array<uint16_t>(dd_class, "uint16", "16-bit unsigned int");
-    pyrti::add_field_type_array<DDS_Long>(dd_class, "int32", "32-bit signed int");
-    pyrti::add_field_type_array<DDS_UnsignedLong>(dd_class, "uint32", "32-bit unsigned int");
-    pyrti::add_field_type_array<DDS_LongLong>(dd_class, "longlong", "64-bit signed int");
-    pyrti::add_field_type_array<DDS_UnsignedLongLong>(dd_class, "ulonglong", "64-bit unsigned int");
-    pyrti::add_field_type_array<float>(dd_class, "float32", "32-bit floating point");
-    pyrti::add_field_type_array<double>(dd_class, "float64", "64-bit floating point");
-    pyrti::add_field_type_array<char>(dd_class, "char", "character");
+    pyrti::add_field_type_collection<char>(dd_class, "int8", "8-bit signed int");
+    pyrti::add_field_type_collection<uint8_t>(dd_class, "uint8", "8-bit unsigned int");
+    pyrti::add_field_type_collection<int16_t>(dd_class, "int16", "16-bit signed int");
+    pyrti::add_field_type_collection<uint16_t>(dd_class, "uint16", "16-bit unsigned int");
+    pyrti::add_field_type_collection<DDS_Long>(dd_class, "int32", "32-bit signed int");
+    pyrti::add_field_type_collection<DDS_UnsignedLong>(dd_class, "uint32", "32-bit unsigned int");
+    pyrti::add_field_type_collection<DDS_LongLong>(dd_class, "longlong", "64-bit signed int");
+    pyrti::add_field_type_collection<DDS_UnsignedLongLong>(dd_class, "ulonglong", "64-bit unsigned int");
+    pyrti::add_field_type_collection<float>(dd_class, "float32", "32-bit floating point");
+    pyrti::add_field_type_collection<double>(dd_class, "float64", "64-bit floating point");
+    pyrti::add_field_type_collection<char>(dd_class, "char", "character");
 
     dd_class
         .def(
@@ -698,19 +859,7 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "get_complex_values",
             [](const DynamicData& data, const std::string& name) {
-                std::vector<DynamicData> v;
-                auto info = data.member_info(name);
-                if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
-                    !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE)) {
-                    auto member = data.value<DynamicData>(name);
-                    for (uint32_t i = 1; i <= info.element_count(); ++i) {
-                        v.push_back(member.value<DynamicData>(i));
-                    }
-                    return v;
-                }
-                else {
-                    throw py::key_error("member is not a collection of non-primitive values.");
-                }
+                return pyrti::get_complex_values(data, name);
             },
             py::arg("name"),
             "Get a list of complex values by field name."
@@ -719,20 +868,7 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
             "get_complex_values",
             [](const DynamicData& data, uint32_t index) {
                 index += 1;
-                std::vector<DynamicData> v;
-                auto info = data.member_info(index);
-                if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
-                    !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
-                {
-                    auto member = data.value<DynamicData>(index);
-                    for (uint32_t i = 1; i <= info.element_count(); ++i) {
-                        v.push_back(member.value<DynamicData>(i));
-                    }
-                    return v;
-                }
-                else {
-                    throw py::key_error("member is not a collection of non-primitive values.");
-                }
+                return pyrti::get_complex_values(data, index);
             },
             py::arg("index"),
             "Get a list of complex fields by index."
@@ -772,18 +908,7 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "set_complex_values",
             [](DynamicData& data, const std::string& name, std::vector<DynamicData>& values) {
-                auto info = data.member_info(name);
-                if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
-                    !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
-                {
-                    auto member = data.value<DynamicData>(name);
-                    for (uint32_t i = 0; i < values.size(); ++i) {
-                        member.value<DynamicData>(i + 1, values[i]);
-                    }
-                }
-                else {
-                    throw py::key_error("member is not a collection of non-primitive values.");
-                }
+                pyrti::set_complex_values(data, name, values);
             },
             py::arg("name"),
             py::arg("values"),
@@ -793,18 +918,7 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
             "set_complex_values",
             [](DynamicData& data, uint32_t index, std::vector<DynamicData>& values) {
                 index += 1;
-                auto info = data.member_info(index);
-                if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
-                    !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
-                {
-                    auto member = data.value<DynamicData>(index);
-                    for (uint32_t i = 0; i < values.size(); ++i) {
-                        member.value<DynamicData>(i + 1, values[i]);
-                    }
-                }
-                else {
-                    throw py::key_error("member is not a collection of non-primitive values.");
-                }
+                pyrti::set_complex_values(data, index, values);
             },
             py::arg("index"),
             py::arg("values"),

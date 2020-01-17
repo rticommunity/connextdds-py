@@ -79,3 +79,4 @@ while True:
     - send a SIGQUIT via keyboard shortcut instead of SIGINT
     - kill the Python process via the command line
 - SIP on macOS prevents Python from using DYLD_LIBRARY_PATH to find the target libraries, so it is recommended to put them somewhere on the standard search path (e.g. $HOME/lib)
+- Getter/setter APIs have been replaced by Python properties in most cases. The exception is write-only properties, which are still normal method calls with the new value as the argument.
