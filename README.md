@@ -77,3 +77,4 @@ while True:
     - implement a custom signal handler
     - send a SIGQUIT via keyboard shortcut instead of SIGINT
     - kill the Python process via the command line
+- SIP on macOS prevents Python from using DYLD_LIBRARY_PATH to find the target libraries, so it is recommended to put them somewhere on the standard search path (e.g. $HOME/lib)
