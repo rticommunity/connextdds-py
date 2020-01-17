@@ -57,6 +57,7 @@ while True:
 - Supports QoS modifications in code
 - Supports listeners
 - Supports waitsets and all conditions
+- Supports RTI Distributed Logger and integration with Python `logging` module
 
 ## TODO
 
