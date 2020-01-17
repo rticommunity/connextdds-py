@@ -4,7 +4,7 @@
 using namespace dds::core::xtypes;
 
 template<>
-void pyrti::init_class_defs(py::class_<ArrayType>& cls) {
+void pyrti::init_class_defs(py::class_<ArrayType, CollectionType>& cls) {
     cls
         .def(
             py::init<const DynamicType&, uint32_t>(),
@@ -45,7 +45,7 @@ template<>
 void pyrti::process_inits<ArrayType>(py::module& m, pyrti::ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ArrayType>(m, "ArrayType");
+            return pyrti::init_class<ArrayType, CollectionType>(m, "ArrayType");
         }
     ); 
 }

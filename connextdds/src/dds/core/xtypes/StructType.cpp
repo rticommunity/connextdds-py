@@ -13,11 +13,13 @@ void pyrti::init_class_defs(py::class_<StructType, AbstractConstructedType<Membe
              "Creates an empty StructType."
         )
         .def(
-             py::init([](const std::string& name, ExtensibilityKind extensibility) {
-                 StructType st(name);
-                 st.extensibility_kind(extensibility);
-                 return st;
-             }),
+             py::init(
+                [](const std::string& name, ExtensibilityKind extensibility) {
+                    StructType st(name);
+                    st.extensibility_kind(extensibility);
+                    return st;
+                }
+            ),
              py::arg("name"),
              py::arg("extensibility"),
              "Creates an empty StructType with a specified extensibility."
@@ -29,11 +31,13 @@ void pyrti::init_class_defs(py::class_<StructType, AbstractConstructedType<Membe
              "Create an empty StructType with a base type."
         )
         .def(
-             py::init([](const std::string& name, const StructType& parent, ExtensibilityKind extensibility) {
-                 StructType st(name, parent);
-                 st.extensibility_kind(extensibility);
-                 return st;
-             }),
+             py::init(
+                [](const std::string& name, const StructType& parent, ExtensibilityKind extensibility) {
+                    StructType st(name, parent);
+                    st.extensibility_kind(extensibility);
+                    return st;
+                }
+            ),
              py::arg("name"),
              py::arg("parent"),
              py::arg("extensibility"),
@@ -46,11 +50,13 @@ void pyrti::init_class_defs(py::class_<StructType, AbstractConstructedType<Membe
              "Create a StructType with the provided members."
         )
         .def(
-             py::init([](const std::string& name, const std::vector<Member>& members, ExtensibilityKind extensibility) {
-                 StructType st(name, members);
-                 st.extensibility_kind(extensibility);
-                 return st;
-             }),
+             py::init(
+                [](const std::string& name, const std::vector<Member>& members, ExtensibilityKind extensibility) {
+                    StructType st(name, members);
+                    st.extensibility_kind(extensibility);
+                    return st;
+                }
+            ),
              py::arg("name"),
              py::arg("members"),
              py::arg("extensibility"),
@@ -74,6 +80,15 @@ void pyrti::init_class_defs(py::class_<StructType, AbstractConstructedType<Membe
              py::arg("members"),
              py::arg("extensibility"),
              "Creates a StructType with a base types, the provided members, and the specified extensibility."
+        )
+        .def(
+            py::init(
+                [](DynamicType& dt) {
+                    return static_cast<StructType&>(dt);
+                }
+            ),
+            py::arg("type"),
+            "Cast a DynamicType to a StructType"
         )
         .def_property(
             "extensibility_kind",

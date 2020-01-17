@@ -263,6 +263,7 @@ py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, T key) {
         case TypeKind::UINT_16_TYPE:
             return py::cast(dd.value<uint16_t>(key));
         case TypeKind::INT_32_TYPE:
+        case TypeKind::ENUMERATION_TYPE:
             return py::cast(dd.value<int32_t>(key));
         case TypeKind::UINT_32_TYPE:
             return py::cast(dd.value<uint32_t>(key));
@@ -313,6 +314,7 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, T key, py::object va
             dd.value<uint16_t>(key, py::cast<uint16_t>(value));
             break;
         case TypeKind::INT_32_TYPE:
+        case TypeKind::ENUMERATION_TYPE:
             dd.value<int32_t>(key, py::cast<int32_t>(value));
             break;
         case TypeKind::UINT_32_TYPE:
@@ -370,6 +372,7 @@ bool test_index(const DynamicData& dd, TypeKind::inner_enum kind, int index, con
         case TypeKind::UINT_16_TYPE:
             return dd.value<uint16_t>(index) == py::cast<uint16_t>(obj);
         case TypeKind::INT_32_TYPE:
+        case TypeKind::ENUMERATION_TYPE:
             return dd.value<int32_t>(index) == py::cast<int32_t>(obj);
         case TypeKind::UINT_32_TYPE:
             return dd.value<uint32_t>(index) == py::cast<uint32_t>(obj);

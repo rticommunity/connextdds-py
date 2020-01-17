@@ -24,6 +24,15 @@ void pyrti::init_class_defs(py::class_<EnumType, AbstractConstructedType<EnumMem
             "Creates a enum with the members in the list."
         )
         .def(
+            py::init(
+                [](DynamicType& dt) {
+                    return static_cast<EnumType&>(dt);
+                }
+            ),
+            py::arg("type"),
+            "Cast a DynamicType to an EnumType."
+        )
+        .def(
             "find_member_by_ordinal",
             &EnumType::find_member_by_ordinal,
             py::arg("ordinal"),

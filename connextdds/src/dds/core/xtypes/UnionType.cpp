@@ -27,6 +27,15 @@ void pyrti::init_class_defs(py::class_<UnionType, AbstractConstructedType<UnionM
             py::arg("members"),
             "Creates a Union with the specified UnionMembers."
         )
+        .def(
+            py::init(
+                [](DynamicType& dt) {
+                    return static_cast<UnionType&>(dt);
+                }
+            ),
+            py::arg("type"),
+            "Cast a DynamicType to a UnionType."
+        )
         .def_property_readonly(
             "descriminator",
             &UnionType::discriminator,
