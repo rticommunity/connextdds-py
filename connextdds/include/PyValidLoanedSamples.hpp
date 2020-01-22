@@ -24,7 +24,7 @@ namespace pyrti {
             )
             .def(
                 "__exit__",
-                [](rti::sub::ValidLoanedSamples<T>& ls) {}
+                [](rti::sub::ValidLoanedSamples<T>& ls, py::object, py::object, py::object) {}
             );
     }
 
