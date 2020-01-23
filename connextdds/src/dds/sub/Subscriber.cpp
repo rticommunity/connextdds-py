@@ -11,37 +11,33 @@ template<>
 void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
     cls
         .def(
-            py::init(
-                [](pyrti::PyIEntity& e) {
-                    auto entity = e.get_entity();
-                    return dds::core::polymorphic_cast<pyrti::PySubscriber>(entity);
-                }
-            )
-        )
-        .def(
-            py::init(
-                [](pyrti::PyDomainParticipant& dp) {
-                    return pyrti::PySubscriber(dp);
-                }
-            ),
+            py::init<
+                const pyrti::PyDomainParticipant&
+            >(),
             py::arg("participant"),
             "Create a subscriber under a DomainParticipant."
         )
         .def(
-            py::init(
-                [](pyrti::PyDomainParticipant& dp,
-                    const qos::SubscriberQos& qos,
-                    pyrti::PySubscriberListener* l,
-                    dds::core::status::StatusMask& m) {
-                    return pyrti::PySubscriber(dp, qos, l, m);
-                }
-            ),
+            py::init<
+                const pyrti::PyDomainParticipant&,
+                const qos::SubscriberQos&,
+                pyrti::PySubscriberListener*,
+                const dds::core::status::StatusMask&
+            >(),
             py::arg("participant"),
             py::arg("qos"),
             py::arg("listener") = (pyrti::PySubscriberListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
             py::keep_alive<1,4>(),
             "Create a Subscriber under a DomainParticipant with a listener."
+        )
+        .def(
+            py::init(
+                [](pyrti::PyIEntity& e) {
+                    auto entity = e.get_entity();
+                    return dds::core::polymorphic_cast<pyrti::PySubscriber>(entity);
+                }
+            )
         )
         .def(
             "notify_datareaders",

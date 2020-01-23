@@ -36,14 +36,6 @@ template<>
 void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEntity>& cls) {
     cls
         .def(
-            py::init(
-                [](pyrti::PyIEntity& e) {
-                    auto entity = e.get_entity();
-                    return dds::core::polymorphic_cast<pyrti::PyDomainParticipant>(entity);
-                }
-            )
-        )
-        .def(
             py::init<int32_t>(),
             py::arg("domain_id"),
             "Create a new DomainParticipant with default QoS."
@@ -63,6 +55,14 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             py::keep_alive<1, 4>(),
             "Create a new DomainParticipant"
+        )
+        .def(
+            py::init(
+                [](pyrti::PyIEntity& e) {
+                    auto entity = e.get_entity();
+                    return dds::core::polymorphic_cast<pyrti::PyDomainParticipant>(entity);
+                }
+            )
         )
         .def_property_readonly(
             "listener",

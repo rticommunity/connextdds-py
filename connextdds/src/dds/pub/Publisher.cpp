@@ -11,6 +11,28 @@ using namespace dds::pub;
 template<>
 void pyrti::init_class_defs(py::class_<pyrti::PyPublisher, pyrti::PyIEntity>& cls) {
     cls
+        
+        .def(
+            py::init<
+                const pyrti::PyDomainParticipant&
+            >(),
+            py::arg("participant"),
+            "Create a publisher."
+        )
+        .def(
+            py::init<
+                const pyrti::PyDomainParticipant&, 
+                const qos::PublisherQos&,
+                pyrti::PyPublisherListener*,
+                const dds::core::status::StatusMask&
+            >(),
+            py::arg("participant"),
+            py::arg("qos"),
+            py::arg("listener") = (pyrti::PyPublisherListener*) nullptr,
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::keep_alive<1,4>(),
+            "Create a Publisher with the desired QoS policies and specified listener"
+        )
         .def(
             py::init(
                 [](pyrti::PyIEntity& e) {
@@ -18,31 +40,6 @@ void pyrti::init_class_defs(py::class_<pyrti::PyPublisher, pyrti::PyIEntity>& cl
                     return dds::core::polymorphic_cast<pyrti::PyPublisher>(entity);
                 }
             )
-        )
-        .def(
-            py::init(
-                [](const pyrti::PyDomainParticipant& dp) {
-                    return PyPublisher(dp);
-                }
-            ),
-            py::arg("participant"),
-            "Create a publisher."
-        )
-        .def(
-            py::init(
-                [](const pyrti::PyDomainParticipant& dp, 
-                    const qos::PublisherQos& q,
-                    pyrti::PyPublisherListener* l,
-                    const dds::core::status::StatusMask& m) {
-                    return PyPublisher(dp, q, l ,m);
-                }
-            ),
-            py::arg("participant"),
-            py::arg("qos"),
-            py::arg("listener") = (pyrti::PyPublisherListener*) nullptr,
-            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
-            py::keep_alive<1,4>(),
-            "Create a Publisher with the desired QoS policies and specified listener"
         )
         .def_property(
             "qos",
