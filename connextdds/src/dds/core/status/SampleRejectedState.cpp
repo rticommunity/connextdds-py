@@ -62,8 +62,7 @@ void pyrti::init_class_defs(py::class_<SampleRejectedState>& cls) {
             &SampleRejectedState::rejected_by_virtual_writers_limit,
             "Create a SampleRejectedState indicating that the sample was "
             "rejected because the resource limit on the number of virtual "
-            "writers from which a dds::sub::DataReader may read was "
-            "reached."
+            "writers from which a DataReader may read was reached."
         )
         .def_static(
             "rejected_by_remote_writers_per_sample_limit",

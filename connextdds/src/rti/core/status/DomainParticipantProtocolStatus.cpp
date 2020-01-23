@@ -21,7 +21,7 @@ void pyrti::init_class_defs(py::class_<DomainParticipantProtocolStatus>& cls) {
             &DomainParticipantProtocolStatus::last_corrupted_message_timestamp,
             "The timestamp when the last corrupted RTPS message was detected by the domain participant."
         )
-        .doc() = "Protocol status of a dds::domain::DomainParticipant";
+        .doc() = "Protocol status of a DomainParticipant";
 }
 
 template<>

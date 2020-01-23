@@ -101,7 +101,7 @@ void init_dds_liveliness_kind(py::module& m) {
             "RTI Connext will assume that as long as at least one DataWriter "
             "belonging to the DomainParticipant (or the DomainParticipant "
             "itself) has asserted its liveliness, then the other DataWriters "
-            "belonging to that same dds::domain::DomainParticipant are also alive."
+            "belonging to that same DomainParticipant are also alive."
             "\n\n"
             "The user application takes responsibility to signal liveliness "
             "to RTI Connext either by calling "

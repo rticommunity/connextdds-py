@@ -14,7 +14,6 @@ void init_namespace_dds_sub(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<Query>(m, l);
     pyrti::process_inits<Rank>(m, l);
     pyrti::process_inits<SampleInfo>(m, l);
-    pyrti::process_inits<pyrti::PyStreamManipulators>(m, l);
     pyrti::process_inits<Subscriber>(m, l);
     pyrti::process_inits<SubscriberListener>(m, l);
 

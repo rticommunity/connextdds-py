@@ -49,7 +49,7 @@ void pyrti::init_class_defs(py::class_<SampleLostState>& cls) {
             &SampleLostState::lost_by_samples_per_remote_writer_limit,
             "Create a SampleLostState indicating that the sample was lost "
             "because the resource limit on the number of samples from a given "
-            "remote writer that a dds::sub::DataReader may store was reached."
+            "remote writer that a DataReader may store was reached."
         )
         .def_static(
             "lost_by_virtual_writers_limit",

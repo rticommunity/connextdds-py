@@ -7,9 +7,11 @@ template<>
 void pyrti::init_class_defs(py::class_<CoherentAccess>& cls) {
     cls
         .def(
-            py::init<
-                const dds::sub::Subscriber&
-            >(),
+            py::init(
+                [](const pyrti::PySubscriber& s) {
+                    return std::make_unique<CoherentAccess>(s);
+                }
+            ),
             py::arg("subscriber"),
             "Creating a CoherentAccess object indicates that the application "
             "is about to access the data samples in any of the DataReader "

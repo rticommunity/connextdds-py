@@ -71,10 +71,11 @@ template<>
 void pyrti::init_class_defs(py::class_<TopicQuery>& cls) {
     cls
         .def(
-            py::init<
-                dds::sub::AnyDataReader,
-                const TopicQuerySelection&
-            >(),
+            py::init(
+                [](pyrti::PyIAnyDataReader& dr, const TopicQuerySelection& tqs) {
+                    return TopicQuery(dr.get_any_datareader(), tqs);
+                }
+            ),
             py::arg("reader"),
             py::arg("selection"),
             "Creates a TopicQuery for a given DataReader."

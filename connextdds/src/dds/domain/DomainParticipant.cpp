@@ -451,7 +451,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         .def(
             "find_topics",
             [](pyrti::PyDomainParticipant& dp) {
-                std::vector<dds::topic::AnyTopic> v;
+                std::vector<pyrti::PyAnyTopic> v;
                 rti::topic::find_topics(dp, std::back_inserter(v));
                 return v;
             },

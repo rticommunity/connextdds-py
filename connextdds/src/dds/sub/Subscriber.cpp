@@ -19,15 +19,17 @@ void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
             )
         )
         .def(
-            py::init<
-                dds::domain::DomainParticipant&
-            >(),
+            py::init(
+                [](pyrti::PyDomainParticipant& dp) {
+                    return pyrti::PySubscriber(dp);
+                }
+            ),
             py::arg("participant"),
             "Create a subscriber under a DomainParticipant."
         )
         .def(
             py::init(
-                [](dds::domain::DomainParticipant& dp,
+                [](pyrti::PyDomainParticipant& dp,
                     const qos::SubscriberQos& qos,
                     pyrti::PySubscriberListener* l,
                     dds::core::status::StatusMask& m) {

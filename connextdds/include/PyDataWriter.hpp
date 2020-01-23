@@ -477,9 +477,21 @@ namespace pyrti {
                     writer->wait_for_asynchronous_publishing(max_wait);
                 },
                 py::arg("max_wait"),
-                "This operation blocks the calling thread (up to max_wait) until all data written by the asynchronous dds::pub::DataWriter is sent and acknowledged (if reliable) by all matched DataReader entities. A successful completion indicates that all the samples written have been sent and acknowledged where applicable; a time out indicates that max_wait elapsed before all the data was sent and/or acknowledged.\n"
-                "In other words, this guarantees that sending to best effort dds::sub::DataReader is complete in addition to what dds::pub::DataWriter::wait_for_acknowledgments provides.\n"
-                "If the dds::pub::DataWriter does not have rti::core::policy::PublishMode kind set to rti::core::policy::PublishModeKind_def::ASYNCHRONOUS the operation will complete immediately"
+                "This operation blocks the calling thread (up to max_wait) "
+                "until all data written by the asynchronous DataWriter is "
+                "sent and acknowledged (if reliable) by all matched "
+                "DataReader entities. A successful completion indicates that "
+                "all the samples written have been sent and acknowledged "
+                "where applicable; a time out indicates that max_wait elapsed "
+                "before all the data was sent and/or acknowledged."
+                "\n\n"
+                "In other words, this guarantees that sending to best effort "
+                "DataReader is complete in addition to what "
+                "DataWriter.wait_for_acknowledgments() provides."
+                "\n\n"
+                "If the DataWriter does not have PublishMode kind set to "
+                "PublishModeKind.ASYNCHRONOUS the operation will complete "
+                "immediately"
             )
             .def_property_readonly(
                 "reliable_writer_cache_changed_status",

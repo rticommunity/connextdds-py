@@ -568,6 +568,7 @@ bool test_index(const DynamicData& dd, TypeKind::inner_enum kind, int index, con
     }
 }
 
+
 namespace pyrti {
     class PyDynamicDataFieldsIterator {
     public:
@@ -1141,6 +1142,16 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
             [](DynamicData& dd, std::string& field_path, py::object& value) {
                 auto mi = dd.member_info(field_path);
                 set_member(dd, mi.member_kind().underlying(), field_path, value);
+            }
+        )
+        .def(
+            "update",
+            [](DynamicData& dd, py::dict& dict) {
+                for (auto kv : dict) {
+                    std::string key = py::cast<std::string>(kv.first);
+                    auto mi = dd.member_info(key);
+                    set_member(dd, mi.member_kind().underlying(), key, py::cast<py::object>(kv.second));
+                }
             }
         )
         .def(

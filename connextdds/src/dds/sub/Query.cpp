@@ -33,11 +33,6 @@ void pyrti::init_class_defs(py::class_<Query>& cls) {
             &Query::expression,
             "The expression."
         )
-        .def_property_readonly(
-            "expression",
-            &Query::expression,
-            "The expression."
-        )
         .def_property(
             "parameters",
             [](const Query& q) {

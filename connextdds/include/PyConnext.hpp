@@ -68,5 +68,4 @@ namespace pyrti {
     class PyVector{};
     class PyPrimitiveType{};
     class PyBuiltinProfiles{};
-    class PyStreamManipulators{};
 }

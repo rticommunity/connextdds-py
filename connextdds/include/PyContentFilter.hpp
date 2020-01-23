@@ -91,7 +91,7 @@ namespace pyrti {
             )
             .def_static(
                 "lookup",
-                [](const dds::domain::DomainParticipant& dp, const std::string& name) {
+                [](const pyrti::PyDomainParticipant& dp, const std::string& name) {
                     return rti::topic::find_content_filter<T>(dp, name);
                 },
                 "Lookup a content filter previously registered with "

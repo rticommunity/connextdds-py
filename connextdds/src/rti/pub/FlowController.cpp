@@ -8,11 +8,11 @@ template<>
 void pyrti::init_class_defs(py::class_<FlowController>& cls) {
     cls
         .def(
-            py::init<
-                dds::domain::DomainParticipant&,
-                std::string&,
-                const FlowControllerProperty&
-            >(),
+            py::init(
+                [](pyrti::PyDomainParticipant& dp, std::string& n, const FlowControllerProperty& fcp) {
+                    return FlowController(dp, n, fcp);
+                }
+            ),
             py::arg("participant"),
             py::arg("name"),
             py::arg_v("token_bucket", FlowControllerProperty(), "FlowControllerProperty()"),
@@ -25,7 +25,10 @@ void pyrti::init_class_defs(py::class_<FlowController>& cls) {
         )
         .def_property_readonly(
             "participant",
-            &FlowController::participant,
+            [](FlowController& fc) {
+                dds::domain::DomainParticipant p = fc.participant();
+                return pyrti::PyDomainParticipant(p);
+            },
             "The participant of this FlowController."
         )
         .def_property_readonly(
@@ -233,7 +236,7 @@ void pyrti::process_inits<FlowController>(py::module& m, pyrti::ClassInitList& l
             "Indicates to flow control in a highest-priority-first fashion."
             "\n\n"
             "Determines the next destination queue to service as determined "
-            "by the publication priority of the dds::pub::DataWriter, channel "
+            "by the publication priority of the DataWriter, channel "
             "of multi-channel DataWriter, or individual sample."
             "\n\n"
             "The relative priority of a flow controller's destination queue "

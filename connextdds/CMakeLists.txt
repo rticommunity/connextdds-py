@@ -218,7 +218,6 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/sub/SubscriberListener.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/sub/AnyDataReaderListener.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/sub/AnyDataReader.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/sub/StreamManipulators.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/pub/qos/QosNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/pub/qos/PublisherQos.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/pub/qos/DataWriterQos.cpp"
@@ -252,10 +251,29 @@ target_include_directories(connextdds PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/inclu
 set_target_properties(connextdds PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
                                          SUFFIX "${PYTHON_MODULE_EXTENSION}")
 
-set_target_properties(connextdds
-    PROPERTIES
-        CXX_STANDARD 11
-)
+
+
+check_cxx_compiler_flag(-std=c++17 HAVE_FLAG_STD_CXX17)
+check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
+if (HAVE_FLAG_STD_CXX17)
+    set_target_properties(
+        connextdds
+        PROPERTIES
+            CXX_STANDARD 17
+    )
+elseif(HAVE_FLAG_STD_CXX14)
+    set_target_properties(
+        connextdds
+        PROPERTIES
+            CXX_STANDARD 14
+    )
+else()
+    set_target_properties(
+        connextdds
+        PROPERTIES
+            CXX_STANDARD 11
+    )
+endif()
 
 target_compile_options(
     connextdds

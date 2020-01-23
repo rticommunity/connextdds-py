@@ -127,7 +127,7 @@ namespace pyrti {
             .def(
                 py::init<
                     const pyrti::PySubscriber&,
-                    const dds::topic::ContentFilteredTopic<T>&>(),
+                    const pyrti::PyContentFilteredTopic<T>&>(),
                 py::arg("sub"),
                 py::arg("cft"),
                 "Create a DataReader with a ContentFilteredTopic."
@@ -135,7 +135,7 @@ namespace pyrti {
             .def(
                 py::init<
                     const pyrti::PySubscriber&,
-                    const dds::topic::ContentFilteredTopic<T>&,
+                    const pyrti::PyContentFilteredTopic<T>&,
                     const dds::sub::qos::DataReaderQos&,
                     pyrti::PyDataReaderListener<T>*, 
                     const dds::core::status::StatusMask&>(),
@@ -173,58 +173,6 @@ namespace pyrti {
                 "Returns the filter state for the read/take operations."
             )
             .def(
-                "__rshift__",
-                [](pyrti::PyDataReader<T>& dr, dds::sub::LoanedSamples<T>& ls) {
-                    dr >> ls;
-                    return dr;
-                },
-                py::is_operator(),
-                "Take samples, placing them into a LoanedSamples container."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(bool (*manipulator)(dds::sub::ReadModeDummyType))) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Read or take samples."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(dds::sub::functors::MaxSamplesManipulatorFunctor&)) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Set max number of samples to read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(dds::sub::functors::ContentFilterManipulatorFunctor&)) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Set Query for read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(dds::sub::functors::ConditionManipulatorFunctor&)) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Set ReadCondition for read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(dds::sub::functors::StateFilterManipulatorFunctor&)) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Set DataState to read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(dds::sub::functors::InstanceManipulatorFunctor&)) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Set instance whose samples should be read or taken."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector (pyrti::PyDataReader<T>::*)(dds::sub::functors::NextInstanceManipulatorFunctor&)) &pyrti::PyDataReader<T>::operator>>,
-                py::is_operator(),
-                "Set handle directly prior to the instance handle to access with "
-                "read or take."
-            )
-            .def(
                 py::self == py::self,
                 "Test for equality."
             )
@@ -256,26 +204,6 @@ namespace pyrti {
                 },
                 "Take only valid samples."
             )
-            /*.def(
-                "read",
-                [](DataReader<T>& dr, int32_t max_samples) {
-                    auto v = std::make_unique<std::vector<Sample<T>>>();
-                    std::back_insert_iterator<std::vector<Sample<T>>> it(*v);
-                    dr.read(it, max_samples);
-                    return v;
-                },
-                py::arg("max_samples"),
-                "Read up to max samples.")
-            .def(
-                "take",
-                [](DataReader<T>& dr, int32_t max_samples) {
-                    auto v = std::make_unique<std::vector<Sample<T>>>();
-                    std::back_insert_iterator<std::vector<Sample<T >> > it(*v);
-                    dr.take(it, max_samples);
-                    return v;
-                },
-                py::arg("max_samples"),
-                "Take up to max samples.") */
             .def(
                 "select",
                 &pyrti::PyDataReader<T>::select,
@@ -547,7 +475,10 @@ namespace pyrti {
             )
             .def(
                 "condition",
-                &pyrti::PyDataReader<T>::Selector::condition,
+                [](typename pyrti::PyDataReader<T>::Selector& sel, pyrti::PyIReadCondition& rc) {
+                    auto cond = rc.get_read_condition();
+                    return sel.condition(cond);
+                },
                 py::arg("condition"),
                 "Select samples based on a ReadCondition."
             )
@@ -580,58 +511,6 @@ namespace pyrti {
                     return rti::sub::ValidLoanedSamples<T>(s.take());
                 },
                 "Take valid samples based on Selector settings."
-            );
-
-        py::class_<typename pyrti::PyDataReader<T>::ManipulatorSelector>(cls, "ManipulatorSelector")
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::LoanedSamples<T>&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Streaming operator that populates a LoanedSamples object."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(bool (*manipulator)(dds::sub::ReadModeDummyType))) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Streaming operator taking in a stream manipulator that will "
-                "determine whether the samples will be read or taken."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::functors::MaxSamplesManipulatorFunctor&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Set max number of samples to read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::functors::ContentFilterManipulatorFunctor&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Set Query for read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::functors::ConditionManipulatorFunctor&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Set ReadCondition for read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::functors::StateFilterManipulatorFunctor&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Set DataState to read or take."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::functors::InstanceManipulatorFunctor&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Set instance whose samples should be read or taken."
-            )
-            .def(
-                "__rshift__",
-                (typename pyrti::PyDataReader<T>::ManipulatorSelector& (pyrti::PyDataReader<T>::ManipulatorSelector::*)(dds::sub::functors::NextInstanceManipulatorFunctor&)) &pyrti::PyDataReader<T>::ManipulatorSelector::operator>>,
-                py::is_operator(),
-                "Set handle directly prior to the instance handle to access with "
-                "read or take."
             );
 
         py::implicitly_convertible<pyrti::PyIAnyDataReader, pyrti::PyDataReader<T>>();
