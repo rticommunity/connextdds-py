@@ -27,10 +27,10 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the DomainParticipantQos currently associated with the QosProvider."
         )
         .def(
-            "participant_qos_profile_name",
+            "participant_qos_profile",
             (DomainParticipantQos (QosProvider::*)(const std::string&)) &QosProvider::participant_qos,
             py::arg("profile_name"),
-            "Set the profile name for the DomainParticipantQos associated with this QosProvider."
+            "Set the profile for the DomainParticipantQos associated with this QosProvider."
         )
         .def_property_readonly(
             "topic_qos",
@@ -38,10 +38,10 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the TopicQos currently associated with the QosProvider."
         )
         .def(
-            "topic_qos_profile_name",
+            "topic_qos_profile",
             (TopicQos (QosProvider::*)(const std::string&)) &QosProvider::topic_qos,
             py::arg("profile_name"),
-            "Set the profile name for the TopicQos associated with this QosProvider."
+            "Set the profile for the TopicQos associated with this QosProvider."
         )
         .def_property_readonly(
             "subscriber_qos",
@@ -49,10 +49,10 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the SubscriberQos currently associated with this QosProvider."
         )
         .def(
-            "subscriber_qos_profile_name",
+            "subscriber_qos_profile",
             (SubscriberQos (QosProvider::*)(const std::string&)) &QosProvider::subscriber_qos,
             py::arg("profile"),
-            "Set the profile name for the SubscriberQos associated with the QosProvider."
+            "Set the profile for the SubscriberQos associated with the QosProvider."
         )
         .def_property_readonly(
             "datareader_qos",
@@ -60,10 +60,10 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the DataReaderQos currently associated with the QosProvider."
         )
         .def(
-            "datareader_qos_profile_name",
+            "datareader_qos_profile",
             (DataReaderQos (QosProvider::*)(const std::string&)) &QosProvider::datareader_qos,
             py::arg("profile"),
-            "Set the profile name for the DataReaderQos associated with this QosProvider."
+            "Set the profile for the DataReaderQos associated with this QosProvider."
         )
         .def_property_readonly(
             "publisher_qos",
@@ -71,10 +71,10 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the PublisherQos currently associated with the QosProvider."
         )
         .def(
-            "publisher_qos_profile_name",
+            "publisher_qos_profile",
             (PublisherQos (QosProvider::*)(const std::string&)) &QosProvider::publisher_qos,
             py::arg("profile"),
-            "Set the profile name for the PublisherQos associated with this QosProvider."
+            "Set the profile for the PublisherQos associated with this QosProvider."
         )
         .def_property_readonly(
             "datawriter_qos",
@@ -82,10 +82,10 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the DataWriterQos currently associated with the QosProvider."
         )
         .def(
-            "datawriter_qos_profile_name",
+            "datawriter_qos_profile",
             (DataWriterQos (QosProvider::*)(const std::string&)) & QosProvider::datawriter_qos,
             py::arg("profile"),
-            "Set the profile name for the DataWriterQos associated with this QosProvider."
+            "Set the profile for the DataWriterQos associated with this QosProvider."
         )
         .def_property_static(
             "default_provider_params",
