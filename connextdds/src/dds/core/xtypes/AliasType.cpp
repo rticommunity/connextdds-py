@@ -19,8 +19,22 @@ void pyrti::init_class_defs(py::class_<AliasType, DynamicType>& cls) {
             "Gets the related type."
         )
         .def_property_readonly(
-            "is_pointer", &AliasType::is_pointer,
+            "is_pointer",
+            &AliasType::is_pointer,
             "Gets whether this alias makes related_type a pointer"
+        )
+        .def(
+            "resolve",
+            &rti::core::xtypes::resolve_alias,
+            "Resolves an AliasType recursively to get the final underlying "
+            "type."
+        )
+        .def_static(
+            "resolve_type",
+            &rti::core::xtypes::resolve_alias,
+            py::arg("alias_type"),
+            "Resolves an AliasType recursively to get the final underlying "
+            "type."
         )
         .doc() = "Represents a typedef.";
 }
