@@ -112,12 +112,14 @@ namespace pyrti {
                 "write",
                 (void (pyrti::PyDataWriter<T>::*)(const T&)) &pyrti::PyDataWriter<T>::write,
                 py::arg("sample"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sample.")
             .def(
-                "write_timestamped",
+                "write",
                 (void (pyrti::PyDataWriter<T>::*)(const T&, const dds::core::Time&)) &pyrti::PyDataWriter<T>::write,
                 py::arg("sample"),
                 py::arg("timestamp"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sample with a specified timestamp."
             )
             .def(
@@ -125,6 +127,7 @@ namespace pyrti {
                 (void (pyrti::PyDataWriter<T>::*)(const T&, const dds::core::InstanceHandle&)) &pyrti::PyDataWriter<T>::write,
                 py::arg("sample"),
                 py::arg("handle"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sample with an instance handle."
             )
             .def(
@@ -133,12 +136,14 @@ namespace pyrti {
                 py::arg("sample"),
                 py::arg("handle"),
                 py::arg("timestamp"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sample with an instance handle and specified timestamp."
             )
             .def(
                 "write",
                 (void (pyrti::PyDataWriter<T>::*)(const dds::topic::TopicInstance<T>&)) &pyrti::PyDataWriter<T>::write,
                 py::arg("topic_instance"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sample given a topic instance."
             )
             .def(
@@ -146,6 +151,7 @@ namespace pyrti {
                 (void (pyrti::PyDataWriter<T>::*)(const dds::topic::TopicInstance<T>&, const dds::core::Time&)) &pyrti::PyDataWriter<T>::write,
                 py::arg("topic_instance"),
                 py::arg("timestamp"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sample given a topic instance and specified timestamp."
             )
             .def(
@@ -154,6 +160,7 @@ namespace pyrti {
                     writer.write(values.begin(), values.end());
                 },
                 py::arg("samples"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sequence of samples."
             )
             .def(
@@ -164,6 +171,7 @@ namespace pyrti {
                     }
                 },
                 py::arg("topic_instances"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sequence of topic instances."
             )
             .def(
@@ -173,6 +181,7 @@ namespace pyrti {
                 },
                 py::arg("samples"),
                 py::arg("timestamp"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sequence of samples with a timestamp."
             )
             .def(
@@ -184,6 +193,7 @@ namespace pyrti {
                 },
                 py::arg("topic_instances"),
                 py::arg("timestamp"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sequence of topic instances with a timestamp."
             )
             .def(
@@ -193,6 +203,7 @@ namespace pyrti {
                 },
                 py::arg("samples"),
                 py::arg("handles"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sequence of samples with their instance handles."
             )
             .def(
@@ -203,6 +214,7 @@ namespace pyrti {
                 py::arg("samples"),
                 py::arg("handles"),
                 py::arg("timestamp"),
+                py::call_guard<py::gil_scoped_release>(),
                 "Write a sequence of samples with their instance handles and a timestamp."
             )
             .def(
@@ -212,6 +224,7 @@ namespace pyrti {
                     return dw;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a sample."
             )
             .def(
@@ -221,6 +234,7 @@ namespace pyrti {
                     return dw;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a topic instance."
             )
             .def(
@@ -230,6 +244,7 @@ namespace pyrti {
                     return dw;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a paired sample with a timestamp."
             )
             .def(
@@ -239,6 +254,7 @@ namespace pyrti {
                     return dw;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a paired sample with a timestamp."
             )
             .def(
@@ -248,6 +264,7 @@ namespace pyrti {
                     return dw;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a paired sample with an instance handle."
             )
             .def(
@@ -257,6 +274,7 @@ namespace pyrti {
                     return writer;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a sequence of samples."
             )
             .def(
@@ -268,6 +286,7 @@ namespace pyrti {
                     return writer;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a sequence of topic instances."
             )
             .def(
@@ -279,6 +298,7 @@ namespace pyrti {
                     return writer;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a sequence of pairs of samples with timestamps."
             )
             .def(
@@ -290,6 +310,7 @@ namespace pyrti {
                     return writer;
                 },
                 py::is_operator(),
+                py::call_guard<py::gil_scoped_release>(),
                 "Writes a sequence of pairs of topic instances with timestamps."
             )
             .def(

@@ -571,7 +571,11 @@ namespace pyrti {
                     DynamicData sample = dds::core::xtypes::DynamicData(pyrti::PyDynamicTypeMap::get(dw->type_name()));
                     pyrti::update_dynamicdata_object(sample, dict);
                     dw.write(sample);
-                }
+                },
+                py::arg("sample_data"),
+                py::call_guard<py::gil_scoped_release>(),
+                "Create a DynamicData object and write it with the given "
+                "dictionary containing field names as keys."
             )
             .def(
                 "create_data",
