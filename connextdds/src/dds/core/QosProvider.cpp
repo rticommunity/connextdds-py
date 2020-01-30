@@ -1,5 +1,6 @@
 #include "PyConnext.hpp"
 #include <dds/core/QosProvider.hpp>
+#include "PyDynamicTypeMap.hpp"
 
 using namespace dds::core;
 using namespace dds::domain::qos;
@@ -219,7 +220,9 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
         .def(
             "type",
             [](const QosProvider& qp, const std::string& type_lib_name, const std::string& type_name) {
-                return qp->type(type_lib_name, type_name);
+                auto dt = qp->type(type_lib_name, type_name);
+                pyrti::PyDynamicTypeMap::add(type_name, dt);
+                return dt;
             },
             py::arg("library"),
             py::arg("name"),
@@ -228,7 +231,9 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
         .def(
             "type",
             [](const QosProvider& qp, const std::string& type_name) {
-                return qp->type(type_name);
+                auto dt = qp->type(type_name);
+                pyrti::PyDynamicTypeMap::add(type_name, dt);
+                return dt;
             },
             py::arg("name"),
             "Get a DynamicType from the QosProvider."

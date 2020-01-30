@@ -85,15 +85,14 @@ namespace pyrti {
                 return py::cast(static_cast<wchar_t>(dd.value<DDS_Wchar>(key)));
             case TypeKind::STRING_TYPE:
                 return py::cast(dd.value<std::string>(key));
-            case TypeKind::WSTRING_TYPE:
-                {
+            case TypeKind::WSTRING_TYPE: {
                     std::vector<DDS_Wchar> v(dd.get_values<DDS_Wchar>(key));
                     std::wstring s;
                     for (auto c : v) {
                         s.push_back(static_cast<wchar_t>(c));
                     }
                     return py::cast(s);
-                }
+            }
             default:
                 return py::cast(dd.value<DynamicData>(key));
         }
@@ -217,14 +216,24 @@ namespace pyrti {
     }
 
 
+    // Forward declare function to allow use in set_member
+    void update_dynamicdata_object(DynamicData& dd, py::dict& dict);
+
+
     template<typename T>
     static
     void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object value) {
+        if (value.is_none()){
+            dd.clear_optional_member(key);
+            return;
+        }
+
         if (kind == TypeKind::ALIAS_TYPE) {
             auto alias = static_cast<const AliasType&>(dd.loan_value(key).get().type());
             DynamicType actual_type = rti::core::xtypes::resolve_alias(alias);
             kind = actual_type.kind().underlying();
         }
+
         switch (kind) {
             case TypeKind::BOOLEAN_TYPE:
                 dd.value<bool>(key, py::cast<bool>(value));
@@ -283,25 +292,32 @@ namespace pyrti {
                 //ArrayType array_type = value.loan_member(key);
             }
             case TypeKind::SEQUENCE_TYPE: {
-                bool dd_cast = false;
                 try {
-                    py::cast<DynamicData>(value);
-                    dd_cast = true;
-                }
-                catch(py::builtin_exception::runtime_error e) {
                     rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
                     DynamicData& member = loan.get();
                     auto elem_kind = static_cast<const CollectionType&>(member.type()).content_type().kind().underlying();
                     loan.return_loan();
                     set_collection_member(dd, elem_kind, key, value);
                 }
-                if (dd_cast) {
-                    dd.value<DynamicData>(key, py::cast<DynamicData>(value));
+                catch (py::builtin_exception::runtime_error e) {
+                    auto native_value = py::cast<DynamicData>(value);
+                    dd.value<DynamicData>(key, native_value);
                 }
                 break;
             }
-            default:
-                dd.value<DynamicData>(key, py::cast<DynamicData>(value));
+            default: {
+                try {
+                    auto dd_dict = py::cast<py::dict>(value);
+                    rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
+                    DynamicData& dd_loan = loan.get();
+                    pyrti::update_dynamicdata_object(dd_loan, dd_dict);
+                    loan.return_loan();
+                }
+                catch (py::builtin_exception::runtime_error e) {
+                    auto native_value = py::cast<DynamicData>(value);
+                    dd.value<DynamicData>(key, native_value);
+                }
+            }
         }
     }
 
@@ -354,7 +370,6 @@ namespace pyrti {
     }
 
 
-    static
     void update_dynamicdata_object(DynamicData& dd, py::dict& dict) {
         for (auto kv : dict) {
             std::string key = py::cast<std::string>(kv.first);
@@ -568,12 +583,15 @@ namespace pyrti {
             .def(
                 "write",
                 [](pyrti::PyDataWriter<dds::core::xtypes::DynamicData>& dw, py::dict& dict) {
-                    DynamicData sample = dds::core::xtypes::DynamicData(pyrti::PyDynamicTypeMap::get(dw->type_name()));
+                    auto dt = pyrti::PyDynamicTypeMap::get(dw->type_name());
+                    dds::core::xtypes::DynamicData sample(dt);
                     pyrti::update_dynamicdata_object(sample, dict);
-                    dw.write(sample);
+                    {
+                        py::gil_scoped_release();
+                        dw.write(sample);
+                    }
                 },
                 py::arg("sample_data"),
-                py::call_guard<py::gil_scoped_release>(),
                 "Create a DynamicData object and write it with the given "
                 "dictionary containing field names as keys."
             )
@@ -1172,7 +1190,7 @@ void pyrti::init_class_defs(py::class_<DynamicData>& dd_class) {
             "__setitem__",
             [](DynamicData& dd, const std::string& field_path, py::object& value) {
                 TypeKind::type field_type;
-                if (dd.member_exists(field_path)) {
+                if (dd.member_exists_in_type(field_path)) {
                     field_type = dd.member_info(field_path).member_kind().underlying();
                 }
                 else {

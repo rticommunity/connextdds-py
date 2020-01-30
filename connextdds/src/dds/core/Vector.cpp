@@ -64,6 +64,14 @@ void init_dds_vector_defs(py::class_<dds::core::vector<T>>& cls, const std::stri
             "Set the value at the specified index."
         )
         .def(
+            "__iter__",
+            [](dds::core::vector<T>& v) {
+                return py::make_iterator(v.begin(), v.end());
+            },
+            py::keep_alive<0, 1>(),
+            "Iterate over the contents of the vector."
+        )
+        .def(
             "clear",
             &dds::core::vector<T>::clear,
             ("Resize " + name + " to 0.").c_str()
@@ -110,7 +118,7 @@ void init_dds_vector_buffer_defs(py::class_<dds::core::vector<T>>& cls, const st
             py::arg("buffer"),
             ("Create a " + name + " from another Python buffer.").c_str()
         )
-        .def(
+        /*.def(
             py::init(
                 [](py::bytes b) {
                     char *buffer;
@@ -125,7 +133,7 @@ void init_dds_vector_buffer_defs(py::class_<dds::core::vector<T>>& cls, const st
             ),
             py::arg("bytes"),
             ("Create a " + name + " from a Python bytes sequence.").c_str()
-        )
+        )*/
         .def_buffer(
             [](dds::core::vector<T>& v) {
                 return py::buffer_info(

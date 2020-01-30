@@ -8,16 +8,16 @@
 
 void init_dds_stl_bindings(py::module& m) {
     py::bind_vector<std::vector<bool>>(m, "BoolSeq");
-    py::bind_vector<std::vector<uint8_t>>(m, "OctetSeq");
-    py::bind_vector<std::vector<char>>(m, "CharSeq");
-    py::bind_vector<std::vector<uint16_t>>(m, "UnsignedShortSeq");
-    py::bind_vector<std::vector<int16_t>>(m, "ShortSeq");
-    py::bind_vector<std::vector<uint32_t>>(m, "UnsignedLongSeq");
-    py::bind_vector<std::vector<int32_t>>(m, "LongSeq");
-    py::bind_vector<std::vector<uint64_t>>(m, "UnsignedLongLongSeq");
-    py::bind_vector<std::vector<int64_t>>(m, "LongLongSeq");
-    py::bind_vector<std::vector<float>>(m, "FloatSeq");
-    py::bind_vector<std::vector<double>>(m, "DoubleSeq");
+    py::bind_vector<std::vector<uint8_t>>(m, "OctetSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<char>>(m, "CharSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<uint16_t>>(m, "UnsignedShortSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<int16_t>>(m, "ShortSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<uint32_t>>(m, "UnsignedLongSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<int32_t>>(m, "LongSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<rti::core::uint64>>(m, "UnsignedLongLongSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<rti::core::int64>>(m, "LongLongSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<float>>(m, "FloatSeq", py::buffer_protocol());
+    py::bind_vector<std::vector<double>>(m, "DoubleSeq", py::buffer_protocol());
     py::bind_vector<std::vector<rti::core::LongDouble>>(m, "LongDoubleSeq");
     py::bind_vector<std::vector<wchar_t>>(m, "WcharSeq");
     py::bind_vector<std::vector<std::string>>(m, "StringSeq");
@@ -44,6 +44,16 @@ void init_dds_stl_bindings(py::module& m) {
     py::bind_vector<std::vector<std::pair<std::string, std::string>>>(m, "StringPairSeq");
     py::bind_map<std::map<std::string, std::string>>(m, "StringMap");
 
+    py::implicitly_convertible<py::buffer, std::vector<uint8_t>>();
+    py::implicitly_convertible<py::buffer, std::vector<char>>();
+    py::implicitly_convertible<py::buffer, std::vector<uint16_t>>();
+    py::implicitly_convertible<py::buffer, std::vector<int16_t>>();
+    py::implicitly_convertible<py::buffer, std::vector<uint32_t>>();
+    py::implicitly_convertible<py::buffer, std::vector<int32_t>>();
+    py::implicitly_convertible<py::buffer, std::vector<rti::core::uint64>>();
+    py::implicitly_convertible<py::buffer, std::vector<rti::core::int64>>();
+    py::implicitly_convertible<py::buffer, std::vector<float>>();
+    py::implicitly_convertible<py::buffer, std::vector<double>>();
     py::implicitly_convertible<py::iterable, std::vector<bool>>();
     py::implicitly_convertible<py::iterable, std::vector<uint8_t>>();
     py::implicitly_convertible<py::iterable, std::vector<char>>();
@@ -51,8 +61,8 @@ void init_dds_stl_bindings(py::module& m) {
     py::implicitly_convertible<py::iterable, std::vector<int16_t>>();
     py::implicitly_convertible<py::iterable, std::vector<uint32_t>>();
     py::implicitly_convertible<py::iterable, std::vector<int32_t>>();
-    py::implicitly_convertible<py::iterable, std::vector<uint64_t>>();
-    py::implicitly_convertible<py::iterable, std::vector<int64_t>>();
+    py::implicitly_convertible<py::iterable, std::vector<rti::core::uint64>>();
+    py::implicitly_convertible<py::iterable, std::vector<rti::core::int64>>();
     py::implicitly_convertible<py::iterable, std::vector<float>>();
     py::implicitly_convertible<py::iterable, std::vector<double>>();
     py::implicitly_convertible<py::iterable, std::vector<rti::core::LongDouble>>();

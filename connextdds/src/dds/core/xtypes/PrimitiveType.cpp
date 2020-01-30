@@ -4,25 +4,26 @@
 using namespace dds::core::xtypes;
 
 template<typename T>
-void init_dds_dynamic_primitive_defs(py::module& m, const std::string& name, const std::string& singleton_func_name) {
-    m.
+void init_dds_dynamic_primitive_defs(py::class_<PrimitiveType<T>, DynamicType>& cls, const std::string& name) {
+    cls.
         def(
-            singleton_func_name.c_str(),
-            []() {
-                return primitive_type<T>();
-            },
+            py::init(
+                []() {
+                    return primitive_type<T>();
+                }
+            ),
             ("Get the singleton for " + name).c_str()
         );
 }
 
 template<typename T>
-void init_dds_dynamic_primitive(py::module& m, const std::string& name, const std::string& singleton_func_name, pyrti::ClassInitList& l) {
+void init_dds_dynamic_primitive(py::module& m, const std::string& name, pyrti::ClassInitList& l) {
     l.push_back(
-        [m, name, singleton_func_name]() mutable {
+        [m, name]() mutable {
             py::class_<PrimitiveType<T>, DynamicType> cls(m, name.c_str());
             return (
-                [m, name, singleton_func_name]() mutable {
-                    init_dds_dynamic_primitive_defs<T>(m, name, singleton_func_name);
+                [cls, name]() mutable {
+                    init_dds_dynamic_primitive_defs<T>(cls, name);
                 }     
             );
         }
@@ -31,17 +32,17 @@ void init_dds_dynamic_primitive(py::module& m, const std::string& name, const st
 
 template<>
 void pyrti::process_inits<pyrti::PyPrimitiveType>(py::module& m, pyrti::ClassInitList& l) {
-    init_dds_dynamic_primitive<char>(m, "CharType", "char_type", l);
-    init_dds_dynamic_primitive<bool>(m, "BoolType", "bool_type", l);
-    init_dds_dynamic_primitive<uint8_t>(m, "Uint8Type", "uint8_type", l);
-    init_dds_dynamic_primitive<int16_t>(m, "Int16Type", "int16_type", l);
-    init_dds_dynamic_primitive<uint16_t>(m, "Uint16Type", "uint16_type", l);
-    init_dds_dynamic_primitive<int32_t>(m, "Int32Type", "int32_type", l);
-    init_dds_dynamic_primitive<uint32_t>(m, "Uint32Type", "int32_type", l);
-    init_dds_dynamic_primitive<rti::core::int64>(m, "Int64Type", "int64_type", l);
-    init_dds_dynamic_primitive<rti::core::uint64>(m, "Uint64Type", "uint64_type", l);
-    init_dds_dynamic_primitive<float>(m, "Float", "float_type", l);
-    init_dds_dynamic_primitive<double>(m, "Double", "double_type", l);
-    init_dds_dynamic_primitive<rti::core::LongDouble>(m, "LongDoubleType", "longdouble_type", l);
-    init_dds_dynamic_primitive<wchar_t>(m, "WcharType", "wchar_type", l);
+    init_dds_dynamic_primitive<char>(m, "CharType", l);
+    init_dds_dynamic_primitive<bool>(m, "BoolType", l);
+    init_dds_dynamic_primitive<uint8_t>(m, "Uint8Type", l);
+    init_dds_dynamic_primitive<int16_t>(m, "Int16Type", l);
+    init_dds_dynamic_primitive<uint16_t>(m, "Uint16Type", l);
+    init_dds_dynamic_primitive<int32_t>(m, "Int32Type", l);
+    init_dds_dynamic_primitive<uint32_t>(m, "Uint32Type", l);
+    init_dds_dynamic_primitive<rti::core::int64>(m, "Int64Type", l);
+    init_dds_dynamic_primitive<rti::core::uint64>(m, "Uint64Type", l);
+    init_dds_dynamic_primitive<float>(m, "FloatType", l);
+    init_dds_dynamic_primitive<double>(m, "DoubleType", l);
+    init_dds_dynamic_primitive<rti::core::LongDouble>(m, "LongDoubleType", l);
+    init_dds_dynamic_primitive<wchar_t>(m, "WcharType", l);
 }

@@ -68,8 +68,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyTriggeredConditions>& cls) {
         .def(
             "__contains__",
             [](pyrti::PyTriggeredConditions& tc, pyrti::PyICondition& py_c) {
+                auto condition = py_c.get_condition();
                 for (auto c : tc.v()) {
-                    if (py_c.get_condition() == c) return true;
+                    if (condition == c) return true;
                 }
                 return false;
             }
