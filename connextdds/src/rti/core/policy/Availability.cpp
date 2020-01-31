@@ -4,8 +4,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Availability>& cls) {
+void init_class_defs(py::class_<Availability>& cls) {
     cls
         .def(
             py::init<>(),
@@ -71,10 +73,12 @@ void pyrti::init_class_defs(py::class_<Availability>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Availability>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Availability>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Availability>(m, "Availability");
+            return init_class<Availability>(m, "Availability");
         }
     );
+}
+
 }

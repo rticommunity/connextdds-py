@@ -3,8 +3,10 @@
 
 using namespace dds::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SampleInfo>& cls) {
+void init_class_defs(py::class_<SampleInfo>& cls) {
     cls
         .def_property_readonly(
             "source_timestamp",
@@ -137,10 +139,12 @@ void pyrti::init_class_defs(py::class_<SampleInfo>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SampleInfo>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SampleInfo>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable{
-            return pyrti::init_class<SampleInfo>(m, "SampleInfo");
+            return init_class<SampleInfo>(m, "SampleInfo");
         }
     );
+}
+
 }

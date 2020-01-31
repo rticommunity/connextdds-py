@@ -4,8 +4,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SampleFlag>& cls) {
+void init_class_defs(py::class_<SampleFlag>& cls) {
     cls
         .def_static(
             "redelivered",
@@ -41,13 +43,15 @@ void pyrti::init_class_defs(py::class_<SampleFlag>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SampleFlag>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SampleFlag>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<SampleFlag, uint64_t>(m, "SampleFlag", "Create a RtpsReservedPortKindMask equivalent to RtpsReservedPortKindMask.none()");
+            auto cls = init_mask_type<SampleFlag, uint64_t>(m, "SampleFlag", "Create a RtpsReservedPortKindMask equivalent to RtpsReservedPortKindMask.none()");
             return [cls]() mutable {
                 init_class_defs<SampleFlag>(cls);
             };
         }
     );
+}
+
 }

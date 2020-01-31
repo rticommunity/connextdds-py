@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<EventCount64>& cls) {
+void init_class_defs(py::class_<EventCount64>& cls) {
     cls
         .def_property_readonly(
             "total",
@@ -19,10 +21,12 @@ void pyrti::init_class_defs(py::class_<EventCount64>& cls) {
 }
 
 template<>
-void pyrti::process_inits<EventCount64>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<EventCount64>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<EventCount64>(m, "EventCount64");
+            return init_class<EventCount64>(m, "EventCount64");
         }
     );
+}
+
 }

@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::process_inits<DestinationOrderScopeKind>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DestinationOrderScopeKind>(py::module& m, ClassInitList& l) {
     auto dosk = init_dds_safe_enum<DestinationOrderScopeKind_def>(m, "DestinationOrderScopeKind");
 
     py::enum_<DestinationOrderScopeKind::type>(dosk, "DestinationOrderScopeKind")
@@ -30,4 +32,6 @@ void pyrti::process_inits<DestinationOrderScopeKind>(py::module& m, pyrti::Class
             "topic. The tolerance check is also applied per topic."
         )
         .export_values();
+}
+
 }

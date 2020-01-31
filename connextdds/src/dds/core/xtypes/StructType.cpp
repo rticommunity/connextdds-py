@@ -4,8 +4,10 @@
 using namespace dds::core::xtypes;
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<StructType, AbstractConstructedType<Member>>& cls) {
+void init_class_defs(py::class_<StructType, AbstractConstructedType<Member>>& cls) {
     cls
         .def(
              py::init<const std::string>(),
@@ -132,10 +134,12 @@ void pyrti::init_class_defs(py::class_<StructType, AbstractConstructedType<Membe
 }
 
 template<>
-void pyrti::process_inits<StructType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<StructType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<StructType, AbstractConstructedType<Member>>(m, "StructType");
+            return init_class<StructType, AbstractConstructedType<Member>>(m, "StructType");
         }
     ); 
+}
+
 }

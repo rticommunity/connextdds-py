@@ -8,14 +8,14 @@ using namespace dds::topic;
 INIT_OPAQUE_TYPE_CONTAINERS(dds::topic::SubscriptionBuiltinTopicData);
 
 namespace pyrti {
-    template<>
-    void init_dds_typed_topic_template(py::class_<pyrti::PyTopic<dds::topic::SubscriptionBuiltinTopicData>, pyrti::PyITopicDescription<dds::topic::SubscriptionBuiltinTopicData>, pyrti::PyIAnyTopic>& cls) {
-        init_dds_typed_topic_base_template(cls);
-    }
+
+template<>
+void init_dds_typed_topic_template(py::class_<PyTopic<dds::topic::SubscriptionBuiltinTopicData>, PyITopicDescription<dds::topic::SubscriptionBuiltinTopicData>, PyIAnyTopic>& cls) {
+    init_dds_typed_topic_base_template(cls);
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
+void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
     cls
         .def(
             py::init<>(),
@@ -232,14 +232,16 @@ void pyrti::init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
             "Test for inequality."
         );
 
-    pyrti::init_type<SubscriptionBuiltinTopicData>(cls);
+    init_type<SubscriptionBuiltinTopicData>(cls);
 }
 
 template<>
-void pyrti::process_inits<SubscriptionBuiltinTopicData>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SubscriptionBuiltinTopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<SubscriptionBuiltinTopicData>(m, "SubscriptionBuiltinTopicData");
+            return init_class<SubscriptionBuiltinTopicData>(m, "SubscriptionBuiltinTopicData");
         }
     );
+}
+
 }

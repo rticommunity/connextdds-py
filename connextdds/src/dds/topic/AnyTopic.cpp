@@ -5,23 +5,25 @@
 using namespace dds::topic;
 using namespace dds::topic::qos;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<PyAnyTopic>& cls) {
+void init_class_defs(py::class_<PyAnyTopic>& cls) {
     cls
         .def(
             py::init<
-                const pyrti::PyIAnyTopic&
+                const PyIAnyTopic&
             >(),
             py::arg("topic"),
             "Create an AnyTopic instance from a object that conforms to the "
             "IAnyTopic interface."
         );
 
-    py::implicitly_convertible<pyrti::PyIAnyTopic, pyrti::PyAnyTopic>();
+    py::implicitly_convertible<PyIAnyTopic, PyAnyTopic>();
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<PyIAnyTopic>& cls) {
+void init_class_defs(py::class_<PyIAnyTopic>& cls) {
     cls
         .def_property(
             "qos",
@@ -48,7 +50,7 @@ void pyrti::init_class_defs(py::class_<PyIAnyTopic>& cls) {
         )
         .def(
             "__eq__",
-            [](pyrti::PyIAnyTopic& at, pyrti::PyIAnyTopic& other) {
+            [](PyIAnyTopic& at, PyIAnyTopic& other) {
                 return at.get_any_topic() == other.get_any_topic();
             },
             py::is_operator(),
@@ -56,7 +58,7 @@ void pyrti::init_class_defs(py::class_<PyIAnyTopic>& cls) {
         )
         .def(
             "__ne__",
-            [](pyrti::PyIAnyTopic& at, pyrti::PyIAnyTopic& other) {
+            [](PyIAnyTopic& at, PyIAnyTopic& other) {
                 return at.get_any_topic() != other.get_any_topic();
             },
             py::is_operator(),
@@ -65,16 +67,18 @@ void pyrti::init_class_defs(py::class_<PyIAnyTopic>& cls) {
 }
 
 template<>
-void pyrti::process_inits<AnyTopic>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<AnyTopic>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<PyIAnyTopic>(m, "IAnyTopic");
+            return init_class<PyIAnyTopic>(m, "IAnyTopic");
         }
     ); 
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<PyAnyTopic>(m, "AnyTopic");
+            return init_class<PyAnyTopic>(m, "AnyTopic");
         }
     ); 
+}
+
 }

@@ -4,8 +4,10 @@
 
 using namespace rti::config;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Logger>& cls) {
+void init_class_defs(py::class_<Logger>& cls) {
     cls
         .def_static(
             "get_instance",
@@ -65,7 +67,7 @@ void pyrti::init_class_defs(py::class_<Logger>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Logger>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Logger>(py::module& m, ClassInitList& l) {
     auto verbosity = init_dds_safe_enum<Verbosity_def>(m, "Verbosity");
 
     py::enum_<Verbosity::type>(verbosity, "Verbosity")
@@ -197,7 +199,9 @@ void pyrti::process_inits<Logger>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Logger>(m, "Logger");
+            return init_class<Logger>(m, "Logger");
         }
     );
+}
+
 }

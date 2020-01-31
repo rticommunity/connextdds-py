@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DomainParticipantProtocolStatus>& cls) {
+void init_class_defs(py::class_<DomainParticipantProtocolStatus>& cls) {
     cls
         .def_property_readonly(
             "corrupted_rtps_message_count",
@@ -25,10 +27,12 @@ void pyrti::init_class_defs(py::class_<DomainParticipantProtocolStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DomainParticipantProtocolStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DomainParticipantProtocolStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DomainParticipantProtocolStatus>(m, "DomainParticipantProtocolStatus");
+            return init_class<DomainParticipantProtocolStatus>(m, "DomainParticipantProtocolStatus");
         }
     );
+}
+
 }

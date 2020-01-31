@@ -30,3 +30,4 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l) {
     init_namespace_rti_core_status(m, l);
     init_namespace_rti_core_xtypes(m, l);
 }
+

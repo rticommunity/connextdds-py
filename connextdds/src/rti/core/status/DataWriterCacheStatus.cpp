@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DataWriterCacheStatus>& cls) {
+void init_class_defs(py::class_<DataWriterCacheStatus>& cls) {
     cls
         .def_property_readonly(
             "sample_count",
@@ -21,10 +23,12 @@ void pyrti::init_class_defs(py::class_<DataWriterCacheStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataWriterCacheStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataWriterCacheStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataWriterCacheStatus>(m, "DataWriterCacheStatus");
+            return init_class<DataWriterCacheStatus>(m, "DataWriterCacheStatus");
         }
     );
+}
+
 }

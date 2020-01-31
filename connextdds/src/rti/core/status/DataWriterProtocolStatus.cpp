@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DataWriterProtocolStatus>& cls) {
+void init_class_defs(py::class_<DataWriterProtocolStatus>& cls) {
     cls
         .def_property_readonly(
             "pushed_sample_count",
@@ -142,10 +144,12 @@ void pyrti::init_class_defs(py::class_<DataWriterProtocolStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataWriterProtocolStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataWriterProtocolStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataWriterProtocolStatus>(m, "DataWriterProtocolStatus");
+            return init_class<DataWriterProtocolStatus>(m, "DataWriterProtocolStatus");
         }
     );
+}
+
 }

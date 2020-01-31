@@ -3,8 +3,10 @@
 
 using namespace dds::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SubscriptionMatchedStatus>& cls) {
+void init_class_defs(py::class_<SubscriptionMatchedStatus>& cls) {
     cls
         .def_property_readonly(
             "total_count",
@@ -45,10 +47,12 @@ void pyrti::init_class_defs(py::class_<SubscriptionMatchedStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SubscriptionMatchedStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SubscriptionMatchedStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<SubscriptionMatchedStatus>(m, "SubscriptionMatchedStatus");
+            return init_class<SubscriptionMatchedStatus>(m, "SubscriptionMatchedStatus");
         }
     ); 
+}
+
 }

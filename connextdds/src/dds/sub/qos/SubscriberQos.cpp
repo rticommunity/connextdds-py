@@ -6,26 +6,30 @@ using namespace dds::sub::qos;
 using namespace dds::core::policy;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SubscriberQos>& cls) {
+void init_class_defs(py::class_<SubscriberQos>& cls) {
     cls
         .def(
             py::init<>(),
             "Create a SubscriberQos with the default value for each policy."
         );
-    pyrti::add_qos_property<SubscriberQos, Presentation>(cls, "presentation", "Presentation");
-    pyrti::add_qos_property<SubscriberQos, Partition>(cls, "partition", "Partition");
-    pyrti::add_qos_property<SubscriberQos, GroupData>(cls, "group_data", "GroupData");
-    pyrti::add_qos_property<SubscriberQos, EntityFactory>(cls, "entity_factory", "EntityFactory");
-    pyrti::add_qos_property<SubscriberQos, ExclusiveArea>(cls, "exclusive_area", "ExclusiveArea");
-    pyrti::add_qos_property<SubscriberQos, EntityName>(cls, "entity_name", "EntityName");
+    add_qos_property<SubscriberQos, Presentation>(cls, "presentation", "Presentation");
+    add_qos_property<SubscriberQos, Partition>(cls, "partition", "Partition");
+    add_qos_property<SubscriberQos, GroupData>(cls, "group_data", "GroupData");
+    add_qos_property<SubscriberQos, EntityFactory>(cls, "entity_factory", "EntityFactory");
+    add_qos_property<SubscriberQos, ExclusiveArea>(cls, "exclusive_area", "ExclusiveArea");
+    add_qos_property<SubscriberQos, EntityName>(cls, "entity_name", "EntityName");
 }
 
 template<>
-void pyrti::process_inits<SubscriberQos>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SubscriberQos>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<SubscriberQos>(m, "SubscriberQos");
+            return init_class<SubscriberQos>(m, "SubscriberQos");
         }
     ); 
+}
+
 }

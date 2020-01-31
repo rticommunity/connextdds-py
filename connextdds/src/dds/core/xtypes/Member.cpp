@@ -3,8 +3,10 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Member>& cls) {
+void init_class_defs(py::class_<Member>& cls) {
     cls
         .def(
             py::init<const std::string&, const DynamicType&>(),
@@ -84,10 +86,12 @@ void pyrti::init_class_defs(py::class_<Member>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Member>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Member>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Member>(m, "Member");
+            return init_class<Member>(m, "Member");
         }
     );  
+}
+
 }

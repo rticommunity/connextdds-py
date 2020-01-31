@@ -11,29 +11,30 @@ PYBIND11_MAKE_OPAQUE(std::vector<dds::topic::TopicBuiltinTopicData>);
 using namespace dds::domain;
 
 namespace pyrti {
-    template<typename ParticipantFwdIterator>
-    uint32_t find_participants(ParticipantFwdIterator begin)
-    {
-        DDS_DomainParticipantSeq native_participants = DDS_SEQUENCE_INITIALIZER;
-        // Ensure sequence destruction
-        rti::core::detail::NativeSequenceAdapter<DDS_DomainParticipant> participants_adapter(
-            native_participants);
 
-        DDS_ReturnCode_t retcode = DDS_DomainParticipantFactory_get_participants(
-            DDS_DomainParticipantFactory_get_instance(),
-            &native_participants);
-        rti::core::check_return_code(retcode, "get native participants");
+template<typename ParticipantFwdIterator>
+uint32_t find_participants(ParticipantFwdIterator begin)
+{
+    DDS_DomainParticipantSeq native_participants = DDS_SEQUENCE_INITIALIZER;
+    // Ensure sequence destruction
+    rti::core::detail::NativeSequenceAdapter<DDS_DomainParticipant> participants_adapter(
+        native_participants);
 
-        rti::core::detail::create_from_native_entity<
-            pyrti::PyDomainParticipant, DDS_DomainParticipant, ParticipantFwdIterator>(
-                begin, participants_adapter);
+    DDS_ReturnCode_t retcode = DDS_DomainParticipantFactory_get_participants(
+        DDS_DomainParticipantFactory_get_instance(),
+        &native_participants);
+    rti::core::check_return_code(retcode, "get native participants");
 
-        return participants_adapter.size();
-    }
+    rti::core::detail::create_from_native_entity<
+        PyDomainParticipant, DDS_DomainParticipant, ParticipantFwdIterator>(
+            begin, participants_adapter);
+
+    return participants_adapter.size();
 }
 
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEntity>& cls) {
+void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
     cls
         .def(
             py::init<int32_t>(),
@@ -45,35 +46,35 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
                 [](
                     int32_t id, 
                     const qos::DomainParticipantQos& q, 
-                    pyrti::PyDomainParticipantListener* l,
+                    PyDomainParticipantListener* l,
                     const dds::core::status::StatusMask& m) {
-                        return pyrti::PyDomainParticipant(id, q, l, m);
+                        return PyDomainParticipant(id, q, l, m);
                 }),
             py::arg("domain_id"),
             py::arg("qos"),
-            py::arg("the_listener") = (pyrti::PyDomainParticipantListener*) nullptr,
+            py::arg("the_listener") = (PyDomainParticipantListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             py::keep_alive<1, 4>(),
             "Create a new DomainParticipant"
         )
         .def(
             py::init(
-                [](pyrti::PyIEntity& e) {
+                [](PyIEntity& e) {
                     auto entity = e.get_entity();
-                    return dds::core::polymorphic_cast<pyrti::PyDomainParticipant>(entity);
+                    return dds::core::polymorphic_cast<PyDomainParticipant>(entity);
                 }
             )
         )
         .def_property_readonly(
             "listener",
-            [](const pyrti::PyDomainParticipant& dp) {
-                return dynamic_cast<pyrti::PyDomainParticipantListener*>(dp.listener());
+            [](const PyDomainParticipant& dp) {
+                return dynamic_cast<PyDomainParticipantListener*>(dp.listener());
             },
             "Get the listener."
         )
         .def(
             "bind_listener",
-            [](pyrti::PyDomainParticipant& dp, pyrti::PyDomainParticipantListener* l, const dds::core::status::StatusMask& m) {
+            [](PyDomainParticipant& dp, PyDomainParticipantListener* l, const dds::core::status::StatusMask& m) {
                 dp.listener(l, m);
             },
             py::arg("listener"),
@@ -83,21 +84,21 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property(
             "qos",
-            (qos::DomainParticipantQos (pyrti::PyDomainParticipant::*)() const) &pyrti::PyDomainParticipant::qos,
-            (void (pyrti::PyDomainParticipant::*)(const qos::DomainParticipantQos&)) &pyrti::PyDomainParticipant::qos,
+            (qos::DomainParticipantQos (PyDomainParticipant::*)() const) &PyDomainParticipant::qos,
+            (void (PyDomainParticipant::*)(const qos::DomainParticipantQos&)) &PyDomainParticipant::qos,
             "Get a copy of or set the domain participant's QoS."
         )
         .def(
             "__lshift__",
-            [](pyrti::PyDomainParticipant& dp, const dds::domain::qos::DomainParticipantQos& q) {
-                return pyrti::PyDomainParticipant(dp << q);
+            [](PyDomainParticipant& dp, const dds::domain::qos::DomainParticipantQos& q) {
+                return PyDomainParticipant(dp << q);
             },
             py::is_operator(),
             "Set the domain participant's QoS."
         )
         .def(
             "__rshift__",
-            [](pyrti::PyDomainParticipant& dp, dds::domain::qos::DomainParticipantQos& q) {
+            [](PyDomainParticipant& dp, dds::domain::qos::DomainParticipantQos& q) {
                 return (dp >> q);
             },
             py::is_operator(),
@@ -105,71 +106,71 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "domain_id",
-            &pyrti::PyDomainParticipant::domain_id,
+            &PyDomainParticipant::domain_id,
             "The unique domain identifier."
         )
         .def("assert_liveliness", 
-            &pyrti::PyDomainParticipant::assert_liveliness,
+            &PyDomainParticipant::assert_liveliness,
             "Manually assert the liveliness of the DomainParticipant."
         )
         .def(
             "contains_entity", 
-            &pyrti::PyDomainParticipant::contains_entity, 
+            &PyDomainParticipant::contains_entity, 
             py::arg("handle"),
             "Check whether or not the given handle represents an Entity that was created from the DomainParticipant."
         )
         .def_property_readonly(
             "current_time",
-            &pyrti::PyDomainParticipant::current_time,
+            &PyDomainParticipant::current_time,
             "Get the current time."
         )
         .def_property(
             "default_publisher_qos",
-            (dds::pub::qos::PublisherQos (pyrti::PyDomainParticipant::*)() const) &pyrti::PyDomainParticipant::default_publisher_qos,
-            [](pyrti::PyDomainParticipant& dp, const dds::pub::qos::PublisherQos& q) {
-                return pyrti::PyDomainParticipant(dp.default_publisher_qos(q));
+            (dds::pub::qos::PublisherQos (PyDomainParticipant::*)() const) &PyDomainParticipant::default_publisher_qos,
+            [](PyDomainParticipant& dp, const dds::pub::qos::PublisherQos& q) {
+                return PyDomainParticipant(dp.default_publisher_qos(q));
             },
             "Get a copy of or set the default PublisherQos."
         )
         .def_property(
             "default_subscriber_qos",
-            (dds::sub::qos::SubscriberQos (pyrti::PyDomainParticipant::*)() const) &pyrti::PyDomainParticipant::default_subscriber_qos,
-            [](pyrti::PyDomainParticipant& dp, const dds::sub::qos::SubscriberQos& q) {
+            (dds::sub::qos::SubscriberQos (PyDomainParticipant::*)() const) &PyDomainParticipant::default_subscriber_qos,
+            [](PyDomainParticipant& dp, const dds::sub::qos::SubscriberQos& q) {
                 return PyDomainParticipant(dp.default_subscriber_qos(q));
             },
             "Get a copy of or set the default SubscriberQos."
         )
         .def_property(
             "default_topic_qos",
-            (dds::topic::qos::TopicQos (pyrti::PyDomainParticipant::*)() const) &pyrti::PyDomainParticipant::default_topic_qos,
-            [](pyrti::PyDomainParticipant& dp, const dds::topic::qos::TopicQos& q) {
-                return pyrti::PyDomainParticipant(dp.default_topic_qos(q));
+            (dds::topic::qos::TopicQos (PyDomainParticipant::*)() const) &PyDomainParticipant::default_topic_qos,
+            [](PyDomainParticipant& dp, const dds::topic::qos::TopicQos& q) {
+                return PyDomainParticipant(dp.default_topic_qos(q));
             },
             "Get a copy of or set the default TopicQos."
         )
         .def_property(
             "default_datawriter_qos",
-            [](const pyrti::PyDomainParticipant& dp) {
+            [](const PyDomainParticipant& dp) {
                 return dp->default_datawriter_qos();
             },
-            [](pyrti::PyDomainParticipant& dp, const dds::pub::qos::DataWriterQos &qos) {
+            [](PyDomainParticipant& dp, const dds::pub::qos::DataWriterQos &qos) {
                 return dp->default_datawriter_qos(qos);
             },
             "Get a copy of or set the default DataWriterQos."
         )
         .def_property(
             "default_datareader_qos",
-            [](const pyrti::PyDomainParticipant& dp) {
+            [](const PyDomainParticipant& dp) {
                 return dp->default_datareader_qos();
             },
-            [](pyrti::PyDomainParticipant& dp, const dds::sub::qos::DataReaderQos &qos) {
+            [](PyDomainParticipant& dp, const dds::sub::qos::DataReaderQos &qos) {
                 return dp->default_datareader_qos(qos);
             },
             "Get a copy of or set the default DataReaderQos."
         )
         .def(
             "register_contentfilter",
-            [](pyrti::PyDomainParticipant& dp, const rti::topic::CustomFilter<rti::topic::ContentFilterBase>& cf, const std::string &fn) {
+            [](PyDomainParticipant& dp, const rti::topic::CustomFilter<rti::topic::ContentFilterBase>& cf, const std::string &fn) {
                 return dp->register_contentfilter(cf, fn);
             },
             py::arg("expression"),
@@ -178,7 +179,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "unregister_contentfilter",
-            [](pyrti::PyDomainParticipant& dp, const std::string &fn) {
+            [](PyDomainParticipant& dp, const std::string &fn) {
                 return dp->unregister_contentfilter(fn);
             },
             py::arg("name"),
@@ -186,7 +187,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "register_type",
-            [](pyrti::PyDomainParticipant& dp, 
+            [](PyDomainParticipant& dp, 
                 const std::string& n, 
                 const dds::core::xtypes::DynamicType& t, 
                 const rti::core::xtypes::DynamicDataTypeSerializationProperty& sp) {
@@ -199,7 +200,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "unregister_type",
-            [](pyrti::PyDomainParticipant& dp, const std::string& name) {
+            [](PyDomainParticipant& dp, const std::string& name) {
                 return dp->unregister_type(name);
             },
             py::arg("name"),
@@ -207,7 +208,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "is_type_registered",
-            [](const pyrti::PyDomainParticipant& dp, const std::string& name) {
+            [](const PyDomainParticipant& dp, const std::string& name) {
                 return dp->is_type_registered(name);
             },
             py::arg("name"),
@@ -215,7 +216,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "add_peer",
-            [](pyrti::PyDomainParticipant& dp, const std::string& peer_desc_str) {
+            [](PyDomainParticipant& dp, const std::string& peer_desc_str) {
                 dp->add_peer(peer_desc_str);
             },
             py::arg("peer"),
@@ -223,7 +224,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "add_peers",
-            [](pyrti::PyDomainParticipant& dp, const std::vector<std::string>& peer_list) {
+            [](PyDomainParticipant& dp, const std::vector<std::string>& peer_list) {
                 for (auto& p : peer_list) {
                     dp->add_peer(p);
                 }
@@ -233,7 +234,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "remove_peer",
-            [](pyrti::PyDomainParticipant& dp, const std::string& peer_desc_str) {
+            [](PyDomainParticipant& dp, const std::string& peer_desc_str) {
                 dp->remove_peer(peer_desc_str);
             },
             py::arg("peer"),
@@ -241,7 +242,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "remove_peers",
-            [](pyrti::PyDomainParticipant& dp, const std::vector<std::string>& peer_list) {
+            [](PyDomainParticipant& dp, const std::vector<std::string>& peer_list) {
                 for (auto& p : peer_list) {
                     dp->remove_peer(p);
                 }
@@ -251,7 +252,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "resume_endpoint_discovery",
-            [](pyrti::PyDomainParticipant& dp, const dds::core::InstanceHandle& rph) {
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& rph) {
                 dp->resume_endpoint_discovery(rph);
             },
             py::arg("handle"),
@@ -259,7 +260,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "delete_durable_subscription",
-            [](pyrti::PyDomainParticipant& dp, const rti::core::EndpointGroup& group) {
+            [](PyDomainParticipant& dp, const rti::core::EndpointGroup& group) {
                 dp->delete_durable_subscription(group);
             },
             py::arg("group"),
@@ -267,7 +268,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "register_durable_subscription",
-            [](pyrti::PyDomainParticipant& dp, const rti::core::EndpointGroup& group, const std::string& topic_name) {
+            [](PyDomainParticipant& dp, const rti::core::EndpointGroup& group, const std::string& topic_name) {
                 dp->register_durable_subscription(group, topic_name);
             },
             py::arg("group"),
@@ -276,38 +277,38 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "participant_protocol_status",
-            [](pyrti::PyDomainParticipant& dp) {
+            [](PyDomainParticipant& dp) {
                 return dp->participant_protocol_status();
             },
             "Get the protocol status for this participant"
         )
         .def_property_static(
             "participant_factory_qos",
-            (qos::DomainParticipantFactoryQos (*)()) &pyrti::PyDomainParticipant::participant_factory_qos,
-            (void (*)(const dds::domain::qos::DomainParticipantFactoryQos& qos)) &pyrti::PyDomainParticipant::participant_factory_qos,
+            (qos::DomainParticipantFactoryQos (*)()) &PyDomainParticipant::participant_factory_qos,
+            (void (*)(const dds::domain::qos::DomainParticipantFactoryQos& qos)) &PyDomainParticipant::participant_factory_qos,
             "Get a copy of or set the DomainParticipantFactoryQos."
         )
         .def_static(
             "finalize_participant_factory",
-            &pyrti::PyDomainParticipant::finalize_participant_factory,
+            &PyDomainParticipant::finalize_participant_factory,
             "Finalize the DomainParticipantFactory"
         )
         .def_property_static(
             "default_participant_qos",
-            (qos::DomainParticipantQos (*)()) &pyrti::PyDomainParticipant::default_participant_qos,
-            (void (*)(const qos::DomainParticipantQos& qos)) &pyrti::PyDomainParticipant::default_participant_qos,
+            (qos::DomainParticipantQos (*)()) &PyDomainParticipant::default_participant_qos,
+            (void (*)(const qos::DomainParticipantQos& qos)) &PyDomainParticipant::default_participant_qos,
             "Get a copy of or set the default DomainParticipantQos."
         )
         .def(
             "__enter__", 
-            [](pyrti::PyDomainParticipant& dp) {
+            [](PyDomainParticipant& dp) {
                 return dp;
             },
             "Enter a context for this Domain Participant, to be cleaned up on exiting context"
         )
         .def(
             "__exit__",
-            [](pyrti::PyDomainParticipant& dp, py::object, py::object, py::object) {
+            [](PyDomainParticipant& dp, py::object, py::object, py::object) {
                 dp.close();
             },
             "Exit the context for this Domain Participant, cleaning up resources."
@@ -315,7 +316,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         .def_static(
             "find",
             [](const std::string& n) {
-                pyrti::PyDomainParticipant(rti::domain::find_participant_by_name(n));
+                PyDomainParticipant(rti::domain::find_participant_by_name(n));
             },
             py::arg("name"),
             "Find a local DomainParticipant by its name."
@@ -323,8 +324,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         .def_static(
             "find",
             []() {
-                std::vector<pyrti::PyDomainParticipant> v;
-                pyrti::find_participants(std::back_inserter(v));
+                std::vector<PyDomainParticipant> v;
+                find_participants(std::back_inserter(v));
                 return v;
             },
             "Find all local DomainParticipants."
@@ -332,7 +333,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         .def_static(
             "find",
             [](int32_t domain_id) {
-                return pyrti::PyDomainParticipant(dds::domain::find(domain_id));
+                return PyDomainParticipant(dds::domain::find(domain_id));
             },
             py::arg("domain_id"),
             "Find a local DomainParticipant with the given domain ID. If more "
@@ -341,16 +342,16 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "find_publisher",
-            [](pyrti::PyDomainParticipant& dp, const std::string& name) {
-                return pyrti::PyPublisher(rti::pub::find_publisher(dp, name));
+            [](PyDomainParticipant& dp, const std::string& name) {
+                return PyPublisher(rti::pub::find_publisher(dp, name));
             },
             py::arg("name"),
             "Lookup a Publisher within the DomainParticipant by its entity name."
         )
         .def(
             "find_publishers",
-            [](const pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyPublisher> v;
+            [](const PyDomainParticipant& dp) {
+                std::vector<PyPublisher> v;
                 rti::pub::find_publishers(dp, std::back_inserter(v));
                 return v;
             },
@@ -358,30 +359,30 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "implicit_publisher",
-            [](pyrti::PyDomainParticipant& dp) {
-                return pyrti::PyPublisher(rti::pub::implicit_publisher(dp));
+            [](PyDomainParticipant& dp) {
+                return PyPublisher(rti::pub::implicit_publisher(dp));
             },
             "Get the implicit Publisher for the DomainParticipant."
         )
         .def_property_readonly(
             "builtin_subscriber",
-            [](pyrti::PyDomainParticipant& dp) {
-                return pyrti::PySubscriber(dds::sub::builtin_subscriber(dp));
+            [](PyDomainParticipant& dp) {
+                return PySubscriber(dds::sub::builtin_subscriber(dp));
             },
             "Get the built-in subscriber for the DomainParticipant."
         )
         .def(
             "find_subscriber",
-            [](pyrti::PyDomainParticipant& dp, const std::string& name) {
-                return pyrti::PySubscriber(rti::sub::find_subscriber(dp, name));
+            [](PyDomainParticipant& dp, const std::string& name) {
+                return PySubscriber(rti::sub::find_subscriber(dp, name));
             },
             py::arg("name"),
             "Find a Subscriber in the DomainParticipant by its entity name."
         )
         .def(
             "find_subscribers",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PySubscriber> v;
+            [](PyDomainParticipant& dp) {
+                std::vector<PySubscriber> v;
                 rti::sub::find_subscribers(dp, std::back_inserter(v));
                 return v;
             },
@@ -389,8 +390,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "implicit_subscriber",
-            [](pyrti::PyDomainParticipant& dp) {
-                return pyrti::PySubscriber(rti::sub::implicit_subscriber(dp));
+            [](PyDomainParticipant& dp) {
+                return PySubscriber(rti::sub::implicit_subscriber(dp));
             },
             "Get the implicit Subscriber for the DomainParticipant."
         )
@@ -402,7 +403,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "ignore_participants",
-            [](pyrti::PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
+            [](PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
                 dds::domain::ignore(dp, v.begin(), v.end());
             }
         )
@@ -414,7 +415,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "ignore_topics",
-            [](pyrti::PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
+            [](PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
                 dds::topic::ignore(dp, v.begin(), v.end());
             },
             py::arg("handles"),
@@ -428,7 +429,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "ignore_datawriters",
-            [](pyrti::PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
+            [](PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
                 dds::pub::ignore(dp, v.begin(), v.end());
             },
             py::arg("handles"),
@@ -442,7 +443,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "ignore_datareaders",
-            [](pyrti::PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
+            [](PyDomainParticipant& dp, std::vector<dds::core::InstanceHandle>& v) {
                 dds::sub::ignore(dp, v.begin(), v.end());
             },
             py::arg("handles"),
@@ -450,8 +451,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "find_topics",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyAnyTopic> v;
+            [](PyDomainParticipant& dp) {
+                std::vector<PyAnyTopic> v;
                 rti::topic::find_topics(dp, std::back_inserter(v));
                 return v;
             },
@@ -459,7 +460,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_topics",
-            [](const pyrti::PyDomainParticipant& dp) {
+            [](const PyDomainParticipant& dp) {
                 std::vector<dds::core::InstanceHandle> v;
                 dds::topic::discover_any_topic(dp, std::back_inserter(v));
                 return v;
@@ -474,7 +475,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_topic_data",
-            [](const pyrti::PyDomainParticipant& dp, const pyrti::PyIEntity& topic) {
+            [](const PyDomainParticipant& dp, const PyIEntity& topic) {
                 return dds::topic::discover_topic_data(dp, topic.py_instance_handle());
             },
             py::arg("topic"),
@@ -482,7 +483,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_topic_data",
-            [](const pyrti::PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
+            [](const PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
                 std::vector<dds::topic::TopicBuiltinTopicData> v;
                 for (auto& h : handles) {
                     v.push_back(dds::topic::discover_topic_data(dp, h));
@@ -494,7 +495,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_topic_data",
-            [](const pyrti::PyDomainParticipant& dp) {
+            [](const PyDomainParticipant& dp) {
                 std::vector<dds::topic::TopicBuiltinTopicData> v;
                 dds::topic::discover_topic_data(dp, std::back_inserter(v));
                 return v;
@@ -503,25 +504,25 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "find_datawriter",
-            [](pyrti::PyDomainParticipant& dp, const std::string name) {
+            [](PyDomainParticipant& dp, const std::string name) {
                 auto dw = rti::pub::find_datawriter_by_name<dds::pub::AnyDataWriter>(dp, name);
-                return pyrti::PyAnyDataWriter(dw);
+                return PyAnyDataWriter(dw);
             },
             py::arg("name"),
             "Find a DataWriter by its name."
         )
         .def(
             "find_datareader",
-            [](pyrti::PyDomainParticipant& dp, const std::string name) {
+            [](PyDomainParticipant& dp, const std::string name) {
                 auto dr = rti::sub::find_datareader_by_name<dds::sub::AnyDataReader>(dp, name);
-                return pyrti::PyAnyDataReader(dr);
+                return PyAnyDataReader(dr);
             },
             py::arg("name"),
             "Find a DataReader by its name."
         )
         .def(
             "find_registered_content_filters",
-            [](pyrti::PyDomainParticipant& dp) {
+            [](PyDomainParticipant& dp) {
                 std::vector<std::string> v;
                 rti::topic::find_registered_content_filters(dp, std::back_inserter(v));
                 return v;
@@ -530,9 +531,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "participant_reader",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyDataReader<dds::topic::ParticipantBuiltinTopicData>> v;
-                dds::sub::find<pyrti::PyDataReader<dds::topic::ParticipantBuiltinTopicData>>
+            [](PyDomainParticipant& dp) {
+                std::vector<PyDataReader<dds::topic::ParticipantBuiltinTopicData>> v;
+                dds::sub::find<PyDataReader<dds::topic::ParticipantBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::participant_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
                 return v[0];
@@ -541,9 +542,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "publication_reader",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyDataReader<dds::topic::PublicationBuiltinTopicData>> v;
-                dds::sub::find<pyrti::PyDataReader<dds::topic::PublicationBuiltinTopicData>>
+            [](PyDomainParticipant& dp) {
+                std::vector<PyDataReader<dds::topic::PublicationBuiltinTopicData>> v;
+                dds::sub::find<PyDataReader<dds::topic::PublicationBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::publication_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
                 return v[0];
@@ -552,9 +553,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "subscription_reader",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyDataReader<dds::topic::SubscriptionBuiltinTopicData>> v;
-                dds::sub::find<pyrti::PyDataReader<dds::topic::SubscriptionBuiltinTopicData>>
+            [](PyDomainParticipant& dp) {
+                std::vector<PyDataReader<dds::topic::SubscriptionBuiltinTopicData>> v;
+                dds::sub::find<PyDataReader<dds::topic::SubscriptionBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::subscription_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
                 return v[0];
@@ -563,9 +564,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "topic_reader",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyDataReader<dds::topic::TopicBuiltinTopicData>> v;
-                dds::sub::find<pyrti::PyDataReader<dds::topic::TopicBuiltinTopicData>>
+            [](PyDomainParticipant& dp) {
+                std::vector<PyDataReader<dds::topic::TopicBuiltinTopicData>> v;
+                dds::sub::find<PyDataReader<dds::topic::TopicBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::topic_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
                 return v[0];
@@ -574,9 +575,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def_property_readonly(
             "service_request_reader",
-            [](pyrti::PyDomainParticipant& dp) {
-                std::vector<pyrti::PyDataReader<rti::topic::ServiceRequest>> v;
-                dds::sub::find<pyrti::PyDataReader<rti::topic::ServiceRequest>>
+            [](PyDomainParticipant& dp) {
+                std::vector<PyDataReader<rti::topic::ServiceRequest>> v;
+                dds::sub::find<PyDataReader<rti::topic::ServiceRequest>>
                     (dds::sub::builtin_subscriber(dp), rti::topic::service_request_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
                 return v[0];
@@ -585,7 +586,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_participants",
-            [](pyrti::PyDomainParticipant& dp) {
+            [](PyDomainParticipant& dp) {
                 return rti::domain::discovered_participants(dp);
             },
             "Retrieves the instance handles of other DomainParticipants "
@@ -593,7 +594,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_participant_data",
-            [](pyrti::PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
                 return rti::domain::discovered_participant_data(dp, handle);
             },
             py::arg("handle"),
@@ -601,7 +602,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "discovered_participant_data",
-            [](pyrti::PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
+            [](PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
                 std::vector<dds::topic::ParticipantBuiltinTopicData> v;
                 for (auto& h : handles) {
                     v.push_back(rti::domain::discovered_participant_data(dp, h));
@@ -614,7 +615,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "publication_data",
-            [](pyrti::PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
                 DDS_PublicationBuiltinTopicData pbitd;
                 DDS_DomainParticipant_get_publication_data(
                     dp.delegate()->native_participant(), 
@@ -629,7 +630,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "publication_data",
-            [](pyrti::PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
+            [](PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
                 std::vector<dds::topic::PublicationBuiltinTopicData> v;
                 for (auto& handle : handles) {
                     DDS_PublicationBuiltinTopicData pbitd;
@@ -648,7 +649,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "subscription_data",
-            [](pyrti::PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
                 DDS_SubscriptionBuiltinTopicData sbitd;
                 DDS_DomainParticipant_get_subscription_data(
                     dp.delegate()->native_participant(), 
@@ -663,7 +664,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
         )
         .def(
             "subscription_data",
-            [](pyrti::PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
+            [](PyDomainParticipant& dp, const std::vector<dds::core::InstanceHandle>& handles) {
                 std::vector<dds::topic::SubscriptionBuiltinTopicData> v;
                 for (auto& handle : handles) {
                     DDS_SubscriptionBuiltinTopicData sbitd;
@@ -696,11 +697,13 @@ void pyrti::init_class_defs(py::class_<pyrti::PyDomainParticipant, pyrti::PyIEnt
 }
 
 template<>
-void pyrti::process_inits<DomainParticipant>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DomainParticipant>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyDomainParticipant, pyrti::PyIEntity>(m, "DomainParticipant");
+            return init_class<PyDomainParticipant, PyIEntity>(m, "DomainParticipant");
         }
     ); 
+}
+
 }
 

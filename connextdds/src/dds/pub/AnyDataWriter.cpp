@@ -4,12 +4,14 @@
 using namespace dds::pub;
 using namespace dds::pub::qos;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyAnyDataWriter, pyrti::PyIAnyDataWriter>& cls) {
+void init_class_defs(py::class_<PyAnyDataWriter, PyIAnyDataWriter>& cls) {
     cls
         .def(
             py::init<
-                const pyrti::PyIAnyDataWriter&
+                const PyIAnyDataWriter&
             >(),
             py::arg("writer"),
             "Create an AnyDataWriter instance from a object that conforms to "
@@ -20,51 +22,51 @@ void pyrti::init_class_defs(py::class_<pyrti::PyAnyDataWriter, pyrti::PyIAnyData
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyIAnyDataWriter>& cls) {
+void init_class_defs(py::class_<PyIAnyDataWriter>& cls) {
     cls
         .def_property(
             "qos",
-            (dds::pub::qos::DataWriterQos (pyrti::PyIAnyDataWriter::*)() const) &pyrti::PyIAnyDataWriter::py_qos,
-            (void (pyrti::PyIAnyDataWriter::*)(const dds::pub::qos::DataWriterQos&)) &pyrti::PyIAnyDataWriter::py_qos,
+            (dds::pub::qos::DataWriterQos (PyIAnyDataWriter::*)() const) &PyIAnyDataWriter::py_qos,
+            (void (PyIAnyDataWriter::*)(const dds::pub::qos::DataWriterQos&)) &PyIAnyDataWriter::py_qos,
             "The QoS for this AnyDataWriter."
             "\n\n"
             "This property uses value semantics."
         )
         .def_property_readonly(
             "topic_name",
-            &pyrti::PyIAnyDataWriter::py_topic_name,
+            &PyIAnyDataWriter::py_topic_name,
             "The Topic name for this AnyDataWriter."
         )
         .def_property_readonly(
             "type_name",
-            &pyrti::PyIAnyDataWriter::py_type_name,
+            &PyIAnyDataWriter::py_type_name,
             "The type name for this AnyDataWriter."
         )
         .def_property_readonly(
             "publisher",
-            &pyrti::PyIAnyDataWriter::py_publisher,
+            &PyIAnyDataWriter::py_publisher,
             "The Publisher for this AnyDataWriter."
         )
         .def(
             "wait_for_acknowledgments",
-            &pyrti::PyIAnyDataWriter::py_wait_for_acknowledgments,
+            &PyIAnyDataWriter::py_wait_for_acknowledgments,
             py::arg("timeout"),
             py::call_guard<py::gil_scoped_release>(),
             "Wait for acknowledgments from subscribers."
         )
         .def(
             "close",
-            &pyrti::PyIAnyDataWriter::py_close,
+            &PyIAnyDataWriter::py_close,
             "Close this DataWriter."
         )
         .def(
             "retain",
-            &pyrti::PyIAnyDataWriter::py_retain,
+            &PyIAnyDataWriter::py_retain,
             "Retain this DataWriter."
         )
         .def(
             "__eq__",
-            [](pyrti::PyIAnyDataWriter& adw, pyrti::PyIAnyDataWriter& other) {
+            [](PyIAnyDataWriter& adw, PyIAnyDataWriter& other) {
                 return adw.get_any_datawriter() == other.get_any_datawriter();
             },
             py::is_operator(),
@@ -72,7 +74,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIAnyDataWriter>& cls) {
         )
         .def(
             "__ne__",
-            [](pyrti::PyIAnyDataWriter& adw, pyrti::PyIAnyDataWriter& other) {
+            [](PyIAnyDataWriter& adw, PyIAnyDataWriter& other) {
                 return adw.get_any_datawriter() != other.get_any_datawriter();
             },
             py::is_operator(),
@@ -81,15 +83,17 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIAnyDataWriter>& cls) {
 }
 
 template<>
-void pyrti::process_inits<AnyDataWriter>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<AnyDataWriter>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyIAnyDataWriter>(m, "IAnyDataWriter");
+            return init_class<PyIAnyDataWriter>(m, "IAnyDataWriter");
         }
     );
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyAnyDataWriter, pyrti::PyIAnyDataWriter>(m, "AnyDataWriter");
+            return init_class<PyAnyDataWriter, PyIAnyDataWriter>(m, "AnyDataWriter");
         }
     );
+}
+
 }

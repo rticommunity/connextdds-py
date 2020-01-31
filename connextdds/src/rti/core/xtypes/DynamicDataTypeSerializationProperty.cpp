@@ -3,8 +3,10 @@
 
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DynamicDataTypeSerializationProperty>& cls) {
+void init_class_defs(py::class_<DynamicDataTypeSerializationProperty>& cls) {
     cls
         .def(
             py::init<>(),
@@ -49,11 +51,12 @@ void pyrti::init_class_defs(py::class_<DynamicDataTypeSerializationProperty>& cl
 }
 
 template<>
-void pyrti::process_inits<DynamicDataTypeSerializationProperty>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DynamicDataTypeSerializationProperty>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DynamicDataTypeSerializationProperty>(m, "DynamicDataTypeSerializationProperty");
+            return init_class<DynamicDataTypeSerializationProperty>(m, "DynamicDataTypeSerializationProperty");
         }
     );
 }
 
+}

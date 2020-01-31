@@ -4,8 +4,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SampleLostState>& cls) {
+void init_class_defs(py::class_<SampleLostState>& cls) {
     cls
         .def_static(
             "not_lost",
@@ -88,13 +90,15 @@ void pyrti::init_class_defs(py::class_<SampleLostState>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SampleLostState>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SampleLostState>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type_no_int_constructor<SampleLostState>(m, "SampleLostState", "Creates SampleLostState.not_lost()");
+            auto cls = init_mask_type_no_int_constructor<SampleLostState>(m, "SampleLostState", "Creates SampleLostState.not_lost()");
             return [cls]() mutable {
                 init_class_defs<SampleLostState>(cls);
             };
         }
     ); 
+}
+
 }

@@ -3,8 +3,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ReaderDataLifecycle>& cls) {
+void init_class_defs(py::class_<ReaderDataLifecycle>& cls) {
     cls
         .def(
             py::init<>(),
@@ -83,10 +85,12 @@ void pyrti::init_class_defs(py::class_<ReaderDataLifecycle>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ReaderDataLifecycle>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ReaderDataLifecycle>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ReaderDataLifecycle>(m, "ReaderDataLifecycle");
+            return init_class<ReaderDataLifecycle>(m, "ReaderDataLifecycle");
         }
     );
+}
+
 }

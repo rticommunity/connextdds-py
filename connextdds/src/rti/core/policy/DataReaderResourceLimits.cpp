@@ -4,8 +4,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DataReaderResourceLimits>& cls) {
+void init_class_defs(py::class_<DataReaderResourceLimits>& cls) {
     cls
         .def(
             py::init<>(),
@@ -219,10 +221,12 @@ void pyrti::init_class_defs(py::class_<DataReaderResourceLimits>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataReaderResourceLimits>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataReaderResourceLimits>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataReaderResourceLimits>(m, "DataReaderResourceLimits");
+            return init_class<DataReaderResourceLimits>(m, "DataReaderResourceLimits");
         }
     );
+}
+
 }

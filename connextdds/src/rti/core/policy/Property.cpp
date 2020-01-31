@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Property>& cls) {
+void init_class_defs(py::class_<Property>& cls) {
     cls
         .def(
             py::init<>(),
@@ -126,10 +128,12 @@ void pyrti::init_class_defs(py::class_<Property>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Property>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Property>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Property>(m, "Property");
+            return init_class<Property>(m, "Property");
         }
     );
+}
+
 }

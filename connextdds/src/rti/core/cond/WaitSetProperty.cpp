@@ -4,8 +4,10 @@
 
 using namespace rti::core::cond;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<WaitSetProperty>& cls) {
+void init_class_defs(py::class_<WaitSetProperty>& cls) {
     cls
         .def(
             py::init<>(),
@@ -32,10 +34,12 @@ void pyrti::init_class_defs(py::class_<WaitSetProperty>& cls) {
 }
 
 template<>
-void pyrti::process_inits<WaitSetProperty>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<WaitSetProperty>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<WaitSetProperty>(m, "WaitSetProperty");
+            return init_class<WaitSetProperty>(m, "WaitSetProperty");
         }
     );
+}
+
 }

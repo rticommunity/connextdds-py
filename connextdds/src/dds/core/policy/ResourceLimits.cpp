@@ -3,8 +3,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ResourceLimits>& cls) {
+void init_class_defs(py::class_<ResourceLimits>& cls) {
     cls
         .def(
             py::init<>(),
@@ -86,10 +88,12 @@ void pyrti::init_class_defs(py::class_<ResourceLimits>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ResourceLimits>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ResourceLimits>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ResourceLimits>(m, "ResourceLimits");
+            return init_class<ResourceLimits>(m, "ResourceLimits");
         }
     );
+}
+
 }

@@ -3,8 +3,10 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DynamicType>& cls) {
+void init_class_defs(py::class_<DynamicType>& cls) {
     cls
         .def_property_readonly(
             "kind",
@@ -88,10 +90,13 @@ void pyrti::init_class_defs(py::class_<DynamicType>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DynamicType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DynamicType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DynamicType>(m, "DynamicType");
+            return init_class<DynamicType>(m, "DynamicType");
         }
     );  
 }
+
+}
+

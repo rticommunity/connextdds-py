@@ -4,8 +4,10 @@
 
 using namespace dds::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SampleRejectedState>& cls) {
+void init_class_defs(py::class_<SampleRejectedState>& cls) {
     cls
         .def_static(
             "not_rejected",
@@ -82,13 +84,15 @@ void pyrti::init_class_defs(py::class_<SampleRejectedState>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SampleRejectedState>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SampleRejectedState>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type_no_int_constructor<SampleRejectedState>(m, "SampleRejectedState", "Creates SampleRejectedState.not_rejected()");
+            auto cls = init_mask_type_no_int_constructor<SampleRejectedState>(m, "SampleRejectedState", "Creates SampleRejectedState.not_rejected()");
             return [cls]() mutable {
                 init_class_defs<SampleRejectedState>(cls);
             };
         }
     ); 
+}
+
 }

@@ -4,8 +4,10 @@
 using namespace dds::core::xtypes;
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<AbstractConstructedType<Member>, DynamicType>& cls) {
+void init_class_defs(py::class_<AbstractConstructedType<Member>, DynamicType>& cls) {
     cls
         .def(
             "extensibility_kind", 
@@ -50,10 +52,12 @@ void pyrti::init_class_defs(py::class_<AbstractConstructedType<Member>, DynamicT
 }
 
 template<>
-void pyrti::process_inits<AbstractConstructedType<Member>>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<AbstractConstructedType<Member>>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<AbstractConstructedType<Member>, DynamicType>(m, "ACTMember");
+            return init_class<AbstractConstructedType<Member>, DynamicType>(m, "ACTMember");
         }
     ); 
+}
+
 }

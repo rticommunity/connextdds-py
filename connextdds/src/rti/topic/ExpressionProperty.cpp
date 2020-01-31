@@ -3,8 +3,10 @@
 
 using namespace rti::topic;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ExpressionProperty>& cls) {
+void init_class_defs(py::class_<ExpressionProperty>& cls) {
     cls
         .def(
             py::init<>(),
@@ -48,10 +50,12 @@ void pyrti::init_class_defs(py::class_<ExpressionProperty>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ExpressionProperty>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ExpressionProperty>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ExpressionProperty>(m, "ExpressionProperty");
+            return init_class<ExpressionProperty>(m, "ExpressionProperty");
         }
     );
+}
+
 }

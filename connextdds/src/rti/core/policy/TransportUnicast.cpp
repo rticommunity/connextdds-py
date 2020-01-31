@@ -4,8 +4,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TransportUnicastSettings>& cls) {
+void init_class_defs(py::class_<TransportUnicastSettings>& cls) {
     cls
         .def(
             py::init<>(),
@@ -46,7 +48,7 @@ void pyrti::init_class_defs(py::class_<TransportUnicastSettings>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<TransportUnicast>& cls) {
+void init_class_defs(py::class_<TransportUnicast>& cls) {
     cls
         .def(
             py::init<>(),
@@ -78,16 +80,18 @@ void pyrti::init_class_defs(py::class_<TransportUnicast>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TransportUnicast>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TransportUnicast>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TransportUnicastSettings>(m, "TransportUnicastSettings");
+            return init_class<TransportUnicastSettings>(m, "TransportUnicastSettings");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TransportUnicast>(m, "TransportUnicast");
+            return init_class<TransportUnicast>(m, "TransportUnicast");
         }
     );
+}
+
 }

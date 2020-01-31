@@ -3,14 +3,18 @@
 #include "PyEntity.hpp"
 #include "PyDataReader.hpp"
 
-template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyIDataReader, pyrti::PyIEntity, pyrti::PyIAnyDataReader>& cls) {}
+namespace pyrti {
 
 template<>
-void pyrti::process_inits<pyrti::PyIDataReader>(py::module& m, pyrti::ClassInitList& l) {
+void init_class_defs(py::class_<PyIDataReader, PyIEntity, PyIAnyDataReader>& cls) {}
+
+template<>
+void process_inits<PyIDataReader>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyIDataReader, pyrti::PyIEntity, pyrti::PyIAnyDataReader>(m, "IDataReader");
+            return init_class<PyIDataReader, PyIEntity, PyIAnyDataReader>(m, "IDataReader");
         }
     );
+}
+
 }

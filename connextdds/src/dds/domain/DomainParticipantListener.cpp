@@ -1,14 +1,16 @@
 #include "PyConnext.hpp"
 #include "PyDomainParticipantListener.hpp"
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(
+void init_class_defs(
     py::class_<
-        pyrti::PyDomainParticipantListener,
-        pyrti::PyPublisherListener,
-        pyrti::PySubscriberListener,
-        pyrti::PyAnyTopicListener,
-        pyrti::PyDomainParticipantListenerTrampoline<>>& cls) {
+        PyDomainParticipantListener,
+        PyPublisherListener,
+        PySubscriberListener,
+        PyAnyTopicListener,
+        PyDomainParticipantListenerTrampoline<>>& cls) {
     cls
         .def(
             py::init<>()
@@ -16,11 +18,11 @@ void pyrti::init_class_defs(
 }
 
 template<>
-void pyrti::init_class_defs(
+void init_class_defs(
     py::class_<
-        pyrti::PyNoOpDomainParticipantListener,
-        pyrti::PyDomainParticipantListener,
-        pyrti::PyNoOpDomainParticipantListenerTrampoline<>>& cls) {
+        PyNoOpDomainParticipantListener,
+        PyDomainParticipantListener,
+        PyNoOpDomainParticipantListenerTrampoline<>>& cls) {
     cls
         .def(
             py::init<>()
@@ -28,24 +30,26 @@ void pyrti::init_class_defs(
 }
 
 template<>
-void pyrti::process_inits<dds::domain::DomainParticipantListener>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::domain::DomainParticipantListener>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<
-                pyrti::PyDomainParticipantListener,
-                pyrti::PyPublisherListener,
-                pyrti::PySubscriberListener,
-                pyrti::PyAnyTopicListener,
-                pyrti::PyDomainParticipantListenerTrampoline<>>(m, "DomainParticipantListener");
+            return init_class<
+                PyDomainParticipantListener,
+                PyPublisherListener,
+                PySubscriberListener,
+                PyAnyTopicListener,
+                PyDomainParticipantListenerTrampoline<>>(m, "DomainParticipantListener");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<
-                pyrti::PyNoOpDomainParticipantListener,
-                pyrti::PyDomainParticipantListener,
-                pyrti::PyNoOpDomainParticipantListenerTrampoline<>>(m, "NoOpDomainParticipantListener");
+            return init_class<
+                PyNoOpDomainParticipantListener,
+                PyDomainParticipantListener,
+                PyNoOpDomainParticipantListenerTrampoline<>>(m, "NoOpDomainParticipantListener");
         }
     );
+}
+
 }

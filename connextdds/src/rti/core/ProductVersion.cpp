@@ -3,8 +3,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ProductVersion>& cls) {
+void init_class_defs(py::class_<ProductVersion>& cls) {
     cls
         .def(
             py::init<>(),
@@ -56,10 +58,12 @@ void pyrti::init_class_defs(py::class_<ProductVersion>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ProductVersion>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ProductVersion>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ProductVersion>(m, "ProductVersion");
+            return init_class<ProductVersion>(m, "ProductVersion");
         }
     );
+}
+
 }

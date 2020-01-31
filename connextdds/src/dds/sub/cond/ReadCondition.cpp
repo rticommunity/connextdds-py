@@ -5,12 +5,14 @@
 #include "PyCondition.hpp"
 #include "PyAnyDataReader.hpp"
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCondition>& cls) {
+void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls) {
     cls
         .def(
-            py::init([](pyrti::PyIAnyDataReader& adr, const dds::sub::status::DataState& ds) {
-                return pyrti::PyReadCondition(rti::sub::cond::create_read_condition_ex(adr.get_any_datareader(), ds));
+            py::init([](PyIAnyDataReader& adr, const dds::sub::status::DataState& ds) {
+                return PyReadCondition(rti::sub::cond::create_read_condition_ex(adr.get_any_datareader(), ds));
             }),
             py::arg("reader"),
             py::arg("status"),
@@ -18,8 +20,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
         )
         .def(
             py::init(
-                [](pyrti::PyIAnyDataReader& dr, const dds::sub::status::DataState& ds, std::function<void()>& func) {
-                    return pyrti::PyReadCondition(
+                [](PyIAnyDataReader& dr, const dds::sub::status::DataState& ds, std::function<void()>& func) {
+                    return PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
                             ds,
@@ -35,8 +37,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
         )
         .def(
             py::init(
-                [](pyrti::PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds) {
-                    return pyrti::PyReadCondition(
+                [](PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds) {
+                    return PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
                             ds
@@ -50,8 +52,8 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
         )
         .def(
             py::init(
-                [](pyrti::PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds, std::function<void()>& func) {
-                    return pyrti::PyReadCondition(
+                [](PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds, std::function<void()>& func) {
+                    return PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
                             ds,
@@ -67,9 +69,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
         )
         .def(
             py::init(
-                [](pyrti::PyICondition& py_c) {
+                [](PyICondition& py_c) {
                     auto c = py_c.get_condition();
-                    return pyrti::PyReadCondition(dds::core::polymorphic_cast<dds::sub::cond::ReadCondition>(c));
+                    return PyReadCondition(dds::core::polymorphic_cast<dds::sub::cond::ReadCondition>(c));
                 }
             ),
             "Cast a compatible Condition to a ReadCondition."
@@ -77,43 +79,43 @@ void pyrti::init_class_defs(py::class_<pyrti::PyReadCondition, pyrti::PyIReadCon
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyIReadCondition, pyrti::PyICondition>& cls) {
+void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls) {
     cls
         .def_property_readonly(
             "state_filter",
-            &pyrti::PyIReadCondition::py_state_filter,
+            &PyIReadCondition::py_state_filter,
             "Returns the DataState of this condition."
         )
         .def_property_readonly(
             "data_reader",
-            &pyrti::PyIReadCondition::py_data_reader,
+            &PyIReadCondition::py_data_reader,
             "Returns the DataReader associated to this condition."
         )
         .def(
             "close",
-            &pyrti::PyIReadCondition::py_close,
+            &PyIReadCondition::py_close,
             "Returns the DataReader associated to this condition."
         )
         .def_property_readonly(
             "closed",
-            &pyrti::PyIReadCondition::py_closed,
+            &PyIReadCondition::py_closed,
             "Returns the DataReader associated to this condition."
         )
         .def(
             "__enter__",
-            [](pyrti::PyIReadCondition& rc) -> pyrti::PyIReadCondition& {
+            [](PyIReadCondition& rc) -> PyIReadCondition& {
                 return rc;
             }
         )
         .def(
             "__exit__",
-            [](pyrti::PyIReadCondition& rc) {
+            [](PyIReadCondition& rc) {
                 rc.py_close();
             }
         )
         .def(
             "__eq__",
-            [](pyrti::PyIReadCondition& rc, pyrti::PyIReadCondition& other) {
+            [](PyIReadCondition& rc, PyIReadCondition& other) {
                 return rc.get_read_condition() == other.get_read_condition();
             },
             py::is_operator(),
@@ -121,7 +123,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIReadCondition, pyrti::PyICondit
         )
         .def(
             "__ne__",
-            [](pyrti::PyIReadCondition& rc, pyrti::PyIReadCondition& other) {
+            [](PyIReadCondition& rc, PyIReadCondition& other) {
                 return rc.get_read_condition() != other.get_read_condition();
             },
             py::is_operator(),
@@ -130,16 +132,18 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIReadCondition, pyrti::PyICondit
 }
 
 template<>
-void pyrti::process_inits<dds::sub::cond::ReadCondition>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::sub::cond::ReadCondition>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyIReadCondition, pyrti::PyICondition>(m, "IReadCondition");
+            return init_class<PyIReadCondition, PyICondition>(m, "IReadCondition");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyReadCondition, pyrti::PyIReadCondition>(m, "ReadCondition");
+            return init_class<PyReadCondition, PyIReadCondition>(m, "ReadCondition");
         }
     );
+}
+
 }

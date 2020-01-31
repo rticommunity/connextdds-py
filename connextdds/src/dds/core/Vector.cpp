@@ -3,6 +3,8 @@
 #include <rti/core/TransportInfo.hpp>
 #include <rti/core/Cookie.hpp>
 
+namespace pyrti {
+
 template<typename T>
 static
 void init_dds_vector_defs(py::class_<dds::core::vector<T>>& cls, const std::string& name) {
@@ -150,7 +152,7 @@ void init_dds_vector_buffer_defs(py::class_<dds::core::vector<T>>& cls, const st
 
 template<typename T>
 static
-void init_dds_vector_nonbuffer_class(py::module& m, const std::string& cls_name, pyrti::ClassInitList& l) {
+void init_dds_vector_nonbuffer_class(py::module& m, const std::string& cls_name, ClassInitList& l) {
     l.push_back(
         [m, cls_name]() mutable {
             py::class_<dds::core::vector<T>> cls(m, cls_name.c_str());
@@ -165,7 +167,7 @@ void init_dds_vector_nonbuffer_class(py::module& m, const std::string& cls_name,
 
 template<typename T>
 static
-void init_dds_vector_buffer_class(py::module& m, const std::string& cls_name, pyrti::ClassInitList& l) {
+void init_dds_vector_buffer_class(py::module& m, const std::string& cls_name, ClassInitList& l) {
     l.push_back(
         [m, cls_name]() mutable {
             py::class_<dds::core::vector<T>> cls(m, cls_name.c_str(), py::buffer_protocol());
@@ -180,11 +182,13 @@ void init_dds_vector_buffer_class(py::module& m, const std::string& cls_name, py
 }
 
 template<>
-void pyrti::process_inits<pyrti::PyVector>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<PyVector>(py::module& m, ClassInitList& l) {
     init_dds_vector_buffer_class<uint8_t>(m, "DdsByteVector", l);
     init_dds_vector_buffer_class<int32_t>(m, "DdsInt32Vector", l);
     init_dds_vector_nonbuffer_class<rti::core::Locator>(m, "LocatorVector", l);
     init_dds_vector_nonbuffer_class<rti::core::TransportInfo>(m, "TransportInfoVector", l);
     init_dds_vector_nonbuffer_class<rti::core::Cookie>(m, "CookieVector", l);
     init_dds_vector_nonbuffer_class<rti::core::EndpointGroup>(m, "EndpointGroupVector", l);
+}
+
 }

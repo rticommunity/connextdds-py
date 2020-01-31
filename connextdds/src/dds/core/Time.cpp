@@ -4,8 +4,10 @@
 
 using namespace dds::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Time>& cls) {
+void init_class_defs(py::class_<Time>& cls) {
     cls
         .def(
             py::init<>(),
@@ -179,10 +181,12 @@ void pyrti::init_class_defs(py::class_<Time>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Time>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Time>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Time>(m, "Time");
+            return init_class<Time>(m, "Time");
         }
     );
+}
+
 }

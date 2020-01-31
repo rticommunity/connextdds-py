@@ -4,11 +4,13 @@
 
 using namespace dds::core;
 
-template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyEntity, pyrti::PyIEntity>& cls) {}
+namespace pyrti {
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyIEntity>& cls) {
+void init_class_defs(py::class_<PyEntity, PyIEntity>& cls) {}
+
+template<>
+void init_class_defs(py::class_<PyIEntity>& cls) {
     cls
         .def(
             "enable",
@@ -37,7 +39,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIEntity>& cls) {
         )
         .def(
             "__eq__",
-            [](pyrti::PyIEntity& e, pyrti::PyIEntity& other) {
+            [](PyIEntity& e, PyIEntity& other) {
                 return e.get_entity() == other.get_entity();
             },
             py::is_operator(),
@@ -45,7 +47,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIEntity>& cls) {
         )
         .def(
             "__ne__",
-            [](pyrti::PyIEntity& e, pyrti::PyIEntity& other) {
+            [](PyIEntity& e, PyIEntity& other) {
                 return e.get_entity() != other.get_entity();
             },
             py::is_operator(),
@@ -57,15 +59,17 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIEntity>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Entity>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Entity>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyIEntity>(m, "IEntity");
+            return init_class<PyIEntity>(m, "IEntity");
         }
     );
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyEntity, pyrti::PyIEntity>(m, "Entity");
+            return init_class<PyEntity, PyIEntity>(m, "Entity");
         }
     ); 
+}
+
 }

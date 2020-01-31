@@ -4,8 +4,10 @@
 using namespace dds::core::xtypes;
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<EnumType, AbstractConstructedType<EnumMember>>& cls) {
+void init_class_defs(py::class_<EnumType, AbstractConstructedType<EnumMember>>& cls) {
     cls
         .def(
             py::init<
@@ -53,10 +55,12 @@ void pyrti::init_class_defs(py::class_<EnumType, AbstractConstructedType<EnumMem
 }
 
 template<>
-void pyrti::process_inits<EnumType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<EnumType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<EnumType, AbstractConstructedType<EnumMember>>(m, "EnumType");
+            return init_class<EnumType, AbstractConstructedType<EnumMember>>(m, "EnumType");
         }
     );  
+}
+
 }

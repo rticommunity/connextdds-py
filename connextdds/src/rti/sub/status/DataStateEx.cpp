@@ -4,8 +4,10 @@
 
 using namespace rti::sub::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<StreamKind>& cls) {
+void init_class_defs(py::class_<StreamKind>& cls) {
     cls
         .def_static(
             "live",
@@ -25,7 +27,7 @@ void pyrti::init_class_defs(py::class_<StreamKind>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<DataStateEx>& cls) {
+void init_class_defs(py::class_<DataStateEx>& cls) {
     cls
         .def(
             py::init<>(),
@@ -148,10 +150,10 @@ void pyrti::init_class_defs(py::class_<DataStateEx>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataStateEx>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataStateEx>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<StreamKind, uint32_t>(m, "StreamKind", "Create a StreamKind with nothing enabled.");
+            auto cls = init_mask_type<StreamKind, uint32_t>(m, "StreamKind", "Create a StreamKind with nothing enabled.");
             return [cls]() mutable {
                 init_class_defs<StreamKind>(cls);
             };
@@ -160,7 +162,9 @@ void pyrti::process_inits<DataStateEx>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataStateEx>(m, "DataStateEx");
+            return init_class<DataStateEx>(m, "DataStateEx");
         }
     );
+}
+
 }

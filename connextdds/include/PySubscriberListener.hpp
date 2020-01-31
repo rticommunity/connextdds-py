@@ -6,99 +6,101 @@
 #include "PyEntity.hpp"
 
 namespace pyrti {
-    class PySubscriberListener :
-        public dds::sub::SubscriberListener,
-        public pyrti::PyAnyDataReaderListener {
-    public:
-        using dds::sub::SubscriberListener::SubscriberListener;
-        using pyrti::PyAnyDataReaderListener::PyAnyDataReaderListener;
 
-        using dds::sub::SubscriberListener::on_data_on_readers;
+class PySubscriberListener :
+    public dds::sub::SubscriberListener,
+    public PyAnyDataReaderListener {
+public:
+    using dds::sub::SubscriberListener::SubscriberListener;
+    using PyAnyDataReaderListener::PyAnyDataReaderListener;
 
-        virtual
-        void on_data_on_readers(
-            pyrti::PySubscriber& sub
-        ) = 0;
+    using dds::sub::SubscriberListener::on_data_on_readers;
 
-        virtual
-        ~PySubscriberListener() {}
-    };
+    virtual
+    void on_data_on_readers(
+        PySubscriber& sub
+    ) = 0;
 
-    class PyNoOpSubscriberListener : 
-        public pyrti::PySubscriberListener,
-        public pyrti::PyNoOpAnyDataReaderListener {
-    public:
-        using pyrti::PySubscriberListener::PySubscriberListener;
+    virtual
+    ~PySubscriberListener() {}
+};
 
-        using pyrti::PyNoOpAnyDataReaderListener::on_requested_deadline_missed;
-        using pyrti::PyNoOpAnyDataReaderListener::on_requested_incompatible_qos;
-        using pyrti::PyNoOpAnyDataReaderListener::on_sample_rejected;
-        using pyrti::PyNoOpAnyDataReaderListener::on_liveliness_changed;
-        using pyrti::PyNoOpAnyDataReaderListener::on_data_available;
-        using pyrti::PyNoOpAnyDataReaderListener::on_subscription_matched;
-        using pyrti::PyNoOpAnyDataReaderListener::on_sample_lost;
+class PyNoOpSubscriberListener : 
+    public PySubscriberListener,
+    public PyNoOpAnyDataReaderListener {
+public:
+    using PySubscriberListener::PySubscriberListener;
 
-        using pyrti::PySubscriberListener::on_data_on_readers;
+    using PyNoOpAnyDataReaderListener::on_requested_deadline_missed;
+    using PyNoOpAnyDataReaderListener::on_requested_incompatible_qos;
+    using PyNoOpAnyDataReaderListener::on_sample_rejected;
+    using PyNoOpAnyDataReaderListener::on_liveliness_changed;
+    using PyNoOpAnyDataReaderListener::on_data_available;
+    using PyNoOpAnyDataReaderListener::on_subscription_matched;
+    using PyNoOpAnyDataReaderListener::on_sample_lost;
 
-        void on_data_on_readers(
-            pyrti::PySubscriber& sub
-        ) override {}
+    using PySubscriberListener::on_data_on_readers;
 
-        virtual
-        ~PyNoOpSubscriberListener() {}
-    };
+    void on_data_on_readers(
+        PySubscriber& sub
+    ) override {}
 
-    template<class SLBase = pyrti::PySubscriberListener>
-    class PySubscriberListenerTrampoline : public pyrti::PyAnyDataReaderListenerTrampoline<SLBase> {
-    public:
-        using pyrti::PyAnyDataReaderListenerTrampoline<SLBase>::PyAnyDataReaderListenerTrampoline;
+    virtual
+    ~PyNoOpSubscriberListener() {}
+};
 
-        void on_data_on_readers(
-            dds::sub::Subscriber& sub
-        ) override {
-            pyrti::PySubscriber s(sub);
-            this->on_data_on_readers(s);
-        }
+template<class SLBase = PySubscriberListener>
+class PySubscriberListenerTrampoline : public PyAnyDataReaderListenerTrampoline<SLBase> {
+public:
+    using PyAnyDataReaderListenerTrampoline<SLBase>::PyAnyDataReaderListenerTrampoline;
 
-        void on_data_on_readers(
-            pyrti::PySubscriber& sub
-        ) override {
-            PYBIND11_OVERLOAD_PURE(
-                void,
-                SLBase,
-                on_data_on_readers,
-                sub
-            );
-        }
+    void on_data_on_readers(
+        dds::sub::Subscriber& sub
+    ) override {
+        PySubscriber s(sub);
+        this->on_data_on_readers(s);
+    }
 
-        virtual
-        ~PySubscriberListenerTrampoline() {}
-    };
+    void on_data_on_readers(
+        PySubscriber& sub
+    ) override {
+        PYBIND11_OVERLOAD_PURE(
+            void,
+            SLBase,
+            on_data_on_readers,
+            sub
+        );
+    }
 
-    template <class SLBase = pyrti::PyNoOpSubscriberListener>
-    class PyNoOpSubscriberListenerTrampoline : public pyrti::PyNoOpAnyDataReaderListenerTrampoline<SLBase> {
-    public:
-        using pyrti::PyNoOpAnyDataReaderListenerTrampoline<SLBase>::PyNoOpAnyDataReaderListenerTrampoline;
-        
-        void on_data_on_readers(
-            dds::sub::Subscriber& sub
-        ) override {
-            pyrti::PySubscriber s(sub);
-            this->on_data_on_readers(s);
-        }
+    virtual
+    ~PySubscriberListenerTrampoline() {}
+};
 
-        void on_data_on_readers(
-            pyrti::PySubscriber& sub
-        ) override {
-            PYBIND11_OVERLOAD(
-                void,
-                SLBase,
-                on_data_on_readers,
-                sub
-            );
-        }
+template <class SLBase = PyNoOpSubscriberListener>
+class PyNoOpSubscriberListenerTrampoline : public PyNoOpAnyDataReaderListenerTrampoline<SLBase> {
+public:
+    using PyNoOpAnyDataReaderListenerTrampoline<SLBase>::PyNoOpAnyDataReaderListenerTrampoline;
+    
+    void on_data_on_readers(
+        dds::sub::Subscriber& sub
+    ) override {
+        PySubscriber s(sub);
+        this->on_data_on_readers(s);
+    }
 
-        virtual
-        ~PyNoOpSubscriberListenerTrampoline() {}
-    };
+    void on_data_on_readers(
+        PySubscriber& sub
+    ) override {
+        PYBIND11_OVERLOAD(
+            void,
+            SLBase,
+            on_data_on_readers,
+            sub
+        );
+    }
+
+    virtual
+    ~PyNoOpSubscriberListenerTrampoline() {}
+};
+
 }

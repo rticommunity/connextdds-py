@@ -6,8 +6,10 @@ namespace py = pybind11;
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::process_inits<TypeKind>(py::module& m, pyrti::ClassInitList&) {
+void process_inits<TypeKind>(py::module& m, ClassInitList&) {
     auto tk = init_dds_safe_enum<TypeKind_def>(m, "TypeKind");
 
     py::enum_<TypeKind::type>(tk, "TypeKind")
@@ -143,7 +145,11 @@ void pyrti::process_inits<TypeKind>(py::module& m, pyrti::ClassInitList&) {
         )
         .value(
             "MAP_TYPE",
+#if RTI_CONNEXT_DDS_6_0_0
             TypeKind::type::MAP_TYPE,
+#else
+            TypeKind::type::MAP_TYPE_OMG,
+#endif
             "Map type"
         )
         .value(
@@ -168,3 +174,6 @@ void pyrti::process_inits<TypeKind>(py::module& m, pyrti::ClassInitList&) {
         )
         .export_values();
 }
+
+}
+

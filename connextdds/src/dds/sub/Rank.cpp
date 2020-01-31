@@ -3,8 +3,10 @@
 
 using namespace dds::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Rank>& cls) {
+void init_class_defs(py::class_<Rank>& cls) {
     cls
         .def(
             py::init<>(),
@@ -40,10 +42,12 @@ void pyrti::init_class_defs(py::class_<Rank>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Rank>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Rank>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable{
-            return pyrti::init_class<Rank>(m, "Rank");
+            return init_class<Rank>(m, "Rank");
         }
     );
+}
+
 }

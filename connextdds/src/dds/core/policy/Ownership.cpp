@@ -4,8 +4,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Ownership>& cls) {
+void init_class_defs(py::class_<Ownership>& cls) {
     cls
         .def(
             py::init<>(),
@@ -76,11 +78,13 @@ void init_dds_ownership_kind(py::module& m) {
 }
 
 template<>
-void pyrti::process_inits<Ownership>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Ownership>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
             init_dds_ownership_kind(m);
-            return pyrti::init_class<Ownership>(m, "Ownership");
+            return init_class<Ownership>(m, "Ownership");
         }
     );
+}
+
 }

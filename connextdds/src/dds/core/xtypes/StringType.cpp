@@ -4,8 +4,10 @@
 using namespace dds::core::xtypes;
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<StringType, UnidimensionalCollectionTypeImpl>& cls) {
+void init_class_defs(py::class_<StringType, UnidimensionalCollectionTypeImpl>& cls) {
     cls
         .def(
             py::init<uint32_t>(),
@@ -15,10 +17,12 @@ void pyrti::init_class_defs(py::class_<StringType, UnidimensionalCollectionTypeI
 }
 
 template<>
-void pyrti::process_inits<StringType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<StringType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<StringType, UnidimensionalCollectionTypeImpl>(m, "StringType");
+            return init_class<StringType, UnidimensionalCollectionTypeImpl>(m, "StringType");
         }
     ); 
+}
+
 }

@@ -4,8 +4,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<History>& cls) {
+void init_class_defs(py::class_<History>& cls) {
     cls
         .def(
             py::init<>(),
@@ -110,11 +112,13 @@ void init_dds_history_kind(py::module& m) {
 }
 
 template<>
-void pyrti::process_inits<History>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<History>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
             init_dds_history_kind(m);
-            return pyrti::init_class<History>(m, "History");
+            return init_class<History>(m, "History");
         }
     );
+}
+
 }

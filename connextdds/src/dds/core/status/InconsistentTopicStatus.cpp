@@ -3,8 +3,10 @@
 
 using namespace dds::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<InconsistentTopicStatus>& cls) {
+void init_class_defs(py::class_<InconsistentTopicStatus>& cls) {
     cls
         .def_property_readonly(
             "total_count",
@@ -23,10 +25,12 @@ void pyrti::init_class_defs(py::class_<InconsistentTopicStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<InconsistentTopicStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<InconsistentTopicStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<InconsistentTopicStatus>(m, "InconsistentTopicStatus");
+            return init_class<InconsistentTopicStatus>(m, "InconsistentTopicStatus");
         }
     ); 
+}
+
 }

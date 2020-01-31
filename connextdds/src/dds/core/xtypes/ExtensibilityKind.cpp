@@ -4,8 +4,10 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::process_inits<ExtensibilityKind>(py::module& m, pyrti::ClassInitList&) {
+void process_inits<ExtensibilityKind>(py::module& m, ClassInitList&) {
     auto ek = init_dds_safe_enum<ExtensibilityKind_def>(m, "ExtensibilityKind");
 
     py::enum_<ExtensibilityKind::type>(ek, "ExtensibilityKind")
@@ -25,4 +27,6 @@ void pyrti::process_inits<ExtensibilityKind>(py::module& m, pyrti::ClassInitList
             "Mutable extensibility."
         )
         .export_values();
+}
+
 }

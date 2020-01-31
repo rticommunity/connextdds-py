@@ -4,8 +4,10 @@
 
 using namespace rti::topic;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<PrintFormatProperty>& cls) {
+void init_class_defs(py::class_<PrintFormatProperty>& cls) {
     cls
         .def(
             py::init<
@@ -61,7 +63,7 @@ void pyrti::init_class_defs(py::class_<PrintFormatProperty>& cls) {
 }
 
 template<>
-void pyrti::process_inits<PrintFormatProperty>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<PrintFormatProperty>(py::module& m, ClassInitList& l) {
     auto pfk = init_dds_safe_enum<PrintFormatKind_def>(m, "PrintFormatKind");
 
     py::enum_<PrintFormatKind::type>(pfk, "PrintFormatKind")
@@ -84,7 +86,9 @@ void pyrti::process_inits<PrintFormatProperty>(py::module& m, pyrti::ClassInitLi
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<PrintFormatProperty>(m, "PrintFormatProperty");
+            return init_class<PrintFormatProperty>(m, "PrintFormatProperty");
         }
     );
+}
+
 }

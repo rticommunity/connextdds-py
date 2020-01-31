@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ReliableWriterCacheChangedStatus>& cls) {
+void init_class_defs(py::class_<ReliableWriterCacheChangedStatus>& cls) {
     cls
         .def_property_readonly(
             "empty_reliable_writer_cache",
@@ -45,10 +47,12 @@ void pyrti::init_class_defs(py::class_<ReliableWriterCacheChangedStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ReliableWriterCacheChangedStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ReliableWriterCacheChangedStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ReliableWriterCacheChangedStatus>(m, "ReliableWriterCacheChangedStatus");
+            return init_class<ReliableWriterCacheChangedStatus>(m, "ReliableWriterCacheChangedStatus");
         }
     );
+}
+
 }

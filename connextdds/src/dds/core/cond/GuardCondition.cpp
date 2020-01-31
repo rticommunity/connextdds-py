@@ -2,8 +2,10 @@
 #include "PyCondition.hpp"
 #include <pybind11/functional.h>
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondition>& cls) {
+void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls) {
     cls
         .def(
             py::init<>(),
@@ -11,9 +13,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondit
         )
         .def(
             py::init(
-                [](pyrti::PyICondition& c) {
+                [](PyICondition& c) {
                     auto gc = c.get_condition();
-                    return dds::core::polymorphic_cast<pyrti::PyGuardCondition>(gc);
+                    return dds::core::polymorphic_cast<PyGuardCondition>(gc);
                 }
             ),
             py::arg("condition"),
@@ -21,7 +23,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondit
         )
         .def(
             "handler",
-            [](pyrti::PyGuardCondition& gc, std::function<void()>& func) {
+            [](PyGuardCondition& gc, std::function<void()>& func) {
                 gc->handler(func);
             },
             py::arg("func"),
@@ -29,13 +31,13 @@ void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondit
         )
         .def(
             "reset_handler",
-            &pyrti::PyGuardCondition::reset_handler,
+            &PyGuardCondition::reset_handler,
             "Resets the handler for this GuardCondition."
         )
         .def_property(
             "trigger_value",
-            (bool (pyrti::PyGuardCondition::*)() const) &pyrti::PyGuardCondition::trigger_value,
-            (void (pyrti::PyGuardCondition::*)(bool)) &pyrti::PyGuardCondition::trigger_value,
+            (bool (PyGuardCondition::*)() const) &PyGuardCondition::trigger_value,
+            (void (PyGuardCondition::*)(bool)) &PyGuardCondition::trigger_value,
             "Get/set the trigger value for this GuardCondition"
         )
         .def(
@@ -49,10 +51,12 @@ void pyrti::init_class_defs(py::class_<pyrti::PyGuardCondition, pyrti::PyICondit
 }
 
 template<>
-void pyrti::process_inits<dds::core::cond::GuardCondition>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::core::cond::GuardCondition>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable{
-            return pyrti::init_class<pyrti::PyGuardCondition, pyrti::PyICondition>(m, "GuardCondition");
+            return init_class<PyGuardCondition, PyICondition>(m, "GuardCondition");
         }
     );
+}
+
 }

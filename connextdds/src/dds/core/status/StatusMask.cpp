@@ -4,8 +4,10 @@
 
 using namespace dds::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<StatusMask>& cls) {
+void init_class_defs(py::class_<StatusMask>& cls) {
     cls
         .def_static(
             "all", 
@@ -161,13 +163,15 @@ void pyrti::init_class_defs(py::class_<StatusMask>& cls) {
 }
 
 template<>
-void pyrti::process_inits<StatusMask>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<StatusMask>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<StatusMask, uint64_t>(m, "StatusMask", "Create a StatusMask equivalent to StatusMask.none()");
+            auto cls = init_mask_type<StatusMask, uint64_t>(m, "StatusMask", "Create a StatusMask equivalent to StatusMask.none()");
             return [cls]() mutable {
                 init_class_defs<StatusMask>(cls);
             };
         }
     ); 
+}
+
 }

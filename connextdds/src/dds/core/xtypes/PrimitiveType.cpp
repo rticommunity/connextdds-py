@@ -3,6 +3,8 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<typename T>
 void init_dds_dynamic_primitive_defs(py::class_<PrimitiveType<T>, DynamicType>& cls, const std::string& name) {
     cls.
@@ -17,7 +19,7 @@ void init_dds_dynamic_primitive_defs(py::class_<PrimitiveType<T>, DynamicType>& 
 }
 
 template<typename T>
-void init_dds_dynamic_primitive(py::module& m, const std::string& name, pyrti::ClassInitList& l) {
+void init_dds_dynamic_primitive(py::module& m, const std::string& name, ClassInitList& l) {
     l.push_back(
         [m, name]() mutable {
             py::class_<PrimitiveType<T>, DynamicType> cls(m, name.c_str());
@@ -31,7 +33,7 @@ void init_dds_dynamic_primitive(py::module& m, const std::string& name, pyrti::C
 }
 
 template<>
-void pyrti::process_inits<pyrti::PyPrimitiveType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<PyPrimitiveType>(py::module& m, ClassInitList& l) {
     init_dds_dynamic_primitive<char>(m, "CharType", l);
     init_dds_dynamic_primitive<bool>(m, "BoolType", l);
     init_dds_dynamic_primitive<uint8_t>(m, "Uint8Type", l);
@@ -45,4 +47,6 @@ void pyrti::process_inits<pyrti::PyPrimitiveType>(py::module& m, pyrti::ClassIni
     init_dds_dynamic_primitive<double>(m, "DoubleType", l);
     init_dds_dynamic_primitive<rti::core::LongDouble>(m, "LongDoubleType", l);
     init_dds_dynamic_primitive<wchar_t>(m, "WcharType", l);
+}
+
 }

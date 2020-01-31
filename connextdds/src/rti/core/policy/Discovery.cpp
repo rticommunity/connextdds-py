@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Discovery>& cls) {
+void init_class_defs(py::class_<Discovery>& cls) {
     cls
         .def(
             py::init<>(),
@@ -68,10 +70,12 @@ void pyrti::init_class_defs(py::class_<Discovery>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Discovery>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Discovery>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Discovery>(m, "Discovery");
+            return init_class<Discovery>(m, "Discovery");
         }
     );
+}
+
 }

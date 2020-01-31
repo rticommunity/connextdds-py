@@ -2,14 +2,15 @@
 #include "PyEntity.hpp"
 #include "PyCondition.hpp"
 #include <pybind11/functional.h>
+namespace pyrti {
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondition>& cls) {
+void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls) {
     cls
         .def(
             py::init(
-                [](pyrti::PyIEntity& e) {
-                    return pyrti::PyStatusCondition(e.get_entity());
+                [](PyIEntity& e) {
+                    return PyStatusCondition(e.get_entity());
                 }
             ),
             py::arg("entity"),
@@ -17,9 +18,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondi
             "Obtain a referene to an entity's StatusCondition object")
         .def(
             py::init(
-                [](pyrti::PyICondition& c) {
+                [](PyICondition& c) {
                     auto sc = c.get_condition();
-                    return dds::core::polymorphic_cast<pyrti::PyStatusCondition>(sc);
+                    return dds::core::polymorphic_cast<PyStatusCondition>(sc);
                 }
             ),
             py::arg("condition"),
@@ -27,21 +28,21 @@ void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondi
         )
         .def_property(
             "enabled_statuses",
-            (const dds::core::status::StatusMask (pyrti::PyStatusCondition::*)() const) &pyrti::PyStatusCondition::enabled_statuses,
-            (void (pyrti::PyStatusCondition::*)(const dds::core::status::StatusMask&)) &pyrti::PyStatusCondition::enabled_statuses,
+            (const dds::core::status::StatusMask (PyStatusCondition::*)() const) &PyStatusCondition::enabled_statuses,
+            (void (PyStatusCondition::*)(const dds::core::status::StatusMask&)) &PyStatusCondition::enabled_statuses,
             "Get/set the enabled statuses for this condition."
         )
         .def_property_readonly(
             "entity",
-            [](const pyrti::PyStatusCondition& sc) {
-                auto e = pyrti::PyEntity(sc.entity());
+            [](const PyStatusCondition& sc) {
+                auto e = PyEntity(sc.entity());
                 return e;
             },
             "Get the Entity associated with this StatusCondition."
         )
         .def(
             "handler",
-            [](pyrti::PyStatusCondition& sc, std::function<void()>& func) {
+            [](PyStatusCondition& sc, std::function<void()>& func) {
                 sc->handler(func);
             },
             py::arg("func"),
@@ -49,19 +50,19 @@ void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondi
         )
         .def(
             "reset_handler",
-            [](pyrti::PyStatusCondition& sc) {
+            [](PyStatusCondition& sc) {
                 sc->reset_handler();
             },
             "Resets the handler for this StatusCondition."
         )
         .def(
             "dispatch",
-            &pyrti::PyStatusCondition::dispatch,
+            &PyStatusCondition::dispatch,
             "Dispatches the functions registered with the condition."
         )
         .def_property_readonly(
             "trigger_value",
-            &pyrti::PyStatusCondition::trigger_value,
+            &PyStatusCondition::trigger_value,
             "The trigger value of the condition."
         )
         .def(
@@ -75,10 +76,12 @@ void pyrti::init_class_defs(py::class_<pyrti::PyStatusCondition, pyrti::PyICondi
 }
 
 template<>
-void pyrti::process_inits<dds::core::cond::StatusCondition>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::core::cond::StatusCondition>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyStatusCondition, pyrti::PyICondition>(m, "StatusCondition");
+            return init_class<PyStatusCondition, PyICondition>(m, "StatusCondition");
         }
     );
+}
+
 }

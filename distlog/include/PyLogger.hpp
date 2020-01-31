@@ -39,4 +39,6 @@ namespace pyrti {
         static bool _options_set;
         static std::recursive_mutex _lock;
     };
+
+    void init_logger(py::module&);
 }

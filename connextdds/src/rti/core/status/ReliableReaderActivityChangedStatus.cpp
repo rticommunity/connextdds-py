@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ReliableReaderActivityChangedStatus>& cls) {
+void init_class_defs(py::class_<ReliableReaderActivityChangedStatus>& cls) {
     cls
         .def_property_readonly(
             "active_count",
@@ -28,10 +30,12 @@ void pyrti::init_class_defs(py::class_<ReliableReaderActivityChangedStatus>& cls
 }
 
 template<>
-void pyrti::process_inits<ReliableReaderActivityChangedStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ReliableReaderActivityChangedStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ReliableReaderActivityChangedStatus>(m, "ReliableReaderActivityChangedStatus");
+            return init_class<ReliableReaderActivityChangedStatus>(m, "ReliableReaderActivityChangedStatus");
         }
     );
+}
+
 }

@@ -3,8 +3,10 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<CollectionType, DynamicType>& cls) {
+void init_class_defs(py::class_<CollectionType, DynamicType>& cls) {
     cls
         .def(
             "content_type", 
@@ -14,10 +16,12 @@ void pyrti::init_class_defs(py::class_<CollectionType, DynamicType>& cls) {
 }
 
 template<>
-void pyrti::process_inits<CollectionType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<CollectionType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<CollectionType, DynamicType>(m, "CollectionType");
+            return init_class<CollectionType, DynamicType>(m, "CollectionType");
         }
     );  
+}
+
 }

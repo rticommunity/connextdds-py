@@ -3,8 +3,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<WriterDataLifecycle>& cls) {
+void init_class_defs(py::class_<WriterDataLifecycle>& cls) {
     cls
         .def(
             py::init<>(),
@@ -74,10 +76,12 @@ void pyrti::init_class_defs(py::class_<WriterDataLifecycle>& cls) {
 }
 
 template<>
-void pyrti::process_inits<WriterDataLifecycle>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<WriterDataLifecycle>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<WriterDataLifecycle>(m, "WriterDataLifecycle");
+            return init_class<WriterDataLifecycle>(m, "WriterDataLifecycle");
         }
     );    
+}
+
 }

@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DataWriterResourceLimits>& cls) {
+void init_class_defs(py::class_<DataWriterResourceLimits>& cls) {
     cls
         .def(
             py::init<>(),
@@ -138,7 +140,7 @@ void pyrti::init_class_defs(py::class_<DataWriterResourceLimits>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataWriterResourceLimits>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataWriterResourceLimits>(py::module& m, ClassInitList& l) {
     auto dwrlirk = init_dds_safe_enum<DataWriterResourceLimitsInstanceReplacementKind_def>(m, "DataWriterResourceLimitsInstaceReplacementKind");
 
     py::enum_<DataWriterResourceLimitsInstanceReplacementKind::type>(dwrlirk, "DataWriterResourceLimitsInstaceReplacementKind")
@@ -218,7 +220,9 @@ void pyrti::process_inits<DataWriterResourceLimits>(py::module& m, pyrti::ClassI
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataWriterResourceLimits>(m, "DataWriterResourceLimits");
+            return init_class<DataWriterResourceLimits>(m, "DataWriterResourceLimits");
         }
     );
+}
+
 }

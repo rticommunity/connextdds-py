@@ -9,151 +9,153 @@
 #include "PyAnyDataReader.hpp"
 
 namespace pyrti {
-    class PyICondition {
-    public:
-        virtual
-        dds::core::cond::Condition get_condition() = 0;
 
-        virtual
-        void py_dispatch() = 0;
+class PyICondition {
+public:
+    virtual
+    dds::core::cond::Condition get_condition() = 0;
 
-        virtual
-        bool py_trigger_value() = 0;
+    virtual
+    void py_dispatch() = 0;
 
-        virtual
-        ~PyICondition() {}
-    };
+    virtual
+    bool py_trigger_value() = 0;
 
-    class PyIReadCondition : public pyrti::PyICondition {
-    public:
-        using pyrti::PyICondition::PyICondition;
+    virtual
+    ~PyICondition() {}
+};
 
-        virtual
-        dds::sub::cond::ReadCondition get_read_condition() = 0;
+class PyIReadCondition : public PyICondition {
+public:
+    using PyICondition::PyICondition;
 
-        virtual
-        const dds::sub::status::DataState py_state_filter() = 0;
+    virtual
+    dds::sub::cond::ReadCondition get_read_condition() = 0;
 
-        virtual
-        const pyrti::PyAnyDataReader py_data_reader() = 0;
+    virtual
+    const dds::sub::status::DataState py_state_filter() = 0;
 
-        virtual
-        void py_close() = 0;
+    virtual
+    const PyAnyDataReader py_data_reader() = 0;
 
-        virtual
-        bool py_closed() = 0;
+    virtual
+    void py_close() = 0;
 
-        virtual
-        ~PyIReadCondition() {}
-    };
+    virtual
+    bool py_closed() = 0;
 
-    class PyCondition : public dds::core::cond::Condition, public pyrti::PyICondition {
-    public:
-        using dds::core::cond::Condition::Condition;
+    virtual
+    ~PyIReadCondition() {}
+};
 
-        dds::core::cond::Condition get_condition() override {
-            return dds::core::cond::Condition(*this);
-        }
+class PyCondition : public dds::core::cond::Condition, public PyICondition {
+public:
+    using dds::core::cond::Condition::Condition;
 
-        void py_dispatch() override { this->dispatch(); }
+    dds::core::cond::Condition get_condition() override {
+        return dds::core::cond::Condition(*this);
+    }
 
-        bool py_trigger_value() override { return this->trigger_value(); }
+    void py_dispatch() override { this->dispatch(); }
 
-        virtual
-        ~PyCondition() {}
-    };
+    bool py_trigger_value() override { return this->trigger_value(); }
 
-    class PyStatusCondition : public dds::core::cond::StatusCondition, public pyrti::PyICondition {
-    public:
-        using dds::core::cond::StatusCondition::StatusCondition;
+    virtual
+    ~PyCondition() {}
+};
 
-        dds::core::cond::Condition get_condition() override {
-            return dds::core::cond::Condition(*this);
-        }
+class PyStatusCondition : public dds::core::cond::StatusCondition, public PyICondition {
+public:
+    using dds::core::cond::StatusCondition::StatusCondition;
 
-        void py_dispatch() override { this->dispatch(); }
+    dds::core::cond::Condition get_condition() override {
+        return dds::core::cond::Condition(*this);
+    }
 
-        bool py_trigger_value() override { return this->trigger_value(); }
+    void py_dispatch() override { this->dispatch(); }
 
-        virtual
-        ~PyStatusCondition() {}
-    };
+    bool py_trigger_value() override { return this->trigger_value(); }
 
-    class PyGuardCondition : public dds::core::cond::GuardCondition, public pyrti::PyICondition {
-    public:
-        using dds::core::cond::GuardCondition::GuardCondition;
+    virtual
+    ~PyStatusCondition() {}
+};
 
-        dds::core::cond::Condition get_condition() override {
-            return dds::core::cond::Condition(*this);
-        }
+class PyGuardCondition : public dds::core::cond::GuardCondition, public PyICondition {
+public:
+    using dds::core::cond::GuardCondition::GuardCondition;
 
-        void py_dispatch() override { this->dispatch(); }
+    dds::core::cond::Condition get_condition() override {
+        return dds::core::cond::Condition(*this);
+    }
 
-        bool py_trigger_value() override { return this->trigger_value(); }
+    void py_dispatch() override { this->dispatch(); }
 
-        virtual
-        ~PyGuardCondition() {}
-    };
+    bool py_trigger_value() override { return this->trigger_value(); }
 
-    class PyReadCondition : public dds::sub::cond::ReadCondition, public pyrti::PyIReadCondition {
-    public:
-        using dds::sub::cond::ReadCondition::ReadCondition;
+    virtual
+    ~PyGuardCondition() {}
+};
 
-        dds::core::cond::Condition get_condition() override {
-            return dds::core::cond::Condition(*this);
-        }
+class PyReadCondition : public dds::sub::cond::ReadCondition, public PyIReadCondition {
+public:
+    using dds::sub::cond::ReadCondition::ReadCondition;
 
-        dds::sub::cond::ReadCondition get_read_condition() override {
-            return *this;
-        }
+    dds::core::cond::Condition get_condition() override {
+        return dds::core::cond::Condition(*this);
+    }
 
-        void py_dispatch() override { this->dispatch(); }
+    dds::sub::cond::ReadCondition get_read_condition() override {
+        return *this;
+    }
 
-        bool py_trigger_value() override { return this->trigger_value(); }
+    void py_dispatch() override { this->dispatch(); }
 
-        const dds::sub::status::DataState py_state_filter() override { return this->state_filter(); }
+    bool py_trigger_value() override { return this->trigger_value(); }
 
-        const pyrti::PyAnyDataReader py_data_reader() override {
-            auto dr = this->data_reader();
-            return pyrti::PyAnyDataReader(dr);
-        }
+    const dds::sub::status::DataState py_state_filter() override { return this->state_filter(); }
 
-        void py_close() override { this->close(); }
+    const PyAnyDataReader py_data_reader() override {
+        auto dr = this->data_reader();
+        return PyAnyDataReader(dr);
+    }
 
-        bool py_closed() override { return this->closed(); }
+    void py_close() override { this->close(); }
 
-        virtual
-        ~PyReadCondition() {}
-    };
+    bool py_closed() override { return this->closed(); }
 
-    class PyQueryCondition : public dds::sub::cond::QueryCondition, public pyrti::PyIReadCondition {
-    public:
-        using dds::sub::cond::QueryCondition::QueryCondition;
+    virtual
+    ~PyReadCondition() {}
+};
 
-        dds::core::cond::Condition get_condition() override {
-            return dds::core::cond::Condition(*this);
-        }
+class PyQueryCondition : public dds::sub::cond::QueryCondition, public PyIReadCondition {
+public:
+    using dds::sub::cond::QueryCondition::QueryCondition;
 
-        dds::sub::cond::ReadCondition get_read_condition() override {
-            return dds::sub::cond::ReadCondition(*this);
-        }
+    dds::core::cond::Condition get_condition() override {
+        return dds::core::cond::Condition(*this);
+    }
 
-        void py_dispatch() override { this->dispatch(); }
+    dds::sub::cond::ReadCondition get_read_condition() override {
+        return dds::sub::cond::ReadCondition(*this);
+    }
 
-        bool py_trigger_value() override { return this->trigger_value(); }
+    void py_dispatch() override { this->dispatch(); }
 
-        const dds::sub::status::DataState py_state_filter() override { return this->state_filter(); }
+    bool py_trigger_value() override { return this->trigger_value(); }
 
-        const pyrti::PyAnyDataReader py_data_reader() override {
-            auto dr = this->data_reader();
-            return pyrti::PyAnyDataReader(dr);
-        }
+    const dds::sub::status::DataState py_state_filter() override { return this->state_filter(); }
 
-        void py_close() override { this->close(); }
+    const PyAnyDataReader py_data_reader() override {
+        auto dr = this->data_reader();
+        return PyAnyDataReader(dr);
+    }
 
-        bool py_closed() override { return this->closed(); }
+    void py_close() override { this->close(); }
 
-        virtual
-        ~PyQueryCondition() {}
-    };
+    bool py_closed() override { return this->closed(); }
+
+    virtual
+    ~PyQueryCondition() {}
+};
+
 }

@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<LocatorFilter>& cls) {
+void init_class_defs(py::class_<LocatorFilter>& cls) {
     cls
         .def(
             py::init<>(),
@@ -44,10 +46,12 @@ void pyrti::init_class_defs(py::class_<LocatorFilter>& cls) {
 }
 
 template<>
-void pyrti::process_inits<LocatorFilter>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<LocatorFilter>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<LocatorFilter>(m, "LocatorFilter");
+            return init_class<LocatorFilter>(m, "LocatorFilter");
         }
     );
+}
+
 }

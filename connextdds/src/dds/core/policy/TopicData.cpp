@@ -3,8 +3,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TopicData>& cls) {
+void init_class_defs(py::class_<TopicData>& cls) {
     cls
         .def(
             py::init<>(),
@@ -36,10 +38,12 @@ void pyrti::init_class_defs(py::class_<TopicData>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TopicData>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TopicData>(m, "TopicData");
+            return init_class<TopicData>(m, "TopicData");
         }
     ); 
+}
+
 }

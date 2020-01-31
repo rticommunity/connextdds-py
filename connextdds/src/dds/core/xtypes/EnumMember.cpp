@@ -3,8 +3,10 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<EnumMember>& cls) {
+void init_class_defs(py::class_<EnumMember>& cls) {
     cls
         .def(
             py::init<const std::string&, int32_t>(),
@@ -41,10 +43,12 @@ void pyrti::init_class_defs(py::class_<EnumMember>& cls) {
 }
 
 template<>
-void pyrti::process_inits<EnumMember>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<EnumMember>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<EnumMember>(m, "EnumMember");
+            return init_class<EnumMember>(m, "EnumMember");
         }
     );  
+}
+
 }

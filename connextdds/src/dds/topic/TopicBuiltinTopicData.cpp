@@ -8,14 +8,14 @@ using namespace dds::topic;
 INIT_OPAQUE_TYPE_CONTAINERS(dds::topic::TopicBuiltinTopicData);
 
 namespace pyrti {
-    template<>
-    void init_dds_typed_topic_template(py::class_<pyrti::PyTopic<dds::topic::TopicBuiltinTopicData>, pyrti::PyITopicDescription<dds::topic::TopicBuiltinTopicData>, pyrti::PyIAnyTopic>& cls) {
-        init_dds_typed_topic_base_template(cls);
-    }
+
+template<>
+void init_dds_typed_topic_template(py::class_<PyTopic<dds::topic::TopicBuiltinTopicData>, PyITopicDescription<dds::topic::TopicBuiltinTopicData>, PyIAnyTopic>& cls) {
+    init_dds_typed_topic_base_template(cls);
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
+void init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
     cls
         .def(
             py::init<>(),
@@ -122,14 +122,16 @@ void pyrti::init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
             "Test for inequality."
         );
 
-    pyrti::init_type<TopicBuiltinTopicData>(cls);
+    init_type<TopicBuiltinTopicData>(cls);
 }
 
 template<>
-void pyrti::process_inits<TopicBuiltinTopicData>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TopicBuiltinTopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TopicBuiltinTopicData>(m, "TopicBuiltinTopicData");
+            return init_class<TopicBuiltinTopicData>(m, "TopicBuiltinTopicData");
         }
     );
+}
+
 }

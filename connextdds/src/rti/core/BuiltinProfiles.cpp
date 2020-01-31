@@ -1,13 +1,16 @@
 #include "PyConnext.hpp"
 #include <rti/core/BuiltinProfiles.hpp>
 
-namespace rti { namespace core { namespace builtin_profiles { namespace qos_lib_exp{ }}}}
-
 using namespace rti::core::builtin_profiles::qos_lib;
+
+#if RTI_CONNEXT_DDS_6_0_0
 using namespace rti::core::builtin_profiles::qos_lib_exp;
+#endif
+
+namespace pyrti {
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyBuiltinProfiles>& cls) {
+void init_class_defs(py::class_<PyBuiltinProfiles>& cls) {
     cls
         .def_property_readonly_static(
             "library_name",
@@ -327,10 +330,12 @@ void pyrti::init_class_defs(py::class_<pyrti::PyBuiltinProfiles>& cls) {
 }
 
 template<>
-void pyrti::process_inits<pyrti::PyBuiltinProfiles>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<PyBuiltinProfiles>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyBuiltinProfiles>(m, "BuiltinProfiles");
+            return init_class<PyBuiltinProfiles>(m, "BuiltinProfiles");
         }
     );
+}
+
 }

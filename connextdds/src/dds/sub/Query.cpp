@@ -4,12 +4,14 @@
 
 using namespace dds::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Query>& cls) {
+void init_class_defs(py::class_<Query>& cls) {
     cls
         .def(
             py::init(
-                [](pyrti::PyIDataReader& dr, const std::string& expression) {
+                [](PyIDataReader& dr, const std::string& expression) {
                     return dr.create_query(expression);
                 }
             ),
@@ -19,7 +21,7 @@ void pyrti::init_class_defs(py::class_<Query>& cls) {
         )
         .def(
             py::init(
-                [](pyrti::PyIDataReader& dr, const std::string& expression, const std::vector<std::string>& params) {
+                [](PyIDataReader& dr, const std::string& expression, const std::vector<std::string>& params) {
                     return dr.create_query(expression, params);
                 }
             ),
@@ -90,10 +92,12 @@ void pyrti::init_class_defs(py::class_<Query>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Query>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Query>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Query>(m, "Query");
+            return init_class<Query>(m, "Query");
         }
     );
+}
+
 }

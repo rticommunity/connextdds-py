@@ -6,9 +6,10 @@
 
 INIT_OPAQUE_TYPE_CONTAINERS(dds::core::StringTopicType);
 
+namespace pyrti {
 
 template<>
-void pyrti::init_class_defs(py::class_<dds::core::StringTopicType>& cls) {
+void init_class_defs(py::class_<dds::core::StringTopicType>& cls) {
     cls
         .def(
             py::init<>(),
@@ -53,15 +54,17 @@ void pyrti::init_class_defs(py::class_<dds::core::StringTopicType>& cls) {
         );
 
     py::implicitly_convertible<std::string, dds::core::StringTopicType>();
-    pyrti::init_type<dds::core::StringTopicType>(cls);
+    init_type<dds::core::StringTopicType>(cls);
 }
 
 
 template<>
-void pyrti::process_inits<dds::core::StringTopicType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::core::StringTopicType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<dds::core::StringTopicType>(m, "StringTopicType");
+            return init_class<dds::core::StringTopicType>(m, "StringTopicType");
         }
     );
+}
+
 }

@@ -6,44 +6,46 @@
 #include "PyEntity.hpp"
 
 namespace pyrti {
-    class PyPublisherListener : 
-        public dds::pub::PublisherListener,
-        public pyrti::PyAnyDataWriterListener {
-    public:
-        using dds::pub::PublisherListener::PublisherListener;
-        using pyrti::PyAnyDataWriterListener::PyAnyDataWriterListener;
 
-        /*using pyrti::PyAnyDataWriterListener::on_offered_deadline_missed;
-        using pyrti::PyAnyDataWriterListener::on_offered_incompatible_qos;
-        using pyrti::PyAnyDataWriterListener::on_liveliness_lost;
-        using pyrti::PyAnyDataWriterListener::on_publication_matched;
-        using pyrti::PyAnyDataWriterListener::on_reliable_writer_cache_changed;
-        using pyrti::PyAnyDataWriterListener::on_reliable_reader_activity_changed;
-        using pyrti::PyAnyDataWriterListener::on_instance_replaced;
-        using pyrti::PyAnyDataWriterListener::on_application_acknowledgment;
-        using pyrti::PyAnyDataWriterListener::on_service_request_accepted;*/
+class PyPublisherListener : 
+    public dds::pub::PublisherListener,
+    public PyAnyDataWriterListener {
+public:
+    using dds::pub::PublisherListener::PublisherListener;
+    using PyAnyDataWriterListener::PyAnyDataWriterListener;
 
-        virtual
-        ~PyPublisherListener() {}
-    };
+    /*using PyAnyDataWriterListener::on_offered_deadline_missed;
+    using PyAnyDataWriterListener::on_offered_incompatible_qos;
+    using PyAnyDataWriterListener::on_liveliness_lost;
+    using PyAnyDataWriterListener::on_publication_matched;
+    using PyAnyDataWriterListener::on_reliable_writer_cache_changed;
+    using PyAnyDataWriterListener::on_reliable_reader_activity_changed;
+    using PyAnyDataWriterListener::on_instance_replaced;
+    using PyAnyDataWriterListener::on_application_acknowledgment;
+    using PyAnyDataWriterListener::on_service_request_accepted;*/
 
-    class PyNoOpPublisherListener : 
-        public pyrti::PyPublisherListener,
-        public pyrti::PyNoOpAnyDataWriterListener {
-    public:
-        using pyrti::PyPublisherListener::PyPublisherListener;
-        
-        using pyrti::PyNoOpAnyDataWriterListener::on_offered_deadline_missed;
-        using pyrti::PyNoOpAnyDataWriterListener::on_offered_incompatible_qos;
-        using pyrti::PyNoOpAnyDataWriterListener::on_liveliness_lost;
-        using pyrti::PyNoOpAnyDataWriterListener::on_publication_matched;
-        using pyrti::PyNoOpAnyDataWriterListener::on_reliable_writer_cache_changed;
-        using pyrti::PyNoOpAnyDataWriterListener::on_reliable_reader_activity_changed;
-        using pyrti::PyNoOpAnyDataWriterListener::on_instance_replaced;
-        using pyrti::PyNoOpAnyDataWriterListener::on_application_acknowledgment;
-        using pyrti::PyNoOpAnyDataWriterListener::on_service_request_accepted;
+    virtual
+    ~PyPublisherListener() {}
+};
 
-        virtual
-        ~PyNoOpPublisherListener() {}
-    };
+class PyNoOpPublisherListener : 
+    public PyPublisherListener,
+    public PyNoOpAnyDataWriterListener {
+public:
+    using PyPublisherListener::PyPublisherListener;
+    
+    using PyNoOpAnyDataWriterListener::on_offered_deadline_missed;
+    using PyNoOpAnyDataWriterListener::on_offered_incompatible_qos;
+    using PyNoOpAnyDataWriterListener::on_liveliness_lost;
+    using PyNoOpAnyDataWriterListener::on_publication_matched;
+    using PyNoOpAnyDataWriterListener::on_reliable_writer_cache_changed;
+    using PyNoOpAnyDataWriterListener::on_reliable_reader_activity_changed;
+    using PyNoOpAnyDataWriterListener::on_instance_replaced;
+    using PyNoOpAnyDataWriterListener::on_application_acknowledgment;
+    using PyNoOpAnyDataWriterListener::on_service_request_accepted;
+
+    virtual
+    ~PyNoOpPublisherListener() {}
+};
+
 }

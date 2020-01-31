@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
+void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
     cls
         .def(
             py::init<>(),
@@ -471,7 +473,7 @@ void pyrti::init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DomainParticipantResourceLimits>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DomainParticipantResourceLimits>(py::module& m, ClassInitList& l) {
     auto igrk = init_dds_safe_enum<IgnoredEntityReplacementKind_def>(m, "IgnoredEntityReplacementKind");
 
     py::enum_<IgnoredEntityReplacementKind::type>(igrk, "IgnoredEntityReplacementKind")
@@ -487,7 +489,9 @@ void pyrti::process_inits<DomainParticipantResourceLimits>(py::module& m, pyrti:
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DomainParticipantResourceLimits>(m, "DomainParticipantResourceLimits");
+            return init_class<DomainParticipantResourceLimits>(m, "DomainParticipantResourceLimits");
         }
     );
+}
+
 }

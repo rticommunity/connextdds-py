@@ -4,8 +4,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Presentation>& cls) {
+void init_class_defs(py::class_<Presentation>& cls) {
     cls
         .def(
             py::init<>(),
@@ -112,11 +114,13 @@ static void init_dds_presentation_access_scope_kind(py::module& m) {
 }
 
 template<>
-void pyrti::process_inits<Presentation>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Presentation>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
             init_dds_presentation_access_scope_kind(m);
-            return pyrti::init_class<Presentation>(m, "Presentation");
+            return init_class<Presentation>(m, "Presentation");
         }
     );
+}
+
 }

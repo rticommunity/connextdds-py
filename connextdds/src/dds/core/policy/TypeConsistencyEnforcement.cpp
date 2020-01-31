@@ -4,8 +4,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TypeConsistencyEnforcement>& cls) {
+void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls) {
     cls
         .def(
             py::init<>(),
@@ -120,11 +122,13 @@ void init_type_consistency_enforcement_kind(py::module& m) {
 }
 
 template<>
-void pyrti::process_inits<TypeConsistencyEnforcement>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TypeConsistencyEnforcement>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
             init_type_consistency_enforcement_kind(m);
-            return pyrti::init_class<TypeConsistencyEnforcement>(m, "TypeConsistencyEnforcement");
+            return init_class<TypeConsistencyEnforcement>(m, "TypeConsistencyEnforcement");
         }
     );      
+}
+
 }

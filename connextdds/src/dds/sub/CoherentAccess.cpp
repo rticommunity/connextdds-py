@@ -3,13 +3,15 @@
 
 using namespace dds::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<CoherentAccess>& cls) {
+void init_class_defs(py::class_<CoherentAccess>& cls) {
     cls
         .def(
             py::init(
-                [](const pyrti::PySubscriber& s) {
-                    return std::make_unique<CoherentAccess>(s);
+                [](const PySubscriber& s) {
+                    return std::unique_ptr<CoherentAccess>(new CoherentAccess(s));
                 }
             ),
             py::arg("subscriber"),
@@ -40,10 +42,12 @@ void pyrti::init_class_defs(py::class_<CoherentAccess>& cls) {
 }
 
 template<>
-void pyrti::process_inits<CoherentAccess>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<CoherentAccess>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<CoherentAccess>(m, "CoherentAccess");
+            return init_class<CoherentAccess>(m, "CoherentAccess");
         }
     ); 
+}
+
 }

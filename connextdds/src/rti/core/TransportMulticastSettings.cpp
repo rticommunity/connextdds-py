@@ -3,8 +3,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TransportMulticastSettings>& cls) {
+void init_class_defs(py::class_<TransportMulticastSettings>& cls) {
     cls
         .def(
             py::init<
@@ -50,10 +52,12 @@ void pyrti::init_class_defs(py::class_<TransportMulticastSettings>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TransportMulticastSettings>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TransportMulticastSettings>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TransportMulticastSettings>(m, "TransportMulticastSettings");
+            return init_class<TransportMulticastSettings>(m, "TransportMulticastSettings");
         }
     );
+}
+
 }

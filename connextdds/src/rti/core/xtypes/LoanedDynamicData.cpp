@@ -3,8 +3,10 @@
 
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<LoanedDynamicData>& cls) {
+void init_class_defs(py::class_<LoanedDynamicData>& cls) {
     cls
         .def(
             "return_loan",
@@ -24,11 +26,12 @@ void pyrti::init_class_defs(py::class_<LoanedDynamicData>& cls) {
 }
 
 template<>
-void pyrti::process_inits<LoanedDynamicData>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<LoanedDynamicData>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<LoanedDynamicData>(m, "LoanedDynamicData");
+            return init_class<LoanedDynamicData>(m, "LoanedDynamicData");
         }
     );
 }
 
+}

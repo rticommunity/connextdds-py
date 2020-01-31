@@ -7,53 +7,55 @@
 
 using namespace dds::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
+void init_class_defs(py::class_<PySubscriber>& cls) {
     cls
         .def(
             py::init<
-                const pyrti::PyDomainParticipant&
+                const PyDomainParticipant&
             >(),
             py::arg("participant"),
             "Create a subscriber under a DomainParticipant."
         )
         .def(
             py::init<
-                const pyrti::PyDomainParticipant&,
+                const PyDomainParticipant&,
                 const qos::SubscriberQos&,
-                pyrti::PySubscriberListener*,
+                PySubscriberListener*,
                 const dds::core::status::StatusMask&
             >(),
             py::arg("participant"),
             py::arg("qos"),
-            py::arg("listener") = (pyrti::PySubscriberListener*) nullptr,
+            py::arg("listener") = (PySubscriberListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
             py::keep_alive<1,4>(),
             "Create a Subscriber under a DomainParticipant with a listener."
         )
         .def(
             py::init(
-                [](pyrti::PyIEntity& e) {
+                [](PyIEntity& e) {
                     auto entity = e.get_entity();
-                    return dds::core::polymorphic_cast<pyrti::PySubscriber>(entity);
+                    return dds::core::polymorphic_cast<PySubscriber>(entity);
                 }
             )
         )
         .def(
             "notify_datareaders",
-            &pyrti::PySubscriber::notify_datareaders,
+            &PySubscriber::notify_datareaders,
             "This operation invokes the operation on_data_available on the DataReaderListener objects attached to contained DataReader entities with a DATA_AVAILABLE status that is considered changed"
         )
         .def_property_readonly(
             "listener",
-            [](const pyrti::PySubscriber& sub) {
-                return dynamic_cast<pyrti::PySubscriberListener*>(sub.listener());
+            [](const PySubscriber& sub) {
+                return dynamic_cast<PySubscriberListener*>(sub.listener());
             },
             "Get the listener."
         )
         .def(
             "bind_listener",
-            [](pyrti::PySubscriber& sub, pyrti::PySubscriberListener* l, const dds::core::status::StatusMask& m) {
+            [](PySubscriber& sub, PySubscriberListener* l, const dds::core::status::StatusMask& m) {
                 sub.listener(l, m);
             },
             py::arg("listener"),
@@ -63,27 +65,27 @@ void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
         )
         .def_property(
             "qos",
-            (qos::SubscriberQos (pyrti::PySubscriber::*)() const) &pyrti::PySubscriber::qos,
-            (void (pyrti::PySubscriber::*)(const qos::SubscriberQos&)) &pyrti::PySubscriber::qos,
+            (qos::SubscriberQos (PySubscriber::*)() const) &PySubscriber::qos,
+            (void (PySubscriber::*)(const qos::SubscriberQos&)) &PySubscriber::qos,
             "Get a copy of or set the SubscriberQos."
         )
         .def_property(
             "default_datareader_qos",
-            (qos::DataReaderQos (pyrti::PySubscriber::*)() const) &pyrti::PySubscriber::default_datareader_qos,
-            [](pyrti::PySubscriber& sub, const qos::DataReaderQos& qos) {
-                return pyrti::PySubscriber(sub.default_datareader_qos(qos));
+            (qos::DataReaderQos (PySubscriber::*)() const) &PySubscriber::default_datareader_qos,
+            [](PySubscriber& sub, const qos::DataReaderQos& qos) {
+                return PySubscriber(sub.default_datareader_qos(qos));
             },
             "Get a copy of or set the default DataReaderQos."
         )
         .def_property_readonly(
             "participant",
-            &pyrti::PySubscriber::participant,
+            &PySubscriber::participant,
             "Get the parent DomainParticipant for this Subscriber."
         )
         .def(
             "find_datareaders",
-            [](const pyrti::PySubscriber& sub) {
-                std::vector<pyrti::PyAnyDataReader> v;
+            [](const PySubscriber& sub) {
+                std::vector<PyAnyDataReader> v;
                 rti::sub::find_datareaders(sub, std::back_inserter(v));
                 return v;
             },
@@ -91,27 +93,27 @@ void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
         )
         .def(
             "enable",
-            &pyrti::PySubscriber::enable,
+            &PySubscriber::enable,
             "Enables this entity (if it was created disabled)."
         )
         .def_property_readonly(
             "status_changes",
-            &pyrti::PySubscriber::status_changes,
+            &PySubscriber::status_changes,
             "The list of communication statuses that are triggered."
         )
         .def_property_readonly(
             "instance_handle",
-            &pyrti::PySubscriber::instance_handle,
+            &PySubscriber::instance_handle,
             "The instance handle that represents this entity."
         )
         .def(
             "close",
-            &pyrti::PySubscriber::close,
+            &PySubscriber::close,
             "Forces the destruction of this entity."
         )
         .def(
             "retain",
-            &pyrti::PySubscriber::retain,
+            &PySubscriber::retain,
             "Disables the automatic destruction of this entity."
         )
         .def(
@@ -123,14 +125,16 @@ void pyrti::init_class_defs(py::class_<pyrti::PySubscriber>& cls) {
             "Test for inequality."
         );
 
-    py::implicitly_convertible<pyrti::PyIEntity, pyrti::PySubscriber>();
+    py::implicitly_convertible<PyIEntity, PySubscriber>();
 }
 
 template<>
-void pyrti::process_inits<Subscriber>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Subscriber>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PySubscriber>(m, "Subscriber");
+            return init_class<PySubscriber>(m, "Subscriber");
         }
     );
+}
+
 }

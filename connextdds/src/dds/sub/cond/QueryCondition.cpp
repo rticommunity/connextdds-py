@@ -3,8 +3,10 @@
 #include <dds/sub/cond/QueryCondition.hpp>
 #include "PyCondition.hpp"
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCondition>& cls) {
+void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls) {
     cls
         .def(
             py::init<
@@ -18,7 +20,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         .def(
             py::init(
                 [](const dds::sub::Query& q, const dds::sub::status::DataState& ds, std::function<void()>& func) {
-                    return pyrti::PyQueryCondition(
+                    return PyQueryCondition(
                         q, 
                         ds, 
                         func
@@ -33,7 +35,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         .def(
             py::init(
                 [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds) {
-                    return pyrti::PyQueryCondition(rti::sub::cond::create_query_condition_ex(q, ds));
+                    return PyQueryCondition(rti::sub::cond::create_query_condition_ex(q, ds));
                 }
             ),
             py::arg("query"),
@@ -43,7 +45,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         .def(
             py::init(
                 [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds, std::function<void()>& func) {
-                    return pyrti::PyQueryCondition(
+                    return PyQueryCondition(
                         rti::sub::cond::create_query_condition_ex(
                             q, 
                             ds, 
@@ -59,9 +61,9 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         )
         .def(
             py::init(
-                [](pyrti::PyICondition& py_c) {
+                [](PyICondition& py_c) {
                     auto condition = py_c.get_condition();
-                    return pyrti::PyQueryCondition(dds::core::polymorphic_cast<dds::sub::cond::QueryCondition>(condition));
+                    return PyQueryCondition(dds::core::polymorphic_cast<dds::sub::cond::QueryCondition>(condition));
                 }
             ),
             py::arg("condition"),
@@ -69,25 +71,25 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
         )
         .def_property_readonly(
             "expression",
-            &pyrti::PyQueryCondition::expression,
+            &PyQueryCondition::expression,
             "The expression."
         )
         .def_property(
             "parameters",
-            (std::vector<std::string> (pyrti::PyQueryCondition::*)() const) &pyrti::PyQueryCondition::parameters,
-            [](pyrti::PyQueryCondition& q, std::vector<std::string>& v) {
+            (std::vector<std::string> (PyQueryCondition::*)() const) &PyQueryCondition::parameters,
+            [](PyQueryCondition& q, std::vector<std::string>& v) {
                 q.parameters(v.begin(), v.end());
             },
             "The parameters for the expression."
         )
         .def_property_readonly(
             "parameters_length",
-            &pyrti::PyQueryCondition::parameters_length,
+            &PyQueryCondition::parameters_length,
             "The parameter sequence length."
         )
         .def(
             "__len__",
-            &pyrti::PyQueryCondition::parameters_length
+            &PyQueryCondition::parameters_length
         )
         .def(
             py::self == py::self,
@@ -101,10 +103,12 @@ void pyrti::init_class_defs(py::class_<pyrti::PyQueryCondition, pyrti::PyIReadCo
 }
 
 template<>
-void pyrti::process_inits<dds::sub::cond::QueryCondition>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::sub::cond::QueryCondition>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyQueryCondition, pyrti::PyIReadCondition>(m, "QueryCondition");
+            return init_class<PyQueryCondition, PyIReadCondition>(m, "QueryCondition");
         }
     );
+}
+
 }

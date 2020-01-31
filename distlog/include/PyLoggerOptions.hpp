@@ -12,15 +12,15 @@ namespace pyrti {
     public:
         PyLoggerOptions();
         ~PyLoggerOptions();
-        PyLoggerOptions(const pyrti::PyLoggerOptions&);
+        PyLoggerOptions(const PyLoggerOptions&);
         py::object participant();
-        pyrti::PyLoggerOptions& participant(const pyrti::PyDomainParticipant&);
+        PyLoggerOptions& participant(const PyDomainParticipant&);
         bool log_infrastructure_messages();
         PyLoggerOptions& log_infrastructure_messages(bool);
         bool remote_administration_enabled();
         PyLoggerOptions& remote_administration_enabled(bool);
-        pyrti::PyLogLevel filter_level();
-        PyLoggerOptions& filter_level(pyrti::PyLogLevel);
+        PyLogLevel filter_level();
+        PyLoggerOptions& filter_level(PyLogLevel);
         int32_t domain_id();
         PyLoggerOptions& domain_id(int32_t);
         std::string qos_library();
@@ -38,6 +38,8 @@ namespace pyrti {
 
     private:
         RTI_DL_Options* _options;
-        friend class pyrti::PyLogger;
+        friend class PyLogger;
     };
+
+    void init_logger_options(py::module&);
 }

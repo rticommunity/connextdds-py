@@ -1,12 +1,14 @@
 #include "PyConnext.hpp"
 #include "PyPublisherListener.hpp"
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(
+void init_class_defs(
     py::class_<
-        pyrti::PyPublisherListener,
-        pyrti::PyAnyDataWriterListener,
-        pyrti::PyAnyDataWriterListenerTrampoline<pyrti::PyPublisherListener>>& cls) {
+        PyPublisherListener,
+        PyAnyDataWriterListener,
+        PyAnyDataWriterListenerTrampoline<PyPublisherListener>>& cls) {
         
     cls
         .def(
@@ -15,11 +17,11 @@ void pyrti::init_class_defs(
 }
 
 template<>
-void pyrti::init_class_defs(
+void init_class_defs(
     py::class_<
-        pyrti::PyNoOpPublisherListener,
-        pyrti::PyPublisherListener,
-        pyrti::PyNoOpAnyDataWriterListenerTrampoline<pyrti::PyNoOpPublisherListener>>& cls) {
+        PyNoOpPublisherListener,
+        PyPublisherListener,
+        PyNoOpAnyDataWriterListenerTrampoline<PyNoOpPublisherListener>>& cls) {
     cls
         .def(
             py::init<>()
@@ -27,22 +29,24 @@ void pyrti::init_class_defs(
 }
 
 template<>
-void pyrti::process_inits<dds::pub::PublisherListener>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::pub::PublisherListener>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<
-                pyrti::PyPublisherListener,
-                pyrti::PyAnyDataWriterListener,
-                pyrti::PyAnyDataWriterListenerTrampoline<pyrti::PyPublisherListener>>(m, "PublisherListener");
+            return init_class<
+                PyPublisherListener,
+                PyAnyDataWriterListener,
+                PyAnyDataWriterListenerTrampoline<PyPublisherListener>>(m, "PublisherListener");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<
-                pyrti::PyNoOpPublisherListener,
-                pyrti::PyPublisherListener,
-                pyrti::PyNoOpAnyDataWriterListenerTrampoline<pyrti::PyNoOpPublisherListener>>(m, "NoOpPublisherListener");
+            return init_class<
+                PyNoOpPublisherListener,
+                PyPublisherListener,
+                PyNoOpAnyDataWriterListenerTrampoline<PyNoOpPublisherListener>>(m, "NoOpPublisherListener");
         }
     );
+}
+
 }

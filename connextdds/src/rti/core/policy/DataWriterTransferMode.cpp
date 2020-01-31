@@ -4,8 +4,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DataWriterShmemRefTransferModeSettings>& cls) {
+void init_class_defs(py::class_<DataWriterShmemRefTransferModeSettings>& cls) {
     cls
         .def(
             py::init<>(),
@@ -28,7 +30,7 @@ void pyrti::init_class_defs(py::class_<DataWriterShmemRefTransferModeSettings>& 
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<DataWriterTransferMode>& cls) {
+void init_class_defs(py::class_<DataWriterTransferMode>& cls) {
     cls
         .def(
             py::init<>(),
@@ -52,16 +54,18 @@ void pyrti::init_class_defs(py::class_<DataWriterTransferMode>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataWriterTransferMode>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataWriterTransferMode>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataWriterShmemRefTransferModeSettings>(m, "DataWriterShmemRefTransferModeSettings");
+            return init_class<DataWriterShmemRefTransferModeSettings>(m, "DataWriterShmemRefTransferModeSettings");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataWriterTransferMode>(m, "DataWriterTransferMode");
+            return init_class<DataWriterTransferMode>(m, "DataWriterTransferMode");
         }
     );
+}
+
 }

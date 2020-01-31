@@ -5,60 +5,62 @@
 using namespace dds::sub;
 using namespace dds::sub::qos;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyAnyDataReader, pyrti::PyIAnyDataReader>& cls) {
+void init_class_defs(py::class_<PyAnyDataReader, PyIAnyDataReader>& cls) {
     cls
         .def(
             py::init<
-                const pyrti::PyIAnyDataReader&
+                const PyIAnyDataReader&
             >(),
             py::arg("reader"),
             "Create an AnyDataReader instance from a object that conforms to "
             "the IAnyDataReader interface."
         );
 
-    py::implicitly_convertible<pyrti::PyIAnyDataReader, pyrti::PyAnyDataReader>();
+    py::implicitly_convertible<PyIAnyDataReader, PyAnyDataReader>();
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyIAnyDataReader>& cls) {
+void init_class_defs(py::class_<PyIAnyDataReader>& cls) {
     cls
         .def_property(
             "qos",
-            (DataReaderQos (pyrti::PyIAnyDataReader::*)() const) &pyrti::PyIAnyDataReader::py_qos,
-            (void (pyrti::PyIAnyDataReader::*)(const DataReaderQos&)) &pyrti::PyIAnyDataReader::py_qos,
+            (DataReaderQos (PyIAnyDataReader::*)() const) &PyIAnyDataReader::py_qos,
+            (void (PyIAnyDataReader::*)(const DataReaderQos&)) &PyIAnyDataReader::py_qos,
             "The QoS for this AnyDataReader."
             "\n\n"
             "This property uses value semantics."
         )
         .def_property_readonly(
             "topic_name",
-            (std::string (pyrti::PyIAnyDataReader::*)() const) &pyrti::PyIAnyDataReader::py_topic_name,
+            (std::string (PyIAnyDataReader::*)() const) &PyIAnyDataReader::py_topic_name,
             "The Topic name for this AnyDataReader."
         )
         .def_property_readonly(
             "type_name",
-            (std::string (pyrti::PyIAnyDataReader::*)() const) &pyrti::PyIAnyDataReader::py_type_name,
+            (std::string (PyIAnyDataReader::*)() const) &PyIAnyDataReader::py_type_name,
             "The type name for this AnyDataReader."
         )
         .def_property_readonly(
             "subscriber",
-            (const PySubscriber& (pyrti::PyIAnyDataReader::*)() const) &pyrti::PyIAnyDataReader::py_subscriber,
+            (const PySubscriber& (PyIAnyDataReader::*)() const) &PyIAnyDataReader::py_subscriber,
             "The Publisher for this AnyDataReader."
         )
         .def(
             "close",
-            &pyrti::PyIAnyDataReader::py_close,
+            &PyIAnyDataReader::py_close,
             "Close this DataReader."
         )
         .def(
             "retain",
-            &pyrti::PyIAnyDataReader::py_retain,
+            &PyIAnyDataReader::py_retain,
             "Retain this DataReader."
         )
         .def(
             "__eq__",
-            [](pyrti::PyIAnyDataReader &adr, pyrti::PyIAnyDataReader& other) {
+            [](PyIAnyDataReader &adr, PyIAnyDataReader& other) {
                 return adr.get_any_datareader() == other.get_any_datareader();
             },
             py::is_operator(),
@@ -66,7 +68,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIAnyDataReader>& cls) {
         )
         .def(
             "__ne__",
-            [](pyrti::PyIAnyDataReader &adr, pyrti::PyIAnyDataReader& other) {
+            [](PyIAnyDataReader &adr, PyIAnyDataReader& other) {
                 return adr.get_any_datareader() != other.get_any_datareader();
             },
             py::is_operator(),
@@ -75,15 +77,17 @@ void pyrti::init_class_defs(py::class_<pyrti::PyIAnyDataReader>& cls) {
 }
 
 template<>
-void pyrti::process_inits<AnyDataReader>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<AnyDataReader>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyIAnyDataReader>(m, "IAnyDataReader");
+            return init_class<PyIAnyDataReader>(m, "IAnyDataReader");
         }
     ); 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyAnyDataReader, pyrti::PyIAnyDataReader>(m, "AnyDataReader");
+            return init_class<PyAnyDataReader, PyIAnyDataReader>(m, "AnyDataReader");
         }
     );
+}
+
 }

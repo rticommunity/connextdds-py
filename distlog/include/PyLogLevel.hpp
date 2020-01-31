@@ -15,4 +15,6 @@ namespace pyrti {
         DEBUG       = 700,
         TRACE       = 800
     };
+
+    void init_log_level(py::module&);
 }

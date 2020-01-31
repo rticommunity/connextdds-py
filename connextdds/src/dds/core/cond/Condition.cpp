@@ -1,8 +1,10 @@
 #include "PyConnext.hpp"
 #include "PyCondition.hpp"
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyICondition>& cls) {
+void init_class_defs(py::class_<PyICondition>& cls) {
     cls
         .def(
             "dispatch",
@@ -16,7 +18,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyICondition>& cls) {
         )
         .def(
             "__eq__",
-            [](pyrti::PyICondition& c, pyrti::PyICondition& other) {
+            [](PyICondition& c, PyICondition& other) {
                 return c.get_condition() == other.get_condition();
             },
             py::is_operator(),
@@ -24,7 +26,7 @@ void pyrti::init_class_defs(py::class_<pyrti::PyICondition>& cls) {
         )
         .def(
             "__ne__",
-            [](pyrti::PyICondition& c, pyrti::PyICondition& other) {
+            [](PyICondition& c, PyICondition& other) {
                 return c.get_condition() != other.get_condition();
             },
             py::is_operator(),
@@ -33,19 +35,21 @@ void pyrti::init_class_defs(py::class_<pyrti::PyICondition>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyCondition, pyrti::PyICondition>& cls) {}
+void init_class_defs(py::class_<PyCondition, PyICondition>& cls) {}
 
 template<>
-void pyrti::process_inits<dds::core::cond::Condition>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::core::cond::Condition>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyICondition>(m, "ICondition");
+            return init_class<PyICondition>(m, "ICondition");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyCondition, pyrti::PyICondition>(m, "Condition");
+            return init_class<PyCondition, PyICondition>(m, "Condition");
         }
     );
+}
+
 }

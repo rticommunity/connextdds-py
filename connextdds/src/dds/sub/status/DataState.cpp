@@ -4,8 +4,10 @@
 
 using namespace dds::sub::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SampleState>& cls) {
+void init_class_defs(py::class_<SampleState>& cls) {
     cls
         .def_static(
             "read",
@@ -25,7 +27,7 @@ void pyrti::init_class_defs(py::class_<SampleState>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<ViewState>& cls) {
+void init_class_defs(py::class_<ViewState>& cls) {
     cls
         .def_static(
             "new_view",
@@ -45,7 +47,7 @@ void pyrti::init_class_defs(py::class_<ViewState>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<InstanceState>& cls) {
+void init_class_defs(py::class_<InstanceState>& cls) {
     cls
         .def_static(
             "alive",
@@ -77,7 +79,7 @@ void pyrti::init_class_defs(py::class_<InstanceState>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<DataState>& cls) {
+void init_class_defs(py::class_<DataState>& cls) {
     cls
         .def(
             py::init<>(),
@@ -193,10 +195,10 @@ void pyrti::init_class_defs(py::class_<DataState>& cls) {
 
 
 template<>
-void pyrti::process_inits<DataState>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataState>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<SampleState, uint32_t>(m, "SampleState", "Create a SampleState with no bits set.");
+            auto cls = init_mask_type<SampleState, uint32_t>(m, "SampleState", "Create a SampleState with no bits set.");
             return [cls]() mutable {
                 init_class_defs<SampleState>(cls);
             };
@@ -205,7 +207,7 @@ void pyrti::process_inits<DataState>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<ViewState, uint32_t>(m, "ViewState", "Create a ViewState with no bits set.");
+            auto cls = init_mask_type<ViewState, uint32_t>(m, "ViewState", "Create a ViewState with no bits set.");
             return [cls]() mutable {
                 init_class_defs<ViewState>(cls);
             };
@@ -214,7 +216,7 @@ void pyrti::process_inits<DataState>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<InstanceState, uint32_t>(m, "InstanceState", "Create an InstanceState with no bits set.");
+            auto cls = init_mask_type<InstanceState, uint32_t>(m, "InstanceState", "Create an InstanceState with no bits set.");
             return [cls]() mutable {
                 init_class_defs<InstanceState>(cls);
             };
@@ -223,7 +225,9 @@ void pyrti::process_inits<DataState>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataState>(m, "DataState");
+            return init_class<DataState>(m, "DataState");
         }
     ); 
+}
+
 }

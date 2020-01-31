@@ -5,8 +5,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ThreadSettingsKindMask>& cls) {
+void init_class_defs(py::class_<ThreadSettingsKindMask>& cls) {
     cls
         .def_static(
             "floating_point",
@@ -57,7 +59,7 @@ void pyrti::init_class_defs(py::class_<ThreadSettingsKindMask>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<ThreadSettings>& cls) {
+void init_class_defs(py::class_<ThreadSettings>& cls) {
     cls
         .def(
             py::init<>(),
@@ -115,7 +117,7 @@ void pyrti::init_class_defs(py::class_<ThreadSettings>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ThreadSettings>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ThreadSettings>(py::module& m, ClassInitList& l) {
     auto tscrk = init_dds_safe_enum<ThreadSettingsCpuRotationKind_def>(m, "ThreadSettingsCpuRotationKind");
     py::enum_<ThreadSettingsCpuRotationKind::type>(tscrk, "ThreadSettingsCpuRotationKind")
         .value(
@@ -134,7 +136,7 @@ void pyrti::process_inits<ThreadSettings>(py::module& m, pyrti::ClassInitList& l
 
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<ThreadSettingsKindMask, uint64_t>(m, "ThreadSettingsKindMask", "Create a ThreadSettingsKindMask with default thread settings.");
+            auto cls = init_mask_type<ThreadSettingsKindMask, uint64_t>(m, "ThreadSettingsKindMask", "Create a ThreadSettingsKindMask with default thread settings.");
             return [cls]() mutable {
                 init_class_defs<ThreadSettingsKindMask>(cls);
             };
@@ -143,7 +145,9 @@ void pyrti::process_inits<ThreadSettings>(py::module& m, pyrti::ClassInitList& l
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ThreadSettings>(m, "ThreadSettings");
+            return init_class<ThreadSettings>(m, "ThreadSettings");
         }
     );
+}
+
 }

@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ExclusiveArea>& cls) {
+void init_class_defs(py::class_<ExclusiveArea>& cls) {
     cls
         .def(
             py::init<>(),
@@ -46,10 +48,12 @@ void pyrti::init_class_defs(py::class_<ExclusiveArea>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ExclusiveArea>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ExclusiveArea>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ExclusiveArea>(m, "ExclusiveArea");
+            return init_class<ExclusiveArea>(m, "ExclusiveArea");
         }
     );
+}
+
 }

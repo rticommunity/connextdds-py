@@ -5,8 +5,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TransportMulticast>& cls) {
+void init_class_defs(py::class_<TransportMulticast>& cls) {
     cls
         .def(
             py::init<>(),
@@ -45,7 +47,7 @@ void pyrti::init_class_defs(py::class_<TransportMulticast>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<TransportMulticastMappingFunction>& cls) {
+void init_class_defs(py::class_<TransportMulticastMappingFunction>& cls) {
     cls
         .def(
             py::init<
@@ -87,7 +89,7 @@ void pyrti::init_class_defs(py::class_<TransportMulticastMappingFunction>& cls) 
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<MulticastMapping>& cls) {
+void init_class_defs(py::class_<MulticastMapping>& cls) {
     cls
         .def(
             py::init<>(),
@@ -141,7 +143,7 @@ void pyrti::init_class_defs(py::class_<MulticastMapping>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TransportMulticast>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TransportMulticast>(py::module& m, ClassInitList& l) {
     auto tmk = init_dds_safe_enum<TransportMulticastKind_def>(m, "TransportMulticastKind");
 
     py::enum_<TransportMulticastKind::type>(tmk, "TransportMulticastKind")
@@ -162,19 +164,21 @@ void pyrti::process_inits<TransportMulticast>(py::module& m, pyrti::ClassInitLis
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TransportMulticast>(m, "TransportMulticast");
+            return init_class<TransportMulticast>(m, "TransportMulticast");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TransportMulticastMappingFunction>(m, "TransportMulticastMappingFunction");
+            return init_class<TransportMulticastMappingFunction>(m, "TransportMulticastMappingFunction");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<MulticastMapping>(m, "MulticastMapping");
+            return init_class<MulticastMapping>(m, "MulticastMapping");
         }
     );
+}
+
 }

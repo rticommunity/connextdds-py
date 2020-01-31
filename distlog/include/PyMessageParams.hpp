@@ -24,4 +24,6 @@ namespace pyrti {
         RTI_DL_DistLogger_MessageParams _params;
         friend class PyLogger;
     };
+
+    void init_message_params(py::module&);
 }

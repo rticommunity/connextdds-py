@@ -6,8 +6,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cls) {
+void init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cls) {
     cls
         .def_static(
             "all",
@@ -35,7 +37,7 @@ void pyrti::init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cl
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<DiscoveryConfig>& cls) {
+void init_class_defs(py::class_<DiscoveryConfig>& cls) {
     cls
         .def(
             py::init<>(),
@@ -293,7 +295,7 @@ void pyrti::init_class_defs(py::class_<DiscoveryConfig>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DiscoveryConfig>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DiscoveryConfig>(py::module& m, ClassInitList& l) {
     auto rppk = init_dds_safe_enum<RemoteParticipantPurgeKind_def>(m, "RemoteParticipantPurgeKind");
 
     py::enum_<RemoteParticipantPurgeKind::type>(rppk, "RemoteParticipantPurgeKind")
@@ -345,7 +347,7 @@ void pyrti::process_inits<DiscoveryConfig>(py::module& m, pyrti::ClassInitList& 
         
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<DiscoveryConfigBuiltinPluginKindMask, uint64_t>(m, "DiscoveryConfigBuiltinPluginKindMask", "Create a DiscoveryConfigBuiltinPluginKindMask equivalent to DiscoveryConfigBuiltinPluginKindMask.none()");
+            auto cls = init_mask_type<DiscoveryConfigBuiltinPluginKindMask, uint64_t>(m, "DiscoveryConfigBuiltinPluginKindMask", "Create a DiscoveryConfigBuiltinPluginKindMask equivalent to DiscoveryConfigBuiltinPluginKindMask.none()");
             return [cls]() mutable {
                 init_class_defs<DiscoveryConfigBuiltinPluginKindMask>(cls);
             };
@@ -354,7 +356,9 @@ void pyrti::process_inits<DiscoveryConfig>(py::module& m, pyrti::ClassInitList& 
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DiscoveryConfig>(m, "DiscoveryConfig");
+            return init_class<DiscoveryConfig>(m, "DiscoveryConfig");
         }
     );
+}
+
 }

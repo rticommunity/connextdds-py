@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::process_inits<AcknowledgmentKind>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<AcknowledgmentKind>(py::module& m, ClassInitList& l) {
     auto ak = init_dds_safe_enum<AcknowledgmentKind_def>(m, "AcknowledgmentKind");
 
     py::enum_<AcknowledgmentKind::type>(ak, "AcknowledgmentKind")
@@ -42,4 +44,6 @@ void pyrti::process_inits<AcknowledgmentKind>(py::module& m, pyrti::ClassInitLis
             "DataReader.acknowledge_all or DataReader.acknowledge_sample."
         )
         .export_values();
+}
+
 }

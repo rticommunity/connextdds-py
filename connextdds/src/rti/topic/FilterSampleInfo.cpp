@@ -3,8 +3,10 @@
 
 using namespace rti::topic;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<FilterSampleInfo>& cls) {
+void init_class_defs(py::class_<FilterSampleInfo>& cls) {
     cls
         .def_property_readonly(
             "related_sample_identity",
@@ -29,10 +31,12 @@ void pyrti::init_class_defs(py::class_<FilterSampleInfo>& cls) {
 }
 
 template<>
-void pyrti::process_inits<FilterSampleInfo>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<FilterSampleInfo>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<FilterSampleInfo>(m, "FilterSampleInfo");
+            return init_class<FilterSampleInfo>(m, "FilterSampleInfo");
         }
     );
+}
+
 }

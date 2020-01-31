@@ -6,68 +6,68 @@
 using namespace dds::core::cond;
 
 namespace pyrti {
-    class PyTriggeredConditions {
-    public:
-        PyTriggeredConditions(const std::vector<Condition>&& v) : _v(v) {}
+class PyTriggeredConditions {
+public:
+    PyTriggeredConditions(const std::vector<Condition>&& v) : _v(v) {}
 
-    std::vector<Condition>& v() { return this->_v; }
+std::vector<Condition>& v() { return this->_v; }
 
-    private:
-        std::vector<Condition> _v;
-    };
+private:
+    std::vector<Condition> _v;
+};
 
-    class PyTriggeredConditionsIterator {
-    public:
-        PyTriggeredConditionsIterator(PyTriggeredConditions& tc, bool reversed) : _tc(tc) {
-            if (reversed) {
-                this->_index = tc.v().size() - 1;
-                this->_end = -1;
-                this->_step = -1;
-            }
-            else {
-                this->_index = 0;
-                this->_end = tc.v().size();
-                this->_step = 1;
-            }
+class PyTriggeredConditionsIterator {
+public:
+    PyTriggeredConditionsIterator(PyTriggeredConditions& tc, bool reversed) : _tc(tc) {
+        if (reversed) {
+            this->_index = tc.v().size() - 1;
+            this->_end = -1;
+            this->_step = -1;
         }
-
-        pyrti::PyCondition next() {
-            if (this->_index == this->_end) throw py::stop_iteration();
-            auto retval = pyrti::PyCondition(this->_tc.v()[this->_index]);
-            this->_index += this->_step;
-            return retval;
+        else {
+            this->_index = 0;
+            this->_end = tc.v().size();
+            this->_step = 1;
         }
+    }
 
-    private:
-        PyTriggeredConditions& _tc;
-        int32_t _index;
-        int32_t _step;
-        int32_t _end;
-    };
-}
+    PyCondition next() {
+        if (this->_index == this->_end) throw py::stop_iteration();
+        auto retval = PyCondition(this->_tc.v()[this->_index]);
+        this->_index += this->_step;
+        return retval;
+    }
+
+private:
+    PyTriggeredConditions& _tc;
+    int32_t _index;
+    int32_t _step;
+    int32_t _end;
+};
+
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyTriggeredConditionsIterator>& cls) {
+void init_class_defs(py::class_<PyTriggeredConditionsIterator>& cls) {
     cls
         .def(
             "__next__",
-            &pyrti::PyTriggeredConditionsIterator::next,
+            &PyTriggeredConditionsIterator::next,
             "Get next triggered condition."
         );
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<pyrti::PyTriggeredConditions>& cls) {
+void init_class_defs(py::class_<PyTriggeredConditions>& cls) {
     cls
         .def(
             "__getitem__",
-            [](pyrti::PyTriggeredConditions& tc, int index) {
-                return pyrti::PyCondition(tc.v()[index]);
+            [](PyTriggeredConditions& tc, int index) {
+                return PyCondition(tc.v()[index]);
             }
         )
         .def(
             "__contains__",
-            [](pyrti::PyTriggeredConditions& tc, pyrti::PyICondition& py_c) {
+            [](PyTriggeredConditions& tc, PyICondition& py_c) {
                 auto condition = py_c.get_condition();
                 for (auto c : tc.v()) {
                     if (condition == c) return true;
@@ -77,27 +77,27 @@ void pyrti::init_class_defs(py::class_<pyrti::PyTriggeredConditions>& cls) {
         )
         .def(
             "__len__",
-            [](pyrti::PyTriggeredConditions& tc) {
+            [](PyTriggeredConditions& tc) {
                 return tc.v().size();
             }
         )
         .def(
             "__iter__",
-            [](pyrti::PyTriggeredConditions& tc) {
-                return pyrti::PyTriggeredConditionsIterator(tc, false);
+            [](PyTriggeredConditions& tc) {
+                return PyTriggeredConditionsIterator(tc, false);
             },
             py::keep_alive<0, 1>()
         )
         .def(
             "__reverse__",
-            [](pyrti::PyTriggeredConditions& tc) {
-                return pyrti::PyTriggeredConditionsIterator(tc, true);
+            [](PyTriggeredConditions& tc) {
+                return PyTriggeredConditionsIterator(tc, true);
             }
         );
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
+void init_class_defs(py::class_<WaitSet>& cls) {
     cls
         .def(
             py::init<>(),
@@ -111,11 +111,11 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         .def(
             "wait",
             [](WaitSet& ws, const dds::core::Duration& d) {
-                return pyrti::PyTriggeredConditions(ws.wait(d));
+                return PyTriggeredConditions(ws.wait(d));
                 /*auto active_conditions = ws.wait(d);
-                std::vector<pyrti::PyCondition> conditions;
+                std::vector<PyCondition> conditions;
                 for (auto& c : active_conditions) {
-                    conditions.push_back(pyrti::PyCondition(c));
+                    conditions.push_back(PyCondition(c));
                 }
                 return conditions; */
             },
@@ -126,11 +126,11 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         .def(
             "wait",
             [](WaitSet& ws) {
-                return pyrti::PyTriggeredConditions(ws.wait());
+                return PyTriggeredConditions(ws.wait());
                 /*auto active_conditions = ws.wait();
-                std::vector<pyrti::PyCondition> conditions;
+                std::vector<PyCondition> conditions;
                 for (auto& c : active_conditions) {
-                    conditions.push_back(pyrti::PyCondition(c));
+                    conditions.push_back(PyCondition(c));
                 }
                 return conditions;*/
             },
@@ -152,7 +152,7 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         )
         .def(
             "__iadd__",
-            [](WaitSet& ws, pyrti::PyICondition& c) {
+            [](WaitSet& ws, PyICondition& c) {
                 return ws += c.get_condition();
             },
             py::is_operator(),
@@ -160,15 +160,15 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         )
         .def(
             "__isub__",
-            [](WaitSet& ws, pyrti::PyICondition& c) {
-               return  ws -= c.get_condition();
+            [](WaitSet& ws, PyICondition& c) {
+            return  ws -= c.get_condition();
             },
             py::is_operator(),
             "Detach a condition from a WaitSet."
         )
         .def(
             "attach_condition",
-            [](WaitSet& ws, pyrti::PyICondition& c) {
+            [](WaitSet& ws, PyICondition& c) {
                 ws.attach_condition(c.get_condition());
             },
             py::arg("condition"),
@@ -176,7 +176,7 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         )
         .def(
             "detach_condition",
-            [](WaitSet& ws, pyrti::PyICondition& c) {
+            [](WaitSet& ws, PyICondition& c) {
                 return ws.detach_condition(c.get_condition());
             },
             py::arg("condition"),
@@ -185,13 +185,13 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
         .def_property(
             "conditions",
             [](WaitSet& ws) {
-                std::vector<pyrti::PyCondition> conditions;
+                std::vector<PyCondition> conditions;
                 for (auto& c : ws.conditions()) {
-                    conditions.push_back(pyrti::PyCondition(c));
+                    conditions.push_back(PyCondition(c));
                 }
                 return conditions;
             },
-            [](WaitSet& ws, std::vector<pyrti::PyICondition*> conditions) {
+            [](WaitSet& ws, std::vector<PyICondition*> conditions) {
                 for (auto& c : conditions) {
                     ws += c->get_condition();
                 }
@@ -218,22 +218,24 @@ void pyrti::init_class_defs(py::class_<WaitSet>& cls) {
 }
 
 template<>
-void pyrti::process_inits<WaitSet>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<WaitSet>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<WaitSet>(m, "WaitSet");
+            return init_class<WaitSet>(m, "WaitSet");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyTriggeredConditions>(m, "TriggeredConditions");
+            return init_class<PyTriggeredConditions>(m, "TriggeredConditions");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<pyrti::PyTriggeredConditionsIterator>(m, "TriggeredConditionsIterator");
+            return init_class<PyTriggeredConditionsIterator>(m, "TriggeredConditionsIterator");
         }
     );
+}
+
 }

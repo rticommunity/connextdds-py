@@ -7,128 +7,130 @@
 #include <dds/sub/Subscriber.hpp>
 
 namespace pyrti {
-    class PyIEntity {
-    public:
-        virtual
-        dds::core::Entity get_entity() = 0;
 
-        virtual
-        void py_enable() = 0;
+class PyIEntity {
+public:
+    virtual
+    dds::core::Entity get_entity() = 0;
 
-        virtual 
-        const dds::core::status::StatusMask py_status_changes() = 0;
+    virtual
+    void py_enable() = 0;
 
-        virtual
-        const dds::core::InstanceHandle py_instance_handle() const = 0;
+    virtual 
+    const dds::core::status::StatusMask py_status_changes() = 0;
 
-        virtual
-        void py_close() = 0;
+    virtual
+    const dds::core::InstanceHandle py_instance_handle() const = 0;
 
-        virtual
-        void py_retain() = 0;
+    virtual
+    void py_close() = 0;
 
-        virtual
-        ~PyIEntity() {}
-    };
+    virtual
+    void py_retain() = 0;
 
-    class PyEntity : public dds::core::Entity, public PyIEntity {
-    public:
-        using dds::core::Entity::Entity;
+    virtual
+    ~PyIEntity() {}
+};
 
-        PyEntity(const dds::core::Entity& e) : dds::core::Entity(e) {}
+class PyEntity : public dds::core::Entity, public PyIEntity {
+public:
+    using dds::core::Entity::Entity;
 
-        dds::core::Entity get_entity() override {
-            return dds::core::Entity(*this);
-        }
+    PyEntity(const dds::core::Entity& e) : dds::core::Entity(e) {}
 
-        void py_enable() override { this->enable(); };
- 
-        const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    dds::core::Entity get_entity() override {
+        return dds::core::Entity(*this);
+    }
 
-        const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    void py_enable() override { this->enable(); };
 
-        void py_close() override { this->close(); }
+    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
 
-        void py_retain() override { this->retain(); }
+    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-        virtual
-        ~PyEntity() {}
-    };
+    void py_close() override { this->close(); }
 
-    class PyDomainParticipant : public dds::domain::DomainParticipant, public PyIEntity {
-    public:
-        using dds::domain::DomainParticipant::DomainParticipant;
+    void py_retain() override { this->retain(); }
 
-        pyrti::PyDomainParticipant& operator=(const dds::domain::DomainParticipant& dp) {
-            dds::domain::DomainParticipant::operator=(dp);
-            return *this;
-        }
+    virtual
+    ~PyEntity() {}
+};
 
-        dds::core::Entity get_entity() override {
-            return dds::core::Entity(*this);
-        }
+class PyDomainParticipant : public dds::domain::DomainParticipant, public PyIEntity {
+public:
+    using dds::domain::DomainParticipant::DomainParticipant;
 
-        void py_enable() override { this->enable(); };
- 
-        const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    PyDomainParticipant& operator=(const dds::domain::DomainParticipant& dp) {
+        dds::domain::DomainParticipant::operator=(dp);
+        return *this;
+    }
 
-        const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    dds::core::Entity get_entity() override {
+        return dds::core::Entity(*this);
+    }
 
-        void py_close() override { this->close(); }
+    void py_enable() override { this->enable(); };
 
-        void py_retain() override { this->retain(); }
+    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
 
+    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-        virtual
-        ~PyDomainParticipant() {}
-    };
+    void py_close() override { this->close(); }
 
-    class PyPublisher : public dds::pub::Publisher, public PyIEntity {
-    public:
-        using dds::pub::Publisher::Publisher;
-
-        PyPublisher(const dds::pub::Publisher& pub) : dds::pub::Publisher(pub) {}
-
-        dds::core::Entity get_entity() override {
-            return dds::core::Entity(*this);
-        }
-
-        void py_enable() override { this->enable(); };
- 
-        const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
-
-        const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
-
-        void py_close() override { this->close(); }
-
-        void py_retain() override { this->retain(); }
+    void py_retain() override { this->retain(); }
 
 
-        virtual
-        ~PyPublisher() {}
-    };
+    virtual
+    ~PyDomainParticipant() {}
+};
 
-    class PySubscriber : public dds::sub::Subscriber, public PyIEntity {
-    public:
-        using dds::sub::Subscriber::Subscriber;
+class PyPublisher : public dds::pub::Publisher, public PyIEntity {
+public:
+    using dds::pub::Publisher::Publisher;
 
-        PySubscriber(const dds::sub::Subscriber& sub) : dds::sub::Subscriber(sub) {}
+    PyPublisher(const dds::pub::Publisher& pub) : dds::pub::Publisher(pub) {}
 
-        dds::core::Entity get_entity() override {
-            return dds::core::Entity(*this);
-        }
+    dds::core::Entity get_entity() override {
+        return dds::core::Entity(*this);
+    }
 
-        void py_enable() override { this->enable(); };
- 
-        const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    void py_enable() override { this->enable(); };
 
-        const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
 
-        void py_close() override { this->close(); }
+    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-        void py_retain() override { this->retain(); }
+    void py_close() override { this->close(); }
 
-        virtual
-        ~PySubscriber() {}
-    };
+    void py_retain() override { this->retain(); }
+
+
+    virtual
+    ~PyPublisher() {}
+};
+
+class PySubscriber : public dds::sub::Subscriber, public PyIEntity {
+public:
+    using dds::sub::Subscriber::Subscriber;
+
+    PySubscriber(const dds::sub::Subscriber& sub) : dds::sub::Subscriber(sub) {}
+
+    dds::core::Entity get_entity() override {
+        return dds::core::Entity(*this);
+    }
+
+    void py_enable() override { this->enable(); };
+
+    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+
+    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+
+    void py_close() override { this->close(); }
+
+    void py_retain() override { this->retain(); }
+
+    virtual
+    ~PySubscriber() {}
+};
+
 }

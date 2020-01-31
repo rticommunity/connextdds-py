@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Service>& cls) {
+void init_class_defs(py::class_<Service>& cls) {
     cls
         .def(
             py::init<>(),
@@ -35,7 +37,7 @@ void pyrti::init_class_defs(py::class_<Service>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Service>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Service>(py::module& m, ClassInitList& l) {
     auto sk = init_dds_safe_enum<ServiceKind_def>(m, "ServiceKind");
 
     py::enum_<ServiceKind::type>(sk, "ServiceKind")
@@ -83,7 +85,9 @@ void pyrti::process_inits<Service>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Service>(m, "Service");
+            return init_class<Service>(m, "Service");
         }
     );
+}
+
 }

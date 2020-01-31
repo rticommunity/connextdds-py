@@ -3,8 +3,10 @@
 
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DynamicDataProperty>& cls) {
+void init_class_defs(py::class_<DynamicDataProperty>& cls) {
     cls
         .def(
             py::init<>(),
@@ -49,11 +51,12 @@ void pyrti::init_class_defs(py::class_<DynamicDataProperty>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DynamicDataProperty>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DynamicDataProperty>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DynamicDataProperty>(m, "DynamicDataProperty");
+            return init_class<DynamicDataProperty>(m, "DynamicDataProperty");
         }
     );
 }
 
+}

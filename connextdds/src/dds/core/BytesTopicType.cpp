@@ -6,9 +6,10 @@
 
 INIT_OPAQUE_TYPE_CONTAINERS(dds::core::BytesTopicType);
 
+namespace pyrti {
 
 template<>
-void pyrti::init_class_defs(py::class_<dds::core::BytesTopicType>& cls) {
+void init_class_defs(py::class_<dds::core::BytesTopicType>& cls) {
     cls
         .def(
             py::init<>(),
@@ -60,15 +61,17 @@ void pyrti::init_class_defs(py::class_<dds::core::BytesTopicType>& cls) {
         );;
 
     py::implicitly_convertible<std::vector<uint8_t>, dds::core::BytesTopicType>();
-    pyrti::init_type<dds::core::BytesTopicType>(cls);
+    init_type<dds::core::BytesTopicType>(cls);
 }
 
 
 template<>
-void pyrti::process_inits<dds::core::BytesTopicType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<dds::core::BytesTopicType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<dds::core::BytesTopicType>(m, "BytesTopicType");
+            return init_class<dds::core::BytesTopicType>(m, "BytesTopicType");
         }
     );
+}
+
 }

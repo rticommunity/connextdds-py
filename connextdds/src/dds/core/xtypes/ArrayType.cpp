@@ -3,8 +3,10 @@
 
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ArrayType, CollectionType>& cls) {
+void init_class_defs(py::class_<ArrayType, CollectionType>& cls) {
     cls
         .def(
             py::init<const DynamicType&, uint32_t>(),
@@ -42,10 +44,12 @@ void pyrti::init_class_defs(py::class_<ArrayType, CollectionType>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ArrayType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ArrayType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ArrayType, CollectionType>(m, "ArrayType");
+            return init_class<ArrayType, CollectionType>(m, "ArrayType");
         }
     ); 
+}
+
 }

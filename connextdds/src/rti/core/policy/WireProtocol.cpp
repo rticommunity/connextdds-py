@@ -6,8 +6,10 @@
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<RtpsReservedPortKindMask>& cls) {
+void init_class_defs(py::class_<RtpsReservedPortKindMask>& cls) {
     cls
         .def_static(
             "all",
@@ -55,7 +57,7 @@ void pyrti::init_class_defs(py::class_<RtpsReservedPortKindMask>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<RtpsWellKnownPorts>& cls) {
+void init_class_defs(py::class_<RtpsWellKnownPorts>& cls) {
     cls
         .def(
             py::init<>(),
@@ -146,7 +148,7 @@ void pyrti::init_class_defs(py::class_<RtpsWellKnownPorts>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<WireProtocol>& cls) {
+void init_class_defs(py::class_<WireProtocol>& cls) {
     cls
         .def(
             py::init<>(),
@@ -234,7 +236,7 @@ void pyrti::init_class_defs(py::class_<WireProtocol>& cls) {
 }
 
 template<>
-void pyrti::process_inits<WireProtocol>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<WireProtocol>(py::module& m, ClassInitList& l) {
     auto wpak = init_dds_safe_enum<WireProtocolAutoKind_def>(m, "WireProtocolAutoKind");
 
     py::enum_<WireProtocolAutoKind::type>(wpak, "WireProtocolAutoKind")
@@ -257,7 +259,7 @@ void pyrti::process_inits<WireProtocol>(py::module& m, pyrti::ClassInitList& l) 
 
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<RtpsReservedPortKindMask, uint64_t>(m, "RtpsReservedPortKindMask", "Create a RtpsReservedPortKindMask equivalent to RtpsReservedPortKindMask.none()");
+            auto cls = init_mask_type<RtpsReservedPortKindMask, uint64_t>(m, "RtpsReservedPortKindMask", "Create a RtpsReservedPortKindMask equivalent to RtpsReservedPortKindMask.none()");
             return [cls]() mutable {
                 init_class_defs<RtpsReservedPortKindMask>(cls);
             };
@@ -266,13 +268,15 @@ void pyrti::process_inits<WireProtocol>(py::module& m, pyrti::ClassInitList& l) 
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<RtpsWellKnownPorts>(m, "RtpsWellKnownPorts");
+            return init_class<RtpsWellKnownPorts>(m, "RtpsWellKnownPorts");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<WireProtocol>(m, "WireProtocol");
+            return init_class<WireProtocol>(m, "WireProtocol");
         }
     );
+}
+
 }

@@ -4,8 +4,10 @@
 using namespace rti::core::xtypes;
 using namespace dds::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<UnidimensionalCollectionTypeImpl, CollectionType>& cls) {
+void init_class_defs(py::class_<UnidimensionalCollectionTypeImpl, CollectionType>& cls) {
     cls
         .def_property_readonly(
             "bounds",
@@ -15,10 +17,12 @@ void pyrti::init_class_defs(py::class_<UnidimensionalCollectionTypeImpl, Collect
 }
 
 template<>
-void pyrti::process_inits<UnidimensionalCollectionTypeImpl>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<UnidimensionalCollectionTypeImpl>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<UnidimensionalCollectionTypeImpl, CollectionType>(m, "UnidimensionalCollectionType");
+            return init_class<UnidimensionalCollectionTypeImpl, CollectionType>(m, "UnidimensionalCollectionType");
         }
     ); 
+}
+
 }

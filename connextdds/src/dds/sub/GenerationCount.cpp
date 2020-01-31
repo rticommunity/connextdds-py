@@ -3,8 +3,10 @@
 
 using namespace dds::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<GenerationCount>& cls) {
+void init_class_defs(py::class_<GenerationCount>& cls) {
     cls
         .def(
             py::init<>(),
@@ -33,10 +35,12 @@ void pyrti::init_class_defs(py::class_<GenerationCount>& cls) {
 }
 
 template<>
-void pyrti::process_inits<GenerationCount>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<GenerationCount>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable{
-            return pyrti::init_class<GenerationCount>(m, "GenerationCount");
+            return init_class<GenerationCount>(m, "GenerationCount");
         }
     );
+}
+
 }

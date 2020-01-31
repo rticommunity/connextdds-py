@@ -21,55 +21,55 @@ namespace pyrti {
 
         virtual
         void on_offered_deadline_missed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedDeadlineMissedStatus& status
         ) = 0;
 
         virtual
         void on_offered_incompatible_qos(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedIncompatibleQosStatus& status
         ) = 0;
 
         virtual
         void on_liveliness_lost(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::LivelinessLostStatus& status
         ) = 0;
 
         virtual
         void on_publication_matched(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::PublicationMatchedStatus& status
         ) = 0;
 
         virtual
         void on_reliable_writer_cache_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableWriterCacheChangedStatus& status
         ) = 0;
 
         virtual
         void on_reliable_reader_activity_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableReaderActivityChangedStatus& status
         ) = 0;
 
         virtual
         void on_instance_replaced(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::InstanceHandle& handle
         ) = 0;
 
         virtual
         void on_application_acknowledgment(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::pub::AcknowledgmentInfo& acknowledgment_info
         ) = 0;
 
         virtual
         void on_service_request_accepted(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status
         ) = 0;
 
@@ -79,62 +79,62 @@ namespace pyrti {
 
 
 
-    class PyNoOpAnyDataWriterListener : public pyrti::PyAnyDataWriterListener {
+    class PyNoOpAnyDataWriterListener : public PyAnyDataWriterListener {
     public:
-        using pyrti::PyAnyDataWriterListener::PyAnyDataWriterListener;
+        using PyAnyDataWriterListener::PyAnyDataWriterListener;
 
-        using pyrti::PyAnyDataWriterListener::on_offered_deadline_missed;
-        using pyrti::PyAnyDataWriterListener::on_offered_incompatible_qos;
-        using pyrti::PyAnyDataWriterListener::on_liveliness_lost;
-        using pyrti::PyAnyDataWriterListener::on_publication_matched;
-        using pyrti::PyAnyDataWriterListener::on_reliable_writer_cache_changed;
-        using pyrti::PyAnyDataWriterListener::on_reliable_reader_activity_changed;
-        using pyrti::PyAnyDataWriterListener::on_instance_replaced;
-        using pyrti::PyAnyDataWriterListener::on_application_acknowledgment;
-        using pyrti::PyAnyDataWriterListener::on_service_request_accepted;
+        using PyAnyDataWriterListener::on_offered_deadline_missed;
+        using PyAnyDataWriterListener::on_offered_incompatible_qos;
+        using PyAnyDataWriterListener::on_liveliness_lost;
+        using PyAnyDataWriterListener::on_publication_matched;
+        using PyAnyDataWriterListener::on_reliable_writer_cache_changed;
+        using PyAnyDataWriterListener::on_reliable_reader_activity_changed;
+        using PyAnyDataWriterListener::on_instance_replaced;
+        using PyAnyDataWriterListener::on_application_acknowledgment;
+        using PyAnyDataWriterListener::on_service_request_accepted;
 
         void on_offered_deadline_missed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedDeadlineMissedStatus& status
         ) override {}
 
         void on_offered_incompatible_qos(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedIncompatibleQosStatus& status
         ) override {}
 
         void on_liveliness_lost(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::LivelinessLostStatus& status
         ) override {}
 
         void on_publication_matched(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::PublicationMatchedStatus& status
         ) override {}
 
         void on_reliable_writer_cache_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableWriterCacheChangedStatus& status
         ) override {}
 
         void on_reliable_reader_activity_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableReaderActivityChangedStatus& status
         ) override {}
 
         void on_instance_replaced(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::InstanceHandle& handle
         ) override {}
 
         void on_application_acknowledgment(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::pub::AcknowledgmentInfo& acknowledgment_info
         ) override {}
 
         void on_service_request_accepted(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status
         ) override {}
 
@@ -144,7 +144,7 @@ namespace pyrti {
 
 
 
-    template<class ADWLBase = pyrti::PyAnyDataWriterListener>
+    template<class ADWLBase = PyAnyDataWriterListener>
     class PyAnyDataWriterListenerTrampoline : public ADWLBase {
     public:
         using ADWLBase::ADWLBase;
@@ -153,7 +153,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const dds::core::status::OfferedDeadlineMissedStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_offered_deadline_missed(adw, status);
         }
 
@@ -161,7 +161,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const dds::core::status::OfferedIncompatibleQosStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_offered_incompatible_qos(adw, status);
         }
 
@@ -169,7 +169,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const dds::core::status::LivelinessLostStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_liveliness_lost(adw, status);
         }
 
@@ -177,7 +177,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const dds::core::status::PublicationMatchedStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_publication_matched(adw, status);
         }
 
@@ -185,7 +185,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const rti::core::status::ReliableWriterCacheChangedStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_reliable_writer_cache_changed(adw, status);
         }
 
@@ -193,7 +193,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const rti::core::status::ReliableReaderActivityChangedStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_reliable_reader_activity_changed(adw, status);
         }
 
@@ -201,7 +201,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const dds::core::InstanceHandle& handle
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_instance_replaced(adw, handle);
         }
 
@@ -209,7 +209,7 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const rti::pub::AcknowledgmentInfo& acknowledgment_info
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_application_acknowledgment(adw, acknowledgment_info);
         }
 
@@ -217,12 +217,12 @@ namespace pyrti {
             dds::pub::AnyDataWriter& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status
         ) override {
-            auto adw = pyrti::PyAnyDataWriter(writer);
+            auto adw = PyAnyDataWriter(writer);
             this->on_service_request_accepted(adw, status);
         }
 
         void on_offered_deadline_missed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedDeadlineMissedStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -235,7 +235,7 @@ namespace pyrti {
         }
 
         void on_offered_incompatible_qos(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedIncompatibleQosStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -248,7 +248,7 @@ namespace pyrti {
         }
 
         void on_liveliness_lost(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::LivelinessLostStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -261,7 +261,7 @@ namespace pyrti {
         }
 
         void on_publication_matched(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::PublicationMatchedStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -274,7 +274,7 @@ namespace pyrti {
         }
 
         void on_reliable_writer_cache_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableWriterCacheChangedStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -287,7 +287,7 @@ namespace pyrti {
         }
 
         void on_reliable_reader_activity_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableReaderActivityChangedStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -300,7 +300,7 @@ namespace pyrti {
         }
 
         void on_instance_replaced(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::InstanceHandle& handle
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -313,7 +313,7 @@ namespace pyrti {
         }
 
         void on_application_acknowledgment(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::pub::AcknowledgmentInfo& acknowledgment_info
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -326,7 +326,7 @@ namespace pyrti {
         }
 
         void on_service_request_accepted(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status
         ) override {
             PYBIND11_OVERLOAD_PURE(
@@ -345,23 +345,23 @@ namespace pyrti {
 
 
 
-    template<class ADWLBase = pyrti::PyNoOpAnyDataWriterListener>
-    class PyNoOpAnyDataWriterListenerTrampoline : public pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase> {
+    template<class ADWLBase = PyNoOpAnyDataWriterListener>
+    class PyNoOpAnyDataWriterListenerTrampoline : public PyAnyDataWriterListenerTrampoline<ADWLBase> {
     public:
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::PyAnyDataWriterListenerTrampoline;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::PyAnyDataWriterListenerTrampoline;
 
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_offered_deadline_missed;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_offered_incompatible_qos;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_liveliness_lost;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_publication_matched;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_reliable_writer_cache_changed;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_reliable_reader_activity_changed;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_instance_replaced;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_application_acknowledgment;
-        using pyrti::PyAnyDataWriterListenerTrampoline<ADWLBase>::on_service_request_accepted;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_offered_deadline_missed;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_offered_incompatible_qos;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_liveliness_lost;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_publication_matched;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_reliable_writer_cache_changed;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_reliable_reader_activity_changed;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_instance_replaced;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_application_acknowledgment;
+        using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_service_request_accepted;
 
         void on_offered_deadline_missed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedDeadlineMissedStatus& status
         ) override {
             PYBIND11_OVERLOAD(
@@ -374,7 +374,7 @@ namespace pyrti {
         }
 
         void on_offered_incompatible_qos(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::OfferedIncompatibleQosStatus& status
         ) override {
             PYBIND11_OVERLOAD(
@@ -387,7 +387,7 @@ namespace pyrti {
         }
 
         void on_liveliness_lost(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::LivelinessLostStatus& status
         ) override {
             PYBIND11_OVERLOAD(
@@ -400,7 +400,7 @@ namespace pyrti {
         }
 
         void on_publication_matched(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::status::PublicationMatchedStatus& status
         ) override {
             PYBIND11_OVERLOAD(
@@ -413,7 +413,7 @@ namespace pyrti {
         }
 
         void on_reliable_writer_cache_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableWriterCacheChangedStatus& status
         ) override {
             PYBIND11_OVERLOAD(
@@ -426,7 +426,7 @@ namespace pyrti {
         }
 
         void on_reliable_reader_activity_changed(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ReliableReaderActivityChangedStatus& status
         ) override {
             PYBIND11_OVERLOAD(
@@ -439,7 +439,7 @@ namespace pyrti {
         }
 
         void on_instance_replaced(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const dds::core::InstanceHandle& handle
         ) override {
             PYBIND11_OVERLOAD(
@@ -452,7 +452,7 @@ namespace pyrti {
         }
 
         void on_application_acknowledgment(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::pub::AcknowledgmentInfo& acknowledgment_info
         ) override {
             PYBIND11_OVERLOAD(
@@ -465,7 +465,7 @@ namespace pyrti {
         }
 
         void on_service_request_accepted(
-            pyrti::PyAnyDataWriter& writer,
+            PyAnyDataWriter& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status
         ) override {
             PYBIND11_OVERLOAD(

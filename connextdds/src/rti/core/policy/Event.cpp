@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Event>& cls) {
+void init_class_defs(py::class_<Event>& cls) {
     cls
         .def(
             py::init<>(),
@@ -50,10 +52,12 @@ void pyrti::init_class_defs(py::class_<Event>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Event>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Event>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Event>(m, "Event");
+            return init_class<Event>(m, "Event");
         }
     );
+}
+
 }

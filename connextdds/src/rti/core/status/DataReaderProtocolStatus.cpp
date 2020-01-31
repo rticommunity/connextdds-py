@@ -3,8 +3,10 @@
 
 using namespace rti::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DataReaderProtocolStatus>& cls) {
+void init_class_defs(py::class_<DataReaderProtocolStatus>& cls) {
     cls
         .def_property_readonly(
             "received_sample_count",
@@ -110,10 +112,12 @@ void pyrti::init_class_defs(py::class_<DataReaderProtocolStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DataReaderProtocolStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DataReaderProtocolStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DataReaderProtocolStatus>(m, "DataReaderProtocolStatus");
+            return init_class<DataReaderProtocolStatus>(m, "DataReaderProtocolStatus");
         }
     );
+}
+
 }

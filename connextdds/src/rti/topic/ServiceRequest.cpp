@@ -4,8 +4,10 @@
 
 using namespace rti::topic;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ServiceRequest>& cls) {
+void init_class_defs(py::class_<ServiceRequest>& cls) {
     cls
         .def_property_readonly(
             "service_id",
@@ -40,7 +42,7 @@ void pyrti::init_class_defs(py::class_<ServiceRequest>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ServiceRequest>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ServiceRequest>(py::module& m, ClassInitList& l) {
     auto sri = init_dds_safe_enum<rti::core::ServiceRequestId_def>(m, "ServiceRequestId");
 
     py::enum_<rti::core::ServiceRequestId::type>(sri, "ServiceRequestId")
@@ -63,7 +65,9 @@ void pyrti::process_inits<ServiceRequest>(py::module& m, pyrti::ClassInitList& l
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ServiceRequest>(m, "ServiceRequest");
+            return init_class<ServiceRequest>(m, "ServiceRequest");
         }
     );
+}
+
 }

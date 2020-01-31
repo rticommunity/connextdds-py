@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TypeSupport>& cls) {
+void init_class_defs(py::class_<TypeSupport>& cls) {
     cls
         .def(
             py::init<>(),
@@ -29,7 +31,7 @@ void pyrti::init_class_defs(py::class_<TypeSupport>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TypeSupport>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TypeSupport>(py::module& m, ClassInitList& l) {
     auto cpk = init_dds_safe_enum<CdrPaddingKind_def>(m, "CdrPaddingKind");
 
     py::enum_<CdrPaddingKind::type>(cpk, "CdrPaddingKind")
@@ -57,7 +59,9 @@ void pyrti::process_inits<TypeSupport>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TypeSupport>(m, "TypeSupport");
+            return init_class<TypeSupport>(m, "TypeSupport");
         }
     );
+}
+
 }

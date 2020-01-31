@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::process_inits<RefilterKind>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<RefilterKind>(py::module& m, ClassInitList& l) {
     auto rk = init_dds_safe_enum<rti::core::policy::RefilterKind_def>(m, "RefilterKind");
 
     py::enum_<RefilterKind::type>(rk, "RefilterKind")
@@ -42,4 +44,6 @@ void pyrti::process_inits<RefilterKind>(py::module& m, pyrti::ClassInitList& l) 
             "filter only existing samples that are requested by the reader."
         )
         .export_values();
+}
+
 }

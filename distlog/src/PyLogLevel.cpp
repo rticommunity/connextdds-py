@@ -1,42 +1,46 @@
 #include "PyConnext.hpp"
 #include "PyLogLevel.hpp"
 
+namespace pyrti {
+
 void init_log_level(py::module& m) {
-    py::enum_<pyrti::PyLogLevel>(m, "LogLevel")
+    py::enum_<PyLogLevel>(m, "LogLevel")
         .value(
             "SILENT",
-            pyrti::PyLogLevel::SILENT
+            PyLogLevel::SILENT
         )
         .value(
             "FATAL",
-            pyrti::PyLogLevel::FATAL
+            PyLogLevel::FATAL
         )
         .value(
             "SEVERE",
-            pyrti::PyLogLevel::SEVERE
+            PyLogLevel::SEVERE
         )
         .value(
             "ERROR",
-            pyrti::PyLogLevel::ERROR
+            PyLogLevel::ERROR
         )
         .value(
             "WARNING",
-            pyrti::PyLogLevel::WARNING
+            PyLogLevel::WARNING
         )
         .value(
             "NOTICE",
-            pyrti::PyLogLevel::NOTICE
+            PyLogLevel::NOTICE
         )
         .value(
             "INFO",
-            pyrti::PyLogLevel::INFO
+            PyLogLevel::INFO
         )
         .value(
             "DEBUG",
-            pyrti::PyLogLevel::DEBUG
+            PyLogLevel::DEBUG
         )
         .value(
             "TRACE",
-            pyrti::PyLogLevel::TRACE
+            PyLogLevel::TRACE
         );
+}
+
 }

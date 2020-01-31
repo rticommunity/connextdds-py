@@ -3,8 +3,10 @@
 
 using namespace dds::core::status;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<OfferedDeadlineMissedStatus>& cls) {
+void init_class_defs(py::class_<OfferedDeadlineMissedStatus>& cls) {
     cls
         .def_property_readonly(
             "total_count",
@@ -24,10 +26,12 @@ void pyrti::init_class_defs(py::class_<OfferedDeadlineMissedStatus>& cls) {
 }
 
 template<>
-void pyrti::process_inits<OfferedDeadlineMissedStatus>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<OfferedDeadlineMissedStatus>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<OfferedDeadlineMissedStatus>(m, "OfferedDeadlineMissedStatus");
+            return init_class<OfferedDeadlineMissedStatus>(m, "OfferedDeadlineMissedStatus");
         }
     ); 
+}
+
 }

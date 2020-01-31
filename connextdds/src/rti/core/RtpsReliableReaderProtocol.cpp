@@ -5,8 +5,10 @@ using namespace dds::core;
 using namespace rti::core;
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<RtpsReliableReaderProtocol>& cls) {
+void init_class_defs(py::class_<RtpsReliableReaderProtocol>& cls) {
     cls
         .def(
             py::init<>(),
@@ -80,10 +82,12 @@ void pyrti::init_class_defs(py::class_<RtpsReliableReaderProtocol>& cls) {
 }
 
 template<>
-void pyrti::process_inits<RtpsReliableReaderProtocol>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<RtpsReliableReaderProtocol>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<RtpsReliableReaderProtocol>(m, "RtpsReliableReaderProtocol");
+            return init_class<RtpsReliableReaderProtocol>(m, "RtpsReliableReaderProtocol");
         }
     );
+}
+
 }

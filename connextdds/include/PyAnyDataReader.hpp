@@ -5,63 +5,65 @@
 #include "PyEntity.hpp"
 
 namespace pyrti {
-    class PyIAnyDataReader {
-    public:
-        virtual 
-        dds::sub::AnyDataReader get_any_datareader() const = 0;
 
-        virtual
-        dds::sub::qos::DataReaderQos py_qos() const = 0;
+class PyIAnyDataReader {
+public:
+    virtual 
+    dds::sub::AnyDataReader get_any_datareader() const = 0;
 
-        virtual
-        void py_qos(const dds::sub::qos::DataReaderQos&) = 0;
+    virtual
+    dds::sub::qos::DataReaderQos py_qos() const = 0;
 
-        virtual
-        const std::string& py_topic_name() const = 0;
+    virtual
+    void py_qos(const dds::sub::qos::DataReaderQos&) = 0;
 
-        virtual
-        const std::string& py_type_name() const = 0;
+    virtual
+    const std::string& py_topic_name() const = 0;
 
-        virtual
-        const pyrti::PySubscriber py_subscriber() const = 0;
+    virtual
+    const std::string& py_type_name() const = 0;
 
-        virtual
-        void py_close() = 0;
+    virtual
+    const PySubscriber py_subscriber() const = 0;
 
-        virtual
-        void py_retain() = 0;
+    virtual
+    void py_close() = 0;
 
-        virtual
-        ~PyIAnyDataReader() {}
-    };
+    virtual
+    void py_retain() = 0;
 
-    class PyAnyDataReader : public dds::sub::AnyDataReader, public PyIAnyDataReader {
-    public:
-        using dds::sub::AnyDataReader::AnyDataReader;
+    virtual
+    ~PyIAnyDataReader() {}
+};
 
-        PyAnyDataReader(const dds::sub::AnyDataReader& adr) : dds::sub::AnyDataReader(adr) {}
+class PyAnyDataReader : public dds::sub::AnyDataReader, public PyIAnyDataReader {
+public:
+    using dds::sub::AnyDataReader::AnyDataReader;
 
-        PyAnyDataReader(const PyIAnyDataReader& adr) : dds::sub::AnyDataReader(adr.get_any_datareader()) {}
+    PyAnyDataReader(const dds::sub::AnyDataReader& adr) : dds::sub::AnyDataReader(adr) {}
 
-        dds::sub::AnyDataReader get_any_datareader() const override {
-            return (*this);
-        }
+    PyAnyDataReader(const PyIAnyDataReader& adr) : dds::sub::AnyDataReader(adr.get_any_datareader()) {}
 
-        dds::sub::qos::DataReaderQos py_qos() const override { return this->qos(); }
+    dds::sub::AnyDataReader get_any_datareader() const override {
+        return (*this);
+    }
 
-        void py_qos(const dds::sub::qos::DataReaderQos& q) override { this->qos(q); }
+    dds::sub::qos::DataReaderQos py_qos() const override { return this->qos(); }
 
-        const std::string& py_topic_name() const override { return this->topic_name(); }
+    void py_qos(const dds::sub::qos::DataReaderQos& q) override { this->qos(q); }
 
-        const std::string& py_type_name() const override { return this->type_name(); }
+    const std::string& py_topic_name() const override { return this->topic_name(); }
 
-        const pyrti::PySubscriber py_subscriber() const override {
-            auto s = this->subscriber();
-            return pyrti::PySubscriber(s);
-        }
+    const std::string& py_type_name() const override { return this->type_name(); }
 
-        void py_close() override { this->close(); }
+    const PySubscriber py_subscriber() const override {
+        auto s = this->subscriber();
+        return PySubscriber(s);
+    }
 
-        void py_retain() override { this->retain(); }
-    };
+    void py_close() override { this->close(); }
+
+    void py_retain() override { this->retain(); }
+};
+
 }

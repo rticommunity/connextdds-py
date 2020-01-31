@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ReceiverPool>& cls) {
+void init_class_defs(py::class_<ReceiverPool>& cls) {
     cls
         .def(
             py::init<>(),
@@ -58,10 +60,12 @@ void pyrti::init_class_defs(py::class_<ReceiverPool>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ReceiverPool>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ReceiverPool>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ReceiverPool>(m, "ReceiverPool");
+            return init_class<ReceiverPool>(m, "ReceiverPool");
         }
     );
+}
+
 }

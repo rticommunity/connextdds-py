@@ -9,6 +9,8 @@ namespace py = pybind11;
 
 using namespace dds::core;
 
+namespace pyrti {
+
 template<typename T>
 py::class_<safe_enum<T>> init_dds_safe_enum(py::module& m, const std::string& name) {
     py::class_<safe_enum<T>> cls(m, name.c_str());
@@ -67,4 +69,6 @@ py::class_<safe_enum<T>> init_dds_safe_enum(py::module& m, const std::string& na
         );
     py::implicitly_convertible<typename safe_enum<T>::inner_enum, safe_enum<T>>();
     return cls;
+}
+
 }

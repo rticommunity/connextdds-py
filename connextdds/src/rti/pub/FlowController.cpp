@@ -4,12 +4,14 @@
 
 using namespace rti::pub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<FlowController>& cls) {
+void init_class_defs(py::class_<FlowController>& cls) {
     cls
         .def(
             py::init(
-                [](pyrti::PyDomainParticipant& dp, std::string& n, const FlowControllerProperty& fcp) {
+                [](PyDomainParticipant& dp, std::string& n, const FlowControllerProperty& fcp) {
                     return FlowController(dp, n, fcp);
                 }
             ),
@@ -27,7 +29,7 @@ void pyrti::init_class_defs(py::class_<FlowController>& cls) {
             "participant",
             [](FlowController& fc) {
                 dds::domain::DomainParticipant p = fc.participant();
-                return pyrti::PyDomainParticipant(p);
+                return PyDomainParticipant(p);
             },
             "The participant of this FlowController."
         )
@@ -67,7 +69,7 @@ void pyrti::init_class_defs(py::class_<FlowController>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<FlowControllerProperty>& cls) {
+void init_class_defs(py::class_<FlowControllerProperty>& cls) {
     cls
         .def(
             py::init<>(),
@@ -109,7 +111,7 @@ void pyrti::init_class_defs(py::class_<FlowControllerProperty>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<FlowControllerTokenBucketProperty>& cls) {
+void init_class_defs(py::class_<FlowControllerTokenBucketProperty>& cls) {
     cls
         .def(
             py::init<
@@ -172,7 +174,7 @@ void pyrti::init_class_defs(py::class_<FlowControllerTokenBucketProperty>& cls) 
 }
 
 template<>
-void pyrti::process_inits<FlowController>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<FlowController>(py::module& m, ClassInitList& l) {
     auto fcsp = init_dds_safe_enum<FlowControllerSchedulingPolicy_def>(m, "FlowControllerSchedulingPolicy");
 
     py::enum_<FlowControllerSchedulingPolicy::type>(fcsp, "Kind")
@@ -262,19 +264,21 @@ void pyrti::process_inits<FlowController>(py::module& m, pyrti::ClassInitList& l
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<FlowControllerTokenBucketProperty>(m, "FlowControllerTokenBucketProperty");
+            return init_class<FlowControllerTokenBucketProperty>(m, "FlowControllerTokenBucketProperty");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<FlowControllerProperty>(m, "FlowControllerProperty");
+            return init_class<FlowControllerProperty>(m, "FlowControllerProperty");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<FlowController>(m, "FlowController");
+            return init_class<FlowController>(m, "FlowController");
         }
     );
+}
+
 }

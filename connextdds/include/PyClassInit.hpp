@@ -6,5 +6,5 @@
 using namespace dds::all;
 /*
 template<>
-void pyrti::process_inits<Duration>(py::module&, pyrti::ClassInitList&);
+void process_inits<Duration>(py::module&, ClassInitList&);
 */

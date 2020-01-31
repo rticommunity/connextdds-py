@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TopicQueryDispatch>& cls) {
+void init_class_defs(py::class_<TopicQueryDispatch>& cls) {
     cls
         .def(
             py::init<>(),
@@ -52,10 +54,12 @@ void pyrti::init_class_defs(py::class_<TopicQueryDispatch>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TopicQueryDispatch>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TopicQueryDispatch>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TopicQueryDispatch>(m, "TopicQueryDispatch");
+            return init_class<TopicQueryDispatch>(m, "TopicQueryDispatch");
         }
     );
+}
+
 }

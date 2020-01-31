@@ -4,8 +4,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<Locator>& cls) {
+void init_class_defs(py::class_<Locator>& cls) {
     cls
         .def(
             py::init<
@@ -56,7 +58,7 @@ void pyrti::init_class_defs(py::class_<Locator>& cls) {
 }
 
 template<>
-void pyrti::process_inits<Locator>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Locator>(py::module& m, ClassInitList& l) {
     auto lk = init_dds_safe_enum<LocatorKind_def>(m, "LocatorKind");
     py::enum_<LocatorKind::type>(lk, "LocatorKind")
         .value(
@@ -141,7 +143,9 @@ void pyrti::process_inits<Locator>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<Locator>(m, "Locator");
+            return init_class<Locator>(m, "Locator");
         }
     );
+}
+
 }

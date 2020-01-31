@@ -3,8 +3,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<ContentFilterProperty>& cls) {
+void init_class_defs(py::class_<ContentFilterProperty>& cls) {
     cls
         .def_property_readonly(
             "content_filter_topic_name",
@@ -58,10 +60,12 @@ void pyrti::init_class_defs(py::class_<ContentFilterProperty>& cls) {
 }
 
 template<>
-void pyrti::process_inits<ContentFilterProperty>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<ContentFilterProperty>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<ContentFilterProperty>(m, "ContentFilterProperty");
+            return init_class<ContentFilterProperty>(m, "ContentFilterProperty");
         }
     );
+}
+
 }

@@ -3,8 +3,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<DurabilityService>& cls) {
+void init_class_defs(py::class_<DurabilityService>& cls) {
     cls
         .def(
             py::init<>(),
@@ -80,10 +82,12 @@ void pyrti::init_class_defs(py::class_<DurabilityService>& cls) {
 }
 
 template<>
-void pyrti::process_inits<DurabilityService>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<DurabilityService>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<DurabilityService>(m, "DurabilityService");
+            return init_class<DurabilityService>(m, "DurabilityService");
         }
     );
+}
+
 }

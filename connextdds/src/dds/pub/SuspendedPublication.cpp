@@ -3,8 +3,10 @@
 
 using namespace dds::pub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SuspendedPublication>& cls) {
+void init_class_defs(py::class_<SuspendedPublication>& cls) {
     cls
         .def(
             py::init<
@@ -34,10 +36,12 @@ void pyrti::init_class_defs(py::class_<SuspendedPublication>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SuspendedPublication>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SuspendedPublication>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<SuspendedPublication>(m, "SuspendedPublication");
+            return init_class<SuspendedPublication>(m, "SuspendedPublication");
         }
     ); 
+}
+
 }

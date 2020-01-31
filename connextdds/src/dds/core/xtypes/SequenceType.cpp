@@ -4,8 +4,10 @@
 using namespace dds::core::xtypes;
 using namespace rti::core::xtypes;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SequenceType, UnidimensionalCollectionTypeImpl>& cls) {
+void init_class_defs(py::class_<SequenceType, UnidimensionalCollectionTypeImpl>& cls) {
     cls
         .def(
             py::init<const DynamicType&>(),
@@ -20,10 +22,12 @@ void pyrti::init_class_defs(py::class_<SequenceType, UnidimensionalCollectionTyp
 }
 
 template<>
-void pyrti::process_inits<SequenceType>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SequenceType>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<SequenceType, UnidimensionalCollectionTypeImpl>(m, "SequenceType");
+            return init_class<SequenceType, UnidimensionalCollectionTypeImpl>(m, "SequenceType");
         }
     );
+}
+
 }

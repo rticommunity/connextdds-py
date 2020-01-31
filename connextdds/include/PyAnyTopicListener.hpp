@@ -6,95 +6,97 @@
 #include "PyAnyTopic.hpp"
 
 namespace pyrti {
-    class PyAnyTopicListener : public dds::topic::AnyTopicListener {
-    public:
-        using dds::topic::AnyTopicListener::AnyTopicListener;
 
-        using dds::topic::AnyTopicListener::on_inconsistent_topic;
+class PyAnyTopicListener : public dds::topic::AnyTopicListener {
+public:
+    using dds::topic::AnyTopicListener::AnyTopicListener;
 
-        virtual
-        void on_inconsistent_topic(
-            pyrti::PyAnyTopic& topic,
-            const dds::core::status::InconsistentTopicStatus& status
-        ) = 0;
+    using dds::topic::AnyTopicListener::on_inconsistent_topic;
 
-        virtual
-        ~PyAnyTopicListener() {}
-    };
+    virtual
+    void on_inconsistent_topic(
+        PyAnyTopic& topic,
+        const dds::core::status::InconsistentTopicStatus& status
+    ) = 0;
 
-
-
-    class PyNoOpAnyTopicListener : public pyrti::PyAnyTopicListener {
-    public:
-        using pyrti::PyAnyTopicListener::PyAnyTopicListener;
-
-        using pyrti::PyAnyTopicListener::on_inconsistent_topic;
-
-        void on_inconsistent_topic(
-            pyrti::PyAnyTopic& topic,
-            const dds::core::status::InconsistentTopicStatus& status
-        ) override {}
-
-        virtual
-        ~PyNoOpAnyTopicListener() {}
-    };
+    virtual
+    ~PyAnyTopicListener() {}
+};
 
 
 
+class PyNoOpAnyTopicListener : public PyAnyTopicListener {
+public:
+    using PyAnyTopicListener::PyAnyTopicListener;
 
-    template<class TLBase = pyrti::PyAnyTopicListener>
-    class PyAnyTopicListenerTrampoline : public TLBase {
-    public:
-        using TLBase::TLBase;
+    using PyAnyTopicListener::on_inconsistent_topic;
 
-        void on_inconsistent_topic(
-            dds::topic::AnyTopic& topic,
-            const dds::core::status::InconsistentTopicStatus& status
-        ) override {
-            auto at = pyrti::PyAnyTopic(topic);
-            this->on_inconsistent_topic(at, status);
-        }
+    void on_inconsistent_topic(
+        PyAnyTopic& topic,
+        const dds::core::status::InconsistentTopicStatus& status
+    ) override {}
 
-        void on_inconsistent_topic(
-            pyrti::PyAnyTopic& topic,
-            const dds::core::status::InconsistentTopicStatus& status
-        ) override {
-            PYBIND11_OVERLOAD_PURE(
-                void,
-                TLBase,
-                on_inconsistent_topic,
-                topic,
-                status
-            );
-        }
-
-        virtual
-        ~PyAnyTopicListenerTrampoline() {}
-    };
+    virtual
+    ~PyNoOpAnyTopicListener() {}
+};
 
 
 
-    template<class TLBase = pyrti::PyNoOpAnyTopicListener>
-    class PyNoOpAnyTopicListenerTrampoline : public PyAnyTopicListenerTrampoline<TLBase> {
-    public:
-        using pyrti::PyAnyTopicListenerTrampoline<TLBase>::PyAnyTopicListenerTrampoline;
 
-        using pyrti::PyAnyTopicListenerTrampoline<TLBase>::on_inconsistent_topic;
+template<class TLBase = PyAnyTopicListener>
+class PyAnyTopicListenerTrampoline : public TLBase {
+public:
+    using TLBase::TLBase;
 
-        void on_inconsistent_topic(
-            pyrti::PyAnyTopic& topic,
-            const dds::core::status::InconsistentTopicStatus& status
-        ) override {
-            PYBIND11_OVERLOAD(
-                void,
-                TLBase,
-                on_inconsistent_topic,
-                topic,
-                status
-            );
-        }
+    void on_inconsistent_topic(
+        dds::topic::AnyTopic& topic,
+        const dds::core::status::InconsistentTopicStatus& status
+    ) override {
+        auto at = PyAnyTopic(topic);
+        this->on_inconsistent_topic(at, status);
+    }
 
-        virtual
-        ~PyNoOpAnyTopicListenerTrampoline() {}
-    };
+    void on_inconsistent_topic(
+        PyAnyTopic& topic,
+        const dds::core::status::InconsistentTopicStatus& status
+    ) override {
+        PYBIND11_OVERLOAD_PURE(
+            void,
+            TLBase,
+            on_inconsistent_topic,
+            topic,
+            status
+        );
+    }
+
+    virtual
+    ~PyAnyTopicListenerTrampoline() {}
+};
+
+
+
+template<class TLBase = PyNoOpAnyTopicListener>
+class PyNoOpAnyTopicListenerTrampoline : public PyAnyTopicListenerTrampoline<TLBase> {
+public:
+    using PyAnyTopicListenerTrampoline<TLBase>::PyAnyTopicListenerTrampoline;
+
+    using PyAnyTopicListenerTrampoline<TLBase>::on_inconsistent_topic;
+
+    void on_inconsistent_topic(
+        PyAnyTopic& topic,
+        const dds::core::status::InconsistentTopicStatus& status
+    ) override {
+        PYBIND11_OVERLOAD(
+            void,
+            TLBase,
+            on_inconsistent_topic,
+            topic,
+            status
+        );
+    }
+
+    virtual
+    ~PyNoOpAnyTopicListenerTrampoline() {}
+};
+
 }

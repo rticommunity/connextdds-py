@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TransportBuiltinMask>& cls) {
+void init_class_defs(py::class_<TransportBuiltinMask>& cls) {
     cls
         .def_static(
             "all",
@@ -35,7 +37,7 @@ void pyrti::init_class_defs(py::class_<TransportBuiltinMask>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<TransportBuiltin>& cls) {
+void init_class_defs(py::class_<TransportBuiltin>& cls) {
     cls
         .def(
             py::init<>(),
@@ -91,10 +93,10 @@ void pyrti::init_class_defs(py::class_<TransportBuiltin>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TransportBuiltin>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TransportBuiltin>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = pyrti::init_mask_type<TransportBuiltinMask, uint64_t>(m, "TransportBuiltinMask", "Create a TransportBuiltinMask equivalent to TransportBuiltinMask.none()");
+            auto cls = init_mask_type<TransportBuiltinMask, uint64_t>(m, "TransportBuiltinMask", "Create a TransportBuiltinMask equivalent to TransportBuiltinMask.none()");
             return [cls]() mutable {
                 init_class_defs<TransportBuiltinMask>(cls);
             };
@@ -103,7 +105,9 @@ void pyrti::process_inits<TransportBuiltin>(py::module& m, pyrti::ClassInitList&
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TransportBuiltin>(m, "TransportBuiltin");
+            return init_class<TransportBuiltin>(m, "TransportBuiltin");
         }
     );
+}
+
 }

@@ -3,8 +3,10 @@
 
 using namespace dds::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::process_inits<Exception>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<Exception>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() {
             auto ex = py::register_exception<Exception>(
@@ -87,4 +89,6 @@ void pyrti::process_inits<Exception>(py::module& m, pyrti::ClassInitList& l) {
         }
     ); 
     
+}
+
 }

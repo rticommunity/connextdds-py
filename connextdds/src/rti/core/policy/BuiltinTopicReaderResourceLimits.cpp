@@ -3,8 +3,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<BuiltinTopicReaderResourceLimits>& cls) {
+void init_class_defs(py::class_<BuiltinTopicReaderResourceLimits>& cls) {
     cls
         .def(
             py::init<>(),
@@ -102,10 +104,12 @@ void pyrti::init_class_defs(py::class_<BuiltinTopicReaderResourceLimits>& cls) {
 }
 
 template<>
-void pyrti::process_inits<BuiltinTopicReaderResourceLimits>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<BuiltinTopicReaderResourceLimits>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<BuiltinTopicReaderResourceLimits>(m, "BuiltinTopicReaderResourceLimits");
+            return init_class<BuiltinTopicReaderResourceLimits>(m, "BuiltinTopicReaderResourceLimits");
         }
     );
+}
+
 }

@@ -5,8 +5,10 @@
 
 using namespace rti::sub;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<TopicQuerySelection>& cls) {
+void init_class_defs(py::class_<TopicQuerySelection>& cls) {
     cls
         .def(
             py::init<
@@ -42,7 +44,7 @@ void pyrti::init_class_defs(py::class_<TopicQuerySelection>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<TopicQueryData>& cls) {
+void init_class_defs(py::class_<TopicQueryData>& cls) {
     cls
         .def_static(
             "create_from_service_request",
@@ -68,11 +70,11 @@ void pyrti::init_class_defs(py::class_<TopicQueryData>& cls) {
 }
 
 template<>
-void pyrti::init_class_defs(py::class_<TopicQuery>& cls) {
+void init_class_defs(py::class_<TopicQuery>& cls) {
     cls
         .def(
             py::init(
-                [](pyrti::PyIAnyDataReader& dr, const TopicQuerySelection& tqs) {
+                [](PyIAnyDataReader& dr, const TopicQuerySelection& tqs) {
                     return TopicQuery(dr.get_any_datareader(), tqs);
                 }
             ),
@@ -125,7 +127,7 @@ void pyrti::init_class_defs(py::class_<TopicQuery>& cls) {
 }
 
 template<>
-void pyrti::process_inits<TopicQuery>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<TopicQuery>(py::module& m, ClassInitList& l) {
     auto tqsk = init_dds_safe_enum<TopicQuerySelectionKind_def>(m, "TopicQuerySelectionKind");
 
     py::enum_<TopicQuerySelectionKind::type>(tqsk, "TopicQuerySelectionKind")
@@ -149,19 +151,21 @@ void pyrti::process_inits<TopicQuery>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TopicQuerySelection>(m, "TopicQuerySelection");
+            return init_class<TopicQuerySelection>(m, "TopicQuerySelection");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TopicQueryData>(m, "TopicQueryData");
+            return init_class<TopicQueryData>(m, "TopicQueryData");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<TopicQuery>(m, "TopicQuery");
+            return init_class<TopicQuery>(m, "TopicQuery");
         }
     );
+}
+
 }

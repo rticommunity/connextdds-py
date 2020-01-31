@@ -3,8 +3,10 @@
 
 using namespace dds::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<OwnershipStrength>& cls) {
+void init_class_defs(py::class_<OwnershipStrength>& cls) {
     cls
         .def(
             py::init<>(),
@@ -34,10 +36,12 @@ void pyrti::init_class_defs(py::class_<OwnershipStrength>& cls) {
 }
 
 template<>
-void pyrti::process_inits<OwnershipStrength>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<OwnershipStrength>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<OwnershipStrength>(m, "OwnershipStrength");
+            return init_class<OwnershipStrength>(m, "OwnershipStrength");
         }
     );
+}
+
 }

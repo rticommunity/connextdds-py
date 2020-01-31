@@ -4,8 +4,10 @@
 
 using namespace rti::core::policy;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<PublishMode>& cls) {
+void init_class_defs(py::class_<PublishMode>& cls) {
     cls
         .def(
             py::init<>(),
@@ -66,7 +68,7 @@ void pyrti::init_class_defs(py::class_<PublishMode>& cls) {
 }
 
 template<>
-void pyrti::process_inits<PublishMode>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<PublishMode>(py::module& m, ClassInitList& l) {
     auto pmk = init_dds_safe_enum<PublishModeKind_def>(m, "PublishModeKind");
 
     py::enum_<PublishModeKind::type>(pmk, "PublishModeKind")
@@ -105,7 +107,9 @@ void pyrti::process_inits<PublishMode>(py::module& m, pyrti::ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<PublishMode>(m, "PublishMode");
+            return init_class<PublishMode>(m, "PublishMode");
         }
     );
+}
+
 }

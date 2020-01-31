@@ -8,8 +8,10 @@ using namespace dds::topic::qos;
 using namespace dds::pub::qos;
 using namespace dds::sub::qos;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
+void init_class_defs(py::class_<QosProvider>& cls) {
     cls
         .def(
             py::init<const std::string&, const std::string&>(),
@@ -221,7 +223,7 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "type",
             [](const QosProvider& qp, const std::string& type_lib_name, const std::string& type_name) {
                 auto dt = qp->type(type_lib_name, type_name);
-                pyrti::PyDynamicTypeMap::add(type_name, dt);
+                PyDynamicTypeMap::add(type_name, dt);
                 return dt;
             },
             py::arg("library"),
@@ -232,7 +234,7 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
             "type",
             [](const QosProvider& qp, const std::string& type_name) {
                 auto dt = qp->type(type_name);
-                pyrti::PyDynamicTypeMap::add(type_name, dt);
+                PyDynamicTypeMap::add(type_name, dt);
                 return dt;
             },
             py::arg("name"),
@@ -308,10 +310,12 @@ void pyrti::init_class_defs(py::class_<QosProvider>& cls) {
 }
 
 template<>
-void pyrti::process_inits<QosProvider>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<QosProvider>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<QosProvider>(m, "QosProvider");
+            return init_class<QosProvider>(m, "QosProvider");
         }
     );
+}
+
 }

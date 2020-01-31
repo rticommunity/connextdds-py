@@ -3,8 +3,10 @@
 
 using namespace rti::core;
 
+namespace pyrti {
+
 template<>
-void pyrti::init_class_defs(py::class_<SequenceNumber>& cls) {
+void init_class_defs(py::class_<SequenceNumber>& cls) {
     cls
         .def(
             py::init<>(),
@@ -101,10 +103,12 @@ void pyrti::init_class_defs(py::class_<SequenceNumber>& cls) {
 }
 
 template<>
-void pyrti::process_inits<SequenceNumber>(py::module& m, pyrti::ClassInitList& l) {
+void process_inits<SequenceNumber>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return pyrti::init_class<SequenceNumber>(m, "SequenceNumber");
+            return init_class<SequenceNumber>(m, "SequenceNumber");
         }
     );
+}
+
 }
