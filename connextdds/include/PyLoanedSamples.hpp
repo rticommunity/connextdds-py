@@ -55,7 +55,7 @@ void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls) {
             [](dds::sub::LoanedSamples<T>& ls, py::object, py::object, py::object) {
                 ls.return_loan();
             },
-            "Exit the context for this DataReader, cleaning up resources."
+            "Exit the context for the loaned samples, returning the resources."
         );
 }
 

@@ -22,6 +22,20 @@ void init_class_defs(py::class_<LoanedDynamicData>& cls) {
             "get",
             (const dds::core::xtypes::DynamicData& (LoanedDynamicData::*)() const) &LoanedDynamicData::get,
             "Obtains the DynamicData object representing a member of a DynamicData object."
+        )
+        .def(
+            "__enter__",
+            [](LoanedDynamicData& ldd) -> LoanedDynamicData& {
+                return ldd;
+            },
+            "Enter a context for the loaned field, loan returned on context exit."
+        )
+        .def(
+            "__exit__",
+            [](LoanedDynamicData& ldd, py::object, py::object, py::object) {
+                ldd.return_loan();
+            },
+            "Exit the context for the loaned field, returning the resources."
         );
 }
 
