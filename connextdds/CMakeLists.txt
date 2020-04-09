@@ -18,6 +18,7 @@ add_library(
     MODULE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyAsyncioExecutor.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/InitMisc.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/DDSSTLBinds.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/status/StatusNamespace.cpp"
@@ -81,6 +82,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/BuiltinProfiles.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/QosProviderParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/LocatorFilterElement.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/LongDouble.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/ChannelSettings.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/VendorId.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/RtpsReliableReaderProtocol.cpp"
