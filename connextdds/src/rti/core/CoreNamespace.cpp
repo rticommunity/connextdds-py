@@ -14,6 +14,7 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<Guid>(m, l);
     pyrti::process_inits<Locator>(m, l);
     pyrti::process_inits<LocatorFilterElement>(m, l);
+    pyrti::process_inits<LongDouble>(m, l);
     pyrti::process_inits<ProductVersion>(m, l);
     pyrti::process_inits<ProtocolVersion>(m, l);
     pyrti::process_inits<QosProviderParams>(m, l);
