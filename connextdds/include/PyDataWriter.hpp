@@ -2,6 +2,7 @@
 
 #include "PyConnext.hpp"
 #include <pybind11/stl_bind.h>
+#include <pybind11/functional.h>
 #include <dds/pub/DataWriter.hpp>
 #include <dds/pub/discovery.hpp>
 #include <dds/topic/TopicInstance.hpp>
@@ -11,6 +12,8 @@
 #include "PyDynamicTypeMap.hpp"
 #include "PyTopic.hpp"
 #include "PyDataWriterListener.hpp"
+#include "PyAsyncioExecutor.hpp"
+
 
 namespace pyrti {
 
@@ -665,6 +668,211 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         .def(
             py::self != py::self,
             "Test for inequality."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const T& sample) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &sample]() {
+                        dw.write(sample);
+                    })
+                );
+            },
+            py::arg("sample"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Write a sample. This method is awaitable and is only for use "
+            "with asyncio.")
+        
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const T& sample, const dds::core::Time& timestamp) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &sample, &timestamp]() {
+                        dw.write(sample, timestamp);
+                    })
+                );
+            },
+            py::arg("sample"),
+            py::arg("timestamp"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            "Write a sample with a specified timestamp. This methods is "
+            "awaitable and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const T& sample, const dds::core::InstanceHandle& handle) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &sample, &handle]() {
+                        dw.write(sample, handle);
+                    })
+                );
+            },
+            py::arg("sample"),
+            py::arg("handle"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            "Write a sample with an instance handle. This method is awaitable "
+            "and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const T& sample, const dds::core::InstanceHandle& handle, const dds::core::Time& timestamp) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &sample, &handle, &timestamp]() {
+                        dw.write(sample, handle, timestamp);
+                    })
+                );
+            },
+            py::arg("sample"),
+            py::arg("handle"),
+            py::arg("timestamp"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            py::keep_alive<0, 4>(),
+            "Write a sample with an instance handle and specified timestamp. "
+            "This method is awaitable and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const dds::topic::TopicInstance<T>& topic_instance) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &topic_instance]() {
+                        dw.write(topic_instance);
+                    })
+                );
+            },
+            py::arg("topic_instance"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Write a sample given a topic instance. This method is awaitable "
+            "and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const dds::topic::TopicInstance<T>& topic_instance, const dds::core::Time& timestamp) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &topic_instance, &timestamp]() {
+                        dw.write(topic_instance, timestamp);
+                    })
+                );
+            },
+            py::arg("topic_instance"),
+            py::arg("timestamp"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            "Write a sample given a topic instance and specified timestamp. "
+            "This method is awaitable and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const std::vector<T>& values) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &values]() {
+                        dw.write(values.begin(), values.end());
+                    })
+                );
+            },
+            py::arg("samples"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Write a sequence of samples. This method is awaitable and only "
+            "for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const std::vector<dds::topic::TopicInstance<T>>& values) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &values]() {
+                        for (auto ti : values) {
+                            dw.write(ti);
+                        }
+                    })
+                );
+            },
+            py::arg("topic_instances"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Write a sequence of topic instances. This method is awaitable "
+            "and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const std::vector<T>& values, const dds::core::Time& timestamp) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &values, &timestamp]() {
+                        dw.write(values.begin(), values.end(), timestamp);
+                    })
+                );
+            },
+            py::arg("samples"),
+            py::arg("timestamp"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            "Write a sequence of samples with a timestamp. This method is "
+            "awaitable and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const std::vector<dds::topic::TopicInstance<T>>& values, const dds::core::Time& timestamp) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &values, &timestamp]() {
+                        for (auto ti : values) {
+                            dw.write(ti, timestamp);
+                        }
+                    })
+                );
+            },
+            py::arg("topic_instances"),
+            py::arg("timestamp"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            "Write a sequence of topic instances with a timestamp. This "
+            "method is awaitable and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const std::vector<T>& values, const std::vector<dds::core::InstanceHandle>& handles) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &values, &handles]() {
+                        dw.write(values.begin(), values.end(), handles.begin(), handles.end());
+                    })
+                );
+            },
+            py::arg("samples"),
+            py::arg("handles"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            "Write a sequence of samples with their instance handles. This "
+            "method is awaitable and only for use with asyncio."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<T>& dw, const std::vector<T>& values, const std::vector<dds::core::InstanceHandle>& handles, const dds::core::Time& timestamp) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &values, &handles, &timestamp]() {
+                        dw.write(values.begin(), values.end(), handles.begin(), handles.end(), timestamp);
+                    })
+                );
+            },
+            py::arg("samples"),
+            py::arg("handles"),
+            py::arg("timestamp"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            py::keep_alive<0, 3>(),
+            py::keep_alive<0, 4>(),
+            "Write a sequence of samples with their instance handles and a "
+            "timestamp. This method is awaitable and only for use with "
+            "asyncio."
         );
 
     py::implicitly_convertible<PyIAnyDataWriter, PyDataWriter<T>>();

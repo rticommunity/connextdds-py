@@ -3,6 +3,7 @@
 #include "PyConnext.hpp"
 #include <pybind11/stl_bind.h>
 #include <pybind11/operators.h>
+#include <pybind11/functional.h>
 #include <dds/sub/DataReader.hpp>
 #include <rti/sub/AckResponseData.hpp>
 #include <dds/sub/cond/ReadCondition.hpp>
@@ -16,6 +17,7 @@
 #include "PyDataReaderListener.hpp"
 #include "PyContentFilteredTopic.hpp"
 #include "PyDynamicTypeMap.hpp"
+#include "PyAsyncioExecutor.hpp"
 
 namespace pyrti {
 
@@ -247,7 +249,8 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         .def(
             "__lshift__",
             [](PyDataReader<T>& dr, const dds::sub::qos::DataReaderQos& qos) {
-                return (dr << qos);
+                dr << qos;
+                return dr;
             },
             py::is_operator(),
             "Set the DataReaderQos for this DataReader."
@@ -255,10 +258,36 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         .def(
             "__rshift__",
             [](PyDataReader<T>& dr, dds::sub::qos::DataReaderQos& qos) {
-                return (dr >> qos);
+                dr >> qos;
+                return dr;
             },
             py::is_operator(),
             "Get the DataReaderQos from this DataReader"
+
+        )
+        .def(
+            "wait_for_historical_data",
+            &PyDataReader<T>::wait_for_historical_data,
+            py::arg("max_wait"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Waits until all \"historical\" data is received for DataReaders "
+            "that have a non-VOLATILE Durability Qos kind."
+        )
+        .def(
+            "wait_for_historical_data_async",
+            [](PyDataReader<T>& dr, const dds::core::Duration& max_wait) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dr, &max_wait]() {
+                        dr.wait_for_historical_data(max_wait);
+                    })
+                );
+            },
+            py::arg("max_wait"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Waits until all \"historical\" data is received for DataReaders "
+            "that have a non-VOLATILE Durability Qos kind. This call is "
+            "awaitable and only for use with asyncio."
         )
         .def_property_readonly(
             "liveliness_changed_status",

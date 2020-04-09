@@ -1,7 +1,10 @@
 #include "PyConnext.hpp"
 #include <dds/core/cond/WaitSet.hpp>
 #include <rti/core/cond/WaitSetImpl.hpp>
+#include <future>
+#include <pybind11/functional.h>
 #include "PyCondition.hpp"
+#include "PyAsyncioExecutor.hpp"
 
 using namespace dds::core::cond;
 
@@ -10,7 +13,7 @@ class PyTriggeredConditions {
 public:
     PyTriggeredConditions(const std::vector<Condition>&& v) : _v(v) {}
 
-std::vector<Condition>& v() { return this->_v; }
+    std::vector<Condition>& v() { return this->_v; }
 
 private:
     std::vector<Condition> _v;
@@ -96,6 +99,7 @@ void init_class_defs(py::class_<PyTriggeredConditions>& cls) {
         );
 }
 
+
 template<>
 void init_class_defs(py::class_<WaitSet>& cls) {
     cls
@@ -106,49 +110,100 @@ void init_class_defs(py::class_<WaitSet>& cls) {
         .def(
             py::init<const rti::core::cond::WaitSetProperty&>(),
             py::arg("property"),
-            "Create a WaitSet with no conditions attached with the specified WaitSetProperty settings."
+            "Create a WaitSet with no conditions attached with the specified "
+            "WaitSetProperty settings."
         )
         .def(
             "wait",
             [](WaitSet& ws, const dds::core::Duration& d) {
                 return PyTriggeredConditions(ws.wait(d));
-                /*auto active_conditions = ws.wait(d);
-                std::vector<PyCondition> conditions;
-                for (auto& c : active_conditions) {
-                    conditions.push_back(PyCondition(c));
-                }
-                return conditions; */
             },
             py::arg("timeout"),
             py::call_guard<py::gil_scoped_release>(),
-            "Wait for conditions attached to this WaitSet to trigger with a timeout."
+            "Wait for conditions attached to this WaitSet to trigger with a "
+            "timeout."
         )
         .def(
             "wait",
             [](WaitSet& ws) {
                 return PyTriggeredConditions(ws.wait());
-                /*auto active_conditions = ws.wait();
-                std::vector<PyCondition> conditions;
-                for (auto& c : active_conditions) {
-                    conditions.push_back(PyCondition(c));
-                }
-                return conditions;*/
             },
             py::call_guard<py::gil_scoped_release>(),
-            "Wait indefinitely for conditions attached to this WaitSet to trigger."
+            "Wait indefinitely for conditions attached to this WaitSet to "
+            "trigger."
+        )
+        .def(
+            "wait_async",
+            [](WaitSet& ws, const dds::core::Duration& d) -> py::object {
+                return PyAsyncioExecutor::run<PyTriggeredConditions>(
+                    std::function<PyTriggeredConditions()>([&ws, &d]() {
+                        return PyTriggeredConditions(ws.wait(d));
+                    })
+                );
+            },
+            py::arg("timeout"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Wait for conditions attached to this WaitSet to trigger with a "
+            "timeout. This call is awaitable and only for use with asyncio."
+        )
+        .def(
+            "wait_async",
+            [](WaitSet& ws) {
+                return PyAsyncioExecutor::run<PyTriggeredConditions>(
+                    std::function<PyTriggeredConditions()>([&ws]() {
+                        return PyTriggeredConditions(ws.wait());
+                    })
+                );
+            },
+            py::keep_alive<0, 1>(),
+            "Wait indefinitely for conditions attached to this WaitSet to "
+            "trigger. This call is awaitable and only for use with asyncio."
         )
         .def(
             "dispatch",
             (void (WaitSet::*)(const dds::core::Duration&)) &WaitSet::dispatch,
             py::arg("timeout"),
             py::call_guard<py::gil_scoped_release>(),
-            "Dispatch handlers for triggered conditions attached to this WaitSet with a timeout."
+            "Dispatch handlers for triggered conditions attached to this "
+            "WaitSet with a timeout."
         )
         .def(
             "dispatch",
             (void (WaitSet::*)()) &WaitSet::dispatch,
             py::call_guard<py::gil_scoped_release>(),
-            "Dispatch handlers for triggered conditions attached to this WaitSet with no timeout."
+            "Dispatch handlers for triggered conditions attached to this "
+            "WaitSet with no timeout."
+        )
+        .def(
+            "dispatch_async",
+            [](WaitSet& ws, const dds::core::Duration& d) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&ws, &d]() {
+                        ws.dispatch(d);
+                    })
+                );
+            },
+            py::arg("timeout"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Dispatch handlers for triggered conditions attached to this "
+            "WaitSet with a timeout. This call is awaitable and only for "
+            "use with asyncio."
+        )
+        .def(
+            "dispatch_async",
+            [](WaitSet& ws) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&ws]() {
+                        ws.dispatch();
+                    })
+                );
+            },
+            py::keep_alive<0, 1>(),
+            "Dispatch handlers for triggered conditions attached to this "
+            "WaitSet with no timeout. This call is awaitable and only for "
+            "use with asyncio."
         )
         .def(
             "__iadd__",
