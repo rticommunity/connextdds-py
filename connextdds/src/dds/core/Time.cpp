@@ -1,8 +1,11 @@
 #include "PyConnext.hpp"
+#include <pybind11/chrono.h>
 #include <dds/core/Time.hpp>
 #include <dds/core/Duration.hpp>
+#include <rti/core/constants.hpp>
 
 using namespace dds::core;
+using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds>;
 
 namespace pyrti {
 
@@ -23,6 +26,18 @@ void init_class_defs(py::class_<Time>& cls) {
             py::init<Time&>(),
             py::arg("other"),
             "Copy-construct a Time object from another Time object."
+        )
+        .def(
+            py::init(
+                [](timestamp ts) {
+                    int64_t microseconds = ts.time_since_epoch().count();
+                    int32_t sec = static_cast<int32_t>(microseconds / rti::core::microsec_per_sec);
+                    uint32_t nanosec = (microseconds % rti::core::microsec_per_sec)
+                        * rti::core::nanosec_per_microsec;
+
+                    return Time(sec, nanosec);
+                }
+            )
         )
         .def_property(
             "sec", 
@@ -138,17 +153,33 @@ void init_class_defs(py::class_<Time>& cls) {
         )
         .def_static(
             "from_microsecs",
-            &Time::from_microsecs,
+            [](uint64_t microseconds) {
+                int32_t sec = static_cast<int32_t>(microseconds / rti::core::microsec_per_sec);
+                uint32_t nanosec = (microseconds % rti::core::microsec_per_sec)
+                    * rti::core::nanosec_per_microsec;
+
+                return Time(sec, nanosec);
+            },
             py::arg("microseconds"),
             "Create a Time object from microseconds."
         )
         .def_static(
             "from_millisecs",
-            &Time::from_millisecs,
+            [](uint64_t milliseconds) {
+                int32_t sec = static_cast<int32_t>(milliseconds / rti::core::millisec_per_sec);
+                uint32_t nanosec = (milliseconds % rti::core::millisec_per_sec)
+                    * rti::core::nanosec_per_millisec;
+
+                return Time(sec, nanosec);
+            },
             py::arg("milliseconds"),
             "Create a Time object from millisecs."
         )
-        .def_static("from_secs", &Time::from_secs, "Create a Time object from seconds."
+        .def_static(
+            "from_secs",
+            &Time::from_secs,
+            py::arg("seconds"),
+            "Create a Time object from seconds."
         )
         .def(
             py::self + Duration(),
@@ -178,6 +209,8 @@ void init_class_defs(py::class_<Time>& cls) {
             py::self - py::self,
             "Calculate the duration between two times."
         );
+
+    py::implicitly_convertible<timestamp, Time>();
 }
 
 template<>

@@ -751,13 +751,36 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<DynamicData>, Py
                 dds::core::xtypes::DynamicData sample(dt);
                 update_dynamicdata_object(sample, dict);
                 {
-                    py::gil_scoped_release();
+                    py::gil_scoped_release release;
                     dw.write(sample);
                 }
             },
             py::arg("sample_data"),
             "Create a DynamicData object and write it with the given "
             "dictionary containing field names as keys."
+        )
+        .def(
+            "write_async",
+            [](PyDataWriter<dds::core::xtypes::DynamicData>& dw, py::dict& dict) {
+                return PyAsyncioExecutor::run<void>(
+                    std::function<void()>([&dw, &dict]() {
+                        py::gil_scoped_acquire acquire;
+                        auto dt = PyDynamicTypeMap::get(dw->type_name());
+                        dds::core::xtypes::DynamicData sample(dt);
+                        update_dynamicdata_object(sample, dict);
+                        {
+                            py::gil_scoped_release release;
+                            dw.write(sample);
+                        }
+                    })
+                );
+            },
+            py::arg("sample_data"),
+            py::keep_alive<0, 1>(),
+            py::keep_alive<0, 2>(),
+            "Create a DynamicData object and write it with the given "
+            "dictionary containing field names as keys. This method is "
+            "awaitable and is only for use with asyncio."
         )
         .def(
             "create_data",

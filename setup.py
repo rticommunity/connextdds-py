@@ -55,7 +55,7 @@ class CMakeBuild(build_ext):
                       '-DCONNEXTDDS_DIR=' + nddshome,
                       '-DCONNEXTDDS_ARCH=' + arch]
 
-        cfg = 'Debug' if self.debug else 'MinSizeRel'
+        cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
         if platform.system() == "Windows":

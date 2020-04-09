@@ -46,7 +46,7 @@ template<>
 void process_inits<SampleFlag>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            auto cls = init_mask_type<SampleFlag, uint64_t>(m, "SampleFlag", "Create a RtpsReservedPortKindMask equivalent to RtpsReservedPortKindMask.none()");
+            auto cls = init_mask_type<SampleFlag, uint64_t>(m, "SampleFlag", "Construct an empty SampleFlag with no bits set.");
             return [cls]() mutable {
                 init_class_defs<SampleFlag>(cls);
             };

@@ -192,6 +192,7 @@ py::class_<T> init_mask_type(py::object& m, const std::string& name, const std::
             py::init<
                 INIT_TYPE
             >(),
+            py::arg("value"),
             "Creates a mask from the bits in an integer."
         );
 

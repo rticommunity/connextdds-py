@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include <pybind11/chrono.h>
 #include <dds/core/Duration.hpp>
 
 using namespace dds::core;
@@ -31,13 +32,13 @@ void init_class_defs(py::class_<Duration>& cls) {
             )
         )
         .def_property(
-            "seconds",
+            "sec",
             (int32_t (Duration::*)() const) &Duration::sec,
             (void (Duration::*)(int32_t)) &Duration::sec,
             "Get/set the number of seconds in the Duration."
         )
         .def_property(
-            "nanoseconds",
+            "nanosec",
             (uint32_t (Duration::*)() const) &Duration::nanosec,
             (void (Duration::*)(uint32_t)) &Duration::nanosec,
             "Get/set the number of nanoseconds in the Duration."
