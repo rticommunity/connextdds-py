@@ -52,7 +52,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 }),
             py::arg("domain_id"),
             py::arg("qos"),
-            py::arg("the_listener") = (PyDomainParticipantListener*) nullptr,
+            py::arg("listener") = (PyDomainParticipantListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             py::keep_alive<1, 4>(),
             "Create a new DomainParticipant"
@@ -63,7 +63,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                     auto entity = e.get_entity();
                     return dds::core::polymorphic_cast<PyDomainParticipant>(entity);
                 }
-            )
+            ),
+            py::arg("entity"),
+            "Downcast an IEntity to a DomainParticipant."
         )
         .def_property_readonly(
             "listener",

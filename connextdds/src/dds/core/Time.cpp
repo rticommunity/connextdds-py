@@ -5,7 +5,7 @@
 #include <rti/core/constants.hpp>
 
 using namespace dds::core;
-using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds>;
+using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
 namespace pyrti {
 
@@ -30,11 +30,10 @@ void init_class_defs(py::class_<Time>& cls) {
         .def(
             py::init(
                 [](timestamp ts) {
-                    int64_t microseconds = ts.time_since_epoch().count();
-                    int32_t sec = static_cast<int32_t>(microseconds / rti::core::microsec_per_sec);
-                    uint32_t nanosec = (microseconds % rti::core::microsec_per_sec)
-                        * rti::core::nanosec_per_microsec;
-
+                    auto timestamp_nano = std::chrono::time_point_cast<std::chrono::nanoseconds>(ts);
+                    int64_t nanoseconds = timestamp_nano.time_since_epoch().count();
+                    int32_t sec = static_cast<int32_t>(nanoseconds / rti::core::nanosec_per_sec);
+                    uint32_t nanosec = (nanoseconds % rti::core::nanosec_per_sec);
                     return Time(sec, nanosec);
                 }
             )
