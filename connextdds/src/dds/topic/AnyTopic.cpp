@@ -31,7 +31,7 @@ void init_class_defs(py::class_<PyIAnyTopic>& cls) {
             (void (PyIAnyTopic::*)(const TopicQos&)) &PyIAnyTopic::py_qos,
             "The QoS for this AnyTopic."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property_readonly(
             "name",

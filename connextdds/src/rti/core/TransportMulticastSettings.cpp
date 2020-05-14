@@ -27,7 +27,7 @@ void init_class_defs(py::class_<TransportMulticastSettings>& cls) {
             "A sequence of transport aliases that specifies the transports on "
             "which to receive multicast traffic for the entity."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "receive_address",

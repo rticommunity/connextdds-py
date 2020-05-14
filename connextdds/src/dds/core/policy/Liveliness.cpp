@@ -37,10 +37,11 @@ void init_class_defs(py::class_<Liveliness>& cls) {
             "The duration within which a Entity must be asserted or else it "
             "is considered not alive."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property(
-            "kind",
+            "assertions_per_lease_duration",
             [](const Liveliness& l) {
                 return l->assertions_per_lease_duration();
             },
@@ -49,6 +50,18 @@ void init_class_defs(py::class_<Liveliness>& cls) {
             },
             "The number of assertions to send during the lease duration."
         )
+#else
+        .def_property(
+            "assertions_per_lease_duration",
+            [](const Liveliness& l) {
+                return l.delegate().native().assertions_per_lease_duration;
+            },
+            [](Liveliness& l, int32_t a) {
+                return l.delegate().native().assertions_per_lease_duration = a;
+            },
+            "The number of assertions to send during the lease duration."
+        )
+#endif
         .def_static(
             "automatic",
             &Liveliness::Automatic,

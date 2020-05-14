@@ -3,6 +3,8 @@
 
 using namespace dds::core::policy;
 
+#if rti_connext_version_gte(6, 0, 0)
+
 namespace pyrti {
 
 template<>
@@ -79,3 +81,5 @@ void process_inits<DataRepresentation>(py::module& m, ClassInitList& l) {
 }
 
 }
+
+#endif

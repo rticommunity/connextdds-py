@@ -30,7 +30,7 @@ void init_class_defs(py::class_<ReaderDataLifecycle>& cls) {
             "information regarding an instance once its instance_state "
             "becomes InstanceStateKind.NOT_ALIVE_NO_WRITERS."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "autopurge_disposed_samples_delay",
@@ -40,7 +40,7 @@ void init_class_defs(py::class_<ReaderDataLifecycle>& cls) {
             "information regarding an instance once its instance_state "
             "becomes InstanceStateKind.NOT_ALIVE_DISPOSED."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "autopurge_disposed_instances_delay",
@@ -54,7 +54,7 @@ void init_class_defs(py::class_<ReaderDataLifecycle>& cls) {
             "instance once its instance_state becomes "
             "InstanceStateKind.NOT_ALIVE_DISPOSED."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_static(
             "no_auto_purge",

@@ -130,12 +130,15 @@ void init_class_defs(py::class_<SampleInfo>& cls) {
                 return s->topic_query_guid();
             }
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property_readonly(
             "encapsulation_id",
             [](const SampleInfo& s) {
                 return s->encapsulation_id();
             }
-        );
+        )
+#endif
+        ;
 }
 
 template<>

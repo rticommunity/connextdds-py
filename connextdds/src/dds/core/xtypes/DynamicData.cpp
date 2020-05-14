@@ -130,6 +130,7 @@ py::object get_collection_member(DynamicData& dd, TypeKind::inner_enum kind, con
         }
         case TypeKind::CHAR_8_TYPE:
             return py::cast(dd.get_values<char>(key));
+#if rti_connext_version_gte(6, 0, 0)
         case TypeKind::CHAR_16_TYPE: {
             std::vector<wchar_t> retval;
             auto dd_values = dd.get_values<uint16_t>(key);
@@ -138,6 +139,7 @@ py::object get_collection_member(DynamicData& dd, TypeKind::inner_enum kind, con
             }
             return py::cast(retval);
         }
+#endif
         case TypeKind::STRING_TYPE: {
             std::vector<std::string> retval;
             DynamicData& member = dd.loan_value(key).get();
@@ -196,8 +198,10 @@ py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key) 
             return py::cast(dd.value<rti::core::LongDouble>(key));
         case TypeKind::CHAR_8_TYPE:
             return py::cast(dd.value<char>(key));
+#if rti_connext_version_gte(6, 0, 0)
         case TypeKind::CHAR_16_TYPE:
             return py::cast(static_cast<wchar_t>(dd.value<DDS_Wchar>(key)));
+#endif
         case TypeKind::STRING_TYPE:
             return py::cast(dd.value<std::string>(key));
         case TypeKind::WSTRING_TYPE: {
@@ -269,6 +273,7 @@ void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& 
         case TypeKind::CHAR_8_TYPE:
             dd.set_values<char>(key, py::cast<std::vector<char>>(values));
             break;
+#if rti_connext_version_gte(6, 0, 0)
         case TypeKind::CHAR_16_TYPE: {
             auto s = py::cast<std::vector<wchar_t>>(values);
             std::vector<DDS_Wchar> v;
@@ -278,6 +283,7 @@ void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& 
             dd.set_values<DDS_Wchar>(key, v);
             break;
         }
+#endif
         case TypeKind::STRING_TYPE: {
             auto v = py::cast<std::vector<std::string>>(values);
             DynamicData& member = dd.loan_value(key);
@@ -373,9 +379,11 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::ob
         case TypeKind::CHAR_8_TYPE:
             dd.value<char>(key, py::cast<char>(value));
             break;
+#if rti_connext_version_gte(6, 0, 0)
         case TypeKind::CHAR_16_TYPE:
             dd.value<DDS_Wchar>(key, static_cast<DDS_Wchar>(py::cast<wchar_t>(value)));
             break;
+#endif
         case TypeKind::STRING_TYPE:
             dd.value<std::string>(key, py::cast<std::string>(value));
             break;
@@ -449,8 +457,10 @@ bool test_index(const DynamicData& dd, TypeKind::inner_enum kind, int index, con
             return dd.value<rti::core::LongDouble>(index) == py::cast<rti::core::LongDouble>(obj);
         case TypeKind::CHAR_8_TYPE:
             return dd.value<char>(index) == py::cast<char>(obj);
+#if rti_connext_version_gte(6, 0, 0)
         case TypeKind::CHAR_16_TYPE:
             return dd.value<DDS_Wchar>(index) == static_cast<DDS_Wchar>(py::cast<wchar_t>(obj));
+#endif
         case TypeKind::STRING_TYPE:
             return dd.value<std::string>(index) == py::cast<std::string>(obj);
         case TypeKind::WSTRING_TYPE:
@@ -875,6 +885,17 @@ void init_dds_typed_topic_instance_template(py::class_<dds::topic::TopicInstance
 template<>
 void init_dds_typed_sample_template(py::class_<dds::sub::Sample<DynamicData>>& cls) {
     init_dds_typed_sample_base_template(cls);
+    
+    cls
+        .def(
+            py::init(
+                [](rti::sub::LoanedSample<DynamicData>& loaned_sample) {
+                    return dds::sub::Sample<DynamicData>(loaned_sample.data(), loaned_sample.info());
+                }
+            ),
+            py::arg("loaned_sample"),
+            "Copy constructor."
+        );
 }
 
 template<typename T>
@@ -1217,6 +1238,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             py::arg("index"),
             "Clear the contents of a single optional data member of this object."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "clear_member", 
             (void (DynamicData::*)(const std::string&)) &DynamicData::clear_member,
@@ -1231,6 +1253,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             py::arg("index"),
             "Clear the contents of a single data member of this object."
         )
+#endif
         .def(
             "set_buffer",
             &DynamicData::set_buffer,
@@ -1644,7 +1667,9 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             &topic_type_support<DynamicData>::to_cdr_buffer,
             py::arg("buffer"),
             py::arg("sample"),
+#if rti_connext_version_gte(6, 0, 0)
             py::arg("representation_id") = dds::core::policy::DataRepresentation::auto_id(),
+#endif
             "Serialize sample to a CDR buffer."
         )
         .def_static(

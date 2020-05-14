@@ -103,11 +103,13 @@ void process_inits<TypeKind>(py::module& m, ClassInitList&) {
             TypeKind::type::CHAR_8_TYPE,
             "8-bit character type."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .value(
             "CHAR_16_TYPE",
             TypeKind::type::CHAR_16_TYPE,
             "16-bit character type."
         )
+#endif
         .value(
             "ENUMERATION_TYPE",
             TypeKind::type::ENUMERATION_TYPE,
@@ -145,7 +147,7 @@ void process_inits<TypeKind>(py::module& m, ClassInitList&) {
         )
         .value(
             "MAP_TYPE",
-#if RTI_CONNEXT_DDS_6_0_0
+#if rti_connext_version_lt(6, 0, 1)
             TypeKind::type::MAP_TYPE,
 #else
             TypeKind::type::MAP_TYPE_OMG,

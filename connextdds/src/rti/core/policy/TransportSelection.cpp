@@ -26,7 +26,7 @@ void init_class_defs(py::class_<TransportSelection>& cls) {
             "A sequence of transport aliases that specifies the transport "
             "instances available for use by the entity."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def(
             py::self == py::self,

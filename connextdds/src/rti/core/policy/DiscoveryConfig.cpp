@@ -55,7 +55,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             (DiscoveryConfig& (DiscoveryConfig::*)(const dds::core::Duration&)) &DiscoveryConfig::participant_liveliness_assert_period,
             "The period to assert liveliness for the participant."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "remote_participant_purge_kind",
@@ -71,7 +71,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             (DiscoveryConfig& (DiscoveryConfig::*)(const dds::core::Duration&)) &DiscoveryConfig::max_liveliness_loss_detection_period,
             "The period to assert liveliness for the participant."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "initial_participant_announcements",
@@ -88,7 +88,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             "participant is first enabled or when a remote participant is "
             "newly discovered."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "max_initial_participant_announcement_period",
@@ -205,7 +205,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             (DiscoveryConfig& (DiscoveryConfig::*)(const dds::core::Duration&)) &DiscoveryConfig::default_domain_announcement_period,
             "The period to announce a participant to the default domain 0."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "ignore_default_domain_announcements",
@@ -250,7 +250,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             "Period at which this DomainParticipant will assert the locators "
             "discovered from other DomainParticipants."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "locator_reachability_lease_duration",
@@ -260,7 +260,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             "consider one of their locators as \"unreachable\" if they do not "
             "receive a REACHABILITY PING from this DomainParticipant."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "locator_reachability_change_detection_period",
@@ -269,8 +269,9 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             "Period at which this DomainParticipant will check if its "
             "locators are reachable from other DomainParticipants."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property(
             "secure_volatile_writer_publish_mode",
             (PublishMode& (DiscoveryConfig::*)()) &DiscoveryConfig::secure_volatile_writer_publish_mode,
@@ -284,6 +285,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
             "Option to reduce the size required to propagate a TypeObject "
             "in Simple Endpoint Discovery."
         )
+#endif
         .def(
             py::self == py::self,
             "Test for equality."

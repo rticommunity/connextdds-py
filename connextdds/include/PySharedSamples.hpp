@@ -39,13 +39,16 @@ void init_shared_samples_defs(py::class_<dds::sub::SharedSamples<T>>& cls) {
             py::keep_alive<0, 1>(),
             "Make a sample iterator"
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "unpack",
             [](dds::sub::SharedSamples<T>& samples) {
                 return rti::sub::unpack(samples);
             },
             "Unpacks all samples into a list."
-        );
+        )
+#endif
+        ;
 }
 
 template<typename T>

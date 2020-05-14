@@ -88,7 +88,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             "qos",
             (qos::DomainParticipantQos (PyDomainParticipant::*)() const) &PyDomainParticipant::qos,
             (void (PyDomainParticipant::*)(const qos::DomainParticipantQos&)) &PyDomainParticipant::qos,
-            "Get a copy of or set the domain participant's QoS."
+            "Get the domain participant's QoS."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def(
             "__lshift__",
@@ -132,7 +134,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             [](PyDomainParticipant& dp, const dds::pub::qos::PublisherQos& q) {
                 return PyDomainParticipant(dp.default_publisher_qos(q));
             },
-            "Get a copy of or set the default PublisherQos."
+            "The default PublisherQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "default_subscriber_qos",
@@ -140,7 +144,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             [](PyDomainParticipant& dp, const dds::sub::qos::SubscriberQos& q) {
                 return PyDomainParticipant(dp.default_subscriber_qos(q));
             },
-            "Get a copy of or set the default SubscriberQos."
+            "The default SubscriberQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "default_topic_qos",
@@ -148,7 +154,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             [](PyDomainParticipant& dp, const dds::topic::qos::TopicQos& q) {
                 return PyDomainParticipant(dp.default_topic_qos(q));
             },
-            "Get a copy of or set the default TopicQos."
+            "The default TopicQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "default_datawriter_qos",
@@ -158,7 +166,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             [](PyDomainParticipant& dp, const dds::pub::qos::DataWriterQos &qos) {
                 return dp->default_datawriter_qos(qos);
             },
-            "Get a copy of or set the default DataWriterQos."
+            "The default DataWriterQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "default_datareader_qos",
@@ -168,7 +178,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             [](PyDomainParticipant& dp, const dds::sub::qos::DataReaderQos &qos) {
                 return dp->default_datareader_qos(qos);
             },
-            "Get a copy of or set the default DataReaderQos."
+            "The default DataReaderQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def(
             "register_contentfilter",

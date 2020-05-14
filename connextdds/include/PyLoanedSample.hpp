@@ -12,6 +12,7 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls) {
             py::init<>(),
             "Basic constructor"
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init<
                 const typename rti::sub::LoanedSample<T>::DataType&,
@@ -20,6 +21,7 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls) {
             py::arg("info"),
             "Construct LoanedSample with data and info."
         )
+#endif
         .def_property_readonly(
             "data",
             &rti::sub::LoanedSample<T>::data,

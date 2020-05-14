@@ -392,7 +392,9 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             "qos",
             (dds::pub::qos::DataWriterQos (PyDataWriter<T>::*)() const) &PyDataWriter<T>::qos,
             (void (PyDataWriter<T>::*)(const dds::pub::qos::DataWriterQos&)) &PyDataWriter<T>::qos,
-            "Get a copy of or set the DataWriterQos."
+            "The DataWriterQos for this DataWriter."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def(
             "__lshift__",
@@ -886,19 +888,21 @@ template<typename T>
 void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& cls) {
     init_dds_typed_datawriter_base_template<T>(cls);
     cls
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "create_data",
             [](dds::pub::DataWriter<T>& dw) {
-                return std::unique_ptr<T>(dw->create_data());
+                return dw->create_data();
             },
             "Create data of the writer's associated type and initialize it."
         )
+#endif
         .def(
             "key_value",
             [](dds::pub::DataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
-                auto d = std::unique_ptr<T>(dw->create_data());
-                dw.key_value(*d, handle);
-                return d;
+                T value;
+                dw.key_value(value, handle);
+                return value;
             },
             py::arg("handle"),
             "Retrieve the instance key that corresponds to an instance handle."
@@ -906,8 +910,8 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, P
         .def(
             "topic_instance_key_value",
             [](dds::pub::DataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
-                auto d = std::unique_ptr<T>(dw->create_data());
-                dds::topic::TopicInstance<T> ti(handle, *d);
+                T value;
+                dds::topic::TopicInstance<T> ti(handle, value);
                 dw.key_value(ti, handle);
                 return ti;
             },

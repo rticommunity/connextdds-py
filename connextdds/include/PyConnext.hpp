@@ -1,14 +1,32 @@
 #pragma once
+#include <ndds_version.h>
+
+#define rti_connext_version_gt(rti_major, rti_minor, rti_release) \
+    ((rti_major < RTI_DDS_VERSION_MAJOR) || \
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor < RTI_DDS_VERSION_MINOR) || \
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release < RTI_DDS_VERSION_RELASE))
+
+#define rti_connext_version_lt(rti_major, rti_minor, rti_release) \
+    ((rti_major > RTI_DDS_VERSION_MAJOR) || \
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor > RTI_DDS_VERSION_MINOR) || \
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release > RTI_DDS_VERSION_RELASE))
+
+#define rti_connext_version_eq(rti_major, rti_minor, rti_release) \
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release == RTI_DDS_VERSION_RELASE)
+
+#define rti_connext_version_gte(rti_major, rti_minor, rti_release) \
+    ((rti_connext_version_gt(rti_major, rti_minor, rti_release)) || \
+    (rti_connext_version_eq(rti_major, rti_minor, rti_release)))
+
+#define rti_connext_version_lte(rti_major, rti_minor, rti_release) \
+    ((rti_connext_version_lt(rti_major, rti_minor, rti_release)) || \
+    (rti_connext_version_eq(rti_major, rti_minor, rti_release)))
+
 #include <pybind11/pybind11.h>
 #include "PyOpaqueTypes.hpp"
 #include <pybind11/operators.h>
 #include <list>
 #include <dds/core/External.hpp>
-#include <ndds_version.h>
-
-#define RTI_CONNEXT_DDS_6_0_0   RTI_DDS_VERSION_MAJOR==6 && \
-                                RTI_DDS_VERSION_MINOR==0 && \
-                                RTI_DDS_VERSION_RELEASE==0
 
 namespace py = pybind11;
 

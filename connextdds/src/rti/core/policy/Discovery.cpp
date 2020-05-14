@@ -19,7 +19,7 @@ void init_class_defs(py::class_<Discovery>& cls) {
             "The transports (by their aliases) available for the discovery "
             "mechanism."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "initial_peers",
@@ -28,7 +28,7 @@ void init_class_defs(py::class_<Discovery>& cls) {
             "The initial list of peers that the discovery mechanism will "
             "contact to announce this DomainParticipant."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "multicast_receive_addresses",
@@ -37,7 +37,7 @@ void init_class_defs(py::class_<Discovery>& cls) {
             "The multicast group addresses on which discovery-related "
             "meta-traffic can be received by the DomainParticipant."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "metatraffic_transport_priority",

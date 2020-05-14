@@ -16,12 +16,15 @@
 #include "PySample.hpp"
 #include "PySharedSamples.hpp"
 #include "PyLoanedSamples.hpp"
-#include "PyValidLoanedSamples.hpp"
 #include "PyLoanedSample.hpp"
 #include "PyContentFilteredTopic.hpp"
 #include "PyContentFilter.hpp"
 #include "PyWriterContentFilter.hpp"
 #include "PyWriterContentFilterHelper.hpp"
+
+#if rti_connext_version_gte(6, 0, 0)
+#include "PyValidLoanedSamples.hpp"
+#endif
 
 namespace pyrti {
 
@@ -43,7 +46,9 @@ void init_type(py::object& o) {
     init_sample<T>(o);
     init_shared_samples<T>(o);
     init_loaned_samples<T>(o);
+#if rti_connext_version_gte(6, 0, 0)
     init_valid_loaned_samples<T>(o);
+#endif
     init_loaned_sample<T>(o);
     init_content_filtered_topic<T>(o);
     init_content_filter<T>(o);

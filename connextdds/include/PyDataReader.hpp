@@ -189,16 +189,17 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             "Read all samples using the default filter state"
         )
         .def(
+            "take",
+            (dds::sub::LoanedSamples<T> (PyDataReader<T>::*)()) &PyDataReader<T>::take,
+            "Take all samples using the default filter state"
+        )
+#if rti_connext_version_gte(6, 0, 0)
+        .def(
             "read_valid",
             [](PyDataReader<T>& dr) {
                 return rti::sub::ValidLoanedSamples<T>(dr.read());;
             },
             "Read only valid samples."
-        )
-        .def(
-            "take",
-            (dds::sub::LoanedSamples<T> (PyDataReader<T>::*)()) &PyDataReader<T>::take,
-            "Take all samples using the default filter state"
         )
         .def(
             "take_valid",
@@ -207,6 +208,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             },
             "Take only valid samples."
         )
+#endif
         .def(
             "select",
             &PyDataReader<T>::select,
@@ -244,7 +246,9 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             "qos",
             (dds::sub::qos::DataReaderQos (PyDataReader<T>::*)() const) &PyDataReader<T>::qos,
             (void (PyDataReader<T>::*)(const dds::sub::qos::DataReaderQos&)) &PyDataReader<T>::qos,
-            "Get a copy of or set the DataReaderQos"
+            "The DataReaderQos for this DataReader."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def(
             "__lshift__",
@@ -364,6 +368,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("sample_info"),
             "Acknowledge a single sample."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "is_data_consistent",
             [](PyDataReader<T>& dr, const T& data, const dds::sub::SampleInfo& info) {
@@ -389,6 +394,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("sample"),
             "Checks if the sample has been overwritten by the DataWriter."
         )
+#endif
         .def_property_readonly(
             "topic_name",
             [](PyDataReader<T>& dr) {
@@ -523,6 +529,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             (dds::sub::LoanedSamples<T> (PyDataReader<T>::Selector::*)()) &PyDataReader<T>::Selector::read,
             "Read samples based on Selector settings."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "read_valid",
             [](typename PyDataReader<T>::Selector& s) {
@@ -530,18 +537,22 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             },
             "Read valid samples based on Selector settings."
         )
+#endif
         .def(
             "take",
             (dds::sub::LoanedSamples<T> (PyDataReader<T>::Selector::*)()) &PyDataReader<T>::Selector::take,
             "Take samples based on Selector settings."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "take_valid",
             [](typename PyDataReader<T>::Selector& s) {
                 return rti::sub::ValidLoanedSamples<T>(s.take());
             },
             "Take valid samples based on Selector settings."
-        );
+        )
+#endif
+        ;
 
     py::implicitly_convertible<PyIAnyDataReader, PyDataReader<T>>();
     py::implicitly_convertible<PyIEntity, PyDataReader<T>>();

@@ -1,6 +1,8 @@
 #include "PyConnext.hpp"
 #include <dds/core/policy/CorePolicy.hpp>
 
+#if rti_connext_version_gte(6, 0, 0)
+
 namespace py = pybind11;
 
 using namespace dds::core::policy;
@@ -143,3 +145,5 @@ void process_inits<DataTag>(py::module& m, ClassInitList& l) {
 }
 
 }
+
+#endif

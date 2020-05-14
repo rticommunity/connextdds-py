@@ -27,7 +27,7 @@ void init_class_defs(py::class_<LocatorFilter>& cls) {
             (LocatorFilter& (LocatorFilter::*)(const std::vector<rti::core::LocatorFilterElement>&)) &LocatorFilter::locator_filters,
             "The locator filters."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "filter_name",

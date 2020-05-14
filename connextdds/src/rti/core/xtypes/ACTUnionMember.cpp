@@ -39,11 +39,13 @@ void init_class_defs(py::class_<AbstractConstructedType<UnionMember>, DynamicTyp
             &AbstractConstructedType<UnionMember>::members, 
             "Gets a copy of all the members"
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "cdr_serialized_sample_max_size", 
             &AbstractConstructedType<UnionMember>::cdr_serialized_sample_max_size, 
             "Gets the maximum serialized size of samples of this type."
         )
+#endif
         .def_readonly_static(
             "INVALID_INDEX", 
             &AbstractConstructedType<UnionMember>::INVALID_INDEX, 

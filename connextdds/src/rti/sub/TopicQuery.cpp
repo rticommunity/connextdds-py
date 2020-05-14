@@ -17,6 +17,7 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls) {
             py::arg("filter"),
             "Creates a TopicQuerySelection."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init<
                 const dds::topic::Filter&,
@@ -26,6 +27,15 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls) {
             py::arg("kind"),
             "Creates a TopicQuerySelection with a selection kind."
         )
+#else
+        .def(
+            py::init<
+                const dds::topic::Filter&
+            >(),
+            py::arg("filter"),
+            "Creates a TopicQuerySelection."
+        )
+#endif
         .def_property(
             "filter",
             (dds::topic::Filter& (TopicQuerySelection::*)()) &TopicQuerySelection::filter,
@@ -34,13 +44,16 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls) {
             },
             "The filter."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property(
             "kind",
             (TopicQuerySelectionKind (TopicQuerySelection::*)() const) &TopicQuerySelection::kind,
             (TopicQuerySelection& (TopicQuerySelection::*)(TopicQuerySelectionKind)) &TopicQuerySelection::kind,
             "Indicates whether the sample selection is limited to cached "
             "samples or not."
-        );
+        )
+#endif
+        ;
 }
 
 template<>
@@ -128,6 +141,8 @@ void init_class_defs(py::class_<TopicQuery>& cls) {
 
 template<>
 void process_inits<TopicQuery>(py::module& m, ClassInitList& l) {
+
+#if rti_connext_version_gte(6, 0, 0)
     auto tqsk = init_dds_safe_enum<TopicQuerySelectionKind_def>(m, "TopicQuerySelectionKind");
 
     py::enum_<TopicQuerySelectionKind::type>(tqsk, "TopicQuerySelectionKind")
@@ -148,6 +163,7 @@ void process_inits<TopicQuery>(py::module& m, ClassInitList& l) {
             "to stop publishing samples for it."
         )
         .export_values();
+#endif
 
     l.push_back(
         [m]() mutable {

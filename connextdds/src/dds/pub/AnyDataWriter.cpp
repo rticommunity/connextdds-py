@@ -30,7 +30,7 @@ void init_class_defs(py::class_<PyIAnyDataWriter>& cls) {
             (void (PyIAnyDataWriter::*)(const dds::pub::qos::DataWriterQos&)) &PyIAnyDataWriter::py_qos,
             "The QoS for this AnyDataWriter."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property_readonly(
             "topic_name",

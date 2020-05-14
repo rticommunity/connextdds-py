@@ -35,7 +35,7 @@ void init_class_defs(py::class_<Reliability>& cls) {
             (Reliability& (Reliability::*)(const dds::core::Duration&)) &Reliability::max_blocking_time,
             "The maximum time a DataWriter may block on a call to write()."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "acknowledgment_kind",

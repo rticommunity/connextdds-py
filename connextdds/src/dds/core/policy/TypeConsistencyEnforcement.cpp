@@ -26,6 +26,7 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls) {
             (TypeConsistencyEnforcement& (TypeConsistencyEnforcement::*)(TypeConsistencyEnforcementKind)) &TypeConsistencyEnforcement::kind,
             "The enforcement kind."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property(
             "ignore_sequence_bounds",
             (bool (TypeConsistencyEnforcement::*)() const) &TypeConsistencyEnforcement::ignore_sequence_bounds,
@@ -63,6 +64,13 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls) {
             "Controls whether enumeration literal names are ignored."
         )
         .def_static(
+            "auto_type_coercion",
+            &TypeConsistencyEnforcement::AutoTypeCoercion,
+            "Creates an instance with "
+            "TypeConsistencyEnforcementKind.AUTO_TYPE_COERCION."
+        )
+#endif
+        .def_static(
             "allow_type_coercion",
             &TypeConsistencyEnforcement::AllowTypeCoercion,
             "Creates an instance with "
@@ -73,12 +81,6 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls) {
             &TypeConsistencyEnforcement::DisallowTypeCoercion,
             "Creates an instance with "
             "TypeConsistencyEnforcementKind.DISALLOW_TYPE_COERCION."
-        )
-        .def_static(
-            "auto_type_coercion",
-            &TypeConsistencyEnforcement::AutoTypeCoercion,
-            "Creates an instance with "
-            "TypeConsistencyEnforcementKind.AUTO_TYPE_COERCION."
         )
         .def(
             py::self == py::self,
@@ -108,6 +110,7 @@ void init_type_consistency_enforcement_kind(py::module& m) {
             "type in order for them to communicate as long as the "
             "DataReader's type is assignable from the DataWriter's type."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .value(
             "AUTO_TYPE_COERCION",
             TypeConsistencyEnforcementKind::type::AUTO_TYPE_COERCION,
@@ -118,6 +121,7 @@ void init_type_consistency_enforcement_kind(py::module& m) {
             "AUTO value will be applied as "
             "TypeConsistencyKind.ALLOW_TYPE_COERCION."
         )
+#endif
         .export_values();
 }
 

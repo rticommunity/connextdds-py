@@ -101,11 +101,13 @@ void init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
             &TopicBuiltinTopicData::topic_data,
             "Get the TopicData policy of the corresponding Topic."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property_readonly(
             "representation",
             &TopicBuiltinTopicData::representation,
             "Get the DataRepresentation policy of the corresponding Topic."
         )
+#endif
         .def_property_readonly_static(
             "topic_name",
             [](py::object&) {

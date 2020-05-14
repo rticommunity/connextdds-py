@@ -14,7 +14,18 @@ void init_class_defs(py::class_<SubscriberQos>& cls) {
         .def(
             py::init<>(),
             "Create a SubscriberQos with the default value for each policy."
+        )
+        .def(
+            py::init(
+                [](const PySubscriber& sub) {
+                    return sub.qos();
+                }
+            ),
+            py::arg("subscriber"),
+            "Create a SubscriberQos with settings equivalent to those "
+            "of the provided Subscriber object."
         );
+
     add_qos_property<SubscriberQos, Presentation>(cls, "presentation", "Presentation");
     add_qos_property<SubscriberQos, Partition>(cls, "partition", "Partition");
     add_qos_property<SubscriberQos, GroupData>(cls, "group_data", "GroupData");

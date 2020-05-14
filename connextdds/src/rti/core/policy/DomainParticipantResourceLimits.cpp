@@ -19,7 +19,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::local_writer_allocation,
             "Allocation settings applied to local DataWriters."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "local_reader_allocation",
@@ -27,7 +27,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::local_reader_allocation,
             "Allocation settings applied to local DataReaders."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "local_publisher_allocation",
@@ -35,7 +35,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::local_publisher_allocation,
             "Allocation settings applied to local Publisher."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "local_subscriber_allocation",
@@ -43,7 +43,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::local_subscriber_allocation,
             "Allocation settings applied to local Subscriber."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "local_topic_allocation",
@@ -51,7 +51,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::local_topic_allocation,
             "Allocation settings applied to local Topic."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "remote_writer_allocation",
@@ -59,7 +59,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::remote_writer_allocation,
             "Allocation settings applied to remote DataWriters."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "remote_reader_allocation",
@@ -67,7 +67,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::remote_reader_allocation,
             "Allocation settings applied to remote DataReaders."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "remote_participant_allocation",
@@ -75,7 +75,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::remote_participant_allocation,
             "Allocation settings applied to remote DomainParticipants."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "matching_writer_reader_pair_allocation",
@@ -84,7 +84,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             "Allocation settings applied to matching local writer and "
             "remote/local reader pairs."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "matching_reader_writer_pair_allocation",
@@ -93,7 +93,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             "Allocation settings applied to matching local reader and "
             "remote/local writer pairs."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "ignored_entity_allocation",
@@ -101,7 +101,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::ignored_entity_allocation,
             "Allocation settings applied to ignored entities."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "content_filtered_topic_allocation",
@@ -109,7 +109,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::content_filtered_topic_allocation,
             "Allocation settings applied to content filtered topic."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "content_filter_allocation",
@@ -117,7 +117,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::content_filter_allocation,
             "Allocation settings applied to content filter."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "read_condition_allocation",
@@ -125,7 +125,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::read_condition_allocation,
             "Allocation settings applied to read condition pool."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "query_condition_allocation",
@@ -133,7 +133,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::query_condition_allocation,
             "Allocation settings applied to query condition pool."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "outstanding_asynchronous_sample_allocation",
@@ -142,7 +142,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             "Allocation settings applied to the maximum number of samples "
             "(from DataWriter) waiting to be asynchronously written."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "flow_controller_allocation",
@@ -150,7 +150,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::flow_controller_allocation,
             "Allocation settings applied to flow controllers."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "local_writer_hash_buckets",
@@ -423,7 +423,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(const rti::core::AllocationSettings&)) &DomainParticipantResourceLimits::remote_topic_query_allocation,
             "Allocation settings applied to remote TopicQueries."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "remote_topic_query_hash_buckets",
@@ -431,6 +431,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             (DomainParticipantResourceLimits& (DomainParticipantResourceLimits::*)(int32_t)) &DomainParticipantResourceLimits::remote_topic_query_hash_buckets,
             "Number of hash buckets for remote TopicQueries."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property(
             "writer_data_tag_list_max_length",
             (int32_t (DomainParticipantResourceLimits::*)() const) &DomainParticipantResourceLimits::writer_data_tag_list_max_length,
@@ -462,6 +463,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
             "Maximum number of segments created by all DataWriters belonging "
             "to a DomainParticipant."
         )
+#endif
         .def(
             py::self == py::self,
             "Test for equality."

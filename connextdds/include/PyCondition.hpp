@@ -84,6 +84,8 @@ class PyGuardCondition : public dds::core::cond::GuardCondition, public PyICondi
 public:
     using dds::core::cond::GuardCondition::GuardCondition;
 
+    PyGuardCondition(const dds::core::cond::GuardCondition& gc) : dds::core::cond::GuardCondition(gc) {}
+
     dds::core::cond::Condition get_condition() override {
         return dds::core::cond::Condition(*this);
     }
@@ -99,6 +101,8 @@ public:
 class PyReadCondition : public dds::sub::cond::ReadCondition, public PyIReadCondition {
 public:
     using dds::sub::cond::ReadCondition::ReadCondition;
+
+    PyReadCondition(const dds::sub::cond::ReadCondition& rc) : dds::sub::cond::ReadCondition(rc) {}
 
     dds::core::cond::Condition get_condition() override {
         return dds::core::cond::Condition(*this);
@@ -130,6 +134,8 @@ public:
 class PyQueryCondition : public dds::sub::cond::QueryCondition, public PyIReadCondition {
 public:
     using dds::sub::cond::QueryCondition::QueryCondition;
+
+    PyQueryCondition(const dds::sub::cond::QueryCondition& qc) : dds::sub::cond::QueryCondition(qc) {}
 
     dds::core::cond::Condition get_condition() override {
         return dds::core::cond::Condition(*this);

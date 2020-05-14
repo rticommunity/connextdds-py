@@ -13,7 +13,18 @@ void init_class_defs(py::class_<TopicQos>& cls) {
         .def(
             py::init<>(),
             "Create a TopicQos with the default value for each policy."
+        )
+        .def(
+            py::init(
+                [](const PyIAnyTopic& topic) {
+                    return topic.py_qos();
+                }
+            ),
+            py::arg("topic"),
+            "Create a TopicQos with settings equivalent to those of the "
+            "provided Topic."
         );
+
     add_qos_property<TopicQos, TopicData>(cls, "topic_data", "TopicData");
     add_qos_property<TopicQos, Durability>(cls, "durability", "Durability");
     add_qos_property<TopicQos, DurabilityService>(cls, "durability_service", "DurabilityService");
@@ -27,7 +38,9 @@ void init_class_defs(py::class_<TopicQos>& cls) {
     add_qos_property<TopicQos, TransportPriority>(cls, "transport_priority", "TransportPriority");
     add_qos_property<TopicQos, Lifespan>(cls, "lifespan", "Lifespan");
     add_qos_property<TopicQos, Ownership>(cls, "ownership", "Ownership");
+#if rti_connext_version_gte(6, 0, 0)
     add_qos_property<TopicQos, DataRepresentation>(cls, "data_representation", "DataRepresentation");
+#endif
 }
 
 template<>

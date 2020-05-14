@@ -14,7 +14,18 @@ void init_class_defs(py::class_<DataReaderQos>& cls) {
         .def(
             py::init<>(),
             "Create a DataReaderQos with the default value for each policy."
+        )
+        .def(
+            py::init(
+                [](const PyIAnyDataReader& dr) {
+                    return dr.py_qos();
+                }
+            ),
+            py::arg("reader"),
+            "Create a DataReaderQos with settings equivalent to those "
+            "of the provided DataReader."
         );
+
     add_qos_property<DataReaderQos, Durability>(cls, "durability", "Durability");
     add_qos_property<DataReaderQos, Deadline>(cls, "deadline", "Deadline");
     add_qos_property<DataReaderQos, LatencyBudget>(cls, "latency_budget", "LatencyBudget");
@@ -27,10 +38,8 @@ void init_class_defs(py::class_<DataReaderQos>& cls) {
     add_qos_property<DataReaderQos, Ownership>(cls, "ownership", "Ownership");
     add_qos_property<DataReaderQos, TimeBasedFilter>(cls, "time_based_filter", "TimeBasedFilter");
     add_qos_property<DataReaderQos, ReaderDataLifecycle>(cls, "reader_data_lifecycle", "ReaderDataLifecycle");
-    add_qos_property<DataReaderQos, DataRepresentation>(cls, "data_representation", "DataRepresentation");
     add_qos_property<DataReaderQos, TransportPriority>(cls, "transport_priority", "TransportPriority");
     add_qos_property<DataReaderQos, TypeConsistencyEnforcement>(cls, "type_consistency_enforcement", "TypeConsistencyEnforcement");
-    add_qos_property<DataReaderQos, DataTag>(cls, "data_tag", "DataTag");
     add_qos_property<DataReaderQos, DataReaderResourceLimits>(cls, "data_reader_resource_limits", "DataReaderResourceLimits");
     add_qos_property<DataReaderQos, DataReaderProtocol>(cls, "data_reader_protocol", "DataReaderProtocol");
     add_qos_property<DataReaderQos, TransportSelection>(cls, "transport_selection", "TransportSelection");
@@ -41,6 +50,10 @@ void init_class_defs(py::class_<DataReaderQos>& cls) {
     add_qos_property<DataReaderQos, Availability>(cls, "availability", "Availability");
     add_qos_property<DataReaderQos, EntityName>(cls, "entity_name", "EntityName");
     add_qos_property<DataReaderQos, TypeSupport>(cls, "type_support", "TypeSupport");
+#if rti_connext_version_gte(6, 0, 0)
+    add_qos_property<DataReaderQos, DataRepresentation>(cls, "data_representation", "DataRepresentation");
+    add_qos_property<DataReaderQos, DataTag>(cls, "data_tag", "DataTag");
+#endif
 }
 
 template<>

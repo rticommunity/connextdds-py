@@ -1,6 +1,5 @@
 #include "PyConnext.hpp"
 #include <rti/core/AllocationSettings.hpp>
-#include <rti/xcdr/Interpreter.hpp>
 
 using namespace rti::core;
 
@@ -44,6 +43,7 @@ void init_class_defs(py::class_<AllocationSettings>& cls) {
             (AllocationSettings& (AllocationSettings::*)(int32_t)) &AllocationSettings::incremental_count,
             "Incremental count of resources."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property_readonly_static(
             "AUTO_COUNT",
             [](py::object&) {
@@ -51,7 +51,9 @@ void init_class_defs(py::class_<AllocationSettings>& cls) {
             },
             "A special value indicating that the quantity is derived from a "
             "different Qos value."
-        );
+        )
+#endif
+        ;
 }
 
 template<>

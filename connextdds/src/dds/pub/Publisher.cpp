@@ -47,7 +47,9 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
             "qos",
             (const dds::pub::qos::PublisherQos (PyPublisher::*)()const) &PyPublisher::qos,
             (void (PyPublisher::*)(const dds::pub::qos::PublisherQos&)) &PyPublisher::qos,
-            "Get a copy of or set the PublisherQos."
+            "The PublisherQos for this Publisher."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def(
             "__lshift__",
@@ -71,7 +73,9 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
             [](PyPublisher& pub, qos::DataWriterQos& qos) {
                 return PyPublisher(pub.default_datawriter_qos(qos));
             },
-            "Get a copy of or set the default DataWriterQos."
+            "The default DataWriterQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property_readonly(
             "listener",

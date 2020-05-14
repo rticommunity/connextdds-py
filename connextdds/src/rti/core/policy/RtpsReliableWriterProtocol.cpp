@@ -36,7 +36,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             (RtpsReliableWriterProtocol& (RtpsReliableWriterProtocol::*)(const dds::core::Duration&)) &RtpsReliableWriterProtocol::heartbeat_period,
             "The period at which to send heartbeats."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "fast_heartbeat_period",
@@ -45,7 +45,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             "An alternative heartbeat period used when a reliable writer "
             "needs to flush its unacknowledged samples more quickly."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "late_joiner_heartbeat_period",
@@ -55,7 +55,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             "joins late and needs to be caught up on cached samples of a "
             "reliable writer more quickly than the normal heartbeat rate."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "virtual_heartbeat_period",
@@ -66,7 +66,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             "currently present, for each virtual GUID, in the reliable "
             "writer's queue."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "samples_per_virtual_heartbeat",
@@ -101,7 +101,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             (RtpsReliableWriterProtocol& (RtpsReliableWriterProtocol::*)(const dds::core::Duration&)) &RtpsReliableWriterProtocol::min_nack_response_delay,
             "The minimum delay to respond to a NACK."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "max_nack_response_delay",
@@ -109,7 +109,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             (RtpsReliableWriterProtocol& (RtpsReliableWriterProtocol::*)(const dds::core::Duration&)) &RtpsReliableWriterProtocol::max_nack_response_delay,
             "The maximum delay to respond to a NACK."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "nack_suppression_duration",
@@ -118,7 +118,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             "The duration for ignoring consecutive NACKs that may trigger "
             "redundant repairs."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "max_bytes_per_nack_response",
@@ -132,7 +132,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             (RtpsReliableWriterProtocol& (RtpsReliableWriterProtocol::*)(const dds::core::Duration&)) &RtpsReliableWriterProtocol::disable_positive_acks_min_sample_keep_duration,
             "The minimum duration a sample is queued for ACK-disabled readers."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "disable_positive_acks_max_sample_keep_duration",
@@ -140,7 +140,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             (RtpsReliableWriterProtocol& (RtpsReliableWriterProtocol::*)(const dds::core::Duration&)) &RtpsReliableWriterProtocol::disable_positive_acks_max_sample_keep_duration,
             "The maximum duration a sample is queued for ACK-disabled readers."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "disable_positive_acks_enable_adaptive_sample_keep_duration",
@@ -179,7 +179,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls) {
             (RtpsReliableWriterProtocol& (RtpsReliableWriterProtocol::*)(const dds::core::Duration&)) &RtpsReliableWriterProtocol::send_window_update_period,
             "Period in which send window may be dynamically changed."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "send_window_increase_factor",

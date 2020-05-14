@@ -4,7 +4,7 @@ include(CheckCXXCompilerFlag)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake")
 find_package(
-    RTIConnextDDS "6.0.0"
+    RTIConnextDDS "5.3.1"
     REQUIRED
     COMPONENTS
         core
@@ -25,11 +25,31 @@ add_library(
 
 target_link_libraries(distlog PRIVATE pybind11::module)
 
-target_link_libraries(
-    distlog PRIVATE
-    ${CONNEXTDDS_EXTERNAL_LIBS}
-    RTIConnextDDS::cpp2_api
-    RTIConnextDDS::distributed_logger_c)
+if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
+    target_link_libraries(
+        distlog PRIVATE
+        ${CONNEXTDDS_EXTERNAL_LIBS}
+        RTIConnextDDS::cpp2_api
+        RTIConnextDDS::distributed_logger_c)
+else()
+    string(TOUPPER ${CMAKE_BUILD_TYPE} RTI_LIB_BUILD_TYPE)
+    target_link_libraries(distlog PRIVATE
+        ${CONNEXTDDS_EXTERNAL_LIBS}
+        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED}
+        ${DISTRIBUTED_LOGGER_C_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
+
+    target_include_directories(distlog PRIVATE ${CONNEXTDDS_INCLUDE_DIRS})
+
+    if(CONNEXTDDS_DEFINITIONS MATCHES "-m64")
+        string(REGEX REPLACE "-m64[ \t\r\n]*" "" CONNEXTDDS_DEFINITIONS "${CONNEXTDDS_DEFINITIONS}")
+        target_compile_options(distlog PRIVATE "-m64")
+    elseif(CONNEXTDDS_DEFINITIONS MATCHES "-m32")
+        string(REGEX REPLACE "-m32[ \t\r\n]*" "" CONNEXTDDS_DEFINITIONS "${CONNEXTDDS_DEFINITIONS}")
+        target_compile_options(distlog PRIVATE "-m32")
+    endif()
+
+    target_compile_definitions(distlog PRIVATE "${CONNEXTDDS_DEFINITIONS}")
+endif()
 
 
 target_include_directories(
@@ -42,7 +62,7 @@ set_target_properties(distlog PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
 
 check_cxx_compiler_flag(-std=c++17 HAVE_FLAG_STD_CXX17)
 check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
-if (HAVE_FLAG_STD_CXX17)
+if (HAVE_FLAG_STD_CXX17 AND RTIConnextDDS_VERSION_MAJOR GREATER_EQUAL 6)
     set_target_properties(
         distlog
         PROPERTIES

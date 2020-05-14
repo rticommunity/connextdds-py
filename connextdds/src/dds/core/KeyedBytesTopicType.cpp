@@ -49,7 +49,7 @@ void init_class_defs(py::class_<dds::core::KeyedBytesTopicType>& cls) {
             (void (dds::core::KeyedBytesTopicType::*)(const std::vector<uint8_t>&)) &dds::core::KeyedBytesTopicType::value,
             "The byte sequence."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def(
             "length",

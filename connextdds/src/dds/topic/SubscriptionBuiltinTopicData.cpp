@@ -107,6 +107,7 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
             &SubscriptionBuiltinTopicData::group_data,
             "The GroupData policy of the corresponding DataWriter."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def_property_readonly(
             "representation",
             &SubscriptionBuiltinTopicData::representation,
@@ -120,6 +121,7 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
             },
             "The DataTag policy of the corresponding DataWriter."
         )
+#endif
         .def_property_readonly(
             "type",
             [](const SubscriptionBuiltinTopicData& p) -> py::object {

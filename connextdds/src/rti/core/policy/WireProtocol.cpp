@@ -185,7 +185,7 @@ void init_class_defs(py::class_<WireProtocol>& cls) {
             (WireProtocol& (WireProtocol::*)(const RtpsWellKnownPorts&)) &WireProtocol::rtps_well_known_ports,
             "The RTPS well-known port mappings."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "rtps_reserved_port_mask",
@@ -194,7 +194,7 @@ void init_class_defs(py::class_<WireProtocol>& cls) {
             "Specifies which well-known ports to reserve when enabling the "
             "participant."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "rtps_auto_id_kind",

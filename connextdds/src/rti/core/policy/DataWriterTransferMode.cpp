@@ -1,6 +1,8 @@
 #include "PyConnext.hpp"
 #include <rti/core/policy/CorePolicy.hpp>
 
+#if rti_connext_version_gte(6, 0, 0)
+
 using namespace rti::core;
 using namespace rti::core::policy;
 
@@ -69,3 +71,5 @@ void process_inits<DataWriterTransferMode>(py::module& m, ClassInitList& l) {
 }
 
 }
+
+#endif

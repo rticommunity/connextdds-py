@@ -67,7 +67,9 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
             "qos",
             (qos::SubscriberQos (PySubscriber::*)() const) &PySubscriber::qos,
             (void (PySubscriber::*)(const qos::SubscriberQos&)) &PySubscriber::qos,
-            "Get a copy of or set the SubscriberQos."
+            "The SubscriberQos for this Subscriber."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "default_datareader_qos",
@@ -75,7 +77,9 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
             [](PySubscriber& sub, const qos::DataReaderQos& qos) {
                 return PySubscriber(sub.default_datareader_qos(qos));
             },
-            "Get a copy of or set the default DataReaderQos."
+            "The default DataReaderQos."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property_readonly(
             "participant",

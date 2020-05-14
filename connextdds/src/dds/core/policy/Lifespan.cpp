@@ -25,7 +25,7 @@ void init_class_defs(py::class_<Lifespan>& cls) {
             (Lifespan& (Lifespan::*)(const dds::core::Duration&)) &Lifespan::duration,
             "Sets the maximum duration for which the data is valid."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def(
             py::self == py::self,

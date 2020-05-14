@@ -39,11 +39,13 @@ void init_class_defs(py::class_<AbstractConstructedType<EnumMember>, DynamicType
             &AbstractConstructedType<EnumMember>::members, 
             "Gets a copy of all the members"
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "cdr_serialized_sample_max_size", 
             &AbstractConstructedType<EnumMember>::cdr_serialized_sample_max_size, 
             "Gets the maximum serialized size of samples of this type."
         )
+#endif
         .def_readonly_static(
             "INVALID_INDEX", 
             &AbstractConstructedType<EnumMember>::INVALID_INDEX, 

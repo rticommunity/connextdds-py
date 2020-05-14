@@ -22,7 +22,7 @@ void init_class_defs(py::class_<LocatorFilterElement>& cls) {
             (LocatorFilterElement& (LocatorFilterElement::*)(const std::vector<Locator>&)) &LocatorFilterElement::locators,
             "The locators associated with this filter."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "filter_expression",

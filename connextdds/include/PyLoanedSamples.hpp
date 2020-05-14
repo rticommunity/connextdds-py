@@ -37,7 +37,7 @@ void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls) {
         )
         .def(
             "__iter__",
-            [](const dds::sub::LoanedSamples<T>& ls) {
+            [](dds::sub::LoanedSamples<T>& ls) {
                 return py::make_iterator(ls.begin(), ls.end());
             },
             // Keep dds::sub::LoanedSamples until iterator is done.
@@ -45,7 +45,7 @@ void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls) {
         )
         .def(
             "__enter__",
-            [](const dds::sub::LoanedSamples<T>& ls) -> const dds::sub::LoanedSamples<T>& {
+            [](dds::sub::LoanedSamples<T>& ls) -> dds::sub::LoanedSamples<T>& {
                 return ls;
             },
             "Enter a context for the loaned samples, loan returned on context exit."

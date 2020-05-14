@@ -30,7 +30,7 @@ void init_class_defs(py::class_<MultiChannel>& cls) {
             "properties. If the length of the sequence is zero, the QoS "
             "policy will be ignored."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "filter_name",

@@ -255,7 +255,9 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
             "qos",
             (dds::topic::qos::TopicQos (PyTopic<T>::*)() const) &PyTopic<T>::qos,
             (void (PyTopic<T>::*)(const dds::topic::qos::TopicQos&)) &PyTopic<T>::qos,
-            "Get a copy of or set the TopicQos."
+            "Get the TopicQos for this Topic."
+            "\n\n"
+            "This property's getter returns a deep copy."
         )
         .def_property_readonly(
             "inconsistent_topic_status",

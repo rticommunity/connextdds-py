@@ -12,7 +12,9 @@ void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<Database>(m, l);
     pyrti::process_inits<DataReaderProtocol>(m, l);
     pyrti::process_inits<DataReaderResourceLimits>(m, l);
+#if rti_connext_version_gte(6, 0, 0)
     pyrti::process_inits<DataWriterTransferMode>(m, l);
+#endif
     pyrti::process_inits<DestinationOrderScopeKind>(m, l);
     pyrti::process_inits<Discovery>(m, l);
     pyrti::process_inits<DiscoveryConfig>(m, l);

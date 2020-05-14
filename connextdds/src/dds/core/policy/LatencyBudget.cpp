@@ -25,7 +25,7 @@ void init_class_defs(py::class_<LatencyBudget>& cls) {
             (LatencyBudget& (LatencyBudget::*)(const dds::core::Duration&)) &LatencyBudget::duration,
             "The duration of the maximum acceptable delay."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def(
             py::self == py::self,

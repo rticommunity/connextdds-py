@@ -14,7 +14,18 @@ void init_class_defs(py::class_<PublisherQos>& cls) {
         .def(
             py::init<>(),
             "Create a PublisherQos with the default value for each policy."
+        )
+        .def(
+            py::init(
+                [](const PyPublisher& pub) {
+                    return pub.qos();
+                }
+            ),
+            py::arg("publisher"),
+            "Create a PublisherQos with the same settings as those applied to "
+            "the provided Publisher object."
         );
+
     add_qos_property<PublisherQos, Presentation>(cls, "presentation", "Presentation");
     add_qos_property<PublisherQos, Partition>(cls, "partition", "Partition");
     add_qos_property<PublisherQos, GroupData>(cls, "group_data", "GroupData");

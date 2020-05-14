@@ -15,7 +15,18 @@ void init_class_defs(py::class_<DomainParticipantQos>& cls) {
             py::init<>(),
             "Create a DomainParticipantQos with the default value for each "
             "policy."
+        )
+        .def(
+            py::init(
+                [](const PyDomainParticipant& dp) {
+                    return dp.qos();
+                }
+            ),
+            py::arg("participant"),
+            "Create a DomainParticipantQos with settings equivalent to those "
+            "of the provided DomainParticipant object."
         );
+
     add_qos_property<DomainParticipantQos, UserData>(cls, "user_data", "UserData");
     add_qos_property<DomainParticipantQos, EntityFactory>(cls, "entity_factory", "EntityFactory");
     add_qos_property<DomainParticipantQos, WireProtocol>(cls, "wire_protocol", "WireProtocol");

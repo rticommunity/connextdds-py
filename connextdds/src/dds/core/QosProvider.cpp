@@ -230,6 +230,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             py::arg("name"),
             "Get a DynamicType from a type library in the QosProvider."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "type",
             [](const QosProvider& qp, const std::string& type_name) {
@@ -240,6 +241,18 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             py::arg("name"),
             "Get a DynamicType from the QosProvider."
         )
+#else
+        .def(
+            "type",
+            [](const QosProvider& qp, const std::string& type_name) {
+                auto dt = qp->type("", type_name);
+                PyDynamicTypeMap::add(type_name, dt);
+                return dt;
+            },
+            py::arg("name"),
+            "Get a DynamicType from the QosProvider."
+        )
+#endif
         .def(
             "type_libraries",
             [](const QosProvider& qp) {

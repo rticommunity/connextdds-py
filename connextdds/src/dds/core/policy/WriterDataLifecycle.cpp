@@ -39,7 +39,7 @@ void init_class_defs(py::class_<WriterDataLifecycle>& cls) {
             "information regarding an instance once it has unregistered the "
             "instance."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "autopurge_disposed_instances_delay",
@@ -53,7 +53,7 @@ void init_class_defs(py::class_<WriterDataLifecycle>& cls) {
             "information regarding an instance once it has disposed the "
             "instance."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_static(
             "auto_dispose_unregistered_instances",

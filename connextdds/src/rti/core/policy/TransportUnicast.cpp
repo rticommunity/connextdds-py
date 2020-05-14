@@ -29,7 +29,7 @@ void init_class_defs(py::class_<TransportUnicastSettings>& cls) {
             "A sequence of transport aliases that specifies the unicast "
             "interfaces on which to receive unicast traffic for the entity."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def_property(
             "receive_port",
@@ -67,7 +67,7 @@ void init_class_defs(py::class_<TransportUnicast>& cls) {
             (TransportUnicast& (TransportUnicast::*)(const std::vector<TransportUnicastSettings>&)) &TransportUnicast::settings,
             "The unicast settings."
             "\n\n"
-            "This property uses value semantics."
+            "This property's getter returns a deep copy."
         )
         .def(
             py::self == py::self,
