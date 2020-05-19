@@ -66,7 +66,6 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls) {
                             ds,
                             [&func](dds::core::cond::Condition c) {
                                 py::gil_scoped_acquire acquire;
-                                py::gil_scoped_acquire acquire;
                                 auto py_c = dds::core::polymorphic_cast<PyReadCondition>(c);
                                 func(&py_c);
                             }

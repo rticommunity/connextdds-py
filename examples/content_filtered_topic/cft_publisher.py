@@ -25,7 +25,7 @@ def publisher_main(domain_id, sample_count):
         count += 1
 
 
-parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using Builtin Topics (Publisher)')
+parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using CFTs (Publisher)')
 parser.add_argument(
     '-d',
     '--domain',

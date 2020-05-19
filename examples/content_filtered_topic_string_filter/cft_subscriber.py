@@ -70,7 +70,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
         count += 1
 
 
-parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using Builtin Topics (Publisher)')
+parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using String Filters (Subscriber)')
 parser.add_argument(
     '-d',
     '--domain',

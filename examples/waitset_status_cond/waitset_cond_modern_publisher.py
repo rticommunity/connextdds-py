@@ -22,7 +22,7 @@ def publisher_main(domain_id, sample_count):
         time.sleep(1)
 
 
-parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Waitsets with Query Conditions (Publisher)')
+parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Waitsets with Status Condition & Read Condition (Publisher)')
 parser.add_argument(
     '-d',
     '--domain',
