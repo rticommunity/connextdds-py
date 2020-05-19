@@ -17,17 +17,17 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls) {
             py::arg("status"),
             "Create a QueryCondition."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init(
-                [](const dds::sub::Query& q, const dds::sub::status::DataState& ds, std::function<void(py::object)>& func) {
+                [](const dds::sub::Query& q, const dds::sub::status::DataState& ds, std::function<void(PyICondition*)>& func) {
                     return PyQueryCondition(
                         q, 
                         ds, 
-                        [&func](dds::core::cond::Condition c) {
+                        [func](dds::core::cond::Condition c) {
                             py::gil_scoped_acquire acquire;
-                            auto qcd = rtiboost::dynamic_pointer_cast<rti::sub::cond::QueryConditionImpl>(c.delegate());
-                            if (qcd.get() == nullptr) throw dds::core::InvalidDowncastError("Could not create QueryCondtion from Condition");
-                            func(py::cast(PyQueryCondition(qcd.get())));
+                            auto py_c = dds::core::polymorphic_cast<PyQueryCondition>(c);
+                            func(&py_c);
                         }
                     );
                 }
@@ -37,6 +37,7 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls) {
             py::arg("handler"),
             "Create a QueryCondition."
         )
+#endif
         .def(
             py::init(
                 [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds) {
@@ -44,32 +45,31 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls) {
                 }
             ),
             py::arg("query"),
-            py::arg("status"),
+            py::arg("status_ex"),
             "Create a QueryCondition."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init(
-                [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds, std::function<void(py::object)>& func) {
+                [](const dds::sub::Query& q, const rti::sub::status::DataStateEx& ds, std::function<void(PyICondition*)>& func) {
                     return PyQueryCondition(
                         rti::sub::cond::create_query_condition_ex(
                             q, 
                             ds, 
-                            [&func](dds::core::cond::Condition c) {
+                            [func](dds::core::cond::Condition c) {
                                 py::gil_scoped_acquire acquire;
-                                auto qcd = rtiboost::dynamic_pointer_cast<rti::sub::cond::QueryConditionImpl>(c.delegate());
-                                if (qcd.get() == nullptr) throw dds::core::InvalidDowncastError("Could not create QueryCondtion from Condition");
-                                func(py::cast(PyQueryCondition(qcd.get())));
+                                auto py_c = dds::core::polymorphic_cast<PyQueryCondition>(c);
+                                func(&py_c);
                             }
                         )
                     );
                 }
             ),
             py::arg("query"),
-            py::arg("status"),
+            py::arg("status_ex"),
             py::arg("handler"),
             "Create a QueryCondition."
         )
-#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init(
                 [](PyICondition& py_c) {

@@ -18,18 +18,18 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls) {
             py::arg("status"),
             "Create a ReadCondition."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init(
-                [](PyIAnyDataReader& dr, const dds::sub::status::DataState& ds, std::function<void(py::object)>& func) {
+                [](PyIAnyDataReader& dr, const dds::sub::status::DataState& ds, std::function<void(PyICondition*)>& func) {
                     return PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
                             ds,
                             [&func](dds::core::cond::Condition c) {
                                 py::gil_scoped_acquire acquire;
-                                auto rcd = rtiboost::dynamic_pointer_cast<rti::sub::cond::ReadConditionImpl>(c.delegate());
-                                if (rcd.get() == nullptr) throw dds::core::InvalidDowncastError("Could not create ReadCondtion from Condition");
-                                func(py::cast(PyReadCondition(rcd.get())));
+                                auto py_c = dds::core::polymorphic_cast<PyReadCondition>(c);
+                                func(&py_c);
                             }
                         )
                     );
@@ -40,6 +40,7 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls) {
             py::arg("handler"),
             "Create a ReadCondition."
         )
+#endif
         .def(
             py::init(
                 [](PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds) {
@@ -55,18 +56,19 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls) {
             py::arg("status"),
             "Create a ReadCondition."
         )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init(
-                [](PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds, std::function<void(py::object)>& func) {
+                [](PyIAnyDataReader& dr, const rti::sub::status::DataStateEx& ds, std::function<void(PyICondition*)>& func) {
                     return PyReadCondition(
                         rti::sub::cond::create_read_condition_ex(
                             dr.get_any_datareader(), 
                             ds,
                             [&func](dds::core::cond::Condition c) {
                                 py::gil_scoped_acquire acquire;
-                                auto rcd = rtiboost::dynamic_pointer_cast<rti::sub::cond::ReadConditionImpl>(c.delegate());
-                                if (rcd.get() == nullptr) throw dds::core::InvalidDowncastError("Could not create ReadCondtion from Condition");
-                                func(py::cast(PyReadCondition(rcd.get())));
+                                py::gil_scoped_acquire acquire;
+                                auto py_c = dds::core::polymorphic_cast<PyReadCondition>(c);
+                                func(&py_c);
                             }
                         )
                     );
@@ -75,9 +77,9 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls) {
             py::arg("reader"),
             py::arg("status"),
             py::arg("handler"),
+            py::keep_alive<1, 4>(),
             "Create a ReadCondition."
         )
-#if rti_connext_version_gte(6, 0, 0)
         .def(
             py::init(
                 [](PyICondition& py_c) {

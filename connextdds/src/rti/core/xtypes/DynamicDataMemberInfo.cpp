@@ -19,7 +19,9 @@ void init_class_defs(py::class_<DynamicDataMemberInfo>& cls) {
         )
         .def_property_readonly(
             "name",
-            &DynamicDataMemberInfo::member_name,
+            [](const DynamicDataMemberInfo& mi) {
+                return mi.member_name().to_std_string();
+            },
             "The member name"
         )
         .def_property_readonly(

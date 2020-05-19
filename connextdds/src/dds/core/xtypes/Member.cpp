@@ -85,6 +85,13 @@ void init_class_defs(py::class_<Member>& cls) {
                 return py_cast_type(dt);
             },
             "Gets the member type."
+        )
+        .def_property_readonly_static(
+            "INVALID_ID",
+            [](py::object&) {
+                return Member::INVALID_ID;
+            },
+            "The special ID of a member without the ID annotation."
         );
 }
 

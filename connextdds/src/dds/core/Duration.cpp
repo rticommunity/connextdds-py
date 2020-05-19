@@ -24,12 +24,23 @@ void init_class_defs(py::class_<Duration>& cls) {
             py::arg("duration"),
             "Create a duration from a datetime.timedelta."
         )
-        .def (
+        .def(
             py::init(
                 [](double s) {
                     return Duration::from_secs(s);
                 }
-            )
+            ),
+            py::arg("float_time"),
+            "Create a duration from a floating point duration in seconds."
+        )
+        .def(
+            py::init(
+                [](const std::pair<int32_t, uint32_t>& d) {
+                    return Duration(d.first, d.second);
+                }
+            ),
+            py::arg("time_tuple"),
+            "Create a duration from a tuple of (sec, nanosec)."
         )
         .def_property(
             "sec",
@@ -172,6 +183,7 @@ void init_class_defs(py::class_<Duration>& cls) {
 
         py::implicitly_convertible<double, Duration>();
         py::implicitly_convertible<std::chrono::duration<int64_t, std::nano>, Duration>();
+        py::implicitly_convertible<const std::pair<int32_t, uint32_t>&, Duration>();
 }
 
 template<>

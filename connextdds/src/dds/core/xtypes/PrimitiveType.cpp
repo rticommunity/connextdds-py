@@ -36,16 +36,16 @@ template<>
 void process_inits<PyPrimitiveType>(py::module& m, ClassInitList& l) {
     init_dds_dynamic_primitive<char>(m, "CharType", l);
     init_dds_dynamic_primitive<bool>(m, "BoolType", l);
-    init_dds_dynamic_primitive<uint8_t>(m, "Uint8Type", l);
+    init_dds_dynamic_primitive<uint8_t>(m, "OctetType", l);
     init_dds_dynamic_primitive<int16_t>(m, "Int16Type", l);
     init_dds_dynamic_primitive<uint16_t>(m, "Uint16Type", l);
     init_dds_dynamic_primitive<int32_t>(m, "Int32Type", l);
     init_dds_dynamic_primitive<uint32_t>(m, "Uint32Type", l);
     init_dds_dynamic_primitive<rti::core::int64>(m, "Int64Type", l);
     init_dds_dynamic_primitive<rti::core::uint64>(m, "Uint64Type", l);
-    init_dds_dynamic_primitive<float>(m, "FloatType", l);
-    init_dds_dynamic_primitive<double>(m, "DoubleType", l);
-    init_dds_dynamic_primitive<rti::core::LongDouble>(m, "LongDoubleType", l);
+    init_dds_dynamic_primitive<float>(m, "Float32Type", l);
+    init_dds_dynamic_primitive<double>(m, "Float64Type", l);
+    init_dds_dynamic_primitive<rti::core::LongDouble>(m, "Float128Type", l);
     init_dds_dynamic_primitive<wchar_t>(m, "WcharType", l);
 }
 

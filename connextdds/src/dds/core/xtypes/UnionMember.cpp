@@ -9,18 +9,18 @@ template<>
 void init_class_defs(py::class_<UnionMember>& cls) {
     cls
         .def(
-            py::init<const std::string&, const DynamicType&, const std::vector<UnionMember::DiscriminatorType>&>(),
-            py::arg("name"),
-            py::arg("dynamic_type"),
-            py::arg("labels"),
-            "Create a union member with a name, type, and selected by one or more labels."
-        )
-        .def(
             py::init<const std::string&, const DynamicType&, UnionMember::DiscriminatorType>(),
             py::arg("name"),
             py::arg("dynamic_type"),
             py::arg("label"),
             "Creates a union member with a name, type, and selected by a single label."
+        )
+        .def(
+            py::init<const std::string&, const DynamicType&, const std::vector<UnionMember::DiscriminatorType>&>(),
+            py::arg("name"),
+            py::arg("dynamic_type"),
+            py::arg("labels"),
+            "Create a union member with a name, type, and selected by one or more labels."
         )
         .def_property(
             "name",
@@ -78,6 +78,16 @@ void init_class_defs(py::class_<UnionMember>& cls) {
             (UnionMember::LabelSeq (UnionMember::*)() const) &UnionMember::labels,
             (UnionMember& (UnionMember::*)(const UnionMember::LabelSeq&)) &UnionMember::labels,
             "The labels that select this member."
+        )
+        .def_readonly_static(
+            "DEFAULT_LABEL",
+            &UnionMember::DEFAULT_LABEL,
+            "Special value for the default union label."
+        )
+        .def_readonly_static(
+            "INVALID_ID",
+            &UnionMember::INVALID_ID,
+            "The special ID of a member without the ID annotation."
         );
         /*.def(
             "set_labels",

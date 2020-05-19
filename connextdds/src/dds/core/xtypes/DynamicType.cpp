@@ -108,8 +108,10 @@ void init_class_defs(py::class_<DynamicType>& cls) {
             "Determines if this DynamicType is an aggregation type."
         )
         .def(
-            "__str__",
-            &rti::core::xtypes::print_idl
+            "print_idl",
+            &rti::core::xtypes::print_idl,
+            py::arg("index") = 0,
+            "Print the equivalent IDL of the type."
         )
         /*.def_static(
             "is_primitive_type",

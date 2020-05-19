@@ -42,8 +42,12 @@ void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls) {
         )
         .def(
             "handler",
-            [](PyStatusCondition& sc, std::function<void()>& func) {
-                sc->handler(func);
+            [](PyStatusCondition& sc, std::function<void(PyICondition*)>& func) {
+                sc->handler([func](dds::core::cond::Condition c) {
+                    py::gil_scoped_acquire acquire;
+                    auto py_c = dds::core::polymorphic_cast<PyStatusCondition>(c);
+                    func(&py_c);
+                });
             },
             py::arg("func"),
             "Set a handler function for this StatusCondition."

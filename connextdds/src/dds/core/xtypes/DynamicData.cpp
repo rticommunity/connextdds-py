@@ -519,7 +519,13 @@ static
 void set_value(DynamicData& dd, const T& key, py::object value) {
     TypeKind::type field_type;
     if (dd.member_exists_in_type(key)) {
-        field_type = dd.member_info(key).member_kind().underlying();
+        if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+            field_type = dd.member_info(key).member_kind().underlying();
+        }
+        else {
+            const UnionType& ut = static_cast<const UnionType&>(dd.type());
+            field_type = ut.member(key).type().kind().underlying();
+        }
     }
     else {
         rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
@@ -911,7 +917,10 @@ void add_field_type(py::class_<DynamicData>& cls, const std::string& type_str, c
         .def(
             ("get_" + type_str).c_str(),
             [](const DynamicData &dd, uint32_t index) {
-                return dd.value<T>(index + 1);
+                if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return dd.value<T>(index);
             },
             py::arg("name"),
             ("Get a " + type_info + " value by field name.").c_str()
@@ -926,7 +935,10 @@ void add_field_type(py::class_<DynamicData>& cls, const std::string& type_str, c
         .def(
             ("set_" + type_str).c_str(),
             [](DynamicData& dd, uint32_t index, const T& v) {
-                dd.value<T>(index + 1, v);
+                if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                dd.value<T>(index, v);
             },
             py::arg("index"),
             py::arg("value"),
@@ -948,7 +960,10 @@ void add_field_type_collection(py::class_<DynamicData>& cls, const std::string& 
         .def (
             ("get_" + type_str + "_values").c_str(),
             [](const DynamicData& dd, uint32_t index) {
-                return dd.get_values<T>(index + 1);
+                if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return dd.get_values<T>(index);
             },
             py::arg("index"),
             ("Get multiple " + type_info + " values by field name.").c_str()
@@ -963,7 +978,10 @@ void add_field_type_collection(py::class_<DynamicData>& cls, const std::string& 
         .def ( \
             ("set_" + type_str + "_values").c_str(),
             [](DynamicData& dd, uint32_t index, const std::vector<T>& v) {
-                dd.set_values<T>(index + 1, v);
+                if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                dd.set_values<T>(index, v);
             },
             py::arg("index"),
             py::arg("values"),
@@ -1040,7 +1058,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "get_wchar",
             [](const DynamicData& data, uint32_t index) {
-                return static_cast<wchar_t>(data.value<uint16_t>(index + 1));
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return static_cast<wchar_t>(data.value<uint16_t>(index));
             },
             py::arg("index"),
             "Get a wchar value by field index."
@@ -1059,7 +1080,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "set_wchar",
             [](DynamicData& data, uint32_t index, wchar_t c) {
                 DDS_Wchar value = static_cast<DDS_Wchar>(c);
-                data.value<DDS_Wchar>(index + 1, value);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                data.value<DDS_Wchar>(index, value);
             },
             py::arg("index"),
             py::arg("value"),
@@ -1081,7 +1105,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "get_wstring",
             [](const DynamicData& data, uint32_t index) {
-                std::vector<DDS_Wchar> v(data.get_values<DDS_Wchar>(index + 1));
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                std::vector<DDS_Wchar> v(data.get_values<DDS_Wchar>(index));
                 std::wstring s;
                 for (auto c : v) {
                     s.push_back(static_cast<wchar_t>(c));
@@ -1111,7 +1138,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                 for (auto c : s) {
                     v.push_back(static_cast<DDS_Wchar>(c));
                 }
-                data.set_values<DDS_Wchar>(index + 1, v);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                data.set_values<DDS_Wchar>(index, v);
             },
             py::arg("index"),
             py::arg("value"),
@@ -1128,7 +1158,9 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "get_complex_values",
             [](DynamicData& data, uint32_t index) {
-                index += 1;
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
                 return get_complex_values(data, index);
             },
             py::arg("index"),
@@ -1178,7 +1210,9 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "set_complex_values",
             [](DynamicData& data, uint32_t index, std::vector<DynamicData>& values) {
-                index += 1;
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
                 set_complex_values(data, index, values);
             },
             py::arg("index"),
@@ -1189,14 +1223,19 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "loan_value",
             (rti::core::xtypes::LoanedDynamicData (DynamicData::*)(const std::string&)) &DynamicData::loan_value,
             py::arg("name"),
+            py::keep_alive<0, 1>(),
             "Gets a view of a complex member."
         )
         .def(
             "loan_value",
             [](DynamicData& data, uint32_t index) {
-                return data.loan_value(index + 1);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return data.loan_value(index);
             },
             py::arg("index"),
+            py::keep_alive<0, 1>(),
             "Gets a view of a complex member."
         )
         .def(
@@ -1204,18 +1243,23 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             (rti::core::xtypes::LoanedDynamicData& (DynamicData::*)(rti::core::xtypes::LoanedDynamicData&, const std::string&)) &DynamicData::loan_value,
             py::arg("data"),
             py::arg("name"),
+            py::keep_alive<0, 1>(),
             "Gets a view of a complex member."
         )
         .def(
             "loan_value",
             [](DynamicData& data, rti::core::xtypes::LoanedDynamicData& loan, uint32_t index) -> rti::core::xtypes::LoanedDynamicData& {
-                return data.loan_value(loan, index + 1);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return data.loan_value(loan, index);
             },
             py::arg("data"),
             py::arg("index"),
+            py::keep_alive<0, 1>(),
             "Gets a view of a complex member."
         )
-        .def(
+        .def_property_readonly(
             "discriminator_value",
             &DynamicData::discriminator_value,
             "Obtains the value of the union discriminator (valid for UnionType only)."
@@ -1234,7 +1278,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "clear_optional_member",
             [](DynamicData& data, uint32_t index) {
-                data.clear_optional_member(index + 1);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                data.clear_optional_member(index);
             },
             py::arg("index"),
             "Clear the contents of a single optional data member of this object."
@@ -1266,20 +1313,20 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             &DynamicData::estimated_max_buffer_size,
             "Get the estimated maximum buffer size for a DynamicData object."
         )
-        .def(
+        .def_property_readonly(
             "type",
             [](const DynamicData& dd) {
                 auto dt = dd.type();
                 return py_cast_type(dt);
             },
-            "Gets this data type of this DynamicData."
+            "Gets the data type of this DynamicData."
         )
-        .def(
+        .def_property_readonly(
             "type_kind",
             &DynamicData::type_kind,
             "Gets this data type kind of this DynamicData."
         )
-        .def(
+        .def_property_readonly(
             "member_count",
             &DynamicData::member_count,
             "Get the number of members in this sample."
@@ -1293,7 +1340,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "member_exists",
             [](const DynamicData& data, uint32_t index) {
-                return data.member_exists(index + 1);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return data.member_exists(index);
             },
             py::arg("index"),
             "Determine if an optional member is set by member index."
@@ -1310,7 +1360,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             py::arg("index"),
             "Determine if a member with a particular index exists in the type."
         )
-        .def(
+        .def_property_readonly(
             "info",
             &DynamicData::info,
             "Returns info about this sample"
@@ -1324,7 +1374,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "member_info",
             [](const DynamicData& data, uint32_t index) {
-                return data.member_info(index + 1);
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1;
+                }
+                return data.member_info(index);
             },
             py::arg("index"),
             "Returns info about a member."
@@ -1375,12 +1428,18 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "fields",
             [](DynamicData& dd) {
+                if (dd.type_kind().underlying() != TypeKind::STRUCTURE_TYPE) {
+                    throw py::type_error("Can't get fields of a non-structure type");
+                }
                 return PyDynamicDataFieldsView(dd);
             }
         )
         .def(
             "items",
             [](DynamicData& dd) {
+                if (dd.type_kind().underlying() != TypeKind::STRUCTURE_TYPE) {
+                    throw py::type_error("Can't get items of a non-structure type");
+                }
                 return PyDynamicDataItemsView(dd);
             }
         )
@@ -1481,17 +1540,15 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "__getitem__",
             [](DynamicData& dd, size_t index) -> py::object {
-                index += 1; // Python index starts at 0 by language convention
                 auto type = dd.type();
                 auto kind = resolve_type_kind(dd, type.kind().underlying(), index); 
+                if (kind != TypeKind::UNION_TYPE) {
+                    index += 1; // Python index starts at 0 by language convention
+                }
                 switch (kind) {
                     case TypeKind::STRUCTURE_TYPE:
                     case TypeKind::UNION_TYPE: {
-                        if (!dd.member_exists(index)) {
-                            return py::cast(nullptr);
-                        }
-                        auto mi = dd.member_info(index);
-                        return get_member(dd, mi.member_kind().underlying(), index);
+                        return get_value(dd, index);
                     }
                     case TypeKind::ARRAY_TYPE:
                     case TypeKind::SEQUENCE_TYPE: {
@@ -1506,19 +1563,22 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "__setitem__",
             [](DynamicData& dd, size_t index, py::object& value) {
-                index += 1; // Python index starts at 0 by language convention
+                if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    index += 1; // Python index starts at 0 by language convention
+                }
                 auto type = dd.type();
                 auto kind = type.kind().underlying();
                 switch (kind) {
                     case TypeKind::STRUCTURE_TYPE:
                     case TypeKind::UNION_TYPE: {
-                        auto mi = dd.member_info(index);
-                        set_member(dd, mi.member_kind().underlying(), index, value);
+                        set_value(dd, index, value);
+                        break;
                     }
                     case TypeKind::ARRAY_TYPE:
                     case TypeKind::SEQUENCE_TYPE: {
                         auto collection_type = static_cast<const CollectionType&>(type);
                         set_member(dd, collection_type.content_type().kind().underlying(), index, value);
+                        break;
                     }
                     default:
                         throw py::type_error("This DynamicData type does not support index access.");
