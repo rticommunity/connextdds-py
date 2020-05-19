@@ -34,7 +34,7 @@ void init_class_defs(py::class_<CoherentAccess>& cls) {
         )
         .def(
             "__exit__",
-            [](CoherentAccess* ca) {
+            [](CoherentAccess* ca, py::object, py::object, py::object) {
                 ca->end();
             },
             "End a context managed coherent access block."

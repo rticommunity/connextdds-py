@@ -8,6 +8,10 @@
 
 namespace pyrti {
 
+class PyDomainParticipantListener;
+class PyPublisherListener;
+class PySubscriberListener;
+
 class PyIEntity {
 public:
     virtual
@@ -65,6 +69,12 @@ public:
         return *this;
     }
 
+    PyDomainParticipant(
+        int32_t d,
+        const dds::domain::qos::DomainParticipantQos& q,
+        PyDomainParticipantListener* l,
+        const dds::core::status::StatusMask& m);
+
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);
     }
@@ -90,6 +100,12 @@ public:
 
     PyPublisher(const dds::pub::Publisher& pub) : dds::pub::Publisher(pub) {}
 
+    PyPublisher(
+        const PyDomainParticipant& p,
+        const dds::pub::qos::PublisherQos& q,
+        PyPublisherListener* l,
+        const dds::core::status::StatusMask& m);
+
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);
     }
@@ -114,6 +130,12 @@ public:
     using dds::sub::Subscriber::Subscriber;
 
     PySubscriber(const dds::sub::Subscriber& sub) : dds::sub::Subscriber(sub) {}
+
+    PySubscriber(
+        const PyDomainParticipant& p,
+        const dds::sub::qos::SubscriberQos& q,
+        PySubscriberListener* l,
+        const dds::core::status::StatusMask& m);
 
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);

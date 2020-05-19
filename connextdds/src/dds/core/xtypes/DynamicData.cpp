@@ -825,6 +825,7 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<DynamicData>, Py
 template<>
 void init_dds_typed_datareader_template(py::class_<PyDataReader<DynamicData>, PyIDataReader>& cls) {
     init_dds_typed_datareader_base_template(cls);
+    init_dds_typed_datareader_del_listener(cls);
     cls
         .def(
             "key_value",
@@ -1267,7 +1268,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         )
         .def(
             "type",
-            &DynamicData::type,
+            [](const DynamicData& dd) {
+                auto dt = dd.type();
+                return py_cast_type(dt);
+            },
             "Gets this data type of this DynamicData."
         )
         .def(

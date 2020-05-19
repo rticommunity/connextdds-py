@@ -13,13 +13,13 @@ class PyContentFilter : public CFBase {
 public:
     using CFBase::CFBase;
 
-    py::object& compile(
+    py::object& compile_helper(
         const std::string& expression,
         const std::vector<std::string>& parameters,
         const dds::core::optional<dds::core::xtypes::DynamicType>& type_code,
         const std::string& type_class_name,
         py::object* old_compile_data
-    ) override {
+    ) {
         auto py_type_code = type_code.is_set() ? py::cast(type_code.get()) : py::cast(nullptr);
         PYBIND11_OVERLOAD_PURE(
             py::object&,
@@ -31,6 +31,19 @@ public:
             type_class_name,
             old_compile_data
         );
+    }
+
+    py::object& compile(
+        const std::string& expression,
+        const std::vector<std::string>& parameters,
+        const dds::core::optional<dds::core::xtypes::DynamicType>& type_code,
+        const std::string& type_class_name,
+        py::object* old_compile_data
+    ) override {
+        py::object& compile_data = compile_helper(expression, parameters, type_code, type_class_name, old_compile_data);
+        if (!compile_data.is_none()) compile_data.inc_ref();
+        if (nullptr != old_compile_data && !old_compile_data->is_none()) old_compile_data->dec_ref();
+        return compile_data;
     }
 
     bool evaluate(
@@ -48,9 +61,9 @@ public:
         );
     }
 
-    void finalize(
+    void finalize_helper(
         py::object& compile_data
-    ) override {
+    ) {
         PYBIND11_OVERLOAD_PURE(
             void,
             CFBase,
@@ -58,11 +71,27 @@ public:
             compile_data
         );
     }
+
+    void finalize(
+        py::object& compile_data
+    ) override {
+        finalize_helper(compile_data);
+        if (!compile_data.is_none()) {
+            compile_data.dec_ref();
+            compile_data = py::cast(nullptr);
+        }
+    }
 };
 
 template<typename T>
-void init_content_filter_defs(py::class_<rti::topic::ContentFilter<T, py::object>, PyContentFilter<T>>& cls) {
+void init_content_filter_defs(py::class_<
+        rti::topic::ContentFilter<T, py::object>,
+        rti::topic::ContentFilterBase,
+        PyContentFilter<T>>& cls) {
     cls
+        .def(
+            py::init<>()
+        )
         .def(
             "compile",
             &rti::topic::ContentFilter<T, py::object>::compile,
@@ -89,22 +118,12 @@ void init_content_filter_defs(py::class_<rti::topic::ContentFilter<T, py::object
             py::arg("compile_data"),
             "A previously compiled instance of the content filter is no "
             "longer in use and resources can now be cleaned up."
-        )
-        .def_static(
-            "lookup",
-            [](const PyDomainParticipant& dp, const std::string& name) {
-                return rti::topic::find_content_filter<T>(dp, name);
-            },
-            "Lookup a content filter previously registered with "
-            "DomainParticipant.register_contentfilter."
-            "\n\n"
-            "You cannot lookup the RTI Connext built-in content filters."
         );
 }
 
 template<typename T>
 void init_content_filter(py::object& o) {
-    py::class_<rti::topic::ContentFilter<T, py::object>, PyContentFilter<T>> cf(o, "ContentFilter");
+    py::class_<rti::topic::ContentFilter<T, py::object>, rti::topic::ContentFilterBase, PyContentFilter<T>> cf(o, "ContentFilter");
 
     init_content_filter_defs(cf);
 }

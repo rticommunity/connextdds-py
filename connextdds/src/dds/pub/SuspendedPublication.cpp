@@ -29,7 +29,7 @@ void init_class_defs(py::class_<SuspendedPublication>& cls) {
         )
         .def(
             "__exit__",
-            [](SuspendedPublication& s) {
+            [](SuspendedPublication& s, py::object, py::object, py::object) {
                 s.resume();
             }
         );

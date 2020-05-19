@@ -95,8 +95,14 @@ public:
 };
 
 template<typename T>
-void init_writer_content_filter_defs(py::class_<rti::topic::WriterContentFilter<T, py::object, py::object>, PyWriterContentFilter<T>>& cls) {
+void init_writer_content_filter_defs(py::class_<
+        rti::topic::WriterContentFilter<T, py::object, py::object>,
+        rti::topic::ContentFilter<T, py::object>, 
+        PyWriterContentFilter<T>>& cls) {
     cls
+        .def(
+            py::init<>()
+        )
         .def(
             "writer_compile",
             &rti::topic::WriterContentFilter<T, py::object, py::object>::writer_compile,
@@ -154,7 +160,7 @@ void init_writer_content_filter_defs(py::class_<rti::topic::WriterContentFilter<
 
 template<typename T>
 void init_writer_content_filter(py::object& o) {
-    py::class_<rti::topic::WriterContentFilter<T, py::object, py::object>, PyWriterContentFilter<T>> wcf(o, "WriterContentFilter");
+    py::class_<rti::topic::WriterContentFilter<T, py::object, py::object>, rti::topic::ContentFilter<T, py::object>, PyWriterContentFilter<T>> wcf(o, "WriterContentFilter");
 
     init_writer_content_filter_defs(wcf);
 }

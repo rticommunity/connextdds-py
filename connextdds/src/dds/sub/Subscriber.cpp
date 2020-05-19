@@ -9,6 +9,15 @@ using namespace dds::sub;
 
 namespace pyrti {
 
+PySubscriber::PySubscriber(
+        const PyDomainParticipant& p,
+        const dds::sub::qos::SubscriberQos& q,
+        PySubscriberListener* l,
+        const dds::core::status::StatusMask& m
+) : dds::sub::Subscriber(p, q, l, m) {
+    if (nullptr != l) py::cast(l).inc_ref();
+}
+
 template<>
 void init_class_defs(py::class_<PySubscriber>& cls) {
     cls
@@ -30,7 +39,6 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
             py::arg("qos"),
             py::arg("listener") = (PySubscriberListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
-            py::keep_alive<1,4>(),
             "Create a Subscriber under a DomainParticipant with a listener."
         )
         .def(
@@ -56,11 +64,16 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
         .def(
             "bind_listener",
             [](PySubscriber& sub, PySubscriberListener* l, const dds::core::status::StatusMask& m) {
+                if (nullptr != l) {
+                    py::cast(l).inc_ref();
+                }
+                if (nullptr != sub.listener()) {
+                    py::cast(sub.listener()).dec_ref();
+                }
                 sub.listener(l, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
-            py::keep_alive<1, 2>(),
             "Bind the listener and event mask to the Subscriber."
         )
         .def_property(
@@ -83,7 +96,10 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
         )
         .def_property_readonly(
             "participant",
-            &PySubscriber::participant,
+            [](PySubscriber& sub) {
+                auto dp = sub.participant();
+                return PyDomainParticipant(dp);
+            },
             "Get the parent DomainParticipant for this Subscriber."
         )
         .def(

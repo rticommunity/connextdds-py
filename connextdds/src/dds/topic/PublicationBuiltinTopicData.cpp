@@ -14,6 +14,9 @@ void init_dds_typed_topic_template(py::class_<PyTopic<dds::topic::PublicationBui
     init_dds_typed_topic_base_template(cls);
 }
 
+template<>
+void init_dds_typed_datareader_del_listener(py::class_<PyDataReader<dds::topic::PublicationBuiltinTopicData>, PyIDataReader>& cls) {}
+
 
 template<>
 void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {

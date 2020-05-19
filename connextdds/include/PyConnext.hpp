@@ -4,15 +4,15 @@
 #define rti_connext_version_gt(rti_major, rti_minor, rti_release) \
     ((rti_major < RTI_DDS_VERSION_MAJOR) || \
     (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor < RTI_DDS_VERSION_MINOR) || \
-    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release < RTI_DDS_VERSION_RELASE))
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release < RTI_DDS_VERSION_RELEASE))
 
 #define rti_connext_version_lt(rti_major, rti_minor, rti_release) \
     ((rti_major > RTI_DDS_VERSION_MAJOR) || \
     (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor > RTI_DDS_VERSION_MINOR) || \
-    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release > RTI_DDS_VERSION_RELASE))
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release > RTI_DDS_VERSION_RELEASE))
 
 #define rti_connext_version_eq(rti_major, rti_minor, rti_release) \
-    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release == RTI_DDS_VERSION_RELASE)
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR && rti_release == RTI_DDS_VERSION_RELEASE)
 
 #define rti_connext_version_gte(rti_major, rti_minor, rti_release) \
     ((rti_connext_version_gt(rti_major, rti_minor, rti_release)) || \
@@ -27,6 +27,7 @@
 #include <pybind11/operators.h>
 #include <list>
 #include <dds/core/External.hpp>
+#include <dds/core/xtypes/DynamicType.hpp>
 
 namespace py = pybind11;
 
@@ -87,6 +88,8 @@ void add_conversion(py_to_class&& cls, const std::string& doc = "Convert to less
 
     py::implicitly_convertible<from_class, to_class>();
 }
+
+py::object py_cast_type(dds::core::xtypes::DynamicType&);
 
 // Dummy classes
 class PyVector{};

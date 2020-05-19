@@ -568,7 +568,7 @@ void init_class_defs(py::class_<PyDataWriterListener<T>, PyDataWriterListenerTra
 
 
 template<typename T>
-void init_class_defs(py::class_<PyNoOpDataWriterListener<T>, PyNoOpDataWriterListenerTrampoline<T>>& cls) {
+void init_class_defs(py::class_<PyNoOpDataWriterListener<T>, PyDataWriterListener<T>, PyNoOpDataWriterListenerTrampoline<T>>& cls) {
     cls
         .def(
             py::init<>()
@@ -643,7 +643,7 @@ void init_class_defs(py::class_<PyNoOpDataWriterListener<T>, PyNoOpDataWriterLis
 template<typename T>
 void init_datawriter_listener(py::object& o) {
     py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>> dwl(o, "DataWriterListener");
-    py::class_<PyNoOpDataWriterListener<T>, PyNoOpDataWriterListenerTrampoline<T>> nodwl(o, "NoOpDataWriterListener");
+    py::class_<PyNoOpDataWriterListener<T>, PyDataWriterListener<T>, PyNoOpDataWriterListenerTrampoline<T>> nodwl(o, "NoOpDataWriterListener");
 
     init_class_defs(dwl);
     init_class_defs(nodwl);

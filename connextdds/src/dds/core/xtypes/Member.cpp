@@ -80,7 +80,10 @@ void init_class_defs(py::class_<Member>& cls) {
         .def("set_optional_flag", &Member::optional, "Sets the member optional flag") */
         .def_property_readonly(
             "type",
-            &Member::type,
+            [](const Member& member) {
+                auto dt = member.type();
+                return py_cast_type(dt);
+            },
             "Gets the member type."
         );
 }

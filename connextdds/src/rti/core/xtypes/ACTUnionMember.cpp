@@ -30,6 +30,18 @@ void init_class_defs(py::class_<AbstractConstructedType<UnionMember>, DynamicTyp
             "Gets a member by its name."
         )
         .def(
+            "__getitem__",
+            [](const AbstractConstructedType<UnionMember>& act, const std::string& name) {
+                return act.member(name);
+            }
+        )
+        .def(
+            "__getitem__",
+            [](const AbstractConstructedType<UnionMember>& act, uint32_t index) {
+                return act.member(index);
+            }
+        )
+        .def(
             "find_member_by_name", 
             &AbstractConstructedType<UnionMember>::find_member_by_name, 
             "Obtains the member index from its name."

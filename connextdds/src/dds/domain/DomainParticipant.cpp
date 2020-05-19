@@ -12,6 +12,15 @@ using namespace dds::domain;
 
 namespace pyrti {
 
+PyDomainParticipant::PyDomainParticipant(
+        int32_t d,
+        const dds::domain::qos::DomainParticipantQos& q,
+        PyDomainParticipantListener* l,
+        const dds::core::status::StatusMask& m
+) : dds::domain::DomainParticipant(d, q, l, m) {
+    if (nullptr != l) py::cast(l).inc_ref();
+}
+
 template<typename ParticipantFwdIterator>
 uint32_t find_participants(ParticipantFwdIterator begin)
 {
@@ -54,7 +63,6 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             py::arg("qos"),
             py::arg("listener") = (PyDomainParticipantListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
-            py::keep_alive<1, 4>(),
             "Create a new DomainParticipant"
         )
         .def(
@@ -77,11 +85,16 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def(
             "bind_listener",
             [](PyDomainParticipant& dp, PyDomainParticipantListener* l, const dds::core::status::StatusMask& m) {
+                if (nullptr != l) {
+                    py::cast(l).inc_ref();
+                }
+                if (nullptr != dp.listener()) {
+                    py::cast(dp.listener()).dec_ref();
+                }
                 dp.listener(l, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
-            py::keep_alive<1, 2>(),
             "Bind the listener and event mask to the DomainParticipant."
         )
         .def_property(
@@ -184,20 +197,42 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def(
             "register_contentfilter",
-            [](PyDomainParticipant& dp, const rti::topic::CustomFilter<rti::topic::ContentFilterBase>& cf, const std::string &fn) {
-                return dp->register_contentfilter(cf, fn);
+            [](PyDomainParticipant& dp, rti::topic::ContentFilterBase* cf, const std::string &fn) {
+                dds::core::smart_ptr_traits<rti::topic::ContentFilterBase>::ref_type ptr(
+                    cf, 
+                    [](rti::topic::ContentFilterBase* filt) {
+                    });
+                rti::topic::CustomFilter<rti::topic::ContentFilterBase> custom(ptr);
+                dp->register_contentfilter(custom, fn);
+                py::cast(cf).inc_ref();
             },
-            py::arg("expression"),
+            py::arg("filter"),
             py::arg("name"),
             "Register a content filter which can be used to create a ContentFiltertedTopic."
         )
         .def(
             "unregister_contentfilter",
             [](PyDomainParticipant& dp, const std::string &fn) {
-                return dp->unregister_contentfilter(fn);
+                auto filter = rti::topic::find_content_filter<rti::topic::ContentFilterBase>(dp, fn);
+                if (dds::core::null != filter) {
+                    dp->unregister_contentfilter(fn);
+                    py::cast(filter.get()).dec_ref();
+                }
             },
             py::arg("name"),
             "Unregister content filter previously registered to this DomainParticipant."
+        )
+        .def(
+            "find_contentfilter",
+            [](PyDomainParticipant& dp, const std::string &fn) {
+                auto filter = rti::topic::find_content_filter<rti::topic::ContentFilterBase>(dp, fn);
+                if (filter != dds::core::null) {
+                    return py::cast(rti::topic::find_content_filter<rti::topic::ContentFilterBase>(dp, fn).get());
+                }
+                else return py::cast(nullptr);
+            },
+            py::arg("name"),
+            "Find content filter previously registered to this DomainParticipant."
         )
         .def(
             "register_type",
@@ -411,7 +446,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def(
             "ignore_participant",
-            (void (*)(const DomainParticipant&, const dds::core::InstanceHandle&)) &dds::domain::ignore,
+            [](const PyDomainParticipant& dp, const dds::core::InstanceHandle& h) {
+                dds::domain::ignore(dp, h);
+            },
             py::arg("handle"),
             "Ignore a DomainParticipant given it's handle."
         )

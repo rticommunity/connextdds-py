@@ -33,8 +33,14 @@ public:
 };
 
 template<typename T>
-void init_writer_content_filter_helper_defs(py::class_<rti::topic::WriterContentFilterHelper<T, py::object, py::object>, PyWriterContentFilterHelper<T>>& cls) {
+void init_writer_content_filter_helper_defs(py::class_<
+        rti::topic::WriterContentFilterHelper<T, py::object, py::object>,
+        rti::topic::WriterContentFilter<T, py::object, py::object>,
+        PyWriterContentFilterHelper<T>>& cls) {
     cls
+        .def(
+            py::init<>()
+        )
         .def(
             "writer_evaluate_helper",
             &rti::topic::WriterContentFilterHelper<T, py::object, py::object>::writer_evaluate_helper,
@@ -57,7 +63,7 @@ void init_writer_content_filter_helper_defs(py::class_<rti::topic::WriterContent
 
 template<typename T>
 void init_writer_content_filter_helper(py::object o) {
-    py::class_<rti::topic::WriterContentFilterHelper<T, py::object, py::object>, PyWriterContentFilterHelper<T>> wcfh(o, "WriterContentFilterHelper");
+    py::class_<rti::topic::WriterContentFilterHelper<T, py::object, py::object>, rti::topic::WriterContentFilter<T, py::object, py::object>, PyWriterContentFilterHelper<T>> wcfh(o, "WriterContentFilterHelper");
 
     init_writer_content_filter_helper_defs(wcfh);
 }

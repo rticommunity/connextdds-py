@@ -30,6 +30,18 @@ void init_class_defs(py::class_<AbstractConstructedType<EnumMember>, DynamicType
             "Gets a member by its name."
         )
         .def(
+            "__getitem__",
+            [](const AbstractConstructedType<EnumMember>& act, const std::string& name) {
+                return act.member(name);
+            }
+        )
+        .def(
+            "__getitem__",
+            [](const AbstractConstructedType<EnumMember>& act, uint32_t index) {
+                return act.member(index);
+            }
+        )
+        .def(
             "find_member_by_name", 
             &AbstractConstructedType<EnumMember>::find_member_by_name, 
             "Obtains the member index from its name."

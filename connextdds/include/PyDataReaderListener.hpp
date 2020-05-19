@@ -408,7 +408,7 @@ void init_class_defs(py::class_<PyDataReaderListener<T>, PyDataReaderListenerTra
 }
 
 template<typename T>
-void init_class_defs(py::class_<PyNoOpDataReaderListener<T>, PyNoOpDataReaderListenerTrampoline<T>>& cls) {
+void init_class_defs(py::class_<PyNoOpDataReaderListener<T>, PyDataReaderListener<T>, PyNoOpDataReaderListenerTrampoline<T>>& cls) {
     cls
         .def(
             py::init<>()
@@ -452,7 +452,7 @@ void init_class_defs(py::class_<PyNoOpDataReaderListener<T>, PyNoOpDataReaderLis
 template<typename T>
 void init_datareader_listener(py::object& o) {
     py::class_<PyDataReaderListener<T>, PyDataReaderListenerTrampoline<T>> drl(o, "DataReaderListener");
-    py::class_<PyNoOpDataReaderListener<T>, PyNoOpDataReaderListenerTrampoline<T>> nodrl(o, "NoOpDataReaderListener");
+    py::class_<PyNoOpDataReaderListener<T>, PyDataReaderListener<T>, PyNoOpDataReaderListenerTrampoline<T>> nodrl(o, "NoOpDataReaderListener");
     
     init_class_defs(drl);
     init_class_defs(nodrl);

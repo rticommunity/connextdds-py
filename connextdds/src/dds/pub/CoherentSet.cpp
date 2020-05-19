@@ -10,7 +10,7 @@ void init_class_defs(py::class_<CoherentSet>& cls) {
     cls
         .def(
             py::init<
-                const Publisher&
+                const PyPublisher&
             >(),
             py::arg("publisher"),
             "Creating a CoherentSet object indicates that the application will "
@@ -25,15 +25,15 @@ void init_class_defs(py::class_<CoherentSet>& cls) {
         )
         .def(
             "__enter__",
-            [](CoherentSet& c) {
+            [](CoherentSet* c) {
                 return c;
             },
             "Context manage the CoherentSet."
         )
         .def(
             "__exit__",
-            [](CoherentSet& c) {
-                c.end();
+            [](CoherentSet* c, py::object, py::object, py::object) {
+                c->end();
             }
         );
 }

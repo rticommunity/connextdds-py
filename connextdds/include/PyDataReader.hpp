@@ -39,27 +39,23 @@ class PyDataReader :    public dds::sub::DataReader<T>,
 public:
     using dds::sub::DataReader<T>::DataReader;
 
-    /*PyDataReader(
-        const PySubscriber& s, 
-        const PyTopic<T>& t) : dds::sub::DataReader<T>(s, t) {}
-
     PyDataReader(
         const PySubscriber& s, 
         const PyTopic<T>& t, 
         const dds::sub::qos::DataReaderQos& q,
         PyDataReaderListener<T>* l,
-        const dds::core::status::StatusMask& m) : dds::sub::DataReader<T>(s, t, q, l, m) {}
-
-    PyDataReader(
-        const PySubscriber& s, 
-        const PyContentFilteredTopic<T>& t) : dds::sub::DataReader<T>(s, t) {}
+        const dds::core::status::StatusMask& m) : dds::sub::DataReader<T>(s, t, q, l, m) {
+            if (nullptr != l) py::cast(l).inc_ref();
+        }
 
     PyDataReader(
         const PySubscriber& s, 
         const PyContentFilteredTopic<T>& t, 
         const dds::sub::qos::DataReaderQos& q,
         PyDataReaderListener<T>* l,
-        const dds::core::status::StatusMask& m) : dds::sub::DataReader<T>(s, t, q, l, m) {} */
+        const dds::core::status::StatusMask& m) : dds::sub::DataReader<T>(s, t, q, l, m) {
+            if (nullptr != l) py::cast(l).inc_ref();
+        }
 
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);
@@ -124,7 +120,6 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("qos"),
             py::arg("listener") = (PyDataReaderListener<T>*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
-            py::keep_alive<1,5>(),
             "Create a DataReader."
         )
         .def(
@@ -147,7 +142,6 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("qos"),
             py::arg("listener") = (PyDataReaderListener<T>*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
-            py::keep_alive<1,5>(),
             "Create a DataReader with a ContentFilteredTopic."
         )
         .def(
@@ -235,11 +229,17 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         .def(
             "bind_listener",
             [](PyDataReader<T>& dr, PyDataReaderListener<T>* l, const dds::core::status::StatusMask& m) {
+                if (nullptr != l) {
+                    py::object py_l = py::cast(l);
+                    py_l.inc_ref();
+                }
+                if (nullptr != dr.listener()) {
+                    py::cast(dr.listener()).dec_ref();
+                }
                 dr.listener(l, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
-            py::keep_alive<1, 2>(),
             "Set the listener and associated event mask."
         )
         .def_property(
@@ -562,8 +562,22 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
 }
 
 template<typename T>
+void init_dds_typed_datareader_del_listener(py::class_<PyDataReader<T>, PyIDataReader>& cls) {
+    cls
+        .def(
+            "__del__",
+            [](PyDataReader<T>& dr) {
+                if (nullptr != dr.listener()) {
+                    py::cast(dr.listener()).dec_ref();
+                }
+            }
+        );
+}
+
+template<typename T>
 void init_dds_typed_datareader_template(py::class_<PyDataReader<T>, PyIDataReader>& cls) {
     init_dds_typed_datareader_base_template<T>(cls);
+    init_dds_typed_datareader_del_listener<T>(cls);
 
     cls
         .def(

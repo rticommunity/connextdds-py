@@ -98,6 +98,27 @@ public:
         const dds::core::status::StatusMask& m
     ) : dds::topic::Topic<T>(dp, n, tn, q, l, m) {} */
 
+    PyTopic(
+        const PyDomainParticipant& dp,
+        const std::string& n,
+        const dds::topic::qos::TopicQos& q,
+        PyTopicListener<T>* l,
+        const dds::core::status::StatusMask& m
+    ) : dds::topic::Topic<T>(dp, n, q, l, m) {
+        if (nullptr != l) py::cast(l).inc_ref();
+    }
+
+    PyTopic(
+        const PyDomainParticipant& dp,
+        const std::string& n,
+        const std::string& tn,
+        const dds::topic::qos::TopicQos& q,
+        PyTopicListener<T>* l,
+        const dds::core::status::StatusMask& m
+    ) : dds::topic::Topic<T>(dp, n, tn, q, l, m) {
+        if (nullptr != l) py::cast(l).inc_ref();
+    }
+
     dds::topic::TopicDescription<T> get_topic_description() override {
         return dds::topic::TopicDescription<T>(*this);
     }
@@ -238,17 +259,21 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
             [](PyTopic<T>& t) {
                 return dynamic_cast<PyTopicListener<T>*>(t.listener());
             },
-            py::keep_alive<1,2>(),
             "The listener."
         )
         .def(
             "bind_listener",
             [](PyTopic<T>& t, PyTopicListener<T>* l, const dds::core::status::StatusMask& m) {
+                if (nullptr != l) {
+                    py::cast(l).inc_ref();
+                }
+                if (nullptr != t.listener()) {
+                    py::cast(t.listener()).dec_ref();
+                }
                 t.listener(l, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
-            py::keep_alive<1, 2>(),
             "Set the listener and event mask."
         )
         .def_property(

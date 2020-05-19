@@ -10,6 +10,15 @@ using namespace dds::pub;
 
 namespace pyrti {
 
+PyPublisher::PyPublisher(
+    const PyDomainParticipant& p,
+    const dds::pub::qos::PublisherQos& q,
+    PyPublisherListener* l,
+    const dds::core::status::StatusMask& m) : 
+dds::pub::Publisher(p, q, l, m) {
+    if (nullptr != l) py::cast(l).inc_ref();
+}
+
 template<>
 void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
     cls
@@ -32,7 +41,6 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
             py::arg("qos"),
             py::arg("listener") = (PyPublisherListener*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
-            py::keep_alive<1,4>(),
             "Create a Publisher with the desired QoS policies and specified listener"
         )
         .def(
@@ -87,11 +95,16 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
         .def(
             "bind_listener",
             [](PyPublisher& pub, PyPublisherListener* l, const dds::core::status::StatusMask& m) {
+                if (nullptr != l) {
+                    py::cast(l).inc_ref();
+                }
+                if (nullptr != pub.listener()) {
+                    py::cast(pub.listener()).dec_ref();
+                }
                 pub.listener(l, m); 
             },
             py::arg("listener"),
             py::arg("event_mask"),
-            py::keep_alive<1, 2>(),
             "Bind the listener and event mask to the Publisher."
         )
         .def(

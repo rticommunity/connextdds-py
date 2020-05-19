@@ -224,7 +224,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             [](const QosProvider& qp, const std::string& type_lib_name, const std::string& type_name) {
                 auto dt = qp->type(type_lib_name, type_name);
                 PyDynamicTypeMap::add(type_name, dt);
-                return dt;
+                return py_cast_type(dt);
             },
             py::arg("library"),
             py::arg("name"),
@@ -236,18 +236,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             [](const QosProvider& qp, const std::string& type_name) {
                 auto dt = qp->type(type_name);
                 PyDynamicTypeMap::add(type_name, dt);
-                return dt;
-            },
-            py::arg("name"),
-            "Get a DynamicType from the QosProvider."
-        )
-#else
-        .def(
-            "type",
-            [](const QosProvider& qp, const std::string& type_name) {
-                auto dt = qp->type("", type_name);
-                PyDynamicTypeMap::add(type_name, dt);
-                return dt;
+                return py_cast_type(dt);
             },
             py::arg("name"),
             "Get a DynamicType from the QosProvider."

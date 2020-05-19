@@ -124,7 +124,7 @@ void init_class_defs(py::class_<TopicQuery>& cls) {
         )
         .def(
             "__exit__",
-            [](TopicQuery& tq) {
+            [](TopicQuery& tq, py::object, py::object, py::object) {
                 tq.close();
             },
             "Exit a context managed block for a TopicQuery."

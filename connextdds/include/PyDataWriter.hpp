@@ -29,13 +29,17 @@ public:
 
     /*PyDataWriter(const PyPublisher& p, const PyTopic<T>& t) : dds::pub::DataWriter<T>(p, t) {}
 
+     */
+
     PyDataWriter(
         const PyPublisher& p,
         const PyTopic<T>& t,
         const dds::pub::qos::DataWriterQos& q,
         PyDataWriterListener<T>* l,
         const dds::core::status::StatusMask& m
-    ) : dds::pub::DataWriter<T>(p, t, q, l, m) {} */
+    ) : dds::pub::DataWriter<T>(p, t, q, l, m) {
+        if (nullptr != l) py::cast(l).inc_ref();
+    }
 
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);
@@ -94,7 +98,6 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             py::arg("qos"),
             py::arg("listener") = (PyDataWriterListener<T>*) nullptr,
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
-            py::keep_alive<1,5>(),
             "Creates a DataWriter with QoS and a listener."
         )
         .def(
@@ -443,6 +446,12 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         .def(
             "bind_listener",
             [](PyDataWriter<T>& dw, PyDataWriterListener<T>* l, const dds::core::status::StatusMask& m) {
+                if (nullptr != l) {
+                    py::cast(l).inc_ref();
+                }
+                if (nullptr != dw.listener()) {
+                    py::cast(dw.listener()).dec_ref();
+                }
                 dw.listener(l, m);
             },
             py::arg("listener"),
@@ -670,6 +679,14 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         .def(
             py::self != py::self,
             "Test for inequality."
+        )
+        .def(
+            "__del__",
+            [](PyDataWriter<T>& dw) {
+                if (nullptr != dw.listener()) {
+                    py::cast(dw.listener()).dec_ref();
+                }
+            }
         )
         .def(
             "write_async",

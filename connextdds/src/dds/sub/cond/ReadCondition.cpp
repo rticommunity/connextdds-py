@@ -133,7 +133,7 @@ void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls) {
         )
         .def(
             "__exit__",
-            [](PyIReadCondition& rc) {
+            [](PyIReadCondition& rc, py::object, py::object, py::object) {
                 rc.py_close();
             }
         )
