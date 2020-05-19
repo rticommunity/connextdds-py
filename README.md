@@ -6,8 +6,8 @@
 
 - macOS or Linux (Windows support coming soon)
 - CMake 3.15+
-- Python 3.x (might work with 2.7) with pip
-- RTI Connext DDS 6.0.0 (6.0.1 compatibility TBD)
+- Python 2.7, Python 3.x with pip
+- RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
 
 ## Installation
 
@@ -21,7 +21,7 @@ $ cd pyrti
 > set environment variables
 
 ```shell
-$ export NDDSHOME=<install location of Connext 6>
+$ export NDDSHOME=<install location of Connext Pro>
 $ export CONNEXTDDS_ARCH=<target arch>
 $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
 $ export NJOBS=<number of concurrent make jobs, default 1>
