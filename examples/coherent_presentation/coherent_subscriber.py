@@ -1,0 +1,55 @@
+import rti.connextdds as dds
+import time
+import argparse
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
+
+class CoherentListener(dds.DynamicData.NoOpDataReaderListener):
+    def on_data_available(self, reader):
+        with reader.take() as samples:
+            print('Received updates:')
+            for sample in (s for s in samples if s.info.valid):
+                data = sample.data
+                print(' {} = {};'.format(data['field'], data['value']))
+
+
+def subscriber_main(domain_id, sample_count):
+    participant = dds.DomainParticipant(domain_id)
+
+    subscriber_qos = dds.QosProvider.default().subscriber_qos
+    subscriber = dds.Subscriber(participant, subscriber_qos)
+
+    coherent_type = dds.QosProvider('coherent.xml').type('coherent_lib', 'coherent')
+    topic = dds.DynamicData.Topic(participant, 'Example coherent', coherent_type)
+    datareader_qos = dds.QosProvider.default().datareader_qos
+    reader = dds.DynamicData.DataReader(subscriber, topic, datareader_qos)
+    reader.bind_listener(CoherentListener(), dds.StatusMask.data_available())
+
+    count = 0
+    while (sample_count == 0) or (count < sample_count):
+        time.sleep(1)
+
+
+parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using Coherent Presentation (Subscriber)')
+parser.add_argument(
+    '-d',
+    '--domain',
+    type=int,
+    default=0,
+    help='DDS Domain ID')
+parser.add_argument(
+    '-c',
+    '--count',
+    type=int,
+    default=0,
+    help='Number of samples to send')
+
+args = parser.parse_args()
+assert(0 <= args.domain < 233)
+assert(args.count >= 0)
+
+subscriber_main(args.domain, args.count)

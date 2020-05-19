@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/6.0.1/rti_dds_qos_profiles.xsd"
+     version="6.0.1">
+  <type_library name="coherent_lib">
+    <struct name= "coherent">
+      <member name="id" type="int32" key="true"/>
+      <member name="field" type="char8"/>
+      <member name="value" type="int32"/>
+    </struct>
+  </type_library>
+</dds>

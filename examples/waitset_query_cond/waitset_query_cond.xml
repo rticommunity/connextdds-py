@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/6.0.1/rti_dds_qos_profiles.xsd"
+     version="6.0.1">
+  <type_library name="wsqc_lib">
+    <struct name= "waitset_query_cond">
+      <member name="x" type="int16"/>
+      <member name="name" type="string" stringMaxLength="100" key="true"/>
+    </struct>
+  </type_library>
+</dds>
