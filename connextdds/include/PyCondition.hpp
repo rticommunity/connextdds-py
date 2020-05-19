@@ -84,6 +84,8 @@ class PyGuardCondition : public dds::core::cond::GuardCondition, public PyICondi
 public:
     using dds::core::cond::GuardCondition::GuardCondition;
 
+    PyGuardCondition() : dds::core::cond::GuardCondition() {}
+
     PyGuardCondition(const dds::core::cond::GuardCondition& gc) : dds::core::cond::GuardCondition(gc) {}
 
     dds::core::cond::Condition get_condition() override {

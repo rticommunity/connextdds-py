@@ -14,7 +14,7 @@ def publisher_main(domain_id, sample_count):
 
     count = 0
     while (sample_count == 0) or (count < sample_count):
-        print('Writing waitset_query_cond, count = {}'.format(count))
+        print('Writing Foo, count = {}'.format(count))
         sample['x'] = count
         writer.write(sample)
 

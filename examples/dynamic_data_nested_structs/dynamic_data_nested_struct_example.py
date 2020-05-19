@@ -74,6 +74,7 @@ with outer_data.loan_value('inner') as loaned_inner:
     loaned_inner.data['y'] = 0.00001
 
     print(loaned_inner.data)
-    print('+ current outer_data value')
-    print(outer_data)
+    
+print('+ current outer_data value')
+print(outer_data)
 

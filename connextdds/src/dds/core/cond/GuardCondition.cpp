@@ -13,23 +13,6 @@ void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls) {
         )
         .def(
             py::init(
-                [](std::function<void(py::object)>& func) {
-                    PyGuardCondition gc;
-                    gc->handler(
-                        [&func](dds::core::cond::Condition c) {
-                            py::gil_scoped_acquire acquire;
-                            auto gc = dds::core::polymorphic_cast<dds::core::cond::GuardCondition>(c);
-                            func(py::cast(PyGuardCondition(gc)));
-                        }
-                    );
-                    return gc;
-                }
-            ),
-            py::arg("handler"),
-            "Create a GuardCondition in an untriggered state with a handler function."
-        )
-        .def(
-            py::init(
                 [](PyICondition& c) {
                     auto gc = c.get_condition();
                     return dds::core::polymorphic_cast<PyGuardCondition>(gc);
@@ -42,7 +25,7 @@ void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls) {
             "handler",
             [](PyGuardCondition& gc, std::function<void(PyICondition*)>& func) {
                 gc->handler(
-                    [&func](dds::core::cond::Condition c) {
+                    [func](dds::core::cond::Condition c) {
                         py::gil_scoped_acquire acquire;
                         auto py_c = dds::core::polymorphic_cast<PyGuardCondition>(c);
                         func(&py_c);
