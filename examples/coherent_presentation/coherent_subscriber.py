@@ -12,7 +12,7 @@ class CoherentListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
         with reader.take() as samples:
             print('Received updates:')
-            for sample in (s for s in samples if s.info.valid):
+            for sample in filter(lambda s: s.info.valid, samples):
                 data = sample.data
                 print(' {} = {};'.format(data['field'], data['value']))
 

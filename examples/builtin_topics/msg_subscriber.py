@@ -11,7 +11,7 @@ class MsgListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
         with reader.take() as samples:
             # can use a take_valid or read_valid in 6.0.x, use generator expression for 5.3.1
-            for sample in (s for s in samples if s.info.valid):
+            for sample in filter(lambda s: s.info.valid, samples):
                 print(sample.data)
 
 

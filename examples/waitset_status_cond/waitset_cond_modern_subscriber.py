@@ -19,7 +19,7 @@ def status_handler(reader):
 
 def rc_handler(reader, count):
     with reader.take() as samples:
-        for sample in (s for s in samples if s.info.valid):
+        for sample in filter(lambda s: s.info.valid, samples):
             count.value += 1
             print(sample.data)
 
