@@ -2,8 +2,8 @@ import rti.connextdds as dds
 
 
 class CustomFilterType(dds.DynamicData.ContentFilter):
-    def __index__(self):
-        pass
+    def __init__(self):
+        super(CustomFilterType, self).__init__()
 
     def compile(self, expression, parameters, type_code, type_class_name, old_compile_data):
         if not expression.startswith('%0 %1 '):

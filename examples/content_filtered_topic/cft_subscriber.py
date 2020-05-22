@@ -1,9 +1,21 @@
+"""
+ (c) 2020 Copyright, Real-Time Innovations, Inc.  All rights reserved.
+ RTI grants Licensee a license to use, modify, compile, and create derivative
+ works of the Software.  Licensee has the right to distribute object form only
+ for use with RTI products.  The Software is provided "as is", with no warranty
+ of any type, including any warranty for fitness for any purpose. RTI is under
+ no obligation to maintain or support the Software.  RTI shall not be liable for
+ any incidental or consequential damages arising out of the use or inability to
+ use the software.
+ """
+
 import rti.connextdds as dds
 import time
 import argparse
 import textwrap
 
 
+# Process incoming data in a listener, print out each sample
 class CftListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
         with reader.take() as samples:
@@ -18,6 +30,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
     topic = dds.DynamicData.Topic(participant, 'Example cft', cft_type)
 
     if is_cft:
+        # Create a CFT that filters for incoming data within a range
         topic = dds.DynamicData.ContentFilteredTopic(
             topic,
             'ContentFilteredTopic',
@@ -29,6 +42,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
             Filter: 1 <= x <= 4
             =========================="""))
     else:
+        # Filtering disabled by default
         print(textwrap.dedent(
             """
             ==========================
@@ -45,6 +59,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
 
         if is_cft:
             if count == 10:
+                # After 10 seconds, udpdate the filter range
                 print(textwrap.dedent(
                     """
                     ==========================
@@ -53,6 +68,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
                     =========================="""))
                 topic.filter_parameters = ['5', '9']
             if count == 20:
+                # After 20 seconds, update the filter again
                 print(textwrap.dedent(
                     """
                     ==========================

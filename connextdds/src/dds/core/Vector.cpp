@@ -60,7 +60,7 @@ void init_dds_vector_defs(py::class_<dds::core::vector<T>>& cls, const std::stri
         )
         .def(
             "__setitem__",
-            [](dds::core::vector<T>& v, ssize_t i, T b) {
+            [](dds::core::vector<T>& v, ssize_t i, const T& b) {
                 v[i] = b;
             },
             "Set the value at the specified index."
@@ -183,12 +183,12 @@ void init_dds_vector_buffer_class(py::module& m, const std::string& cls_name, Cl
 
 template<>
 void process_inits<PyVector>(py::module& m, ClassInitList& l) {
-    init_dds_vector_buffer_class<uint8_t>(m, "DdsByteVector", l);
-    init_dds_vector_buffer_class<int32_t>(m, "DdsInt32Vector", l);
-    init_dds_vector_nonbuffer_class<rti::core::Locator>(m, "LocatorVector", l);
-    init_dds_vector_nonbuffer_class<rti::core::TransportInfo>(m, "TransportInfoVector", l);
-    init_dds_vector_nonbuffer_class<rti::core::Cookie>(m, "CookieVector", l);
-    init_dds_vector_nonbuffer_class<rti::core::EndpointGroup>(m, "EndpointGroupVector", l);
+    init_dds_vector_buffer_class<uint8_t>(m, "ByteSeq", l);
+    init_dds_vector_buffer_class<int32_t>(m, "DdsInt32Seq", l);
+    init_dds_vector_nonbuffer_class<rti::core::Locator>(m, "DdsLocatorSeq", l);
+    init_dds_vector_nonbuffer_class<rti::core::TransportInfo>(m, "TransportInfoSeq", l);
+    init_dds_vector_nonbuffer_class<rti::core::Cookie>(m, "CookieSeq", l);
+    init_dds_vector_nonbuffer_class<rti::core::EndpointGroup>(m, "DdsEndpointGroupSeq", l);
 }
 
 }

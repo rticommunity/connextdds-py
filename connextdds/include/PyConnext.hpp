@@ -91,6 +91,26 @@ void add_conversion(py_to_class&& cls, const std::string& doc = "Convert to less
 
 py::object py_cast_type(dds::core::xtypes::DynamicType&);
 
+class PyObjectHolder {
+public:
+    PyObjectHolder(py::object& obj) : contained(obj) {}
+
+    py::object& object() {
+        return this->contained;
+    }
+
+    virtual ~PyObjectHolder() {
+        if (!this->contained.is_none()) {
+            while (this->contained.ref_count() > 1) {
+                this->contained.dec_ref();
+            }
+        }
+    }
+
+private:
+    py::object contained;
+};
+
 // Dummy classes
 class PyVector{};
 class PyPrimitiveType{};

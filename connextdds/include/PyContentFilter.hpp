@@ -8,7 +8,7 @@ namespace py = pybind11;
 
 namespace pyrti {
 
-template<typename T, class CFBase = rti::topic::ContentFilter<T, py::object>>
+template<typename T, class CFBase = rti::topic::ContentFilter<T, PyObjectHolder>>
 class PyContentFilter : public CFBase {
 public:
     using CFBase::CFBase;
@@ -33,29 +33,35 @@ public:
         );
     }
 
-    py::object& compile(
+    PyObjectHolder& compile(
         const std::string& expression,
         const std::vector<std::string>& parameters,
         const dds::core::optional<dds::core::xtypes::DynamicType>& type_code,
         const std::string& type_class_name,
-        py::object* old_compile_data
+        PyObjectHolder* old_compile_data
     ) override {
-        py::object& compile_data = compile_helper(expression, parameters, type_code, type_class_name, old_compile_data);
-        if (!compile_data.is_none()) compile_data.inc_ref();
-        if (nullptr != old_compile_data && !old_compile_data->is_none()) old_compile_data->dec_ref();
-        return compile_data;
+        py::gil_scoped_acquire acquire;
+        py::object none = py::cast(nullptr);
+        py::object* old = (nullptr == old_compile_data) ? &none : &old_compile_data->object();
+        py::object& compile_data = compile_helper(expression, parameters, type_code, type_class_name, old);
+        if (nullptr != old_compile_data) {
+            delete old_compile_data;
+        }
+        return *(new PyObjectHolder(compile_data));
     }
 
     bool evaluate(
-        py::object& compile_data,
+        PyObjectHolder& compile_data,
         const T& sample,
         const rti::topic::FilterSampleInfo& meta_data
     ) override {
+        py::gil_scoped_acquire acquire;
+        py::object& py_compile_data = compile_data.object();
         PYBIND11_OVERLOAD_PURE(
             bool,
             CFBase,
             evaluate,
-            compile_data,
+            py_compile_data,
             sample,
             meta_data
         );
@@ -73,19 +79,17 @@ public:
     }
 
     void finalize(
-        py::object& compile_data
+        PyObjectHolder& compile_data
     ) override {
-        finalize_helper(compile_data);
-        if (!compile_data.is_none()) {
-            compile_data.dec_ref();
-            compile_data = py::cast(nullptr);
-        }
+        py::gil_scoped_acquire acquire;
+        finalize_helper(compile_data.object());
+        delete &compile_data;
     }
 };
 
 template<typename T>
 void init_content_filter_defs(py::class_<
-        rti::topic::ContentFilter<T, py::object>,
+        rti::topic::ContentFilter<T, PyObjectHolder>,
         rti::topic::ContentFilterBase,
         PyContentFilter<T>>& cls) {
     cls
@@ -94,7 +98,7 @@ void init_content_filter_defs(py::class_<
         )
         .def(
             "compile",
-            &rti::topic::ContentFilter<T, py::object>::compile,
+            &rti::topic::ContentFilter<T, PyObjectHolder>::compile,
             py::arg("expression"),
             py::arg("parameters"),
             py::arg("type_code"),
@@ -105,7 +109,7 @@ void init_content_filter_defs(py::class_<
         )
         .def(
             "evaluate",
-            &rti::topic::ContentFilter<T, py::object>::evaluate,
+            &rti::topic::ContentFilter<T, PyObjectHolder>::evaluate,
             py::arg("compile_data"),
             py::arg("sample"),
             py::arg("meta_data"),
@@ -114,7 +118,7 @@ void init_content_filter_defs(py::class_<
         )
         .def(
             "finalize",
-            &rti::topic::ContentFilter<T, py::object>::finalize,
+            &rti::topic::ContentFilter<T, PyObjectHolder>::finalize,
             py::arg("compile_data"),
             "A previously compiled instance of the content filter is no "
             "longer in use and resources can now be cleaned up."
@@ -123,7 +127,7 @@ void init_content_filter_defs(py::class_<
 
 template<typename T>
 void init_content_filter(py::object& o) {
-    py::class_<rti::topic::ContentFilter<T, py::object>, rti::topic::ContentFilterBase, PyContentFilter<T>> cf(o, "ContentFilter");
+    py::class_<rti::topic::ContentFilter<T, PyObjectHolder>, rti::topic::ContentFilterBase, PyContentFilter<T>> cf(o, "ContentFilter");
 
     init_content_filter_defs(cf);
 }

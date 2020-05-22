@@ -1,3 +1,14 @@
+"""
+ (c) 2020 Copyright, Real-Time Innovations, Inc.  All rights reserved.
+ RTI grants Licensee a license to use, modify, compile, and create derivative
+ works of the Software.  Licensee has the right to distribute object form only
+ for use with RTI products.  The Software is provided "as is", with no warranty
+ of any type, including any warranty for fitness for any purpose. RTI is under
+ no obligation to maintain or support the Software.  RTI shall not be liable for
+ any incidental or consequential damages arising out of the use or inability to
+ use the software.
+ """
+
 import rti.connextdds as dds
 import time
 import argparse
@@ -8,15 +19,17 @@ except NameError:
     xrange = range
 
 
-class BuiltinParticipantListener(dds.ParticipantBuiltinTopicData.DataReaderListener):
+# A Listenener class for DDS Participant data that also enforces "password" authentication
+class BuiltinParticipantListener(dds.ParticipantBuiltinTopicData.NoOpDataReaderListener):
     def __init__(self, auth='password'):
-        dds.ParticipantBuiltinTopicData.DataReaderListener.__init__(self)
+        super(BuiltinParticipantListener, self).__init__()
         self.expected_password = auth
 
     def on_data_available(self, reader):
+        # only process previously unseen Participants
         with reader.select().state(dds.DataState.new_instance()).take() as samples:
-            # can use a take_valid or read_valid in 6.0.x, use generator expression for 5.3.1
-            for sample in (s for s in samples if s.info.valid):
+            for sample in filter(lambda s: s.info.valid, samples):
+                # Convert Participant user data to a string
                 user_data = sample.data.user_data.value
                 user_auth = ''.join((chr(c) for c in user_data))
                 key = sample.data.key
@@ -33,13 +46,15 @@ class BuiltinParticipantListener(dds.ParticipantBuiltinTopicData.DataReaderListe
                     participant.ignore_participant(sample.info.instance_handle)
 
 
-class BuiltinSubscriptionListener(dds.SubscriptionBuiltinTopicData.DataReaderListener):
+# Create a Subscription listener, print discovered DataReader information
+class BuiltinSubscriptionListener(dds.SubscriptionBuiltinTopicData.NoOpDataReaderListener):
     def __init__(self):
-        dds.SubscriptionBuiltinTopicData.DataReaderListener.__init__(self)
+        super(BuiltinSubscriptionListener, self).__init__()
 
     def on_data_available(self, reader):
+        # only process previously unseen DataReaders
         with reader.select().state(dds.DataState.new_instance()).take() as samples:
-            for sample in (s for s in samples if s.info.valid):
+            for sample in filter(lambda s: s.info.valid, samples):
                 participant_key = sample.data.participant_key
                 key = sample.data.key
 
@@ -52,6 +67,7 @@ class BuiltinSubscriptionListener(dds.SubscriptionBuiltinTopicData.DataReaderLis
 def publisher_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
+    # Participant properties give access to the builtin readers
     participant.participant_reader.bind_listener(
         BuiltinParticipantListener(),
         dds.StatusMask.data_available())
@@ -60,7 +76,6 @@ def publisher_main(domain_id, sample_count):
         BuiltinSubscriptionListener(),
         dds.StatusMask.data_available())
 
-
     participant.enable()
 
     msg_type = dds.QosProvider('msg.xml').type('builtin_topics_lib', 'msg')
@@ -68,6 +83,7 @@ def publisher_main(domain_id, sample_count):
     writer = dds.DynamicData.DataWriter(dds.Publisher(participant), topic)
     instance = dds.DynamicData(msg_type)
 
+    # write samples in a loop, incrementing the 'x' field
     count = 0
     while (sample_count == 0) or (count < sample_count):
         time.sleep(1)

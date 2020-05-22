@@ -17,12 +17,12 @@ void init_class_defs(py::class_<Duration>& cls) {
             py::init<int32_t, uint32_t>(),
             py::arg("seconds"),
             py::arg("nanoseconds"),
-            "Create a duration of the specified seconds and nanoseconds."
+            "Create a Duration of the specified seconds and nanoseconds."
         )
         .def(
             py::init<const std::chrono::duration<int64_t, std::nano>&>(),
             py::arg("duration"),
-            "Create a duration from a datetime.timedelta."
+            "Create a Duration from a datetime.timedelta."
         )
         .def(
             py::init(
@@ -30,8 +30,17 @@ void init_class_defs(py::class_<Duration>& cls) {
                     return Duration::from_secs(s);
                 }
             ),
-            py::arg("float_time"),
-            "Create a duration from a floating point duration in seconds."
+            py::arg("float_duration"),
+            "Create a Duration from a floating point duration in seconds."
+        )
+        .def(
+            py::init(
+                [](int32_t s) {
+                    return Duration(s, 0);
+                }
+            ),
+            py::arg("seconds"),
+            "Create a Duration from an integer number of seconds."
         )
         .def(
             py::init(
@@ -40,7 +49,7 @@ void init_class_defs(py::class_<Duration>& cls) {
                 }
             ),
             py::arg("time_tuple"),
-            "Create a duration from a tuple of (sec, nanosec)."
+            "Create a Duration from a tuple of (sec, nanosec)."
         )
         .def_property(
             "sec",

@@ -129,43 +129,88 @@ py::class_<T> init_mask_type_no_int_constructor(py::object& m, const std::string
             "Compare masks for inequality."
         )
         .def(
-            py::self &= py::self,
+            "__iand__",
+            [](T& mask, const T& other) {
+                mask &= other;
+                return mask;
+            },
+            py::is_operator(),
             "Set mask to logical AND with another mask."
         )
         .def(
-            py::self |= py::self,
+            "__ior__",
+            [](T& mask, const T& other) {
+                mask |= other;
+                return mask;
+            },
+            py::is_operator(),
             "Set mask to logical OR with another mask."
         )
         .def(
-            py::self ^= py::self,
+            "__ixor__",
+            [](T& mask, const T& other) {
+                mask ^= other;
+                return mask;
+            },
+            py::is_operator(),
             "Set mask to logical XOR with another mask."
         )
         .def(
-            py::self <<= std::size_t(),
+            "__ilshift__",
+            [](T& mask, std::size_t value) {
+                mask <<= value;
+                return mask;
+            },
+            py::is_operator(),
             "Left shift bits in mask."
         )
         .def(
-            py::self >>= std::size_t(),
+            "__irshift__",
+            [](T& mask, std::size_t value) {
+                mask <<= value;
+                return mask;
+            },
+            py::is_operator(),
             "Right shift bits in mask."
         )
         .def(
-            py::self & py::self,
+            "__and__",
+            [](const T& mask, const T& other) {
+                return T(mask & other);
+            },
+            py::is_operator(),
             "Bitwise logical AND of masks."
         )
         .def(
-            py::self | py::self,
+            "__or__",
+            [](const T& mask, const T& other) {
+                return T(mask | other);
+            },
+            py::is_operator(),
             "Bitwise logical OR of masks."
         )
         .def(
-            py::self ^ py::self,
+            "__xor__",
+            [](const T& mask, const T& other) {
+                return T(mask ^ other);
+            },
+            py::is_operator(),
             "Bitwise logical XOR of masks."
         )
         .def(
-            py::self << std::size_t(),
+            "__lshift__",
+            [](const T& mask, std::size_t value) {
+                return T(mask << value);
+            },
+            py::is_operator(),
             "Left shift bits in mask."
         )
         .def (
-            py::self >> std::size_t(),
+            "__rshift__",
+            [](const T& mask, std::size_t value) {
+                return T(mask >> value);
+            },
+            py::is_operator(),
             "Right shift bits in mask."
         )
         .def(

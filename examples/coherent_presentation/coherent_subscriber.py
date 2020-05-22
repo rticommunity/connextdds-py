@@ -8,6 +8,7 @@ except NameError:
     xrange = range
 
 
+# The listener for a coherent set will only output when a set is received 
 class CoherentListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
         with reader.take() as samples:
