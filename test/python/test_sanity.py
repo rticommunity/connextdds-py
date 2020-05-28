@@ -10,3 +10,4 @@ class TestSanity:
         This test ensures 1+1=2
         """
         assert 1 + 1 == 2
+        print("If this is failing, we have some big problems")
