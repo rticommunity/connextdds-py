@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 project(connextdds)
 include(CheckCXXCompilerFlag)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 find_package(
     RTIConnextDDS "6.0.0"
     REQUIRED
