@@ -20,5 +20,6 @@ install:
   - 'if [ -n "$RTI_MIN_PACKAGE_URL" ]; then python3 resources/travis/linux_install.py; fi'
   - export NDDSHOME=/home/travis/rti_connext_dds-6.0.0
   - export CONNEXTDDS_ARCH="x64Linux3gcc5.4.0"
-  - pip3 install .
+  - export NJOBS=2
+  - pip3 install . -v
 script: pytest test/python
