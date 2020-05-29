@@ -15,4 +15,5 @@ before_install:
   - pip install Sultan scan-build black
 install:
   - 'if [ -n "$RTI_MIN_PACKAGE_URL" ]; then resources/travis/linux_install.py; fi'
+  - pip3 install .
 script: pytest test/python
