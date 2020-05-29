@@ -17,6 +17,6 @@ env:
   - RTI_PACKAGE_VERSION=6.0.0 RTI_MIN_PACKAGE_URL=https://rticommunity.s3.amazonaws.com/downloads/continuous-integration/connext-dds/6.0.0/rti_connext_dds-6.0.0-min-x64Linux3gcc5.4.0.zip
 
 install:
-  - 'if [ -n "$RTI_MIN_PACKAGE_URL" ]; then resources/travis/linux_install.py; fi'
+  - 'if [ -n "$RTI_MIN_PACKAGE_URL" ]; then python3 resources/travis/linux_install.py; fi'
   - pip3 install .
 script: pytest test/python
