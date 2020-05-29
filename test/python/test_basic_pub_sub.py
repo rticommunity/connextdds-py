@@ -10,7 +10,7 @@ def test_data_reader_writer():
     writer_qos << dds.Reliability.reliable()
     writer_qos << dds.History.keep_all()
     writer_qos << dds.Durability.transient_local()
-    
+
     # Create the reader qos
     reader_qos = participant.implicit_subscriber.default_datareader_qos
     reader_qos << dds.Reliability.reliable()
@@ -32,6 +32,6 @@ def test_data_reader_writer():
         time.sleep(0.001)
     for x in reader.read():
         count += 1
-        print(str(x))
+        assert x.data == f"Hello World {count}"
 
     assert count == 5
