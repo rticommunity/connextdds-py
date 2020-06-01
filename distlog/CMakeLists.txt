@@ -4,7 +4,7 @@ include(CheckCXXCompilerFlag)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 find_package(
-    RTIConnextDDS "6.0.0"
+    RTIConnextDDS "5.3.1"
     REQUIRED
     COMPONENTS
         core
