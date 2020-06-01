@@ -1,12 +1,11 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include "PyEntity.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyDataReader.hpp"
 #include "PyDataReader.hpp"
 #include "PyDomainParticipantListener.hpp"
 #include <rti/rti.hpp>
-
-PYBIND11_MAKE_OPAQUE(std::vector<dds::topic::TopicBuiltinTopicData>);
 
 using namespace dds::domain;
 
@@ -55,13 +54,20 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 [](
                     int32_t id, 
                     const qos::DomainParticipantQos& q, 
-                    PyDomainParticipantListener* l,
-                    const dds::core::status::StatusMask& m) {
-                        return PyDomainParticipant(id, q, l, m);
-                }),
+                    dds::core::optional<PyDomainParticipantListener*> l,
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PyDomainParticipant(id, q, listener, m);
+                }
+            ),
             py::arg("domain_id"),
             py::arg("qos"),
-            py::arg("listener") = (PyDomainParticipantListener*) nullptr,
+            py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Create a new DomainParticipant"
         )
@@ -78,20 +84,28 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def_property_readonly(
             "listener",
             [](const PyDomainParticipant& dp) {
-                return dynamic_cast<PyDomainParticipantListener*>(dp.listener());
+                dds::core::optional<PyDomainParticipantListener*> l;
+                auto ptr = dynamic_cast<PyDomainParticipantListener*>(dp.listener());
+                if (nullptr != ptr) l = ptr;
+                return l;
             },
             "Get the listener."
         )
         .def(
             "bind_listener",
-            [](PyDomainParticipant& dp, PyDomainParticipantListener* l, const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
-                    py::cast(l).inc_ref();
+            [](PyDomainParticipant& dp, dds::core::optional<PyDomainParticipantListener*> l, const dds::core::status::StatusMask& m) {
+#if rti_connext_version_gte(6, 0, 1)
+                auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                if (nullptr != listener) {
+                    py::cast(listener).inc_ref();
                 }
                 if (nullptr != dp.listener()) {
                     py::cast(dp.listener()).dec_ref();
                 }
-                dp.listener(l, m);
+                dp.listener(listener, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
@@ -116,7 +130,8 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def(
             "__rshift__",
             [](PyDomainParticipant& dp, dds::domain::qos::DomainParticipantQos& q) {
-                return (dp >> q);
+                auto participant = dp >> q;
+                return PyDomainParticipant(participant);
             },
             py::is_operator(),
             "Get the domain participant's QoS."
@@ -225,11 +240,12 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def(
             "find_contentfilter",
             [](PyDomainParticipant& dp, const std::string &fn) {
+                dds::core::optional<rti::topic::ContentFilterBase*> retval;
                 auto filter = rti::topic::find_content_filter<rti::topic::ContentFilterBase>(dp, fn);
                 if (filter != dds::core::null) {
-                    return py::cast(rti::topic::find_content_filter<rti::topic::ContentFilterBase>(dp, fn).get());
+                    retval = rti::topic::find_content_filter<rti::topic::ContentFilterBase>(dp, fn).get();
                 }
-                else return py::cast(nullptr);
+                return retval;
             },
             py::arg("name"),
             "Find content filter previously registered to this DomainParticipant."
@@ -333,8 +349,12 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def_property_static(
             "participant_factory_qos",
-            (qos::DomainParticipantFactoryQos (*)()) &PyDomainParticipant::participant_factory_qos,
-            (void (*)(const dds::domain::qos::DomainParticipantFactoryQos& qos)) &PyDomainParticipant::participant_factory_qos,
+            [](py::object&) {
+                return PyDomainParticipant::participant_factory_qos();
+            },
+            [](py::object&, const dds::domain::qos::DomainParticipantFactoryQos& qos) {
+                PyDomainParticipant::participant_factory_qos(qos);
+            },
             "Get a copy of or set the DomainParticipantFactoryQos."
         )
         .def_static(
@@ -344,8 +364,12 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def_property_static(
             "default_participant_qos",
-            (qos::DomainParticipantQos (*)()) &PyDomainParticipant::default_participant_qos,
-            (void (*)(const qos::DomainParticipantQos& qos)) &PyDomainParticipant::default_participant_qos,
+            [](py::object&) {
+                return PyDomainParticipant::default_participant_qos();
+            },
+            [](py::object&, const dds::domain::qos::DomainParticipantQos& qos) {
+                PyDomainParticipant::default_participant_qos(qos);
+            },
             "Get a copy of or set the default DomainParticipantQos."
         )
         .def(
@@ -460,7 +484,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def(
             "ignore_topic",
-            (void (*)(DomainParticipant&, const dds::core::InstanceHandle&)) &dds::topic::ignore,
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+                dds::topic::ignore(dp, handle);
+            },
             py::arg("handle"),
             "Ignore a Topic matching the provided handle."
         )
@@ -474,7 +500,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def(
             "ignore_datawriter",
-            (void (*)(DomainParticipant&, const dds::core::InstanceHandle&)) &dds::pub::ignore,
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+                dds::pub::ignore(dp, handle);
+            },
             py::arg("handle"),
             "Ignore a DataWriter matching the provided handle."
         )
@@ -488,7 +516,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def(
             "ignore_datareader",
-            (void (*)(DomainParticipant&, const dds::core::InstanceHandle&)) &dds::sub::ignore,
+            [](PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+                dds::sub::ignore(dp, handle);
+            },
             py::arg("handle"),
             "Ignore a DataReader matching the provided handle."
         )
@@ -520,7 +550,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         )
         .def(
             "discovered_topic_data",
-            (dds::topic::TopicBuiltinTopicData (*)(const DomainParticipant&, const dds::core::InstanceHandle&)) dds::topic::discover_topic_data,
+            [](const PyDomainParticipant& dp, const dds::core::InstanceHandle& handle) {
+                return dds::topic::discover_topic_data(dp, handle);
+            },
             py::arg("handle"),
             "Get information about a discovered topic using its handle."
         )
@@ -751,7 +783,7 @@ template<>
 void process_inits<DomainParticipant>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyDomainParticipant, PyIEntity>(m, "DomainParticipant");
+            return init_class_with_seq<PyDomainParticipant, PyIEntity>(m, "DomainParticipant");
         }
     ); 
 }

@@ -52,9 +52,7 @@ void init_shared_samples_defs(py::class_<dds::sub::SharedSamples<T>>& cls) {
 }
 
 template<typename T>
-void init_shared_samples(py::object& o) {
-    py::class_<dds::sub::SharedSamples<T>> ss(o, "SharedSamples");
-
+void init_shared_samples(py::class_<dds::sub::SharedSamples<T>>& ss) {
     init_shared_samples_defs(ss);
 }
 

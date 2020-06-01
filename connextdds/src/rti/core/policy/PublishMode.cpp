@@ -69,41 +69,43 @@ void init_class_defs(py::class_<PublishMode>& cls) {
 
 template<>
 void process_inits<PublishMode>(py::module& m, ClassInitList& l) {
-    auto pmk = init_dds_safe_enum<PublishModeKind_def>(m, "PublishModeKind");
-
-    py::enum_<PublishModeKind::type>(pmk, "PublishModeKind")
-        .value(
-            "SYNCHRONOUS",
-            PublishModeKind::type::SYNCHRONOUS,
-            "Indicates to send data synchronously."
-            "\n\n"
-            "If DataWriterProtocol.push_on_write is true, data is sent "
-            "immediately in the context of DataWriter.write()."
-            "\n\n"
-            "As data is sent immediately in the context of the user thread, "
-            "no flow control is applied."
-        )
-        .value(
-            "ASYNCHRONOUS",
-            PublishModeKind::type::ASYNCHRONOUS,
-            "Indicates to send data asynchronously."
-            "\n\n"
-            "Configures the DataWriter to delegate the task of data "
-            "transmission to a separate publishing thread. The "
-            "DataWriter.write() call does not send the data, but instead "
-            "schedules the data to be sent later by its associated Publisher."
-            "\n\n"
-            "Each Publisher uses its dedicated publishing thread "
-            "(AsynchronousPublisher) to send data for all its asynchronous "
-            "DataWriters. For each asynchronous DataWriter, the associated "
-            "FlowController determines when the publishing thread is allowed "
-            "to send the data."
-            "\n\n"
-            "DataWriter.wait_for_asynchronous_publishing and "
-            "Publisher.wait_for_asynchronous_publishing enable you to "
-            "determine when the data has actually been sent."
-        )
-        .export_values();
+    init_dds_safe_enum<PublishModeKind_def>(m, "PublishModeKind",
+        [](py::object& o) {
+            py::enum_<PublishModeKind::type>(o, "Enum")
+                .value(
+                    "SYNCHRONOUS",
+                    PublishModeKind::type::SYNCHRONOUS,
+                    "Indicates to send data synchronously."
+                    "\n\n"
+                    "If DataWriterProtocol.push_on_write is true, data is sent "
+                    "immediately in the context of DataWriter.write()."
+                    "\n\n"
+                    "As data is sent immediately in the context of the user thread, "
+                    "no flow control is applied."
+                )
+                .value(
+                    "ASYNCHRONOUS",
+                    PublishModeKind::type::ASYNCHRONOUS,
+                    "Indicates to send data asynchronously."
+                    "\n\n"
+                    "Configures the DataWriter to delegate the task of data "
+                    "transmission to a separate publishing thread. The "
+                    "DataWriter.write() call does not send the data, but instead "
+                    "schedules the data to be sent later by its associated Publisher."
+                    "\n\n"
+                    "Each Publisher uses its dedicated publishing thread "
+                    "(AsynchronousPublisher) to send data for all its asynchronous "
+                    "DataWriters. For each asynchronous DataWriter, the associated "
+                    "FlowController determines when the publishing thread is allowed "
+                    "to send the data."
+                    "\n\n"
+                    "DataWriter.wait_for_asynchronous_publishing and "
+                    "Publisher.wait_for_asynchronous_publishing enable you to "
+                    "determine when the data has actually been sent."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

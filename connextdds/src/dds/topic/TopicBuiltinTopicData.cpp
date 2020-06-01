@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/topic/BuiltinTopic.hpp>
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
@@ -31,12 +32,16 @@ void init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
         )
         .def_property_readonly(
             "name",
-            &TopicBuiltinTopicData::name,
+            [](const TopicBuiltinTopicData& data) {
+                return data.name().to_std_string();
+            },
             "Get the name of the Topic."
         )
         .def_property_readonly(
             "type_name",
-            &TopicBuiltinTopicData::type_name,
+            [](const TopicBuiltinTopicData& data) {
+                return data.type_name().to_std_string();
+            },
             "Get the name of the type attached to the Topic."
         )
         .def_property_readonly(
@@ -126,15 +131,13 @@ void init_class_defs(py::class_<TopicBuiltinTopicData>& cls) {
             py::self != py::self,
             "Test for inequality."
         );
-
-    init_type<TopicBuiltinTopicData>(cls);
 }
 
 template<>
 void process_inits<TopicBuiltinTopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<TopicBuiltinTopicData>(m, "TopicBuiltinTopicData");
+        [m, &l]() mutable {
+            return init_type_class<TopicBuiltinTopicData>(m, l, "TopicBuiltinTopicData");
         }
     );
 }

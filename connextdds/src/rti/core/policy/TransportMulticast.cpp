@@ -1,6 +1,7 @@
 #include "PyConnext.hpp"
 #include <rti/core/policy/CorePolicy.hpp>
 #include "PySafeEnum.hpp"
+#include "PySeq.hpp"
 
 using namespace rti::core;
 using namespace rti::core::policy;
@@ -60,21 +61,13 @@ void init_class_defs(py::class_<TransportMulticastMappingFunction>& cls) {
         )
         .def_property(
             "dll",
-            [](const TransportMulticastMappingFunction& tmmf) {
-                auto val = tmmf.dll();
-                if (val.is_set()) return py::cast(val.get());
-                return py::cast(nullptr);
-            },
+            (rti::core::optional_value<std::string> (TransportMulticastMappingFunction::*)() const) &TransportMulticastMappingFunction::dll,
             (TransportMulticastMappingFunction& (TransportMulticastMappingFunction::*)(const std::string&)) &TransportMulticastMappingFunction::dll,
             "The name of the dynamic library containing the mapping function."
         )
         .def_property(
             "function_name",
-            [](const TransportMulticastMappingFunction& tmmf) {
-                auto val = tmmf.function_name();
-                if (val.is_set()) return py::cast(val.get());
-                return py::cast(nullptr);
-            },
+            (rti::core::optional_value<std::string> (TransportMulticastMappingFunction::*)() const) &TransportMulticastMappingFunction::function_name,
             (TransportMulticastMappingFunction& (TransportMulticastMappingFunction::*)(const std::string&)) &TransportMulticastMappingFunction::function_name,
             "The name of the mapping function."
         )
@@ -108,21 +101,13 @@ void init_class_defs(py::class_<MulticastMapping>& cls) {
         )
         .def_property(
             "addresses",
-            [](const MulticastMapping& mm) {
-                auto val = mm.addresses();
-                if (val.is_set()) return py::cast(val.get());
-                return py::cast(nullptr);
-            },
+            (rti::core::optional_value<std::string> (MulticastMapping::*)() const) &MulticastMapping::addresses,
             (MulticastMapping& (MulticastMapping::*)(const std::string&)) &MulticastMapping::addresses,
             "Multicast mapping addresses."
         )
         .def_property(
             "topic_expression",
-            [](const MulticastMapping& mm) {
-                auto val = mm.topic_expression();
-                if (val.is_set()) return py::cast(val.get());
-                return py::cast(nullptr);
-            },
+            (rti::core::optional_value<std::string> (MulticastMapping::*)() const) &MulticastMapping::topic_expression,
             (MulticastMapping& (MulticastMapping::*)(const std::string&)) &MulticastMapping::topic_expression,
             "The topic expression."
         )
@@ -143,28 +128,60 @@ void init_class_defs(py::class_<MulticastMapping>& cls) {
 }
 
 template<>
-void process_inits<TransportMulticast>(py::module& m, ClassInitList& l) {
-    auto tmk = init_dds_safe_enum<TransportMulticastKind_def>(m, "TransportMulticastKind");
+void init_class_defs(py::class_<TransportMulticastMapping>& cls) {
+    cls
+        .def(
+            py::init<>(),
+            "Creates the default policy."
+        )
+        .def(
+            py::init<
+                const std::vector<MulticastMapping>&
+            >(),
+            py::arg("mappings"),
+            "Creates an object with with specified mappings."
+        )
+        .def_property(
+            "mappings",
+            (std::vector<MulticastMapping> (TransportMulticastMapping::*)() const) &TransportMulticastMapping::mappings,
+            (TransportMulticastMapping& (TransportMulticastMapping::*)(const std::vector<MulticastMapping>&)) &TransportMulticastMapping::mappings,
+            "A sequence of transport multicast mappings."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
+        );
+}
 
-    py::enum_<TransportMulticastKind::type>(tmk, "TransportMulticastKind")
-        .value(
-            "AUTOMATIC",
-            TransportMulticastKind::type::AUTOMATIC,
-            "Selects the multicast address automatically."
-            "\n\n"
-            "NOTE: This setting is required when using the "
-            "TransportMulticastMapping."
-        )
-        .value(
-            "UNICAST",
-            TransportMulticastKind::type::UNICAST,
-            "Selects a unicast-only mode."
-        )
-        .export_values();
+template<>
+void process_inits<TransportMulticast>(py::module& m, ClassInitList& l) {
+    init_dds_safe_enum<TransportMulticastKind_def>(m, "TransportMulticastKind",
+        [](py::object& o) {
+            py::enum_<TransportMulticastKind::type>(o, "Enum")
+                .value(
+                    "AUTOMATIC",
+                    TransportMulticastKind::type::AUTOMATIC,
+                    "Selects the multicast address automatically."
+                    "\n\n"
+                    "NOTE: This setting is required when using the "
+                    "TransportMulticastMapping."
+                )
+                .value(
+                    "UNICAST",
+                    TransportMulticastKind::type::UNICAST,
+                    "Selects a unicast-only mode."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {
-            return init_class<TransportMulticast>(m, "TransportMulticast");
+            return init_class_with_seq<TransportMulticast>(m, "TransportMulticast");
         }
     );
 
@@ -176,7 +193,13 @@ void process_inits<TransportMulticast>(py::module& m, ClassInitList& l) {
 
     l.push_back(
         [m]() mutable {
-            return init_class<MulticastMapping>(m, "MulticastMapping");
+            return init_class_with_seq<MulticastMapping>(m, "MulticastMapping");
+        }
+    );
+
+    l.push_back(
+        [m]() mutable {
+            return init_class<TransportMulticastMapping>(m, "TransportMulticastMapping");
         }
     );
 }

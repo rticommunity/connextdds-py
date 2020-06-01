@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/core/policy/CorePolicy.hpp>
 
 using namespace dds::core::policy;
@@ -42,7 +43,7 @@ template<>
 void process_inits<QosPolicyCount>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<QosPolicyCount>(m, "QosPolicyCount");
+            return init_class_with_seq<QosPolicyCount>(m, "QosPolicyCount");
         }
     );
 }

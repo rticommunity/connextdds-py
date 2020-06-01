@@ -1,5 +1,6 @@
 #include "PyConnext.hpp"
 #include <rti/core/policy/CorePolicy.hpp>
+#include "PySeq.hpp"
 
 using namespace rti::core;
 
@@ -55,7 +56,7 @@ template<>
 void process_inits<TransportMulticastSettings>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<TransportMulticastSettings>(m, "TransportMulticastSettings");
+            return init_class_with_seq<TransportMulticastSettings>(m, "TransportMulticastSettings");
         }
     );
 }

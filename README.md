@@ -73,7 +73,7 @@ while True:
     - rti.connextdds.DynamicData.DataReader
     - rti.connextdds.DynamicData.DataWriter
     - etc.
-- The Python GIL prevents multiple CPU cores from executing Python code in the same application in parallel. This means that if a single-threaded Python application is blocked in a native method that has released the GIL (e.g. by calling rti.connextdds.WaitSet.wait()) then Ctrl-C may not be sufficient to break execution. Workarounds include:
+- The Python GIL prevents multiple CPU cores from executing Python code in the same application in parallel. This means that if a single-threaded Python application is blocked in a native method (e.g. by calling rti.connextdds.WaitSet.wait()) then Ctrl-C may not be sufficient to break execution. Workarounds include:
     - using Python threading to ensure that the GIL is acquired when a native method releases it.
     - implement a custom signal handler
     - send a SIGQUIT via keyboard shortcut instead of SIGINT

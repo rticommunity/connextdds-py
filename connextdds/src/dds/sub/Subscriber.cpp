@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/sub/Subscriber.hpp>
 #include <dds/sub/find.hpp>
 #include <rti/rti.hpp>
@@ -19,7 +20,7 @@ PySubscriber::PySubscriber(
 }
 
 template<>
-void init_class_defs(py::class_<PySubscriber>& cls) {
+void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls) {
     cls
         .def(
             py::init<
@@ -29,16 +30,25 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
             "Create a subscriber under a DomainParticipant."
         )
         .def(
-            py::init<
-                const PyDomainParticipant&,
-                const qos::SubscriberQos&,
-                PySubscriberListener*,
-                const dds::core::status::StatusMask&
-            >(),
+            py::init(
+                [](
+                    const PyDomainParticipant& dp,
+                    const qos::SubscriberQos& q,
+                    dds::core::optional<PySubscriberListener*> l,
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PySubscriber(dp, q, listener, m);
+                }
+            ),
             py::arg("participant"),
             py::arg("qos"),
-            py::arg("listener") = (PySubscriberListener*) nullptr,
-            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
+            py::arg("listener") = py::none(),
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Create a Subscriber under a DomainParticipant with a listener."
         )
         .def(
@@ -57,20 +67,28 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
         .def_property_readonly(
             "listener",
             [](const PySubscriber& sub) {
-                return dynamic_cast<PySubscriberListener*>(sub.listener());
+                dds::core::optional<PySubscriberListener*> l;
+                auto ptr = dynamic_cast<PySubscriberListener*>(sub.listener());
+                if (nullptr != ptr) l = ptr;
+                return l;
             },
             "Get the listener."
         )
         .def(
             "bind_listener",
-            [](PySubscriber& sub, PySubscriberListener* l, const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
-                    py::cast(l).inc_ref();
+            [](PySubscriber& sub, dds::core::optional<PySubscriberListener*> l, const dds::core::status::StatusMask& m) {
+#if rti_connext_version_gte(6, 0, 1)
+                auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                if (nullptr != listener) {
+                    py::cast(listener).inc_ref();
                 }
                 if (nullptr != sub.listener()) {
                     py::cast(sub.listener()).dec_ref();
                 }
-                sub.listener(l, m);
+                sub.listener(listener, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
@@ -104,7 +122,7 @@ void init_class_defs(py::class_<PySubscriber>& cls) {
         )
         .def(
             "find_datareaders",
-            [](const PySubscriber& sub) {
+            [](PySubscriber& sub) {
                 std::vector<PyAnyDataReader> v;
                 rti::sub::find_datareaders(sub, std::back_inserter(v));
                 return v;
@@ -152,7 +170,7 @@ template<>
 void process_inits<Subscriber>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PySubscriber>(m, "Subscriber");
+            return init_class_with_seq<PySubscriber, PyIEntity>(m, "Subscriber");
         }
     );
 }

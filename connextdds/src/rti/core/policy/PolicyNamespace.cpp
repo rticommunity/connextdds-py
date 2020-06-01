@@ -11,7 +11,9 @@ void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<BuiltinTopicReaderResourceLimits>(m, l);
     pyrti::process_inits<Database>(m, l);
     pyrti::process_inits<DataReaderProtocol>(m, l);
+    pyrti::process_inits<DataWriterProtocol>(m, l);
     pyrti::process_inits<DataReaderResourceLimits>(m, l);
+    pyrti::process_inits<DataWriterResourceLimits>(m, l);
 #if rti_connext_version_gte(6, 0, 0)
     pyrti::process_inits<DataWriterTransferMode>(m, l);
 #endif

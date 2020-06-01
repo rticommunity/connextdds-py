@@ -143,82 +143,84 @@ void init_class_defs(py::class_<DataWriterResourceLimits>& cls) {
 
 template<>
 void process_inits<DataWriterResourceLimits>(py::module& m, ClassInitList& l) {
-    auto dwrlirk = init_dds_safe_enum<DataWriterResourceLimitsInstanceReplacementKind_def>(m, "DataWriterResourceLimitsInstaceReplacementKind");
-
-    py::enum_<DataWriterResourceLimitsInstanceReplacementKind::type>(dwrlirk, "DataWriterResourceLimitsInstaceReplacementKind")
-        .value(
-            "UNREGISTERED",
-            DataWriterResourceLimitsInstanceReplacementKind::type::UNREGISTERED,
-            "Allows a DataWriter to reclaim unregistered acknowledged "
-            "instances."
-            "\n\n"
-            "By default, all instance replacement kinds first attempt to "
-            "reclaim an unregistered, acknowledged instance. Used in "
-            "DataWriterResourceLimits.instance_replacement [default]"
-        )
-        .value(
-            "ALIVE",
-            DataWriterResourceLimitsInstanceReplacementKind::type::ALIVE,
-            "Allows a DataWriter to reclaim alive, acknowledged instances."
-            "\n\n"
-            "When an unregistered, acknowledged instance is not available to "
-            "reclaim, this kind allows a DataWriter to reclaim an alive, "
-            "acknowledged instance, where an alive instance is a registered, "
-            "non-disposed instance. The least recently registered or written "
-            "alive instance will be reclaimed."
-        )
-        .value(
-            "DISPOSED",
-            DataWriterResourceLimitsInstanceReplacementKind::type::DISPOSED,
-            "Allows a DataWriter to reclaim disposed acknowledged instances."
-            "\n\n"
-            "When an unregistered, acknowledged instance is not available to "
-            "reclaim, this kind allows a DataWriter to reclaim a disposed, "
-            "acknowledged instance. The least recently disposed instance will "
-            "be reclaimed."
-        )
-        .value(
-            "ALIVE_THEN_DISPOSED",
-            DataWriterResourceLimitsInstanceReplacementKind::type::ALIVE_THEN_DISPOSED,
-            "Allows a DataWriter first to reclaim an alive, acknowledged "
-            "instance, and then, if necessary, a disposed, acknowledged "
-            "instance."
-            "\n\n"
-            "When an unregistered, acknowledged instance is not available "
-            "to reclaim, this kind allows a DataWriter to first try "
-            "reclaiming an alive, acknowledged instance. If no instance is "
-            "reclaimable, then it tries reclaiming a disposed, acknowledged "
-            "instance. The least recently used (i.e., registered, written, or "
-            "disposed) instance will be reclaimed."
-        )
-        .value(
-            "DISPOSED_THEN_ALIVE",
-            DataWriterResourceLimitsInstanceReplacementKind::type::DISPOSED_THEN_ALIVE,
-            "Allows a DataWriter first to reclaim a disposed, acknowledged "
-            "instance, and then, if necessary, an alive, acknowledged "
-            "instance."
-            "\n\n"
-            "When an unregistered, acknowledged instance is not available "
-            "to reclaim, this kind allows a DataWriter to first "
-            "try reclaiming a disposed, acknowledged instance. If no instance "
-            "is reclaimable, then it tries reclaiming an alive, acknowledged "
-            "instance. The least recently used (i.e., disposed, registered, "
-            "or written) instance will be reclaimed."
-        )
-        .value(
-            "ALIVE_OR_DISPOSED",
-            DataWriterResourceLimitsInstanceReplacementKind::type::ALIVE_OR_DISPOSED,
-            "Allows a DataWriter to reclaim a either an alive acknowledged "
-            "instance or a disposed acknowledged instance."
-            "\n\n"
-            "When an unregistered acknowledged instance is not available to "
-            "reclaim, this kind allows a DataWriter to reclaim "
-            "either an alive, acknowledged instance or a disposed, "
-            "acknowledged instance. If both instance kinds are available to "
-            "reclaim, the DataWriter will reclaim the least recently used "
-            "(i.e. disposed, registered, or written) instance."
-        )
-        .export_values();
+    init_dds_safe_enum<DataWriterResourceLimitsInstanceReplacementKind_def>(m, "DataWriterResourceLimitsInstaceReplacementKind",
+        [](py::object& o) {
+            py::enum_<DataWriterResourceLimitsInstanceReplacementKind::type>(o, "Enum")
+                .value(
+                    "UNREGISTERED",
+                    DataWriterResourceLimitsInstanceReplacementKind::type::UNREGISTERED,
+                    "Allows a DataWriter to reclaim unregistered acknowledged "
+                    "instances."
+                    "\n\n"
+                    "By default, all instance replacement kinds first attempt to "
+                    "reclaim an unregistered, acknowledged instance. Used in "
+                    "DataWriterResourceLimits.instance_replacement [default]"
+                )
+                .value(
+                    "ALIVE",
+                    DataWriterResourceLimitsInstanceReplacementKind::type::ALIVE,
+                    "Allows a DataWriter to reclaim alive, acknowledged instances."
+                    "\n\n"
+                    "When an unregistered, acknowledged instance is not available to "
+                    "reclaim, this kind allows a DataWriter to reclaim an alive, "
+                    "acknowledged instance, where an alive instance is a registered, "
+                    "non-disposed instance. The least recently registered or written "
+                    "alive instance will be reclaimed."
+                )
+                .value(
+                    "DISPOSED",
+                    DataWriterResourceLimitsInstanceReplacementKind::type::DISPOSED,
+                    "Allows a DataWriter to reclaim disposed acknowledged instances."
+                    "\n\n"
+                    "When an unregistered, acknowledged instance is not available to "
+                    "reclaim, this kind allows a DataWriter to reclaim a disposed, "
+                    "acknowledged instance. The least recently disposed instance will "
+                    "be reclaimed."
+                )
+                .value(
+                    "ALIVE_THEN_DISPOSED",
+                    DataWriterResourceLimitsInstanceReplacementKind::type::ALIVE_THEN_DISPOSED,
+                    "Allows a DataWriter first to reclaim an alive, acknowledged "
+                    "instance, and then, if necessary, a disposed, acknowledged "
+                    "instance."
+                    "\n\n"
+                    "When an unregistered, acknowledged instance is not available "
+                    "to reclaim, this kind allows a DataWriter to first try "
+                    "reclaiming an alive, acknowledged instance. If no instance is "
+                    "reclaimable, then it tries reclaiming a disposed, acknowledged "
+                    "instance. The least recently used (i.e., registered, written, or "
+                    "disposed) instance will be reclaimed."
+                )
+                .value(
+                    "DISPOSED_THEN_ALIVE",
+                    DataWriterResourceLimitsInstanceReplacementKind::type::DISPOSED_THEN_ALIVE,
+                    "Allows a DataWriter first to reclaim a disposed, acknowledged "
+                    "instance, and then, if necessary, an alive, acknowledged "
+                    "instance."
+                    "\n\n"
+                    "When an unregistered, acknowledged instance is not available "
+                    "to reclaim, this kind allows a DataWriter to first "
+                    "try reclaiming a disposed, acknowledged instance. If no instance "
+                    "is reclaimable, then it tries reclaiming an alive, acknowledged "
+                    "instance. The least recently used (i.e., disposed, registered, "
+                    "or written) instance will be reclaimed."
+                )
+                .value(
+                    "ALIVE_OR_DISPOSED",
+                    DataWriterResourceLimitsInstanceReplacementKind::type::ALIVE_OR_DISPOSED,
+                    "Allows a DataWriter to reclaim a either an alive acknowledged "
+                    "instance or a disposed acknowledged instance."
+                    "\n\n"
+                    "When an unregistered acknowledged instance is not available to "
+                    "reclaim, this kind allows a DataWriter to reclaim "
+                    "either an alive, acknowledged instance or a disposed, "
+                    "acknowledged instance. If both instance kinds are available to "
+                    "reclaim, the DataWriter will reclaim the least recently used "
+                    "(i.e. disposed, registered, or written) instance."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

@@ -84,7 +84,11 @@ setup(
     author_email='marc@rti.com',
     description='A full Python binding for RTI Connext DDS',
     long_description='',
+    package_dir={'rti' : 'rti_pkg'},
     packages=['rti', 'rti.logging'],
+    package_data={
+        '': ['*.pyi'],
+    },
     ext_modules=[CMakeExtension('rti.connextdds', 'connextdds'), CMakeExtension('rti.logging.distlog', 'distlog')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,

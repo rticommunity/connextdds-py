@@ -60,9 +60,7 @@ void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls) {
 }
 
 template<typename T>
-void init_loaned_samples(py::object& o) {
-    py::class_<dds::sub::LoanedSamples<T>> ls(o, "LoanedSamples");
-
+void init_loaned_samples(py::class_<dds::sub::LoanedSamples<T>>& ls) {
     init_loaned_samples_defs(ls);
 }
 

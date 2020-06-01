@@ -10,10 +10,8 @@ void init_class_defs(py::class_<ContentFilterProperty>& cls) {
     cls
         .def_property_readonly(
             "content_filter_topic_name",
-            [](const ContentFilterProperty& c) -> py::object {
-                auto v = c.content_filter_topic_name();
-                if (v.is_set()) return py::cast(v.get());
-                return py::cast(nullptr);
+            [](const ContentFilterProperty& c) {
+                return c.content_filter_topic_name();
             },
             "Name of the ContentFilteredTopic associated with the DataReader."
         )
@@ -24,28 +22,22 @@ void init_class_defs(py::class_<ContentFilterProperty>& cls) {
         )
         .def_property_readonly(
             "filter_class_name",
-            [](const ContentFilterProperty& c) -> py::object {
-                auto v = c.filter_class_name();
-                if (v.is_set()) return py::cast(v.get());
-                return py::cast(nullptr);
+            [](const ContentFilterProperty& c) {
+                return c.filter_class_name();
             },
             "Identifies the filter class this filter belongs to."
         )
         .def_property_readonly(
             "filter_expression",
-            [](const ContentFilterProperty& c) -> py::object {
-                auto v = c.filter_expression();
-                if (v.is_set()) return py::cast(v.get());
-                return py::cast(nullptr);
+            [](const ContentFilterProperty& c) {
+                return c.filter_expression();
             },
             "The filter expression."
         )
         .def_property_readonly(
             "related_topic_name",
-            [](const ContentFilterProperty& c) -> py::object {
-                auto v = c.related_topic_name();
-                if (v.is_set()) return py::cast(v.get());
-                return py::cast(nullptr);
+            [](const ContentFilterProperty& c) {
+                return c.related_topic_name();
             },
             "The name of the ContentFilteredTopic's related Topic."
         )

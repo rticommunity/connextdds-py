@@ -1,8 +1,8 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/core/BuiltinTopicTypes.hpp>
-#include <PyInitType.hpp>
+#include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
-
 
 INIT_OPAQUE_TYPE_CONTAINERS(dds::core::BytesTopicType);
 
@@ -61,15 +61,14 @@ void init_class_defs(py::class_<dds::core::BytesTopicType>& cls) {
         );;
 
     py::implicitly_convertible<std::vector<uint8_t>, dds::core::BytesTopicType>();
-    init_type<dds::core::BytesTopicType>(cls);
 }
 
 
 template<>
 void process_inits<dds::core::BytesTopicType>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<dds::core::BytesTopicType>(m, "BytesTopicType");
+        [m, &l]() mutable {
+            return init_type_class<dds::core::BytesTopicType>(m, l, "BytesTopicType");
         }
     );
 }

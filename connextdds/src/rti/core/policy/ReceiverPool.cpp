@@ -42,11 +42,9 @@ void init_class_defs(py::class_<ReceiverPool>& cls) {
             (ReceiverPool& (ReceiverPool::*)(int32_t)) &ReceiverPool::buffer_alignment,
             "The receive buffer alignment."
         )
-        .def_property_readonly_static(
+        .def_readonly_static(
             "LENGTH_AUTO",
-            [](py::object&){
-                return ReceiverPool::LENGTH_AUTO;
-            },
+            &ReceiverPool::LENGTH_AUTO,
             "Indicates that the length will be automatically resolved."
         )
         .def(

@@ -25,6 +25,20 @@ void init_dds_typed_sample_base_template(py::class_<dds::sub::Sample<T>>& cls) {
             py::arg("sample"),
             "Copy constructor."
         )
+        .def(
+            "__getitem__",
+            [](dds::sub::Sample<T>& s, int index) {
+                switch (index) {
+                case 0:
+                    return py::cast(s.data());
+                case 1:
+                    return py::cast(s.info());
+                default:
+                    throw py::index_error("Invalid Sample item index.");
+                }
+            },
+            py::keep_alive<0, 1>()
+        )
         .def_property(
             "data",
             (const T& (dds::sub::Sample<T>::*)() const) &dds::sub::Sample<T>::data,
@@ -57,9 +71,7 @@ void init_dds_typed_sample_template(py::class_<dds::sub::Sample<T>>& cls) {
 }
 
 template<typename T>
-void init_sample(py::object& o) {
-    py::class_<dds::sub::Sample<T>> s(o, "Sample");
-
+void init_sample(py::class_<dds::sub::Sample<T>>& s) {
     init_dds_typed_sample_template(s);
 }
 

@@ -73,31 +73,6 @@ class PyTopic : public dds::topic::Topic<T>,
 public:
     using dds::topic::Topic<T>::Topic;
 
-    /*PyTopic(const PyDomainParticipant& dp, const std::string& n) : dds::topic::Topic<T>(dp, n) {}
-
-    PyTopic(
-        const PyDomainParticipant& dp, 
-        const std::string& n,
-        const std::string& tn
-    ) : dds::topic::Topic<T>(dp, n, tn) {}
-
-    PyTopic(
-        const PyDomainParticipant& dp,
-        const std::string& n,
-        const dds::topic::qos::TopicQos& q,
-        PyTopicListener<T>* l,
-        const dds::core::status::StatusMask& m
-    ) : dds::topic::Topic<T>(dp, n, q, l, m) {}
-
-    PyTopic(
-        const PyDomainParticipant& dp,
-        const std::string& n,
-        const std::string& tn,
-        const dds::topic::qos::TopicQos& q,
-        PyTopicListener<T>* l,
-        const dds::core::status::StatusMask& m
-    ) : dds::topic::Topic<T>(dp, n, tn, q, l, m) {} */
-
     PyTopic(
         const PyDomainParticipant& dp,
         const std::string& n,
@@ -257,20 +232,28 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
         .def_property_readonly(
             "listener",
             [](PyTopic<T>& t) {
-                return dynamic_cast<PyTopicListener<T>*>(t.listener());
+                dds::core::optional<PyTopicListener<T>*> l;
+                auto ptr = dynamic_cast<PyTopicListener<T>*>(t.listener());
+                if (nullptr != ptr) l = ptr;
+                return l;
             },
             "The listener."
         )
         .def(
             "bind_listener",
-            [](PyTopic<T>& t, PyTopicListener<T>* l, const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
-                    py::cast(l).inc_ref();
+            [](PyTopic<T>& t, dds::core::optional<PyTopicListener<T>*> l, const dds::core::status::StatusMask& m) {
+#if rti_connext_version_gte(6, 0, 1)
+                auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                if (nullptr != listener) {
+                    py::cast(listener).inc_ref();
                 }
                 if (nullptr != t.listener()) {
                     py::cast(t.listener()).dec_ref();
                 }
-                t.listener(l, m);
+                t.listener(listener, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
@@ -291,9 +274,11 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
         )
         .def_static(
             "find",
-            [](PyDomainParticipant& dp, const std::string& name) -> py::object {
+            [](PyDomainParticipant& dp, const std::string& name) {
+                dds::core::optional<PyTopic<T>> retval;
                 auto t = dds::topic::find<dds::topic::Topic<T>>(dp, name);
-                return (t == dds::core::null) ? py::cast(nullptr) : py::cast(PyTopic<T>(t));
+                if (t != dds::core::null) retval = PyTopic<T>(t);
+                return retval;
             },
             py::arg("participant"),
             py::arg("name"),
@@ -311,9 +296,6 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
     py::implicitly_convertible<PyIAnyTopic, PyTopic<T>>();
     py::implicitly_convertible<PyIEntity, PyTopic<T>>();
     py::implicitly_convertible<PyITopicDescription<T>, PyTopic<T>>();
-
-    py::bind_vector<std::vector<PyTopic<T>>>(cls, "Seq");
-    py::implicitly_convertible<py::iterable, std::vector<PyTopic<T>>>();
 }
 
 template<typename T>
@@ -342,45 +324,63 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
             "Creates a new Topic."
         )
         .def(
-            py::init<
-                const PyDomainParticipant&,
-                const std::string&,
-                const dds::topic::qos::TopicQos&,
-                PyTopicListener<T>*,
-                const dds::core::status::StatusMask&
-            >(),
+            py::init(
+                [](
+                    const PyDomainParticipant& dp,
+                    const std::string& n,
+                    const dds::topic::qos::TopicQos& q,
+                    dds::core::optional<PyTopicListener<T>*> l,
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PyTopic<T>(dp, n, q, listener, m);
+                }
+            ),
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("qos"),
-            py::arg("listener") = (PyTopicListener<T>*) nullptr,
-            py::arg("mask") = dds::core::status::StatusMask::all(),
+            py::arg("listener") = py::none(),
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Creates a new Topic."
         )
         .def(
-            py::init<
-                const PyDomainParticipant&,
-                const std::string&,
-                const std::string&,
-                const dds::topic::qos::TopicQos&,
-                PyTopicListener<T>*,
-                const dds::core::status::StatusMask&
-            >(),
+            py::init(
+                [](
+                    const PyDomainParticipant& dp,
+                    const std::string& n,
+                    const std::string& t,
+                    const dds::topic::qos::TopicQos& q,
+                    dds::core::optional<PyTopicListener<T>*> l,
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PyTopic<T>(dp, n, t, q, listener, m);
+                }
+            ),
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("type_name"),
             py::arg("qos"),
-            py::arg("listener") = (PyTopicListener<T>*) nullptr,
-            py::arg("mask") = dds::core::status::StatusMask::all(),
+            py::arg("listener") = py::none(),
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Creates a new Topic."
         );
 }
 
 template<typename T>
-void init_topic(py::object& o) {
-    py::class_<PyITopicDescription<T>, PyIEntity> itd(o, "ITopicDescription");
-    py::class_<PyTopicDescription<T>, PyITopicDescription<T>> td(o, "TopicDescription");
-    py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic> t(o, "Topic");
-
+void init_topic(
+    py::class_<PyITopicDescription<T>, PyIEntity>& itd,
+    py::class_<PyTopicDescription<T>, PyITopicDescription<T>>& td,
+    py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& t
+) {
     init_itopic_description_defs(itd);
     init_topic_description_defs(td);
     init_dds_typed_topic_template(t);

@@ -15,7 +15,6 @@ void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<Exception>(m, l);
     pyrti::process_inits<QosProvider>(m, l);
     pyrti::process_inits<Time>(m, l);
-    pyrti::process_inits<pyrti::PyVector>(m, l);
 
     init_namespace_dds_core_cond(m, l);
     init_namespace_dds_core_policy(m, l);

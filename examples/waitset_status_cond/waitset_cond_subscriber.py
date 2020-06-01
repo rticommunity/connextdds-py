@@ -31,16 +31,15 @@ def status_handler(reader):
 
 # Handle incoming data with a ReadCondition
 def rc_handler(reader, count):
-    with reader.take() as samples:
-        for sample in filter(lambda s: s.info.valid, samples):
-            count.value += 1
-            print(sample.data)
+    for (data, info) in filter(lambda s: s.info.valid, reader.take()):
+        count.value += 1
+        print(data)
 
 
 def subscriber_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    wsqc_type = dds.QosProvider('waitset_cond_modern.xml').type('wssc_lib', 'Foo')
+    wsqc_type = dds.QosProvider('waitset_cond.xml').type('wssc_lib', 'Foo')
     topic = dds.DynamicData.Topic(participant, 'Example Foo', wsqc_type)
     reader_qos = dds.QosProvider.default().datareader_qos
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)

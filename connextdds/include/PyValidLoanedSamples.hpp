@@ -30,9 +30,7 @@ void init_valid_loaned_samples_def(py::class_<rti::sub::ValidLoanedSamples<T>>& 
 }
 
 template<typename T>
-void init_valid_loaned_samples(py::object& o) {
-    py::class_<rti::sub::ValidLoanedSamples<T>> vls(o, "ValidLoanedSamples");
-    
+void init_valid_loaned_samples(py::class_<rti::sub::ValidLoanedSamples<T>>& vls) {
     init_valid_loaned_samples_def(vls);
 }
 

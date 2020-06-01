@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/topic/BuiltinTopic.hpp>
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
@@ -133,15 +134,13 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls) {
             py::self != py::self,
             "Test for inequality."
         );
-
-    init_type<ParticipantBuiltinTopicData>(cls);
 }
 
 template<>
 void process_inits<ParticipantBuiltinTopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<ParticipantBuiltinTopicData>(m, "ParticipantBuiltinTopicData");
+        [m, &l]() mutable {
+            return init_type_class<ParticipantBuiltinTopicData>(m, l, "ParticipantBuiltinTopicData");
         }
     );
 }

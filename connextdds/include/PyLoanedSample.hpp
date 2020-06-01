@@ -33,6 +33,20 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls) {
             "Get the info associated with the sample."
         )
         .def(
+            "__getitem__",
+            [](rti::sub::LoanedSample<T>& ls, int index) {
+                switch (index) {
+                case 0:
+                    return py::cast(ls.data());
+                case 1:
+                    return py::cast(ls.info());
+                default:
+                    throw py::index_error("Invalid LoanedSample item index.");
+                }
+            },
+            py::keep_alive<0, 1>()
+        )
+        .def(
             py::self == py::self,
             "Check if two samples are equivalent"
         )
@@ -43,9 +57,7 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls) {
 }
 
 template<typename T>
-void init_loaned_sample(py::object& o) {
-    py::class_<rti::sub::LoanedSample<T>> ls(o, "LoanedSample");
-
+void init_loaned_sample(py::class_<rti::sub::LoanedSample<T>>& ls) {
     init_loaned_sample_defs(ls);
 }
 

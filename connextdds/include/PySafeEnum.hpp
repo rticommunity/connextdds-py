@@ -4,6 +4,7 @@
 #include "PyOpaqueTypes.hpp"
 #include <pybind11/operators.h>
 #include <dds/core/SafeEnumeration.hpp>
+#include <functional>
 
 namespace py = pybind11;
 
@@ -12,8 +13,9 @@ using namespace dds::core;
 namespace pyrti {
 
 template<typename T>
-py::class_<safe_enum<T>> init_dds_safe_enum(py::module& m, const std::string& name) {
+py::class_<safe_enum<T>> init_dds_safe_enum(py::module& m, const std::string& name, std::function<void(py::object&)> enum_init) {
     py::class_<safe_enum<T>> cls(m, name.c_str());
+    enum_init(cls);
     cls.def(
             py::init<>(), 
             "Initializes enum to 0."

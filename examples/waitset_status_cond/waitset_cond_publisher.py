@@ -17,7 +17,7 @@ import argparse
 def publisher_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    wssc_type = dds.QosProvider('waitset_cond_modern.xml').type('wssc_lib', 'Foo')
+    wssc_type = dds.QosProvider('waitset_cond.xml').type('wssc_lib', 'Foo')
     topic = dds.DynamicData.Topic(participant, 'Example Foo', wssc_type)
     writer = dds.DynamicData.DataWriter(dds.Publisher(participant), topic)
 
@@ -30,7 +30,7 @@ def publisher_main(domain_id, sample_count):
         writer.write(sample)
 
         count += 1
-        time.sleep(0.99)
+        time.sleep(1)
 
 
 parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Waitsets with Status Condition & Read Condition (Publisher)')

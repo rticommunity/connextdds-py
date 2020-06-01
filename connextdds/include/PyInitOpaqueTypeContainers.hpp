@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
 
 #define INIT_OPAQUE_TYPE_CONTAINERS(topic_type) \
     PYBIND11_MAKE_OPAQUE(std::vector<topic_type>); \

@@ -44,12 +44,6 @@ void init_dds_typed_topic_instance_base_template(py::class_<dds::topic::TopicIns
             (void (dds::topic::TopicInstance<T>::*)(const T&)) &dds::topic::TopicInstance<T>::sample,
             "Get/set the sample associated with this TopicInstance."
         );
-
-    py::bind_vector<std::vector<dds::topic::TopicInstance<T>>>(cls, "Seq");
-    py::bind_vector<std::vector<std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>>(cls, "TimestampedSeq");
-
-    py::implicitly_convertible<py::iterable, std::vector<dds::topic::TopicInstance<T>>>();
-    py::implicitly_convertible<py::iterable, std::vector<std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>>();
 }
 
 template<typename T>
@@ -70,9 +64,7 @@ void init_dds_typed_topic_instance_template(py::class_<dds::topic::TopicInstance
 }
 
 template<typename T>
-void init_topic_instance(py::object& o) {
-    py::class_<dds::topic::TopicInstance<T>> ti(o, "TopicInstance");
-
+void init_topic_instance(py::class_<dds::topic::TopicInstance<T>>& ti) {
     init_dds_typed_topic_instance_template(ti);
 }
 

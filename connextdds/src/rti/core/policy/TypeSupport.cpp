@@ -32,30 +32,32 @@ void init_class_defs(py::class_<TypeSupport>& cls) {
 
 template<>
 void process_inits<TypeSupport>(py::module& m, ClassInitList& l) {
-    auto cpk = init_dds_safe_enum<CdrPaddingKind_def>(m, "CdrPaddingKind");
-
-    py::enum_<CdrPaddingKind::type>(cpk, "CdrPaddingKind")
-        .value(
-            "ZERO",
-            CdrPaddingKind::type::ZERO,
-            "Set padding bytes to zero during CDR serialization."
-        )
-        .value(
-            "NOT_SET",
-            CdrPaddingKind::type::NOT_SET,
-            "Don't set padding bytes to any value."
-        )
-        .value(
-            "AUTO",
-            CdrPaddingKind::type::AUTO,
-            "Set the value automatically, depending on the Entity."
-            "\n\n"
-            "When set on a DomainParticipant the default behavior is NOT_SET"
-            "\n\n"
-            "When set on a DataWriter or DataReader the behavior is to "
-            "inherit the value from the DomainParticipant."
-        )
-        .export_values();
+    init_dds_safe_enum<CdrPaddingKind_def>(m, "CdrPaddingKind",
+        [](py::object& o) {
+            py::enum_<CdrPaddingKind::type>(o, "Enum")
+                .value(
+                    "ZERO",
+                    CdrPaddingKind::type::ZERO,
+                    "Set padding bytes to zero during CDR serialization."
+                )
+                .value(
+                    "NOT_SET",
+                    CdrPaddingKind::type::NOT_SET,
+                    "Don't set padding bytes to any value."
+                )
+                .value(
+                    "AUTO",
+                    CdrPaddingKind::type::AUTO,
+                    "Set the value automatically, depending on the Entity."
+                    "\n\n"
+                    "When set on a DomainParticipant the default behavior is NOT_SET"
+                    "\n\n"
+                    "When set on a DataWriter or DataReader the behavior is to "
+                    "inherit the value from the DomainParticipant."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

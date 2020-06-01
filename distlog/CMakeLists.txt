@@ -13,9 +13,10 @@ find_package(
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
 
-add_library(
+pybind11_add_module(
     distlog 
     MODULE
+    NO_EXTRAS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/distlog.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PyLogger.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PyLoggerOptions.cpp"
@@ -23,7 +24,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PyMessageParams.cpp"
 )
 
-target_link_libraries(distlog PRIVATE pybind11::module)
+set_target_properties(distlog PROPERTIES CXX_VISIBILITY_PRESET "default")
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     target_link_libraries(
@@ -86,13 +87,10 @@ target_compile_options(
     distlog
     PRIVATE
     "-fpic"
-    "-fvisibility=hidden"
-    "-flto"
 )
 
 target_link_options(
     distlog
     PRIVATE
     "-fpic"
-    "-flto"
 )

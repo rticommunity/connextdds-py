@@ -175,92 +175,94 @@ void init_class_defs(py::class_<FlowControllerTokenBucketProperty>& cls) {
 
 template<>
 void process_inits<FlowController>(py::module& m, ClassInitList& l) {
-    auto fcsp = init_dds_safe_enum<FlowControllerSchedulingPolicy_def>(m, "FlowControllerSchedulingPolicy");
-
-    py::enum_<FlowControllerSchedulingPolicy::type>(fcsp, "Kind")
-        .value(
-            "ROUND_ROBIN",
-            FlowControllerSchedulingPolicy::type::ROUND_ROBIN,
-            "Indicates to flow control in a round-robin fashion."
-            "\n\n"
-            "Whenever tokens become available, the flow controller "
-            "distributes the tokens uniformly across all of its (non-empty) "
-            "destination queues. No destinations are prioritized. Instead, "
-            "all destinations are treated equally and are serviced in a "
-            "round-robin fashion."
-        )
-        .value(
-            "EARLIEST_DEADLINE_FIRST",
-            FlowControllerSchedulingPolicy::type::EARLIEST_DEADLINE_FIRST,
-            "Indicates to flow control in an earliest-deadline-first fashion."
-            "\n\n"
-            "A sample's deadline is determined by the time it was written "
-            "plus the latency budget of the DataWriter at the time of the "
-            "write call (as specified in the LatencyBudget). The relative "
-            "priority of a flow controller's destination queue is determined "
-            "by the earliest deadline across all samples it contains."
-            "\n\n"
-            "When tokens become available, the FlowController distributes "
-            "tokens to the destination queues in order of their deadline "
-            "priority. In other words, the queue containing the sample with "
-            "the earliest deadline is serviced first. The number of tokens "
-            "granted equals the number of tokens required to send the first "
-            "sample in the queue. Note that the priority of a queue may "
-            "change as samples are sent (i.e. removed from the queue). If a "
-            "sample must be sent to multiple destinations or two samples have "
-            "an equal deadline value, the corresponding destination queues "
-            "are serviced in a round-robin fashion."
-            "\n\n"
-            "Hence, under the default LatencyBudget::duration setting, an "
-            "EDF_FLOW_CONTROLLER_SCHED_POLICY FlowController preserves the "
-            "order in which the user calls DataWriter.write() across the "
-            "DataWriters associated with the flow controller."
-            "\n\n"
-            "Since the LatencyBudget is mutable, a sample written second may "
-            "contain an earlier deadline than the sample written first if the "
-            "LatencyBudget.duration value is sufficiently decreased in "
-            "between writing the two samples. In that case, if the first "
-            "sample is not yet written (still in queue waiting for its turn), "
-            "it inherits the priority corresponding to the (earlier) deadline "
-            "from the second sample."
-            "\n\n"
-            "In other words, the priority of a destination queue is always "
-            "determined by the earliest deadline among all samples contained "
-            "in the queue. This priority inheritance approach is required in "
-            "order to both honor the updated LatencyBudget.duration and "
-            "adhere to the DataWriter in-order data delivery guarantee."
-            "\n\n"
-            "[default] for DataWriter"
-        )
-        .value(
-            "HIGHEST_PRIORITY_FIRST",
-            FlowControllerSchedulingPolicy::type::HIGHEST_PRIORITY_FIRST,
-            "Indicates to flow control in a highest-priority-first fashion."
-            "\n\n"
-            "Determines the next destination queue to service as determined "
-            "by the publication priority of the DataWriter, channel "
-            "of multi-channel DataWriter, or individual sample."
-            "\n\n"
-            "The relative priority of a flow controller's destination queue "
-            "is determined by the highest publication priority of all samples "
-            "it contains."
-            "\n\n"
-            "When tokens become available, the FlowController distributes "
-            "tokens to the destination queues in order of their publication "
-            "priority. In other words, the queue containing the sample with "
-            "the highest publication priority is serviced first. The number "
-            "of tokens granted equals the number of tokens required to send "
-            "the first sample in the queue. Note that the priority of a queue "
-            "may change as samples are sent (i.e. removed from the queue). If "
-            "a sample must be sent to multiple destinations or two samples "
-            "have an equal publication priority, the corresponding "
-            "destination queues are serviced in a round-robin fashion."
-            "\n\n"
-            "This priority inheritance approach is required in order to both "
-            "honor the designated publication priority and adhere to the "
-            "DataWriter in-order data delivery guarantee."
-        )
-        .export_values();
+    init_dds_safe_enum<FlowControllerSchedulingPolicy_def>(m, "FlowControllerSchedulingPolicy",
+        [](py::object& o) {
+            py::enum_<FlowControllerSchedulingPolicy::type>(o, "Enum")
+                .value(
+                    "ROUND_ROBIN",
+                    FlowControllerSchedulingPolicy::type::ROUND_ROBIN,
+                    "Indicates to flow control in a round-robin fashion."
+                    "\n\n"
+                    "Whenever tokens become available, the flow controller "
+                    "distributes the tokens uniformly across all of its (non-empty) "
+                    "destination queues. No destinations are prioritized. Instead, "
+                    "all destinations are treated equally and are serviced in a "
+                    "round-robin fashion."
+                )
+                .value(
+                    "EARLIEST_DEADLINE_FIRST",
+                    FlowControllerSchedulingPolicy::type::EARLIEST_DEADLINE_FIRST,
+                    "Indicates to flow control in an earliest-deadline-first fashion."
+                    "\n\n"
+                    "A sample's deadline is determined by the time it was written "
+                    "plus the latency budget of the DataWriter at the time of the "
+                    "write call (as specified in the LatencyBudget). The relative "
+                    "priority of a flow controller's destination queue is determined "
+                    "by the earliest deadline across all samples it contains."
+                    "\n\n"
+                    "When tokens become available, the FlowController distributes "
+                    "tokens to the destination queues in order of their deadline "
+                    "priority. In other words, the queue containing the sample with "
+                    "the earliest deadline is serviced first. The number of tokens "
+                    "granted equals the number of tokens required to send the first "
+                    "sample in the queue. Note that the priority of a queue may "
+                    "change as samples are sent (i.e. removed from the queue). If a "
+                    "sample must be sent to multiple destinations or two samples have "
+                    "an equal deadline value, the corresponding destination queues "
+                    "are serviced in a round-robin fashion."
+                    "\n\n"
+                    "Hence, under the default LatencyBudget::duration setting, an "
+                    "EDF_FLOW_CONTROLLER_SCHED_POLICY FlowController preserves the "
+                    "order in which the user calls DataWriter.write() across the "
+                    "DataWriters associated with the flow controller."
+                    "\n\n"
+                    "Since the LatencyBudget is mutable, a sample written second may "
+                    "contain an earlier deadline than the sample written first if the "
+                    "LatencyBudget.duration value is sufficiently decreased in "
+                    "between writing the two samples. In that case, if the first "
+                    "sample is not yet written (still in queue waiting for its turn), "
+                    "it inherits the priority corresponding to the (earlier) deadline "
+                    "from the second sample."
+                    "\n\n"
+                    "In other words, the priority of a destination queue is always "
+                    "determined by the earliest deadline among all samples contained "
+                    "in the queue. This priority inheritance approach is required in "
+                    "order to both honor the updated LatencyBudget.duration and "
+                    "adhere to the DataWriter in-order data delivery guarantee."
+                    "\n\n"
+                    "[default] for DataWriter"
+                )
+                .value(
+                    "HIGHEST_PRIORITY_FIRST",
+                    FlowControllerSchedulingPolicy::type::HIGHEST_PRIORITY_FIRST,
+                    "Indicates to flow control in a highest-priority-first fashion."
+                    "\n\n"
+                    "Determines the next destination queue to service as determined "
+                    "by the publication priority of the DataWriter, channel "
+                    "of multi-channel DataWriter, or individual sample."
+                    "\n\n"
+                    "The relative priority of a flow controller's destination queue "
+                    "is determined by the highest publication priority of all samples "
+                    "it contains."
+                    "\n\n"
+                    "When tokens become available, the FlowController distributes "
+                    "tokens to the destination queues in order of their publication "
+                    "priority. In other words, the queue containing the sample with "
+                    "the highest publication priority is serviced first. The number "
+                    "of tokens granted equals the number of tokens required to send "
+                    "the first sample in the queue. Note that the priority of a queue "
+                    "may change as samples are sent (i.e. removed from the queue). If "
+                    "a sample must be sent to multiple destinations or two samples "
+                    "have an equal publication priority, the corresponding "
+                    "destination queues are serviced in a round-robin fashion."
+                    "\n\n"
+                    "This priority inheritance approach is required in order to both "
+                    "honor the designated publication priority and adhere to the "
+                    "DataWriter in-order data delivery guarantee."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

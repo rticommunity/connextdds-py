@@ -98,11 +98,6 @@ void init_class_defs(py::class_<StructType, AbstractConstructedType<Member>>& cl
             (StructType& (StructType::*)(ExtensibilityKind)) &StructType::extensibility_kind,
             "Struct's extensibility kind."
         )
-        /*.def(
-            "set_extensibility_kind",
-            (StructType& (StructType::*)(ExtensibilityKind)) &StructType::extensibility_kind,
-            "Set the struct's extensibility kind."
-        )*/
         .def_property_readonly(
             "has_parent",
             &StructType::has_parent,

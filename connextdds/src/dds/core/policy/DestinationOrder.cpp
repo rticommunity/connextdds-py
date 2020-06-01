@@ -58,36 +58,39 @@ void init_class_defs(py::class_<DestinationOrder>& cls) {
 
 static
 void init_dds_destination_order_kind(py::module& m) {
-    auto dok = init_dds_safe_enum<DestinationOrderKind_def>(m, "DestinationOrderKind");
-    py::enum_<DestinationOrderKind::type>(dok, "DestinationOrderKind")
-        .value(
-            "BY_RECEPTION_TIMESTAMP",
-            DestinationOrderKind::type::BY_RECEPTION_TIMESTAMP,
-            "[default] Indicates that data is ordered based on the reception "
-            "time at each Subscriber."
-            "\n\n"
-            "Since each subscriber may receive the data at different times "
-            "there is no guaranteed that the changes will be seen in the same "
-            "order. Consequently, it is possible for each subscriber to end "
-            "up with a different final value for the data."
-        )
-        .value(
-            "BY_SOURCE_TIMESTAMP",
-            DestinationOrderKind::type::BY_SOURCE_TIMESTAMP,
-            "Indicates that data is ordered based on a time-stamp placed at "
-            "the source (by RTI Connext or by the application)."
-            "\n\n"
-            "In any case this guarantees a consistent final value for the "
-            "data in all subscribers."
-            "\n\n"
-            "Note: If Batching is needed along with "
-            "DestinationOrderKind.BY_SOURCE_TIMESTAMP and "
-            "DestinationOrderScopeKind.INSTANCE, then the "
-            "Batch.source_timestamp_resolution and "
-            "Batch.thread_safe_write setting of Batch should be set to "
-            "Duration.zero() and true respectively."
-        )
-        .export_values();
+    init_dds_safe_enum<DestinationOrderKind_def>(m, "DestinationOrderKind",
+        [](py::object& o){
+            py::enum_<DestinationOrderKind::type>(o, "Enum")
+                .value(
+                    "BY_RECEPTION_TIMESTAMP",
+                    DestinationOrderKind::type::BY_RECEPTION_TIMESTAMP,
+                    "[default] Indicates that data is ordered based on the reception "
+                    "time at each Subscriber."
+                    "\n\n"
+                    "Since each subscriber may receive the data at different times "
+                    "there is no guaranteed that the changes will be seen in the same "
+                    "order. Consequently, it is possible for each subscriber to end "
+                    "up with a different final value for the data."
+                )
+                .value(
+                    "BY_SOURCE_TIMESTAMP",
+                    DestinationOrderKind::type::BY_SOURCE_TIMESTAMP,
+                    "Indicates that data is ordered based on a time-stamp placed at "
+                    "the source (by RTI Connext or by the application)."
+                    "\n\n"
+                    "In any case this guarantees a consistent final value for the "
+                    "data in all subscribers."
+                    "\n\n"
+                    "Note: If Batching is needed along with "
+                    "DestinationOrderKind.BY_SOURCE_TIMESTAMP and "
+                    "DestinationOrderScopeKind.INSTANCE, then the "
+                    "Batch.source_timestamp_resolution and "
+                    "Batch.thread_safe_write setting of Batch should be set to "
+                    "Duration.zero() and true respectively."
+                )
+                .export_values();
+        }
+    );
 }
 
 template<>

@@ -476,18 +476,20 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls) {
 
 template<>
 void process_inits<DomainParticipantResourceLimits>(py::module& m, ClassInitList& l) {
-    auto igrk = init_dds_safe_enum<IgnoredEntityReplacementKind_def>(m, "IgnoredEntityReplacementKind");
-
-    py::enum_<IgnoredEntityReplacementKind::type>(igrk, "IgnoredEntityReplacementKind")
-        .value(
-            "NO_REPLACEMENT",
-            IgnoredEntityReplacementKind::type::NO_REPLACEMENT
-        )
-        .value(
-            "NOT_ALIVE_FIRST",
-            IgnoredEntityReplacementKind::type::NOT_ALIVE_FIRST
-        )
-        .export_values();
+    init_dds_safe_enum<IgnoredEntityReplacementKind_def>(m, "IgnoredEntityReplacementKind",
+        [](py::object& o) {
+            py::enum_<IgnoredEntityReplacementKind::type>(o, "Enum")
+                .value(
+                    "NO_REPLACEMENT",
+                    IgnoredEntityReplacementKind::type::NO_REPLACEMENT
+                )
+                .value(
+                    "NOT_ALIVE_FIRST",
+                    IgnoredEntityReplacementKind::type::NOT_ALIVE_FIRST
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

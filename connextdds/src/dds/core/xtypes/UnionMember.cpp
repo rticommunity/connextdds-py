@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/core/xtypes/MemberType.hpp>
 
 using namespace dds::core::xtypes;
@@ -32,12 +33,6 @@ void init_class_defs(py::class_<UnionMember>& cls) {
             },
             "The union member's name."
         )
-        /*.def(
-            "set_name",
-            [](UnionMember& u, const std::string n) {
-                return u.name(n);
-            },
-            "Set the union member's name, returning the member for chained calls.") */
         .def_property_readonly(
             "type",
             &UnionMember::type,
@@ -54,20 +49,12 @@ void init_class_defs(py::class_<UnionMember>& cls) {
             &UnionMember::id,
             "Returns the ID annotation of this member, or INVALID_ID if this member has no ID."
         )
-        /*.def(
-            "set_id",
-            &UnionMember::id,
-            "Set the ID annotation of this union member and return the member for call chaining.") */
         .def_property(
             "pointer",
             &UnionMember::is_pointer,
             &UnionMember::pointer,
             "Boolean flag for pointer status of union member."
         )
-        /*.def(
-            "set_pointer",
-            &UnionMember::pointer,
-            "Set boolean flag for pointer status of this union member and return the member for call chaining.") */
         .def_property_readonly(
             "label_count",
             &UnionMember::label_count,
@@ -89,17 +76,13 @@ void init_class_defs(py::class_<UnionMember>& cls) {
             &UnionMember::INVALID_ID,
             "The special ID of a member without the ID annotation."
         );
-        /*.def(
-            "set_labels",
-            (UnionMember& (UnionMember::*)(const UnionMember::LabelSeq&)) &UnionMember::labels,
-            "Set the labels that select this member, returning the member for chained calls."); */
 }
 
 template<>
 void process_inits<UnionMember>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<UnionMember>(m, "UnionMember");
+            return init_class_with_seq<UnionMember>(m, "UnionMember");
         }
     );  
 }

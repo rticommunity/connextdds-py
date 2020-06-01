@@ -92,11 +92,11 @@ void init_class_defs(py::class_<QosProvider>& cls) {
         )
         .def_property_static(
             "default_provider_params",
-            [](QosProvider& qp) {
-                return qp->default_provider_params();
+            [](py::object&) {
+                return rti::core::QosProviderImpl::default_provider_params();
             },
-            [](QosProvider& qp, const rti::core::QosProviderParams& params) {
-                qp->default_provider_params(params);
+            [](py::object&, const rti::core::QosProviderParams& params) {
+                rti::core::QosProviderImpl::default_provider_params(params);
             },
             "Get a copy of or set the default QosProviderParams."
         )
@@ -154,48 +154,30 @@ void init_class_defs(py::class_<QosProvider>& cls) {
         .def_property(
             "default_library",
             [](QosProvider& qp) {
-                rti::core::optional_value<std::string> dl = qp->default_library();
-                if (dl.is_set()) return py::cast(dl.get());
-                else return py::cast(nullptr);
+                return qp->default_library();
             },
             [](QosProvider& qp, const std::string& library) {
                 qp->default_library(library);
             },
             "The default library associated with this QosProvider (None if not set)."
-            )
+        )
         .def_property(
             "default_profile",
             [](QosProvider& qp) {
-                rti::core::optional_value<std::string> dp = qp->default_profile();
-                if (dp.is_set()) return py::cast(dp.get());
-                else return py::cast(nullptr);
+                return qp->default_profile();
             },
             [](QosProvider& qp, const std::string& profile) {
                 qp->default_library(profile);
             },
             "The default profile associated with this QosProvider (None if not set)."
-            )
-        .def_property(
-            "default_library",
-            [](QosProvider& qp) {
-                rti::core::optional_value<std::string> dl = qp->default_library();
-                if (dl.is_set()) return py::cast(dl.get());
-                else return py::cast(nullptr);
-            },
-            [](QosProvider& qp, const std::string& library) {
-                qp->default_library(library);
-            },
-            "The default library associated with this QosProvider (None if not set)."
-            )
+        )
         .def_property_readonly(
             "default_library_profile",
             [](const QosProvider& qp) {
-                rti::core::optional_value<std::string> dpl = qp->default_profile_library();
-                if (dpl.is_set()) return py::cast(dpl.get());
-                else return py::cast(nullptr);
+                return qp->default_profile_library();;
             },
             "The library of the default profile associated with this QosProvider (None if not set)."
-            )
+        )
         .def(
             "qos_profile_libraries",
             [](const QosProvider& qp) {
@@ -283,7 +265,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
         .def(
             "create_participant_from_config",
             [](QosProvider& qp, const std::string& config, const rti::domain::DomainParticipantConfigParams& params) {
-                return qp->create_participant_from_config(config, params);
+                return PyDomainParticipant(qp->create_participant_from_config(config, params));
             },
             py::arg("config"),
             py::arg_v("params", rti::domain::DomainParticipantConfigParams(), "DomainParticipantConfigParams()"),

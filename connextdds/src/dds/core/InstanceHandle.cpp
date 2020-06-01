@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include "PyEntity.hpp"
 #include <dds/core/InstanceHandle.hpp>
 
@@ -61,7 +62,7 @@ template<>
 void process_inits<InstanceHandle>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<InstanceHandle>(m, "InstanceHandle");
+            return init_class_with_seq<InstanceHandle>(m, "InstanceHandle");
         }
     );
 }

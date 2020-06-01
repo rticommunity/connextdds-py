@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/pub/Publisher.hpp>
 #include <dds/core/cond/StatusCondition.hpp>
 #include <rti/rti.hpp>
@@ -31,15 +32,24 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
             "Create a publisher."
         )
         .def(
-            py::init<
-                const PyDomainParticipant&, 
-                const qos::PublisherQos&,
-                PyPublisherListener*,
-                const dds::core::status::StatusMask&
-            >(),
+            py::init(
+                [](
+                    const PyDomainParticipant& dp, 
+                    const qos::PublisherQos& q,
+                    dds::core::optional<PyPublisherListener*> l,
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PyPublisher(dp, q, listener, m);
+                }
+            ),
             py::arg("participant"),
             py::arg("qos"),
-            py::arg("listener") = (PyPublisherListener*) nullptr,
+            py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Create a Publisher with the desired QoS policies and specified listener"
         )
@@ -88,20 +98,28 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
         .def_property_readonly(
             "listener",
             [](const PyPublisher& pub) {
-                return dynamic_cast<PyPublisherListener*>(pub.listener());
+                dds::core::optional<PyPublisherListener*> l;
+                auto ptr = dynamic_cast<PyPublisherListener*>(pub.listener());
+                if (nullptr != ptr) l = ptr;
+                return l;
             },
             "Get the listener."
         )
         .def(
             "bind_listener",
-            [](PyPublisher& pub, PyPublisherListener* l, const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
-                    py::cast(l).inc_ref();
+            [](PyPublisher& pub, dds::core::optional<PyPublisherListener*> l, const dds::core::status::StatusMask& m) {
+#if rti_connext_version_gte(6, 0, 1)
+                auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                if (nullptr != listener) {
+                    py::cast(listener).inc_ref();
                 }
                 if (nullptr != pub.listener()) {
                     py::cast(pub.listener()).dec_ref();
                 }
-                pub.listener(l, m); 
+                pub.listener(listener, m); 
             },
             py::arg("listener"),
             py::arg("event_mask"),
@@ -140,7 +158,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
         )
         .def(
             "find_topic_datawriter",
-            [](Publisher& pub, const std::string& topic_name) {
+            [](PyPublisher& pub, const std::string& topic_name) {
                 auto dw = rti::pub::find_datawriter_by_topic_name<dds::pub::AnyDataWriter>(pub, topic_name);
                 return PyAnyDataWriter(dw);
             },
@@ -197,7 +215,7 @@ template<>
 void process_inits<Publisher>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyPublisher, PyIEntity>(m, "Publisher");
+            return init_class_with_seq<PyPublisher, PyIEntity>(m, "Publisher");
         }
     );   
 }

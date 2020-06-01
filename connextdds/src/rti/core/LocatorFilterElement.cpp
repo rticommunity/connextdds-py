@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <rti/core/LocatorFilter.hpp>
 
 using namespace rti::core;
@@ -44,7 +45,7 @@ template<>
 void process_inits<LocatorFilterElement>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<LocatorFilterElement>(m, "LocatorFilterElement");
+            return init_class_with_seq<LocatorFilterElement>(m, "LocatorFilterElement");
         }
     );
 }

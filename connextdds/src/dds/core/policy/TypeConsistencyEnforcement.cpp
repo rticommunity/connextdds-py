@@ -94,35 +94,37 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls) {
 
 static
 void init_type_consistency_enforcement_kind(py::module& m) {
-    auto tcef = init_dds_safe_enum<TypeConsistencyEnforcementKind_def>(m, "TypeConsistencyEnforcementKind");
-
-    py::enum_<TypeConsistencyEnforcementKind::type>(tcef, "TypeConsistencyEnforcementKind")
-        .value(
-            "DISALLOW_TYPE_COERCION",
-            TypeConsistencyEnforcementKind::type::DISALLOW_TYPE_COERCION,
-            "The DataWriter and the DataReader must support the same data "
-            "type in order for them to communicate."
-        )
-        .value(
-            "ALLOW_TYPE_COERCION",
-            TypeConsistencyEnforcementKind::type::ALLOW_TYPE_COERCION,
-            "The DataWriter and the DataReader need not support the same data "
-            "type in order for them to communicate as long as the "
-            "DataReader's type is assignable from the DataWriter's type."
-        )
+    init_dds_safe_enum<TypeConsistencyEnforcementKind_def>(m, "TypeConsistencyEnforcementKind",
+        [](py::object& o) {
+            py::enum_<TypeConsistencyEnforcementKind::type>(o, "Enum")
+                .value(
+                    "DISALLOW_TYPE_COERCION",
+                    TypeConsistencyEnforcementKind::type::DISALLOW_TYPE_COERCION,
+                    "The DataWriter and the DataReader must support the same data "
+                    "type in order for them to communicate."
+                )
+                .value(
+                    "ALLOW_TYPE_COERCION",
+                    TypeConsistencyEnforcementKind::type::ALLOW_TYPE_COERCION,
+                    "The DataWriter and the DataReader need not support the same data "
+                    "type in order for them to communicate as long as the "
+                    "DataReader's type is assignable from the DataWriter's type."
+                )
 #if rti_connext_version_gte(6, 0, 0)
-        .value(
-            "AUTO_TYPE_COERCION",
-            TypeConsistencyEnforcementKind::type::AUTO_TYPE_COERCION,
-            "[default] This AUTO value will be applied as "
-            "TypeConsistencyKind.DISALLOW_TYPE_COERCION when the data type "
-            "is annotated with @transfer_mode(SHMEM_REF) while using C, "
-            "Traditional C++, or Modern C++ APIs. In all other cases, this "
-            "AUTO value will be applied as "
-            "TypeConsistencyKind.ALLOW_TYPE_COERCION."
-        )
+                .value(
+                    "AUTO_TYPE_COERCION",
+                    TypeConsistencyEnforcementKind::type::AUTO_TYPE_COERCION,
+                    "[default] This AUTO value will be applied as "
+                    "TypeConsistencyKind.DISALLOW_TYPE_COERCION when the data type "
+                    "is annotated with @transfer_mode(SHMEM_REF) while using C, "
+                    "Traditional C++, or Modern C++ APIs. In all other cases, this "
+                    "AUTO value will be applied as "
+                    "TypeConsistencyKind.ALLOW_TYPE_COERCION."
+                )
 #endif
-        .export_values();
+                .export_values();
+        }
+    );
 }
 
 template<>

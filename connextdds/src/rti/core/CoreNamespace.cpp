@@ -23,6 +23,7 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<SampleIdentity>(m, l);
     pyrti::process_inits<SequenceNumber>(m, l);
     pyrti::process_inits<ThreadSettings>(m, l);
+    pyrti::process_inits<TransportInfo>(m, l);
     pyrti::process_inits<TransportMulticastSettings>(m, l);
     pyrti::process_inits<VendorId>(m, l);
 

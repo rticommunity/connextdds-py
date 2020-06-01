@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <rti/core/policy/CorePolicy.hpp>
 
 using namespace rti::core;
@@ -54,7 +55,7 @@ template<>
 void process_inits<ChannelSettings>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<ChannelSettings>(m, "ChannelSettings");
+            return init_class_with_seq<ChannelSettings>(m, "ChannelSettings");
         }
     );
 }

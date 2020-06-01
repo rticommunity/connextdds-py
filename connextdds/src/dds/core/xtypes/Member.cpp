@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/core/xtypes/MemberType.hpp>
 
 using namespace dds::core::xtypes;
@@ -74,10 +75,6 @@ void init_class_defs(py::class_<Member>& cls) {
             },
             "Set the member name."
         )
-        /*.def("set_id", &Member::id, "Set the member ID.")
-        .def("set_key_flag", &Member::key, "Set member key status.")
-        .def("set_pointer_flag", &Member::pointer, "Set member pointer flag.")
-        .def("set_optional_flag", &Member::optional, "Sets the member optional flag") */
         .def_property_readonly(
             "type",
             [](const Member& member) {
@@ -99,7 +96,7 @@ template<>
 void process_inits<Member>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<Member>(m, "Member");
+            return init_class_with_seq<Member>(m, "Member");
         }
     );  
 }

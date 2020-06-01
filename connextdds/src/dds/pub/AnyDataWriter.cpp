@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include "PyAnyDataWriter.hpp"
 
 using namespace dds::pub;
@@ -86,12 +87,12 @@ template<>
 void process_inits<AnyDataWriter>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyIAnyDataWriter>(m, "IAnyDataWriter");
+            return init_class_with_ptr_seq<PyIAnyDataWriter>(m, "IAnyDataWriter");
         }
     );
     l.push_back(
         [m]() mutable {
-            return init_class<PyAnyDataWriter, PyIAnyDataWriter>(m, "AnyDataWriter");
+            return init_class_with_seq<PyAnyDataWriter, PyIAnyDataWriter>(m, "AnyDataWriter");
         }
     );
 }

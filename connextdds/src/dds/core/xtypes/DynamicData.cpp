@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <pybind11/numpy.h>
 #include <dds/core/xtypes/DynamicData.hpp>
 #include <dds/core/QosProvider.hpp>
@@ -493,7 +494,7 @@ static
 py::object get_value(DynamicData& dd, const T& key) {
     auto mi = dd.member_info(key);
     if (!dd.member_exists(mi.member_index())) {
-        return py::cast(nullptr);
+        throw dds::core::InvalidArgumentError("DynamicData get_value: member does not exist");
     }
     return get_member(dd, mi.member_kind().underlying(), key);
 }
@@ -503,7 +504,7 @@ template <typename T>
 static
 py::object get_values(DynamicData& dd, const T& key) {
     if (!dd.member_exists(key)) {
-        return py::cast(nullptr);
+        throw dds::core::InvalidArgumentError("DynamicData get_value: member does not exist");
     }
     auto mi = dd.member_info(key);
     auto kind = resolve_type_kind(dd, mi.member_kind().underlying(), mi.member_index());
@@ -749,8 +750,8 @@ void init_dds_typed_topic_template(py::class_<PyTopic<DynamicData>, PyITopicDesc
             py::arg("topic_name"),
             py::arg("topic_type"),
             py::arg("qos"),
-            py::arg("listener") = (PyTopicListener<dds::core::xtypes::DynamicData>*) nullptr,
-            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
+            py::arg("listener") = py::none(),
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             py::keep_alive<1,6>(),
             "Create a Topic with the given type."
         );
@@ -858,26 +859,28 @@ void init_dds_typed_datareader_template(py::class_<PyDataReader<DynamicData>, Py
         )
         .def(
             "read_next",
-            [](PyDataReader<dds::core::xtypes::DynamicData>& dr) -> py::object {
+            [](PyDataReader<dds::core::xtypes::DynamicData>& dr) {
+                dds::core::optional<dds::sub::Sample<dds::core::xtypes::DynamicData>> retval;
                 dds::core::xtypes::DynamicData data(PyDynamicTypeMap::get(dr->type_name()));
                 dds::sub::SampleInfo info;
                 if (dr->read(data, info)) {
-                    return py::cast(dds::sub::Sample<dds::core::xtypes::DynamicData>(data, info));
+                    retval = dds::sub::Sample<dds::core::xtypes::DynamicData>(data, info);
                 }
-                return py::cast(nullptr);
+                return retval;
             },
             "Copy the next not-previously-accessed data value from the "
             "DataReader via a read operation."
         )
         .def(
             "take_next",
-            [](PyDataReader<dds::core::xtypes::DynamicData>& dr) -> py::object {
+            [](PyDataReader<dds::core::xtypes::DynamicData>& dr) {
+                dds::core::optional<dds::sub::Sample<dds::core::xtypes::DynamicData>> retval;
                 dds::core::xtypes::DynamicData data(PyDynamicTypeMap::get(dr->type_name()));
                 dds::sub::SampleInfo info;
                 if (dr->take(data, info)) {
-                    return py::cast(dds::sub::Sample<dds::core::xtypes::DynamicData>(data, info));
+                    retval = dds::sub::Sample<dds::core::xtypes::DynamicData>(data, info);
                 }
-                return py::cast(nullptr);
+                return retval;
             },
             "Copy the next not-previously-accessed data value from the "
             "DataReader via a take operation."
@@ -1011,6 +1014,12 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                 }
             )
         );
+
+    py::class_<PyDynamicDataFieldsView> fields_view(dd_class, "FieldsView");
+    py::class_<PyDynamicDataFieldsIterator> fields_iterator(dd_class, "FieldsIterator");
+    py::class_<PyDynamicDataIndexIterator> index_iterator(dd_class, "IndexIterator");
+    py::class_<PyDynamicDataItemsView> items_view(dd_class, "ItemsView");
+    py::class_<PyDynamicDataItemsIterator> items_iterator(dd_class, "ItemsIterator");
     
     add_field_type<char>(dd_class, "int8", "8-bit signed int");
     add_field_type<uint8_t>(dd_class, "uint8", "8-bit unsigned int");
@@ -1166,38 +1175,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             py::arg("index"),
             "Get a list of complex fields by index."
         )
-            /* .def(
-            "get_complex_values",
-            [](DynamicData& data, const std::string& name, std::vector<DynamicData>& values) {
-                auto info = data.member_info(name);
-                if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
-                {
-                    values.clear();
-                    auto member = data.value<DynamicData>(name);
-                    for (int i = 1; i <= info.element_count(); ++i) {
-                        values.push_back(member.value<DynamicData>(i));
-                    }
-                }
-                else {
-                    throw py::key_error("member is not a collection of non-primitive values.");
-                }
-            })
-        .def(
-            "get_complex_values",
-            [](DynamicData& data, uint32_t index, std::vector<DynamicData>& values) {
-                auto info = data.member_info(index);
-                if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
-                {
-                    values.clear();
-                    auto member = data.value<DynamicData>(index);
-                    for (int i = 1; i <= info.element_count(); ++i) {
-                        values.push_back(member.value<DynamicData>(i));
-                    }
-                }
-                else {
-                    throw py::key_error("member is not a collection of non-primitive values.");
-                }
-            }) */
         .def(
             "set_complex_values",
             [](DynamicData& data, const std::string& name, std::vector<DynamicData>& values) {
@@ -1714,10 +1691,12 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             }
         );
 
-    py::class_<topic_type_support<DynamicData>>(dd_class, "topic_type_support")
+    py::class_<topic_type_support<DynamicData>>(dd_class, "TopicTypeSupport")
         .def_static(
             "register_type",
-            &topic_type_support<DynamicData>::register_type,
+            [](PyDomainParticipant& dp, const std::string& type_name) {
+                topic_type_support<DynamicData>::register_type(dp, type_name);
+            },
             py::arg("participant"),
             py::arg("type_name"),
             "Register a type with a participant."
@@ -1744,7 +1723,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "Deserialize a sample from a CDR buffer."
         );
 
-    py::class_<PyDynamicDataFieldsView>(dd_class, "FieldView")
+    fields_view
         .def(
             py::init<
                 DynamicData&
@@ -1768,7 +1747,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             &PyDynamicDataFieldsView::len
         );
 
-    py::class_<PyDynamicDataFieldsIterator>(dd_class, "FieldIterator")
+    fields_iterator
         .def(
             py::init<
                 DynamicData&,
@@ -1780,7 +1759,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             &PyDynamicDataFieldsIterator::next
         );
 
-    py::class_<PyDynamicDataIndexIterator>(dd_class, "IndexIterator")
+    index_iterator
         .def(
             py::init<
                 DynamicData&,
@@ -1792,7 +1771,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             &PyDynamicDataIndexIterator::next
         );
 
-    py::class_<PyDynamicDataItemsView>(dd_class, "ItemView")
+    items_view
         .def(
             py::init<
                 DynamicData&
@@ -1816,7 +1795,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             &PyDynamicDataItemsView::len
         );
 
-    py::class_<PyDynamicDataItemsIterator>(dd_class, "ItemsIterator")
+    items_iterator
         .def(
             py::init<
                 DynamicData&,
@@ -1827,15 +1806,13 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "__next__",
             &PyDynamicDataItemsIterator::next
         );
-
-    init_type<dds::core::xtypes::DynamicData>(dd_class);
 }
 
 template<>
 void process_inits<DynamicData>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<DynamicData>(m, "DynamicData");
+        [m, &l]() mutable {
+            return init_type_class<DynamicData>(m, l, "DynamicData");
         }
     );
 }

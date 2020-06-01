@@ -217,11 +217,9 @@ void init_class_defs(py::class_<WireProtocol>& cls) {
             "computed CRC with the received RTPS CRC submessage when this "
             "field is set to true."
         )
-        .def_property_readonly_static(
+        .def_readonly_static(
             "RTPS_AUTO_ID",
-            [](py::object&) {
-                return WireProtocol::RTPS_AUTO_ID;
-            },
+            &WireProtocol::RTPS_AUTO_ID,
             "Indicates that RTI Connext should choose an appropriate host, "
             "app, instance or object ID automatically."
         )
@@ -237,25 +235,27 @@ void init_class_defs(py::class_<WireProtocol>& cls) {
 
 template<>
 void process_inits<WireProtocol>(py::module& m, ClassInitList& l) {
-    auto wpak = init_dds_safe_enum<WireProtocolAutoKind_def>(m, "WireProtocolAutoKind");
-
-    py::enum_<WireProtocolAutoKind::type>(wpak, "WireProtocolAutoKind")
-        .value(
-            "RTPS_AUTO_ID_FROM_IP",
-            WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_IP,
-            "Select the IPv4 based algorithm."
-        )
-        .value(
-            "RTPS_AUTO_ID_FROM_MAC",
-            WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_MAC,
-            "Select the MAC based algorithm."
-        )
-        .value(
-            "RTPS_AUTO_ID_FROM_UUID",
-            WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_UUID,
-            "Select the UUID based algorithm."
-        )
-        .export_values();
+    init_dds_safe_enum<WireProtocolAutoKind_def>(m, "WireProtocolAutoKind",
+        [](py::object& o) {
+            py::enum_<WireProtocolAutoKind::type>(o, "Enum")
+                .value(
+                    "RTPS_AUTO_ID_FROM_IP",
+                    WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_IP,
+                    "Select the IPv4 based algorithm."
+                )
+                .value(
+                    "RTPS_AUTO_ID_FROM_MAC",
+                    WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_MAC,
+                    "Select the MAC based algorithm."
+                )
+                .value(
+                    "RTPS_AUTO_ID_FROM_UUID",
+                    WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_UUID,
+                    "Select the UUID based algorithm."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

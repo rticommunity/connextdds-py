@@ -14,16 +14,6 @@ public:
     using dds::pub::PublisherListener::PublisherListener;
     using PyAnyDataWriterListener::PyAnyDataWriterListener;
 
-    /*using PyAnyDataWriterListener::on_offered_deadline_missed;
-    using PyAnyDataWriterListener::on_offered_incompatible_qos;
-    using PyAnyDataWriterListener::on_liveliness_lost;
-    using PyAnyDataWriterListener::on_publication_matched;
-    using PyAnyDataWriterListener::on_reliable_writer_cache_changed;
-    using PyAnyDataWriterListener::on_reliable_reader_activity_changed;
-    using PyAnyDataWriterListener::on_instance_replaced;
-    using PyAnyDataWriterListener::on_application_acknowledgment;
-    using PyAnyDataWriterListener::on_service_request_accepted;*/
-
     virtual
     ~PyPublisherListener() {}
 };

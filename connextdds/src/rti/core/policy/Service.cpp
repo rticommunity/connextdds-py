@@ -38,50 +38,52 @@ void init_class_defs(py::class_<Service>& cls) {
 
 template<>
 void process_inits<Service>(py::module& m, ClassInitList& l) {
-    auto sk = init_dds_safe_enum<ServiceKind_def>(m, "ServiceKind");
-
-    py::enum_<ServiceKind::type>(sk, "ServiceKind")
-        .value(
-            "NO_SERVICE",
-            ServiceKind::type::NO_SERVICE,
-            "There is no service associated to the Entity."
-        )
-        .value(
-            "PERSISTENCE",
-            ServiceKind::type::PERSISTENCE,
-            "The Entity is associated to RTI Persistence Service."
-        )
-        .value(
-            "QUEUING",
-            ServiceKind::type::QUEUING,
-            "The Entity is associated to RTI Queuing Service."
-        )
-        .value(
-            "ROUTING",
-            ServiceKind::type::ROUTING,
-            "The Entity is associated to RTI Routing Service."
-        )
-        .value(
-            "RECORDING",
-            ServiceKind::type::RECORDING,
-            "The Entity is associated to RTI Recording Service."
-        )
-        .value(
-            "REPLAY",
-            ServiceKind::type::REPLAY,
-            "The Entity is associated to RTI Replay Service."
-        )
-        .value(
-            "DATABASE_INTEGRATION",
-            ServiceKind::type::DATABASE_INTEGRATION,
-            "The Entity is associated to RTI Database Integration Service."
-        )
-        .value(
-            "WEB_INTEGRATION",
-            ServiceKind::type::WEB_INTEGRATION,
-            "The Entity is associated to RTI Web Integration Service."
-        )
-        .export_values();
+    init_dds_safe_enum<ServiceKind_def>(m, "ServiceKind",
+        [](py::object& o) {
+            py::enum_<ServiceKind::type>(o, "Enum")
+                .value(
+                    "NO_SERVICE",
+                    ServiceKind::type::NO_SERVICE,
+                    "There is no service associated to the Entity."
+                )
+                .value(
+                    "PERSISTENCE",
+                    ServiceKind::type::PERSISTENCE,
+                    "The Entity is associated to RTI Persistence Service."
+                )
+                .value(
+                    "QUEUING",
+                    ServiceKind::type::QUEUING,
+                    "The Entity is associated to RTI Queuing Service."
+                )
+                .value(
+                    "ROUTING",
+                    ServiceKind::type::ROUTING,
+                    "The Entity is associated to RTI Routing Service."
+                )
+                .value(
+                    "RECORDING",
+                    ServiceKind::type::RECORDING,
+                    "The Entity is associated to RTI Recording Service."
+                )
+                .value(
+                    "REPLAY",
+                    ServiceKind::type::REPLAY,
+                    "The Entity is associated to RTI Replay Service."
+                )
+                .value(
+                    "DATABASE_INTEGRATION",
+                    ServiceKind::type::DATABASE_INTEGRATION,
+                    "The Entity is associated to RTI Database Integration Service."
+                )
+                .value(
+                    "WEB_INTEGRATION",
+                    ServiceKind::type::WEB_INTEGRATION,
+                    "The Entity is associated to RTI Web Integration Service."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

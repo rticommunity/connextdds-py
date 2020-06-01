@@ -120,22 +120,6 @@ void init_dds_vector_buffer_defs(py::class_<dds::core::vector<T>>& cls, const st
             py::arg("buffer"),
             ("Create a " + name + " from another Python buffer.").c_str()
         )
-        /*.def(
-            py::init(
-                [](py::bytes b) {
-                    char *buffer;
-                    ssize_t length;
-                    if (PYBIND11_BYTES_AS_STRING_AND_SIZE(b.ptr(), &buffer, &length)) {
-                        throw py::value_error("Unable to extract bytes contents!");
-                    }
-                    dds::core::vector<T> v((length + sizeof(T)) / sizeof(T));
-                    std::copy(buffer, buffer + length, v.begin());
-                    return v;
-                }
-            ),
-            py::arg("bytes"),
-            ("Create a " + name + " from a Python bytes sequence.").c_str()
-        )*/
         .def_buffer(
             [](dds::core::vector<T>& v) {
                 return py::buffer_info(
@@ -179,16 +163,6 @@ void init_dds_vector_buffer_class(py::module& m, const std::string& cls_name, Cl
             );
         }
     );
-}
-
-template<>
-void process_inits<PyVector>(py::module& m, ClassInitList& l) {
-    init_dds_vector_buffer_class<uint8_t>(m, "ByteSeq", l);
-    init_dds_vector_buffer_class<int32_t>(m, "DdsInt32Seq", l);
-    init_dds_vector_nonbuffer_class<rti::core::Locator>(m, "DdsLocatorSeq", l);
-    init_dds_vector_nonbuffer_class<rti::core::TransportInfo>(m, "TransportInfoSeq", l);
-    init_dds_vector_nonbuffer_class<rti::core::Cookie>(m, "CookieSeq", l);
-    init_dds_vector_nonbuffer_class<rti::core::EndpointGroup>(m, "DdsEndpointGroupSeq", l);
 }
 
 }

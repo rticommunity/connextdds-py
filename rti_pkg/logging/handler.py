@@ -13,6 +13,7 @@ class DistlogHandler(logging.Handler):
     }
 
     def __init__(self, options=None):
+        # type: (Optional[distlog.LoggerOptions]) -> None
         logging.Handler.__init__(self)
         DistlogHandler._count += 1
 
@@ -22,6 +23,7 @@ class DistlogHandler(logging.Handler):
         self._instance = distlog.Logger.instance
 
     def close(self):
+        # type: () -> None
         self.acquire()
         if self._instance is None:
             raise RuntimeError('Attempted multiple closure of DistlogHandler')
@@ -33,6 +35,7 @@ class DistlogHandler(logging.Handler):
         logging.Handler.close(self)
 
     def emit(self, record):
+        # type: (logging.LogRecord) -> None
         level = DistlogHandler._levelMap[record.levelno]
         try:
             self._instance.log(level, record.getMessage(), record.category)

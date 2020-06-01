@@ -36,7 +36,8 @@ void init_class_defs(py::class_<Time>& cls) {
                     uint32_t nanosec = (nanoseconds % rti::core::nanosec_per_sec);
                     return Time(sec, nanosec);
                 }
-            )
+            ),
+            "Create a Time object from a timestamp."
         )
         .def_property(
             "sec", 
@@ -58,66 +59,34 @@ void init_class_defs(py::class_<Time>& cls) {
         )
         .def(
             py::self > py::self,
-            /*"__gt__",
-            [](const Time& t1, const Time& t2) {
-                return t1 > t2;
-            },*/
             "Check if this Time is greater than another."
         )
         .def(
             py::self >= py::self,
-            /*"__ge__",
-            [](const Time& t1, const Time& t2) {
-                return t1 >= t2;
-            },*/
             "Check if this Time is greater than or equal another."
         )
         .def(
             py::self == py::self,
-            /*"__eq__",
-            [](const Time& t1, const Time& t2) {
-                return t1 == t2;
-            },*/
             "Check if this Time is equal to another."
         )
         .def(
             py::self != py::self,
-            /*"__ne__",
-            [](const Time& t1, const Time& t2) {
-                return t1 != t2;
-            },*/
             "Check if this Time is not equal to another."
         )
         .def(
             py::self <= py::self,
-            /*"__le__",
-            [](const Time& t1, const Time& t2) {
-                return t1 <= t2;
-            },*/
             "Check if this Time is less than or equal another."
         )
         .def(
             py::self < py::self,
-            /*"__lt__",
-            [](const Time& t1, const Time& t2) {
-                return t1 < t2;
-            },*/
             "Check if this Time is less than another."
         )
         .def(
             py::self += Duration(),
-            /*"__iadd__",
-            [](Time& t, const Duration& d) {
-                return t += d;
-            },*/
             "Add a Duration to this Time object."
         )
         .def(
             py::self -= Duration(),
-            /*"__isub__",
-            [](Time& t, const Duration& d) {
-                return t -= d;
-            },*/
             "Subtract a Duration from this Time object."
         )
         .def(
@@ -182,26 +151,14 @@ void init_class_defs(py::class_<Time>& cls) {
         )
         .def(
             py::self + Duration(),
-            /*"__add__",
-            [](const Time& t, const Duration& d) {
-                return t + d;
-            },*/
             "Add a Time and Duration together."
         )
         .def(
             Duration() + py::self,
-            /*"__radd__",
-            [](const Duration& d, const Time& t) {
-                return d + t;
-            },*/
             "Add a Time and Duration together."
         )
         .def(
             py::self - Duration(),
-            /*"__sub__",
-            [](const Time& t, const Duration& d) {
-                return t - d;
-            },*/
             "Subtract a Duration from a Time."
         )
         .def(

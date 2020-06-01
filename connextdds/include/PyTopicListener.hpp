@@ -113,10 +113,10 @@ void init_noop_topic_listener_defs(py::class_<PyNoOpTopicListener<T>, PyTopicLis
 }
 
 template<typename T>
-void init_topic_listener(py::object& o) {
-    py::class_<PyTopicListener<T>, PyTopicListenerTrampoline<T>> tl(o, "TopicListener");
-    py::class_<PyNoOpTopicListener<T>, PyTopicListener<T>, PyNoOpTopicListenerTrampoline<T>> notl(o, "NoOpTopicListener");
-    
+void init_topic_listener(
+    py::class_<PyTopicListener<T>, PyTopicListenerTrampoline<T>>& tl,
+    py::class_<PyNoOpTopicListener<T>, PyTopicListener<T>, PyNoOpTopicListenerTrampoline<T>>& notl
+) {
     init_topic_listener_defs(tl);
     init_noop_topic_listener_defs(notl);
 }

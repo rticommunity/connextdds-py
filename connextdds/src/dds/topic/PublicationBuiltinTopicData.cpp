@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/topic/BuiltinTopic.hpp>
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
@@ -43,7 +44,9 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {
         )
         .def_property_readonly(
             "type_name",
-            &PublicationBuiltinTopicData::type_name,
+            [](const PublicationBuiltinTopicData& data) {
+                return data.type_name().to_std_string();
+            },
             "The name of the type attached to the Topic."
         )
         .def_property_readonly(
@@ -138,10 +141,8 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {
 #endif
         .def_property_readonly(
             "type",
-            [](const PublicationBuiltinTopicData& p) -> py::object {
-                auto v = p->type();
-                if (v.is_set()) return py::cast(v.get());
-                return py::cast(nullptr);
+            [](const PublicationBuiltinTopicData& p) {
+                return p->type();
             },
             "The type."
         )
@@ -240,15 +241,13 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {
             py::self != py::self,
             "Test for inequality."
         );
-
-    init_type<PublicationBuiltinTopicData>(cls);
 }
 
 template<>
 void process_inits<PublicationBuiltinTopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<PublicationBuiltinTopicData>(m, "PublicationBuiltinTopicData");
+        [m, &l]() mutable {
+            return init_type_class<PublicationBuiltinTopicData>(m, l, "PublicationBuiltinTopicData");
         }
     );
 }

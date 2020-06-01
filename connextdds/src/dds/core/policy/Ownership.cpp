@@ -48,33 +48,35 @@ void init_class_defs(py::class_<Ownership>& cls) {
 
 static
 void init_dds_ownership_kind(py::module& m) {
-    auto ok = init_dds_safe_enum<OwnershipKind_def>(m, "OwnershipKind");
-
-    py::enum_<OwnershipKind::type>(ok, "OwnershipKind")
-        .value(
-            "SHARED",
-            OwnershipKind::type::SHARED,
-            "[default] Indicates shared ownership for each instance."
-            "\n\n"
-            "Multiple writers are allowed to update the same instance and all "
-            "the updates are made available to the readers. In other words "
-            "there is no concept of an owner for the instances."
-            "\n\n"
-            "This is the default behavior if the OWNERSHIP policy is not "
-            "specified or supported."
-        )
-        .value(
-            "EXCLUSIVE",
-            OwnershipKind::type::EXCLUSIVE,
-            "Indicates each instance can only be owned by one DataWriter, but "
-            "the owner of an instance can change dynamically."
-            "\n\n"
-            "The selection of the owner is controlled by the setting of the "
-            "OWNERSHIP_STRENGTH policy. The owner is always set to be the "
-            "highest-strength DataWriter object among the ones currently "
-            "active (as determined by the LIVELINESS)."
-        )
-        .export_values();
+    init_dds_safe_enum<OwnershipKind_def>(m, "OwnershipKind",
+        [](py::object& o) {
+            py::enum_<OwnershipKind::type>(o, "Enum")
+                .value(
+                    "SHARED",
+                    OwnershipKind::type::SHARED,
+                    "[default] Indicates shared ownership for each instance."
+                    "\n\n"
+                    "Multiple writers are allowed to update the same instance and all "
+                    "the updates are made available to the readers. In other words "
+                    "there is no concept of an owner for the instances."
+                    "\n\n"
+                    "This is the default behavior if the OWNERSHIP policy is not "
+                    "specified or supported."
+                )
+                .value(
+                    "EXCLUSIVE",
+                    OwnershipKind::type::EXCLUSIVE,
+                    "Indicates each instance can only be owned by one DataWriter, but "
+                    "the owner of an instance can change dynamically."
+                    "\n\n"
+                    "The selection of the owner is controlled by the setting of the "
+                    "OWNERSHIP_STRENGTH policy. The owner is always set to be the "
+                    "highest-strength DataWriter object among the ones currently "
+                    "active (as determined by the LIVELINESS)."
+                )
+                .export_values();
+        }
+    );
 }
 
 template<>

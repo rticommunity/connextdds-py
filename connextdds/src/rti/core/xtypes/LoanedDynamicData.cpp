@@ -18,12 +18,6 @@ void init_class_defs(py::class_<LoanedDynamicData>& cls) {
             (dds::core::xtypes::DynamicData& (LoanedDynamicData::*)()) &LoanedDynamicData::get,
             "Obtains the DynamicData object representing a member of a DynamicData object."
         )
-        /*.def(
-            "get",
-            (const dds::core::xtypes::DynamicData& (LoanedDynamicData::*)() const) &LoanedDynamicData::get,
-            py::return_value_policy::reference_internal,
-            "Obtains the DynamicData object representing a member of a DynamicData object."
-        )*/
         .def(
             "__enter__",
             [](LoanedDynamicData& ldd) -> LoanedDynamicData& {

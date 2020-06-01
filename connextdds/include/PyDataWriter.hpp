@@ -27,10 +27,6 @@ class PyDataWriter :    public dds::pub::DataWriter<T>,
 public:
     using dds::pub::DataWriter<T>::DataWriter;
 
-    /*PyDataWriter(const PyPublisher& p, const PyTopic<T>& t) : dds::pub::DataWriter<T>(p, t) {}
-
-     */
-
     PyDataWriter(
         const PyPublisher& p,
         const PyTopic<T>& t,
@@ -87,16 +83,26 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             "Creates a DataWriter."
         )
         .def(
-            py::init<
-                const PyPublisher&,
-                const PyTopic<T>&,
-                const dds::pub::qos::DataWriterQos&,
-                PyDataWriterListener<T>*, 
-                const dds::core::status::StatusMask&>(),
+            py::init(
+                [](
+                    const PyPublisher& p,
+                    const PyTopic<T>& t,
+                    const dds::pub::qos::DataWriterQos& q,
+                    dds::core::optional<PyDataWriterListener<T>*> l, 
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PyDataWriter<T>(p, t, q, listener, m);
+                }
+            ),
             py::arg("pub"),
             py::arg("topic"),
             py::arg("qos"),
-            py::arg("listener") = (PyDataWriterListener<T>*) nullptr,
+            py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Creates a DataWriter with QoS and a listener."
         )
@@ -426,6 +432,20 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             "Get the Topic object associated with this DataWriter."
         )
         .def_property_readonly(
+            "type_name",
+            [](const PyDataWriter<T>& dw) {
+                return dw.py_type_name();
+            },
+            "Get the type name for the topic object associated with this DataWriter."
+        )
+        .def_property_readonly(
+            "topic_name",
+            [](const PyDataWriter<T>& dw) {
+                return dw.py_topic_name();
+            },
+            "Get the topic name associated with this DataWriter."
+        )
+        .def_property_readonly(
             "publisher",
             &PyDataWriter<T>::py_publisher,
             "Get the Publisher that owns this DataWriter."
@@ -439,20 +459,28 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         .def_property_readonly(
             "listener",
             [](PyDataWriter<T>& dw) {
-                return dynamic_cast<PyDataWriterListener<T>*>(dw.listener());
+                dds::core::optional<PyDataWriterListener<T>*> l;
+                auto ptr = dynamic_cast<PyDataWriterListener<T>*>(dw.listener());
+                if (nullptr != ptr) l = ptr;
+                return l;
             },
             "Get the listener associated with the DataWriter or set the listener and status mask as a tuple."
         )
         .def(
             "bind_listener",
-            [](PyDataWriter<T>& dw, PyDataWriterListener<T>* l, const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
-                    py::cast(l).inc_ref();
+            [](PyDataWriter<T>& dw, dds::core::optional<PyDataWriterListener<T>*> l, const dds::core::status::StatusMask& m) {
+#if rti_connext_version_gte(6, 0, 1)
+                auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                if (nullptr != listener) {
+                    py::cast(listener).inc_ref();
                 }
                 if (nullptr != dw.listener()) {
                     py::cast(dw.listener()).dec_ref();
                 }
-                dw.listener(l, m);
+                dw.listener(listener, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
@@ -596,14 +624,6 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             py::arg("params"),
             "Write with advanced parameters."
         )
-        /*.def(
-            "delete_data",
-            [](DataWriter<T>& writer, T* sample) {
-                return writer->delete_data(sample);
-            },
-            py::arg("data"),
-            "Delete data of the writer's associated type."
-        ) */
         .def(
             "register_instance",
             [](PyDataWriter<T>& writer, const T& key, rti::pub::WriteParams& params) {
@@ -641,9 +661,11 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         )
         .def_static(
             "find_by_name",
-            [](PyPublisher& pub, const std::string& name) -> py::object {
+            [](PyPublisher& pub, const std::string& name) {
+                dds::core::optional<PyDataWriter<T>> retval;
                 auto dw = rti::pub::find_datawriter_by_name<PyDataWriter<T>>(pub, name);
-                return (dw == dds::core::null) ? py::cast(nullptr) : py::cast(dw);
+                if (dw != dds::core::null) retval = dw;
+                return retval;
             },
             py::arg("publisher"),
             py::arg("name"),
@@ -652,9 +674,11 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         )
         .def_static(
             "find_by_name",
-            [](PyDomainParticipant& dp, const std::string name) ->py::object {
+            [](PyDomainParticipant& dp, const std::string name) {
+                dds::core::optional<PyDataWriter<T>> retval;
                 auto dw = rti::pub::find_datawriter_by_name<PyDataWriter<T>>(dp, name);
-                return (dw == dds::core::null) ? py::cast(nullptr) : py::cast(dw);
+                if(dw != dds::core::null) retval = dw;
+                return retval;
             },
             py::arg("participant"),
             py::arg("name"),
@@ -663,9 +687,11 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         )
         .def_static(
             "find_by_topic",
-            [](PyPublisher& pub, const std::string& topic_name) -> py::object {
+            [](PyPublisher& pub, const std::string& topic_name) {
+                dds::core::optional<PyDataWriter<T>> retval;
                 auto dw = rti::pub::find_datawriter_by_topic_name<PyDataWriter<T>>(pub, topic_name);
-                return (dw == dds::core::null) ? py::cast(nullptr) : py::cast(dw);
+                if (dw != dds::core::null) retval = dw;
+                return retval;
             },
             py::arg("publisher"),
             py::arg("name"),
@@ -896,9 +922,6 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
 
     py::implicitly_convertible<PyIAnyDataWriter, PyDataWriter<T>>();
     py::implicitly_convertible<PyIEntity, PyDataWriter<T>>();
-
-    py::bind_vector<std::vector<PyDataWriter<T>>>(cls, "Seq");
-    py::implicitly_convertible<py::iterable, std::vector<PyDataWriter<T>>>();
 }
 
 template<typename T>
@@ -908,7 +931,7 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, P
 #if rti_connext_version_gte(6, 0, 0)
         .def(
             "create_data",
-            [](dds::pub::DataWriter<T>& dw) {
+            [](PyDataWriter<T>& dw) {
                 return dw->create_data();
             },
             "Create data of the writer's associated type and initialize it."
@@ -916,7 +939,7 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, P
 #endif
         .def(
             "key_value",
-            [](dds::pub::DataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
+            [](PyDataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
                 T value;
                 dw.key_value(value, handle);
                 return value;
@@ -926,7 +949,7 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, P
         )
         .def(
             "topic_instance_key_value",
-            [](dds::pub::DataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
+            [](PyDataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
                 T value;
                 dds::topic::TopicInstance<T> ti(handle, value);
                 dw.key_value(ti, handle);
@@ -938,9 +961,7 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, P
 }
 
 template<typename T>
-void init_datawriter(py::object& o) {
-    py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter> dw(o, "DataWriter");
-
+void init_datawriter(py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& dw) {
     init_dds_typed_datawriter_template(dw);
 }
 

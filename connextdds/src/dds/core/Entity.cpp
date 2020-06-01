@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include "PyEntity.hpp"
 #include <dds/core/Entity.hpp>
 
@@ -62,12 +63,12 @@ template<>
 void process_inits<Entity>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyIEntity>(m, "IEntity");
+            return init_class_with_ptr_seq<PyIEntity>(m, "IEntity");
         }
     );
     l.push_back(
         [m]() mutable {
-            return init_class<PyEntity, PyIEntity>(m, "Entity");
+            return init_class_with_seq<PyEntity, PyIEntity>(m, "Entity");
         }
     ); 
 }

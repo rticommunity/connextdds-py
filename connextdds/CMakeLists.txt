@@ -13,9 +13,10 @@ find_package(
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
 
-add_library(
+pybind11_add_module(
     connextdds 
     MODULE
+    NO_EXTRAS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyAsyncioExecutor.cpp"
@@ -40,6 +41,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataProperty.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/ACTEnumMember.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/ACTUnionMember.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataMemberInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataTypeSerializationProperty.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/UnidimensionalCollectionType.cpp"
@@ -98,6 +100,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/ProductVersion.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/Locator.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/Guid.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/TransportInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/TransportMulticastSettings.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/EndpointGroup.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/ConfigNamespace.cpp"
@@ -110,10 +113,13 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/ServiceRequest.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/status/StatusNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/status/DataStateEx.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/AckResponseData.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/TopicQuery.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/SubNamespace.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/AcknowledgmentInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/PubNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/FlowController.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/WriteParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/domain/DomainNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/domain/DomainParticipantConfigParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/RTINamespace.cpp"
@@ -191,7 +197,6 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/Entity.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/InstanceHandle.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/CoreNamespace.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/Vector.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/Time.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/topic/qos/QosNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/topic/qos/TopicQos.cpp"
@@ -243,7 +248,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/connextdds.cpp"
 )
 
-target_link_libraries(connextdds PRIVATE pybind11::module)
+set_target_properties(connextdds PROPERTIES CXX_VISIBILITY_PRESET "default")
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     target_link_libraries(connextdds PRIVATE
@@ -304,13 +309,10 @@ target_compile_options(
     connextdds
     PRIVATE
     "-fpic"
-    "-fvisibility=hidden"
-    "-flto"
 )
 
 target_link_options(
     connextdds
     PRIVATE
     "-fpic"
-    "-flto"
 )

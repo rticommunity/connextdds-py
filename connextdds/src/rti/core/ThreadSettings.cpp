@@ -118,21 +118,24 @@ void init_class_defs(py::class_<ThreadSettings>& cls) {
 
 template<>
 void process_inits<ThreadSettings>(py::module& m, ClassInitList& l) {
-    auto tscrk = init_dds_safe_enum<ThreadSettingsCpuRotationKind_def>(m, "ThreadSettingsCpuRotationKind");
-    py::enum_<ThreadSettingsCpuRotationKind::type>(tscrk, "ThreadSettingsCpuRotationKind")
-        .value(
-            "NO_ROTATION",
-            ThreadSettingsCpuRotationKind::NO_ROTATION,
-            "Any thread controlled by this QoS can run on any listed "
-            "processor, as determined by OS scheduling."
-        )
-        .value(
-            "ROUND_ROBIN",
-            ThreadSettingsCpuRotationKind::ROUND_ROBIN,
-            "Threads controlled by this QoS will be assigned one processor "
-            "from the list in round-robin order."
-        )
-        .export_values();
+    init_dds_safe_enum<ThreadSettingsCpuRotationKind_def>(m, "ThreadSettingsCpuRotationKind",
+        [](py::object& o) {
+            py::enum_<ThreadSettingsCpuRotationKind::type>(o, "Enum")
+                .value(
+                    "NO_ROTATION",
+                    ThreadSettingsCpuRotationKind::NO_ROTATION,
+                    "Any thread controlled by this QoS can run on any listed "
+                    "processor, as determined by OS scheduling."
+                )
+                .value(
+                    "ROUND_ROBIN",
+                    ThreadSettingsCpuRotationKind::ROUND_ROBIN,
+                    "Threads controlled by this QoS will be assigned one processor "
+                    "from the list in round-robin order."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

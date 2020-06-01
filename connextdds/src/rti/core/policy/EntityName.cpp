@@ -21,42 +21,14 @@ void init_class_defs(py::class_<EntityName>& cls) {
         )
         .def_property(
             "name",
-            [](const EntityName& en) {
-                if (en.name().is_set()) {
-                    return py::cast(en.name().get());
-                }
-                else {
-                    return py::cast(nullptr);
-                }
-            },
-            [](EntityName& en, py::object& value) {
-                if (value.is_none()) {
-                    return en.name(rti::core::optional_value<std::string>());
-                }
-                else {
-                    return en.name(rti::core::optional_value<std::string>(py::cast<std::string>(value)));
-                }
-            },
+            (rti::core::optional_value<std::string> (EntityName::*)() const) &EntityName::name,
+            (EntityName& (EntityName::*)(const rti::core::optional_value<std::string>&)) &EntityName::name,
             "Sets the entity name."
         )
         .def_property(
             "role_name",
-            [](const EntityName& en) {
-                if (en.name().is_set()) {
-                    return py::cast(en.role_name().get());
-                }
-                else {
-                    return py::cast(nullptr);
-                }
-            },
-            [](EntityName& en, py::object& value) {
-                if (value.is_none()) {
-                    return en.role_name(rti::core::optional_value<std::string>());
-                }
-                else {
-                    return en.role_name(rti::core::optional_value<std::string>(py::cast<std::string>(value)));
-                }
-            },
+            (rti::core::optional_value<std::string> (EntityName::*)() const) &EntityName::role_name,
+            (EntityName& (EntityName::*)(const rti::core::optional_value<std::string>&)) &EntityName::role_name,
             "Sets the role name."
         )
         .def(

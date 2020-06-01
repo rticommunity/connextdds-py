@@ -14,11 +14,6 @@ void init_class_defs(py::class_<Availability>& cls) {
             "Create a default Availability QoS policy."
         )
         .def(
-            /*py::init(
-                [](bool ers, const dds::core::Duration& dwt, const dds::core::Duration& ewt, const std::vector<EndpointGroup>& reg) {
-                    return Availability(ers, dwt, ewt, reg);
-                }
-            )*/
             py::init<
                 bool,
                 const dds::core::Duration&,

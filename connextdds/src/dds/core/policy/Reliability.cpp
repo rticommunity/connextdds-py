@@ -19,7 +19,7 @@ void init_class_defs(py::class_<Reliability>& cls) {
                 const dds::core::Duration&
             >(),
             py::arg("kind"),
-            py::arg("max_blocking_time") = dds::core::Duration::from_millisecs(100),
+            py::arg_v("max_blocking_time", dds::core::Duration::from_millisecs(100), "dds.Duration.from_milliseconds(100)"),
             "Creates an instance with the specified reliability kind an "
             "optionally a specific maximum blocking time."
         )
@@ -50,7 +50,7 @@ void init_class_defs(py::class_<Reliability>& cls) {
         .def_static(
             "reliable",
             &Reliability::Reliable,
-            py::arg("max_blocking_time") = dds::core::Duration::from_millisecs(100),
+            py::arg_v("max_blocking_time", dds::core::Duration::from_millisecs(100), "dds.Duration.from_milliseconds(100)"),
             "Creates a policy with ReliabilityKind.RELIABLE and optionally a "
             "max blocking time."
         )
@@ -71,39 +71,41 @@ void init_class_defs(py::class_<Reliability>& cls) {
 
 static
 void init_dds_reliability_kind(py::module& m) {
-    auto rk = init_dds_safe_enum<ReliabilityKind_def>(m, "ReliabilityKind");
-
-    py::enum_<ReliabilityKind::type>(rk, "ReliabilityKind")
-        .value(
-            "BEST_EFFORT",
-            ReliabilityKind::type::BEST_EFFORT,
-            "Indicates that it is acceptable to not retry propagation of any "
-            "samples."
-            "\n\n"
-            "Presumably new values for the samples are generated often enough "
-            "that it is not necessary to re-send or acknowledge any samples."
-            "\n\n"
-            "[default] for DataReader and Topic."
-        )
-        .value(
-            "RELIABLE",
-            ReliabilityKind::type::RELIABLE,
-            "Specifies that RTI Connext will attempt to deliver all samples "
-            "in its history. Missed samples may be retried."
-            "\n\n"
-            "In steady-state (no modifications communicated via the "
-            "DataWriter), RTI Connext guarantees that all samples in the "
-            "DataWriter history will eventually be delivered to all the "
-            "DataReader objects (subject to timeouts that indicate loss of "
-            "communication with a particular Subscriber)."
-            "\n\n"
-            "Outside steady state, the HISTORY and RESOURCE_LIMITS policies "
-            "will determine how samples become part of the history and "
-            "whether samples can be discarded from it."
-            "\n\n"
-            "[default] for DataWriter."
-        )
-        .export_values();
+    init_dds_safe_enum<ReliabilityKind_def>(m, "ReliabilityKind",
+        [](py::object& o) {
+             py::enum_<ReliabilityKind::type>(o, "Enum")
+                .value(
+                    "BEST_EFFORT",
+                    ReliabilityKind::type::BEST_EFFORT,
+                    "Indicates that it is acceptable to not retry propagation of any "
+                    "samples."
+                    "\n\n"
+                    "Presumably new values for the samples are generated often enough "
+                    "that it is not necessary to re-send or acknowledge any samples."
+                    "\n\n"
+                    "[default] for DataReader and Topic."
+                )
+                .value(
+                    "RELIABLE",
+                    ReliabilityKind::type::RELIABLE,
+                    "Specifies that RTI Connext will attempt to deliver all samples "
+                    "in its history. Missed samples may be retried."
+                    "\n\n"
+                    "In steady-state (no modifications communicated via the "
+                    "DataWriter), RTI Connext guarantees that all samples in the "
+                    "DataWriter history will eventually be delivered to all the "
+                    "DataReader objects (subject to timeouts that indicate loss of "
+                    "communication with a particular Subscriber)."
+                    "\n\n"
+                    "Outside steady state, the HISTORY and RESOURCE_LIMITS policies "
+                    "will determine how samples become part of the history and "
+                    "whether samples can be discarded from it."
+                    "\n\n"
+                    "[default] for DataWriter."
+                )
+                .export_values();
+        }
+    );
 }
 
 template<>

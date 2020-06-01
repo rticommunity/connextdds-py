@@ -75,11 +75,6 @@ void init_class_defs(py::class_<DynamicType>& cls) {
             "Gets the name."
         )
         .def(
-            "print_idl",
-            &rti::core::xtypes::print_idl,
-            "Prints the IDL representation of this type to the standard output."
-        )
-        .def(
             "is_primitive_type",
             [](const DynamicType& dt) {
                 return dds::core::xtypes::is_primitive_type(dt);
@@ -111,32 +106,8 @@ void init_class_defs(py::class_<DynamicType>& cls) {
             "print_idl",
             &rti::core::xtypes::print_idl,
             py::arg("index") = 0,
-            "Print the equivalent IDL of the type."
+            "Prints the IDL representation of this type to the standard output."
         )
-        /*.def_static(
-            "is_primitive_type",
-            &is_primitive_type,
-            py::arg("dynamic_type"),
-            "Determines if the DynamicType is a PrimitiveType"
-        )
-        .def_static(
-            "is_constructed_type",
-            &is_primitive_type,
-            py::arg("dynamic_type"),
-            "Determines if the DynamicType is a constructed type."
-        )
-        .def_static(
-            "is_collection_type",
-            &is_collection_type,
-            py::arg("dynamic_type"),
-            "Determins if the DynamicType is a CollectionType."
-        )
-        .def_static(
-            "is_aggregation_type",
-            &is_aggregation_type,
-            py::arg("dynamic_type"),
-            "Determines if the DynamicType is an aggregation type."
-        )*/
         .def(
             py::self == py::self,
             "Compare DataStateEx objects for equality."

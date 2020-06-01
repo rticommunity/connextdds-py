@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/sub/AnyDataReader.hpp>
 #include "PyAnyDataReader.hpp"
 
@@ -80,12 +81,12 @@ template<>
 void process_inits<AnyDataReader>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyIAnyDataReader>(m, "IAnyDataReader");
+            return init_class_with_ptr_seq<PyIAnyDataReader>(m, "IAnyDataReader");
         }
     ); 
     l.push_back(
         [m]() mutable {
-            return init_class<PyAnyDataReader, PyIAnyDataReader>(m, "AnyDataReader");
+            return init_class_with_seq<PyAnyDataReader, PyIAnyDataReader>(m, "AnyDataReader");
         }
     );
 }

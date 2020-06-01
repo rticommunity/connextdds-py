@@ -62,7 +62,9 @@ void init_class_defs(py::class_<Query>& cls) {
         )
         .def_property_readonly(
             "data_reader",
-            &Query::data_reader,
+            [](Query& q) {
+                return PyAnyDataReader(q.data_reader());
+            },
             "The DataReader as an AnyDataReader."
         )
         .def(

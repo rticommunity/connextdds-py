@@ -1,5 +1,7 @@
 #include "PyConnext.hpp"
 #include <rti/core/Cookie.hpp>
+#include "PyVector.hpp"
+#include "PySeq.hpp"
 
 using namespace rti::core;
 
@@ -37,8 +39,10 @@ void init_class_defs(py::class_<Cookie>& cls) {
 template<>
 void process_inits<Cookie>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<Cookie>(m, "Cookie");
+        [m, &l]() mutable {
+            auto func = init_class_with_seq<Cookie>(m, "Cookie");
+            init_dds_vector_nonbuffer_class<Cookie>(m, "CookieVector", l);
+            return func;
         }
     );
 }

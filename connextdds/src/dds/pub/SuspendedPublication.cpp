@@ -10,7 +10,7 @@ void init_class_defs(py::class_<SuspendedPublication>& cls) {
     cls
         .def(
             py::init<
-                const Publisher&
+                const PyPublisher&
             >(),
             py::arg("publisher"),
             "Suspends the publications of the publisher."

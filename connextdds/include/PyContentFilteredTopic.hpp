@@ -83,7 +83,8 @@ void init_content_filtered_topics_defs(py::class_<PyContentFilteredTopic<T>, PyI
             >(),
             py::arg("topic"),
             py::arg("name"),
-            py::arg("filter")
+            py::arg("contentfilter"),
+            "Create a ContentFilteredTopic with a name and Filter."
         )
         .def(
             py::init(
@@ -163,15 +164,12 @@ void init_content_filtered_topics_defs(py::class_<PyContentFilteredTopic<T>, PyI
 
     py::implicitly_convertible<PyITopicDescription<T>, PyContentFilteredTopic<T>>();
     py::implicitly_convertible<PyIEntity, PyContentFilteredTopic<T>>();
-
-    py::bind_vector<std::vector<PyContentFilteredTopic<T>>>(cls, "Seq");
-    py::implicitly_convertible<py::iterable, std::vector<PyContentFilteredTopic<T>>>();
 }
 
 template<typename T>
-void init_content_filtered_topic(py::object& o) {
-    py::class_<PyContentFilteredTopic<T>, PyITopicDescription<T>, PyIAnyTopic> cft(o, "ContentFilteredTopic");
-
+void init_content_filtered_topic(
+    py::class_<PyContentFilteredTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& cft
+) {
     init_content_filtered_topics_defs(cft);
 }
 

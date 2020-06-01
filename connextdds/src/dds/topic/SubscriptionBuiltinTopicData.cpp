@@ -1,5 +1,6 @@
 #include "PyConnext.hpp"
 #include <dds/topic/BuiltinTopic.hpp>
+#include "PySeq.hpp"
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
@@ -42,7 +43,9 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
         )
         .def_property_readonly(
             "type_name",
-            &SubscriptionBuiltinTopicData::type_name,
+            [](const SubscriptionBuiltinTopicData& data) {
+                return data.type_name().to_std_string();
+            },
             "The name of the type attached to the Topic."
         )
         .def_property_readonly(
@@ -127,10 +130,8 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
 #endif
         .def_property_readonly(
             "type",
-            [](const SubscriptionBuiltinTopicData& p) -> py::object {
-                auto v = p->type();
-                if (v.is_set()) return py::cast(v.get());
-                return py::cast(nullptr);
+            [](const SubscriptionBuiltinTopicData& p) {
+                return p->type();
             },
             "The type."
         )
@@ -236,15 +237,13 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
             py::self != py::self,
             "Test for inequality."
         );
-
-    init_type<SubscriptionBuiltinTopicData>(cls);
 }
 
 template<>
 void process_inits<SubscriptionBuiltinTopicData>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<SubscriptionBuiltinTopicData>(m, "SubscriptionBuiltinTopicData");
+        [m, &l]() mutable {
+            return init_type_class<SubscriptionBuiltinTopicData>(m, l, "SubscriptionBuiltinTopicData");
         }
     );
 }

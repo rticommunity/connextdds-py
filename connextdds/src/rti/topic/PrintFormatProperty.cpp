@@ -64,25 +64,27 @@ void init_class_defs(py::class_<PrintFormatProperty>& cls) {
 
 template<>
 void process_inits<PrintFormatProperty>(py::module& m, ClassInitList& l) {
-    auto pfk = init_dds_safe_enum<PrintFormatKind_def>(m, "PrintFormatKind");
-
-    py::enum_<PrintFormatKind::type>(pfk, "PrintFormatKind")
-        .value(
-            "DEFAULT",
-            PrintFormatKind::type::DEFAULT,
-            "Use a default format specific to RTI Connext to represent the data when converting a data sample to a string."
-        )
-        .value(
-            "XML",
-            PrintFormatKind::type::XML,
-            "Use an XML format to represent the data when converting a data sample to a string."
-        )
-        .value(
-            "JSON",
-            PrintFormatKind::type::JSON,
-            "Use an JSON format to represent the data when converting a data sample to a string."
-        )
-        .export_values();
+    init_dds_safe_enum<PrintFormatKind_def>(m, "PrintFormatKind",
+        [](py::object& o) {
+            py::enum_<PrintFormatKind::type>(o, "Enum")
+                .value(
+                    "DEFAULT",
+                    PrintFormatKind::type::DEFAULT,
+                    "Use a default format specific to RTI Connext to represent the data when converting a data sample to a string."
+                )
+                .value(
+                    "XML",
+                    PrintFormatKind::type::XML,
+                    "Use an XML format to represent the data when converting a data sample to a string."
+                )
+                .value(
+                    "JSON",
+                    PrintFormatKind::type::JSON,
+                    "Use an JSON format to represent the data when converting a data sample to a string."
+                )
+                .export_values();
+        }
+    );
 
     l.push_back(
         [m]() mutable {

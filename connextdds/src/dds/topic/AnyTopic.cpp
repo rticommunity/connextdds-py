@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <dds/topic/AnyTopic.hpp>
 #include "PyAnyTopic.hpp"
 
@@ -70,13 +71,13 @@ template<>
 void process_inits<AnyTopic>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyIAnyTopic>(m, "IAnyTopic");
+            return init_class_with_ptr_seq<PyIAnyTopic>(m, "IAnyTopic");
         }
     ); 
 
     l.push_back(
         [m]() mutable {
-            return init_class<PyAnyTopic>(m, "AnyTopic");
+            return init_class_with_seq<PyAnyTopic>(m, "AnyTopic");
         }
     ); 
 }

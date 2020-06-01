@@ -298,54 +298,56 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls) {
 
 template<>
 void process_inits<DiscoveryConfig>(py::module& m, ClassInitList& l) {
-    auto rppk = init_dds_safe_enum<RemoteParticipantPurgeKind_def>(m, "RemoteParticipantPurgeKind");
-
-    py::enum_<RemoteParticipantPurgeKind::type>(rppk, "RemoteParticipantPurgeKind")
-        .value(
-            "LIVELINESS_BASED",
-            RemoteParticipantPurgeKind::type::LIVELINESS_BASED,
-            "[default] Maintain knowledge of the remote participant for as "
-            "long as it maintains its liveliness contract."
-            "\n\n"
-            "A participant will continue attempting communication with its "
-            "peers, even if discovery communication with them is lost, as "
-            "long as the remote participants maintain their liveliness. If "
-            "both discovery communication and participant liveliness are "
-            "lost, however, the local participant will remove all records of "
-            "the remote participant and its contained endpoints, and no "
-            "further data communication with them will occur until and unless "
-            "they are rediscovered."
-            "\n\n"
-            "The liveliness contract a participant promises to its peers "
-            "(its \"liveliness lease duration\") is specified in its "
-            "DiscoveryConfig.participant_liveliness_lease_duration QoS field. "
-            "It maintains that contract by writing data to those other "
-            "participants with a writer that has a LivelinessKind of "
-            "LivelinessKind.AUTOMATIC or LivelinessKind.MANUAL_BY_PARTICIPANT "
-            "and by asserting itself (at the "
-            "DiscoveryConfig.participant_liveliness_assert_period) over the "
-            "Simple Discovery Protocol."
-        )
-        .value(
-            "NO_PURGE",
-            RemoteParticipantPurgeKind::type::NO_PURGE,
-            "Never \"forget\" a remote participant with which discovery "
-            "communication has been lost."
-            "\n\n"
-            "If a participant with this behavior loses discovery communication "
-            "with a remote participant, it will nevertheless remember that "
-            "remote participant and its endpoints and continue attempting to "
-            "communicate with them indefinitely."
-            "\n\n"
-            "This value has consequences for a participant's resource usage. "
-            "If discovery communication with a remote participant is lost, "
-            "but the same participant is later rediscovered, any relevant "
-            "records that remain in the database will be reused. However, if "
-            "it is not rediscovered, the records will continue to take up "
-            "space in the database for as long as the local participant "
-            "remains in existence."
-        )
-        .export_values();
+    init_dds_safe_enum<RemoteParticipantPurgeKind_def>(m, "RemoteParticipantPurgeKind",
+        [](py::object& o) {
+            py::enum_<RemoteParticipantPurgeKind::type>(o, "Enum")
+                .value(
+                    "LIVELINESS_BASED",
+                    RemoteParticipantPurgeKind::type::LIVELINESS_BASED,
+                    "[default] Maintain knowledge of the remote participant for as "
+                    "long as it maintains its liveliness contract."
+                    "\n\n"
+                    "A participant will continue attempting communication with its "
+                    "peers, even if discovery communication with them is lost, as "
+                    "long as the remote participants maintain their liveliness. If "
+                    "both discovery communication and participant liveliness are "
+                    "lost, however, the local participant will remove all records of "
+                    "the remote participant and its contained endpoints, and no "
+                    "further data communication with them will occur until and unless "
+                    "they are rediscovered."
+                    "\n\n"
+                    "The liveliness contract a participant promises to its peers "
+                    "(its \"liveliness lease duration\") is specified in its "
+                    "DiscoveryConfig.participant_liveliness_lease_duration QoS field. "
+                    "It maintains that contract by writing data to those other "
+                    "participants with a writer that has a LivelinessKind of "
+                    "LivelinessKind.AUTOMATIC or LivelinessKind.MANUAL_BY_PARTICIPANT "
+                    "and by asserting itself (at the "
+                    "DiscoveryConfig.participant_liveliness_assert_period) over the "
+                    "Simple Discovery Protocol."
+                )
+                .value(
+                    "NO_PURGE",
+                    RemoteParticipantPurgeKind::type::NO_PURGE,
+                    "Never \"forget\" a remote participant with which discovery "
+                    "communication has been lost."
+                    "\n\n"
+                    "If a participant with this behavior loses discovery communication "
+                    "with a remote participant, it will nevertheless remember that "
+                    "remote participant and its endpoints and continue attempting to "
+                    "communicate with them indefinitely."
+                    "\n\n"
+                    "This value has consequences for a participant's resource usage. "
+                    "If discovery communication with a remote participant is lost, "
+                    "but the same participant is later rediscovered, any relevant "
+                    "records that remain in the database will be reused. However, if "
+                    "it is not rediscovered, the records will continue to take up "
+                    "space in the database for as long as the local participant "
+                    "remains in existence."
+                )
+                .export_values();
+        }
+    );
         
     l.push_back(
         [m]() mutable {

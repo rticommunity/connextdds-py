@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PyConnext.hpp"
+#include <dds/sub/DataReader.hpp>
 #include <dds/core/cond/Condition.hpp>
 #include <dds/core/cond/StatusCondition.hpp>
 #include <dds/core/cond/GuardCondition.hpp>

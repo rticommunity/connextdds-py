@@ -2,15 +2,10 @@
 
 #include <pybind11/pybind11.h>
 #include "PyEntity.hpp"
-#include "PyOpaqueTypes.hpp"
-#include <dds/core/Time.hpp>
-#include <dds/sub/DataReader.hpp>
 #include "PyCondition.hpp"
 #include <dds/core/xtypes/MemberType.hpp>
 #include <dds/core/xtypes/DynamicData.hpp>
-#include <dds/sub/Sample.hpp>
 #include <dds/core/InstanceHandle.hpp>
-#include <dds/topic/TopicInstance.hpp>
 #include "PyAnyDataReader.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyTopic.hpp"
@@ -34,19 +29,22 @@ PYBIND11_MAKE_OPAQUE(std::vector<rti::core::LongDouble>);
 PYBIND11_MAKE_OPAQUE(std::vector<wchar_t>);
 PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 PYBIND11_MAKE_OPAQUE(std::vector<std::wstring>);
-PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyCondition>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyICondition*>);
+PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyCondition>);
 PYBIND11_MAKE_OPAQUE(std::vector<dds::core::xtypes::Member>);
 PYBIND11_MAKE_OPAQUE(std::vector<dds::core::xtypes::EnumMember>);
 PYBIND11_MAKE_OPAQUE(std::vector<dds::core::xtypes::UnionMember>);
 PYBIND11_MAKE_OPAQUE(std::vector<dds::core::InstanceHandle>);
-PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyEntity>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyIEntity*>);
+PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyEntity>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyDomainParticipant>);
+PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyIAnyTopic*>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyAnyTopic>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PySubscriber>);
+PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyIAnyDataReader*>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyAnyDataReader>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyPublisher>);
+PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyIAnyDataWriter*>);
 PYBIND11_MAKE_OPAQUE(std::vector<pyrti::PyAnyDataWriter>);
 PYBIND11_MAKE_OPAQUE(std::vector<rti::core::EndpointGroup>);
 PYBIND11_MAKE_OPAQUE(std::vector<rti::core::Locator>);

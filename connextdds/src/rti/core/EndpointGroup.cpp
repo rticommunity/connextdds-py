@@ -1,5 +1,7 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <rti/core/policy/CorePolicy.hpp>
+#include "PyVector.hpp"
 
 using namespace rti::core;
 
@@ -36,8 +38,10 @@ void init_class_defs(py::class_<EndpointGroup>& cls) {
 template<>
 void process_inits<EndpointGroup>(py::module& m, ClassInitList& l) {
     l.push_back(
-        [m]() mutable {
-            return init_class<EndpointGroup>(m, "EndpointGroup");
+        [m, &l]() mutable {
+            auto func = init_class_with_seq<EndpointGroup>(m, "EndpointGroup");
+            init_dds_vector_nonbuffer_class<EndpointGroup>(m, "EndpointGroupVector", l);
+            return func;
         }
     );
 }

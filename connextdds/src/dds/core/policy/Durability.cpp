@@ -69,62 +69,65 @@ void init_class_defs(py::class_<Durability>& cls) {
 
 static
 void init_dds_durability_kind(py::module& m) {
-    auto dk = init_dds_safe_enum<DurabilityKind_def>(m, "DurabilityKind");
-    py::enum_<DurabilityKind::type>(dk, "DurabilityKind")
-        .value(
-            "VOLATILE",
-            DurabilityKind::type::VOLATILE,
-            "[default] RTI Connext does not need to keep any samples of data "
-            "instances on behalf of any DataReader that is unknown by the "
-            "DataWriter at the time the instance is written."
-            "\n\n"
-            "In other words, RTI Connext will only attempt to provide the "
-            "data to existing subscribers."
-            "\n\n"
-            "This option does not require RTI Persistence Service."
-        )
-        .value(
-            "TRANSIENT_LOCAL",
-            DurabilityKind::type::TRANSIENT_LOCAL,
-            "RTI Connext will attempt to keep some samples so that they can "
-            "be delivered to any potential late-joining DataReader."
-            "\n\n"
-            "Which particular samples are kept depends on other QoS such as "
-            "History and ResourceLimits. RTI Connext is only required to keep "
-            "the data in memory of the DataWriter that wrote the data."
-            "\n\n"
-            "Data is not required to survive the DataWriter."
-            "\n\n"
-            "For this setting to be effective, you must also set the "
-            "Reliability.kind to ReliabilityKind.RELIABLE. "
-            "\n\n"
-            "This option does not require RTI Persistence Service."
-        )
-        .value(
-            "TRANSIENT",
-            DurabilityKind::type::TRANSIENT,
-            "RTI Connext will attempt to keep some samples so that they can "
-            "be delivered to any potential late-joining DataReader."
-            "\n\n"
-            "Which particular samples are kept depends on other QoS such as "
-            "History and ResourceLimits. RTI Connext is only required to keep "
-            "the data in memory and not in permanent storage."
-            "\n\n"
-            "Data is not tied to the lifecycle of the DataWriter."
-            "\n\n"
-            "Data will survive the DataWriter."
-            "\n\n"
-            "This option requires RTI Persistence Service."
-        )
-        .value(
-            "PERSISTENT",
-            DurabilityKind::type::PERSISTENT,
-            "Data is kept on permanent storage, so that they can outlive a "
-            "system session."
-            "\n\n"
-            "This option requires RTI Persistence Service."
-        )
-        .export_values();
+    init_dds_safe_enum<DurabilityKind_def>(m, "DurabilityKind",
+        [](py::object& o) {
+            py::enum_<DurabilityKind::type>(o, "Enum")
+                .value(
+                    "VOLATILE",
+                    DurabilityKind::type::VOLATILE,
+                    "[default] RTI Connext does not need to keep any samples of data "
+                    "instances on behalf of any DataReader that is unknown by the "
+                    "DataWriter at the time the instance is written."
+                    "\n\n"
+                    "In other words, RTI Connext will only attempt to provide the "
+                    "data to existing subscribers."
+                    "\n\n"
+                    "This option does not require RTI Persistence Service."
+                )
+                .value(
+                    "TRANSIENT_LOCAL",
+                    DurabilityKind::type::TRANSIENT_LOCAL,
+                    "RTI Connext will attempt to keep some samples so that they can "
+                    "be delivered to any potential late-joining DataReader."
+                    "\n\n"
+                    "Which particular samples are kept depends on other QoS such as "
+                    "History and ResourceLimits. RTI Connext is only required to keep "
+                    "the data in memory of the DataWriter that wrote the data."
+                    "\n\n"
+                    "Data is not required to survive the DataWriter."
+                    "\n\n"
+                    "For this setting to be effective, you must also set the "
+                    "Reliability.kind to ReliabilityKind.RELIABLE. "
+                    "\n\n"
+                    "This option does not require RTI Persistence Service."
+                )
+                .value(
+                    "TRANSIENT",
+                    DurabilityKind::type::TRANSIENT,
+                    "RTI Connext will attempt to keep some samples so that they can "
+                    "be delivered to any potential late-joining DataReader."
+                    "\n\n"
+                    "Which particular samples are kept depends on other QoS such as "
+                    "History and ResourceLimits. RTI Connext is only required to keep "
+                    "the data in memory and not in permanent storage."
+                    "\n\n"
+                    "Data is not tied to the lifecycle of the DataWriter."
+                    "\n\n"
+                    "Data will survive the DataWriter."
+                    "\n\n"
+                    "This option requires RTI Persistence Service."
+                )
+                .value(
+                    "PERSISTENT",
+                    DurabilityKind::type::PERSISTENT,
+                    "Data is kept on permanent storage, so that they can outlive a "
+                    "system session."
+                    "\n\n"
+                    "This option requires RTI Persistence Service."
+                )
+                .export_values();
+        }
+    );
 }
 
 template<>

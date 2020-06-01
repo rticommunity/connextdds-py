@@ -78,39 +78,41 @@ void init_class_defs(py::class_<Presentation>& cls) {
 }
 
 static void init_dds_presentation_access_scope_kind(py::module& m) {
-    auto pask = init_dds_safe_enum<PresentationAccessScopeKind_def>(m, "PresentationAccessScopeKind");
-
-    py::enum_<PresentationAccessScopeKind::type>(pask, "PresentationAccessScopeKind")
-        .value(
-            "INSTANCE",
-            PresentationAccessScopeKind::type::INSTANCE,
-            "[default] Scope spans only a single instance."
-            "\n\n"
-            "Indicates that changes to one instance need not be coherent nor "
-            "ordered with respect to changes to any other instance. In other "
-            "words, order and coherent changes apply to each instance "
-            "separately."
-        )
-        .value(
-            "TOPIC",
-            PresentationAccessScopeKind::type::TOPIC,
-            "Scope spans to all instances within the same DataWriter (or "
-            "DataReader), but not across instances in different DataWriter "
-            "(or DataReader)."
-        )
-        .value(
-            "GROUP",
-            PresentationAccessScopeKind::type::GROUP,
-            "Scope spans to all instances belonging to DataWriter (or "
-            "DataReader) entities within the same Publisher (or Subscriber)."
-        )
-        .value(
-            "HIGHEST_OFFERED",
-            PresentationAccessScopeKind::type::HIGHEST_OFFERED,
-            "This value only applies to a Subscriber. The Subscriber will use "
-            "the access scope specified by each remote Publisher."
-        )
-        .export_values();
+    init_dds_safe_enum<PresentationAccessScopeKind_def>(m, "PresentationAccessScopeKind",
+        [](py::object& o) {
+            py::enum_<PresentationAccessScopeKind::type>(o, "Enum")
+                .value(
+                    "INSTANCE",
+                    PresentationAccessScopeKind::type::INSTANCE,
+                    "[default] Scope spans only a single instance."
+                    "\n\n"
+                    "Indicates that changes to one instance need not be coherent nor "
+                    "ordered with respect to changes to any other instance. In other "
+                    "words, order and coherent changes apply to each instance "
+                    "separately."
+                )
+                .value(
+                    "TOPIC",
+                    PresentationAccessScopeKind::type::TOPIC,
+                    "Scope spans to all instances within the same DataWriter (or "
+                    "DataReader), but not across instances in different DataWriter "
+                    "(or DataReader)."
+                )
+                .value(
+                    "GROUP",
+                    PresentationAccessScopeKind::type::GROUP,
+                    "Scope spans to all instances belonging to DataWriter (or "
+                    "DataReader) entities within the same Publisher (or Subscriber)."
+                )
+                .value(
+                    "HIGHEST_OFFERED",
+                    PresentationAccessScopeKind::type::HIGHEST_OFFERED,
+                    "This value only applies to a Subscriber. The Subscriber will use "
+                    "the access scope specified by each remote Publisher."
+                )
+                .export_values();
+        }
+    );
 }
 
 template<>

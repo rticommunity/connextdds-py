@@ -72,7 +72,9 @@ void init_class_defs(py::class_<TopicQueryData>& cls) {
         )
         .def_property_readonly(
             "topic_name",
-            &TopicQueryData::topic_name,
+            [](const TopicQueryData& tqd) {
+                return tqd.topic_name().to_std_string();
+            },
             "The topic name of the DataReader."
         )
         .def_property_readonly(
@@ -112,7 +114,9 @@ void init_class_defs(py::class_<TopicQuery>& cls) {
         )
         .def_property_readonly(
             "datareader",
-            &TopicQuery::datareader,
+            [](TopicQuery& tq) {
+                return PyAnyDataReader(tq.datareader());
+            },
             "Gets the DataReader associated to this TopicQuery."
         )
         .def(
@@ -143,26 +147,28 @@ template<>
 void process_inits<TopicQuery>(py::module& m, ClassInitList& l) {
 
 #if rti_connext_version_gte(6, 0, 0)
-    auto tqsk = init_dds_safe_enum<TopicQuerySelectionKind_def>(m, "TopicQuerySelectionKind");
-
-    py::enum_<TopicQuerySelectionKind::type>(tqsk, "TopicQuerySelectionKind")
-        .value(
-            "HISTORY_SNAPSHOT",
-            TopicQuerySelectionKind::type::HISTORY_SNAPSHOT,
-            "[default] Indicates that the TopicQuery may only select samples "
-            "that were in the DataWriter cache upon reception."
-        )
-        .value(
-            "CONTINUOUS",
-            TopicQuerySelectionKind::type::CONTINUOUS,
-            "Indicates that the TopicQuery may continue selecting samples "
-            "published after its reception."
-            "\n\n"
-            "The subscribing application must explicitly delete the "
-            "TopicQuery (see TopicQuery.close()) to signal the DataWriters "
-            "to stop publishing samples for it."
-        )
-        .export_values();
+    init_dds_safe_enum<TopicQuerySelectionKind_def>(m, "TopicQuerySelectionKind",
+        [](py::object& o) {
+            py::enum_<TopicQuerySelectionKind::type>(o, "Enum")
+                .value(
+                    "HISTORY_SNAPSHOT",
+                    TopicQuerySelectionKind::type::HISTORY_SNAPSHOT,
+                    "[default] Indicates that the TopicQuery may only select samples "
+                    "that were in the DataWriter cache upon reception."
+                )
+                .value(
+                    "CONTINUOUS",
+                    TopicQuerySelectionKind::type::CONTINUOUS,
+                    "Indicates that the TopicQuery may continue selecting samples "
+                    "published after its reception."
+                    "\n\n"
+                    "The subscribing application must explicitly delete the "
+                    "TopicQuery (see TopicQuery.close()) to signal the DataWriters "
+                    "to stop publishing samples for it."
+                )
+                .export_values();
+        }
+    );
 #endif
 
     l.push_back(

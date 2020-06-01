@@ -49,8 +49,20 @@ void init_class_defs(py::class_<DataTag>& cls) {
             [](DataTag& dt, std::vector<std::pair<std::string, std::string>>* entries) {
                 dt.set(entries->begin(), entries->end());
             },
-            py::arg("entries"),
-            "Adds or assigns a tag from a list of string pairs."
+            py::arg("entry_list"),
+            "Adds or assigns tags from a list of string pairs."
+        )
+        .def(
+            "set",
+            [](DataTag& dt, py::dict& entries) {
+                for (auto kv : entries) {
+                    std::string key = py::cast<std::string>(kv.first);
+                    std::string value = py::cast<std::string>(kv.second);
+                    dt.set(std::pair<std::string, std::string>(key, value));
+                }
+            },
+            py::arg("entry_map"),
+            "Adds or assigns tags from a dictionary."
         )
         .def(
             "set",
@@ -81,10 +93,7 @@ void init_class_defs(py::class_<DataTag>& cls) {
         )
         .def(
             "try_get",
-            [](const DataTag& dt, const std::string& key) -> py::object {
-                auto value = dt.try_get(key);
-                return value.is_set() ? py::cast(value.get()) : py::cast(nullptr);
-            },
+            &DataTag::try_get,
             py::arg("key"),
             "Returns the value of a tag identified by a key if it exists."
         )

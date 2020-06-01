@@ -99,6 +99,8 @@ public:
 
 template<typename T>
 void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIDataReader>& cls) {
+    py::class_<typename PyDataReader<T>::Selector> selector(cls, "Selector");
+
     cls
         .def(
             py::init<
@@ -109,17 +111,27 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             "Create a DataReader."
         )
         .def(
-            py::init<
-                const PySubscriber&,
-                const PyTopic<T>&,
-                const dds::sub::qos::DataReaderQos&,
-                PyDataReaderListener<T>*, 
-                const dds::core::status::StatusMask&>(),
+            py::init(
+                [](
+                    const PySubscriber& s,
+                    const PyTopic<T>& t,
+                    const dds::sub::qos::DataReaderQos& q,
+                    dds::core::optional<PyDataReaderListener<T>*> l, 
+                    const dds::core::status::StatusMask& m
+                ) {
+#if rti_connext_version_gte(6, 0, 1)
+                    auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                    auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                    return PyDataReader<T>(s, t, q, listener, m);
+                }
+            ),
             py::arg("sub"),
             py::arg("topic"),
             py::arg("qos"),
-            py::arg("listener") = (PyDataReaderListener<T>*) nullptr,
-            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
+            py::arg("listener") = py::none(),
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Create a DataReader."
         )
         .def(
@@ -131,17 +143,23 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             "Create a DataReader with a ContentFilteredTopic."
         )
         .def(
-            py::init<
-                const PySubscriber&,
-                const PyContentFilteredTopic<T>&,
-                const dds::sub::qos::DataReaderQos&,
-                PyDataReaderListener<T>*, 
-                const dds::core::status::StatusMask&>(),
+            py::init(
+                [](
+                    const PySubscriber& s,
+                    const PyContentFilteredTopic<T>& t,
+                    const dds::sub::qos::DataReaderQos& q,
+                    dds::core::optional<PyDataReaderListener<T>*> l, 
+                    const dds::core::status::StatusMask& m
+                ) {
+                    auto listener = l.is_set() ? l.get() : nullptr;
+                    return PyDataReader<T>(s, t, q, listener, m);
+                }
+            ),
             py::arg("sub"),
             py::arg("cft"),
             py::arg("qos"),
-            py::arg("listener") = (PyDataReaderListener<T>*) nullptr,
-            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all"),
+            py::arg("listener") = py::none(),
+            py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
             "Create a DataReader with a ContentFilteredTopic."
         )
         .def(
@@ -205,13 +223,17 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
 #endif
         .def(
             "select",
-            &PyDataReader<T>::select,
+            [](PyDataReader<T>& dr) {
+                return typename PyDataReader<T>::Selector(dr.select());
+            },
             "Get a Selector to perform complex data selections, such as "
             "per-instance selection, content, and status filtering."
         )
         .def_property_readonly(
             "topic_description",
-            &PyDataReader<T>::topic_description,
+            [](const PyDataReader<T>& dr) {
+                return PyTopicDescription<T>(dr.topic_description());
+            },
             "Returns the TopicDescription associated with the DataReader."
         )
         .def_property_readonly(
@@ -222,21 +244,33 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         .def_property_readonly(
             "listener",
             [](PyDataReader<T>& dr) {
-                return dynamic_cast<PyDataReaderListener<T>*>(dr.listener());
+                dds::core::optional<PyDataReaderListener<T>*> l;
+                auto ptr = dynamic_cast<PyDataReaderListener<T>*>(dr.listener());
+                if (nullptr != ptr) l = ptr;
+                return l;
             },
             "Get the listener object."
         )
         .def(
             "bind_listener",
-            [](PyDataReader<T>& dr, PyDataReaderListener<T>* l, const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
-                    py::object py_l = py::cast(l);
+            [](
+                PyDataReader<T>& dr, 
+                dds::core::optional<PyDataReaderListener<T>*> l, 
+                const dds::core::status::StatusMask& m
+            ) {
+#if rti_connext_version_gte(6, 0, 1)
+                auto listener = l.has_value() ? l.value() : nullptr;
+#else
+                auto listener = l.is_set() ? l.get() : nullptr;
+#endif
+                if (nullptr != listener) {
+                    py::object py_l = py::cast(listener);
                     py_l.inc_ref();
                 }
                 if (nullptr != dr.listener()) {
                     py::cast(dr.listener()).dec_ref();
                 }
-                dr.listener(l, m);
+                dr.listener(listener, m);
             },
             py::arg("listener"),
             py::arg("event_mask"),
@@ -398,14 +432,14 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         .def_property_readonly(
             "topic_name",
             [](PyDataReader<T>& dr) {
-                return dr->topic_name();
+                return dr.py_topic_name();
             },
             "Get the topic name associated with this DataReader."
         )
         .def_property_readonly(
             "type_name",
             [](PyDataReader<T>& dr) {
-                return dr->type_name();
+                return dr.py_type_name();
             },
             "Get the type name associated with this DataReader."
         )
@@ -444,9 +478,11 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         )
         .def_static(
             "find_by_name",
-            [](PySubscriber& sub, const std::string& name) -> py::object {
+            [](PySubscriber& sub, const std::string& name)  {
+                dds::core::optional<PyDataReader<T>> retval;
                 auto dr = rti::sub::find_datareader_by_name<PyDataReader<T>>(sub, name);
-                return (dr == dds::core::null) ? py::cast(nullptr) : py::cast(dr);
+                if (dr != dds::core::null) retval = dr;
+                return retval;
             },
             py::arg("subscriber"),
             py::arg("name"),
@@ -455,9 +491,11 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         )
         .def_static(
             "find_by_name",
-            [](PyDomainParticipant& dp, const std::string name) ->py::object {
+            [](PyDomainParticipant& dp, const std::string name) {
+                dds::core::optional<PyDataReader<T>> retval;
                 auto dr = rti::sub::find_datareader_by_name<PyDataReader<T>>(dp, name);
-                return (dr == dds::core::null) ? py::cast(nullptr) : py::cast(dr);
+                if (dr != dds::core::null) retval = dr;
+                return retval;
             },
             py::arg("participant"),
             py::arg("name"),
@@ -466,9 +504,11 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         )
         .def_static(
             "find_by_topic",
-            [](PySubscriber& sub, const std::string& topic_name) -> py::object {
+            [](PySubscriber& sub, const std::string& topic_name) {
+                dds::core::optional<PyDataReader<T>> retval;
                 auto dr = rti::sub::find_datareader_by_topic_name<PyDataReader<T>>(sub, topic_name);
-                return (dr == dds::core::null) ? py::cast(nullptr) : py::cast(dr);
+                if (dr != dds::core::null) retval = dr;
+                return retval;
             },
             py::arg("subscriber"),
             py::arg("name"),
@@ -476,7 +516,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             "returning the first found."
         );
 
-    py::class_<typename PyDataReader<T>::Selector>(cls, "Selector")
+    selector
         .def(
             py::init<
                 PyDataReader<T>&
@@ -556,9 +596,6 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
 
     py::implicitly_convertible<PyIAnyDataReader, PyDataReader<T>>();
     py::implicitly_convertible<PyIEntity, PyDataReader<T>>();
-
-    py::bind_vector<std::vector<PyDataReader<T>>>(cls, "Seq");
-    py::implicitly_convertible<py::iterable, std::vector<PyDataReader<T>>>();
 }
 
 template<typename T>
@@ -603,26 +640,28 @@ void init_dds_typed_datareader_template(py::class_<PyDataReader<T>, PyIDataReade
         )
         .def(
             "read_next",
-            [](PyDataReader<T>& dr) -> py::object {
+            [](PyDataReader<T>& dr) {
+                dds::core::optional<dds::sub::Sample<T>> retval;
                 T data;
                 dds::sub::SampleInfo info;
                 if (dr->read(data, info)) {
-                    return py::cast(dds::sub::Sample<T>(data, info));
+                    retval = dds::sub::Sample<T>(data, info);
                 }
-                return py::cast(nullptr);
+                return retval;
             },
             "Copy the next not-previously-accessed data value from the "
             "DataReader via a read operation."
         )
         .def(
             "take_next",
-            [](PyDataReader<T>& dr) -> py::object{
+            [](PyDataReader<T>& dr) {
+                dds::core::optional<dds::sub::Sample<T>> retval;
                 T data;
                 dds::sub::SampleInfo info;
                 if (dr->take(data, info)) {
-                    return py::cast(dds::sub::Sample<T>(data, info));
+                    retval = dds::sub::Sample<T>(data, info);
                 }
-                return py::cast(nullptr);
+                return retval;
             },
             "Copy the next not-previously-accessed data value from the "
             "DataReader via a take operation."
@@ -630,9 +669,7 @@ void init_dds_typed_datareader_template(py::class_<PyDataReader<T>, PyIDataReade
 }
 
 template<typename T>
-void init_datareader(py::object& o) {
-    py::class_<PyDataReader<T>, PyIDataReader> dr(o, "DataReader");
-    
+void init_datareader(py::class_<PyDataReader<T>, PyIDataReader>& dr) {
     init_dds_typed_datareader_template(dr);
 }
 

@@ -30,4 +30,5 @@ void init_namespace_rti_sub_status(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti_sub(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti_topic(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti(py::module& m, pyrti::ClassInitList& l);
-void init_misc(py::module& m, pyrti::ClassInitList& l);
+void init_misc_early(py::module& m, pyrti::ClassInitList& l);
+void init_misc_late(py::module& m);

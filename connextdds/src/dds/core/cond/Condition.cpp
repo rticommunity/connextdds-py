@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include "PyCondition.hpp"
 
 namespace pyrti {
@@ -41,13 +42,13 @@ template<>
 void process_inits<dds::core::cond::Condition>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<PyICondition>(m, "ICondition");
+            return init_class_with_ptr_seq<PyICondition>(m, "ICondition");
         }
     );
 
     l.push_back(
         [m]() mutable {
-            return init_class<PyCondition, PyICondition>(m, "Condition");
+            return init_class_with_seq<PyCondition, PyICondition>(m, "Condition");
         }
     );
 }

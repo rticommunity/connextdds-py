@@ -1,4 +1,5 @@
 #include "PyConnext.hpp"
+#include "PySeq.hpp"
 #include <rti/core/policy/CorePolicy.hpp>
 
 using namespace rti::core;
@@ -83,7 +84,7 @@ template<>
 void process_inits<TransportUnicast>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
-            return init_class<TransportUnicastSettings>(m, "TransportUnicastSettings");
+            return init_class_with_seq<TransportUnicastSettings>(m, "TransportUnicastSettings");
         }
     );
 

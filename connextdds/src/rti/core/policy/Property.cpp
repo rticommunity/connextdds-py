@@ -31,16 +31,13 @@ void init_class_defs(py::class_<Property>& cls) {
         )
         .def(
             "get",
-            &Property::exists,
+            &Property::get,
             py::arg("key"),
             "Returns the value of a property identified by a key if it exists."
         )
         .def(
             "try_get",
-            [](const Property& p, const std::string& key) -> py::object {
-                if (p.exists(key)) return py::cast(p.get(key));
-                return py::cast(nullptr);
-            },
+            &Property::try_get,
             py::arg("key"),
             "Returns the value of a property identified by a key if it exists."
         )
