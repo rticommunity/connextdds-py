@@ -74,7 +74,9 @@ class CMakeBuild(build_ext):
         module_build_dir = os.path.join(self.build_temp, ext.name)
         if not os.path.exists(module_build_dir):
             os.makedirs(module_build_dir)
+        print("### Calling CMake")
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=module_build_dir, env=env)
+        print("### Calling CMake Build")
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=module_build_dir)
 
 setup(
