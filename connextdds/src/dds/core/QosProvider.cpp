@@ -224,7 +224,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a DynamicType from the QosProvider."
         )
 #endif
-        .def(
+        .def_property_readonly(
             "type_libraries",
             [](const QosProvider& qp) {
                 return qp->type_libraries();
