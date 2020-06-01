@@ -2,6 +2,8 @@
 
 > A full Python binding for RTI Connext DDS using pybind11
 
+[![Build Status](https://travis-ci.com/rticommunity/connextdds-py.svg?token=BnoLsZyPsyeg3f6xwqc6&branch=master)](https://travis-ci.com/rticommunity/connextdds-py)
+
 ## Requirements
 
 - macOS or Linux (Windows support coming soon)
