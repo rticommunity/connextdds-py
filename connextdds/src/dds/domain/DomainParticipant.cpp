@@ -57,11 +57,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                     dds::core::optional<PyDomainParticipantListener*> l,
                     const dds::core::status::StatusMask& m
                 ) {
-#if rti_connext_version_gte(6, 0, 1)
-                    auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                    auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                    auto listener = has_value(l) ? get_value(l) : nullptr;
                     return PyDomainParticipant(id, q, listener, m);
                 }
             ),
@@ -94,11 +90,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def(
             "bind_listener",
             [](PyDomainParticipant& dp, dds::core::optional<PyDomainParticipantListener*> l, const dds::core::status::StatusMask& m) {
-#if rti_connext_version_gte(6, 0, 1)
-                auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                auto listener = has_value(l) ? get_value(l) : nullptr;
                 if (nullptr != listener) {
                     py::cast(listener).inc_ref();
                 }

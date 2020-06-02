@@ -43,11 +43,7 @@ public:
         if (nullptr != old_compile_data) {
             delete old_compile_data;
         }
-#if rti_connext_version_gte(6, 0, 1)
-        if (compile_data.has_value()) compile_data.value().inc_ref();
-#else
-        if (compile_data.is_set()) compile_data.get().inc_ref();
-#endif
+        if (has_value(compile_data)) get_value(compile_data).inc_ref();
         return *(new dds::core::optional<py::object>(compile_data));
     }
 

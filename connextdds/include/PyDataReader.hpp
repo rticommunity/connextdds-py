@@ -119,11 +119,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
                     dds::core::optional<PyDataReaderListener<T>*> l, 
                     const dds::core::status::StatusMask& m
                 ) {
-#if rti_connext_version_gte(6, 0, 1)
-                    auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                    auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                    auto listener = has_value(l) ? get_value(l) : nullptr;
                     return PyDataReader<T>(s, t, q, listener, m);
                 }
             ),
@@ -258,11 +254,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
                 dds::core::optional<PyDataReaderListener<T>*> l, 
                 const dds::core::status::StatusMask& m
             ) {
-#if rti_connext_version_gte(6, 0, 1)
-                auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                auto listener = has_value(l) ? get_value(l) : nullptr;
                 if (nullptr != listener) {
                     py::object py_l = py::cast(listener);
                     py_l.inc_ref();

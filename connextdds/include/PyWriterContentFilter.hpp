@@ -71,11 +71,7 @@ public:
 
     dds::core::optional<py::object>& writer_attach() override {
         dds::core::optional<py::object>& writer_data = writer_attach_helper();
-#if rti_connext_version_gte(6, 0, 1)
-        if (writer_data.has_value()) writer_data.value().inc_ref();
-#else
-        if (writer_data.is_set()) writer_data.get().inc_ref();
-#endif
+        if (has_value(writer_data)) get_value(writer_data).inc_ref();
         return *(new dds::core::optional<py::object>(writer_data));
     }
 

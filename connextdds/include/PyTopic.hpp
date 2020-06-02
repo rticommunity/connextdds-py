@@ -242,11 +242,7 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
         .def(
             "bind_listener",
             [](PyTopic<T>& t, dds::core::optional<PyTopicListener<T>*> l, const dds::core::status::StatusMask& m) {
-#if rti_connext_version_gte(6, 0, 1)
-                auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                auto listener = has_value(l) ? get_value(l) : nullptr;
                 if (nullptr != listener) {
                     py::cast(listener).inc_ref();
                 }
@@ -332,11 +328,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
                     dds::core::optional<PyTopicListener<T>*> l,
                     const dds::core::status::StatusMask& m
                 ) {
-#if rti_connext_version_gte(6, 0, 1)
-                    auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                    auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                    auto listener = has_value(l) ? get_value(l) : nullptr;
                     return PyTopic<T>(dp, n, q, listener, m);
                 }
             ),
@@ -357,11 +349,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
                     dds::core::optional<PyTopicListener<T>*> l,
                     const dds::core::status::StatusMask& m
                 ) {
-#if rti_connext_version_gte(6, 0, 1)
-                    auto listener = l.has_value() ? l.value() : nullptr;
-#else
-                    auto listener = l.is_set() ? l.get() : nullptr;
-#endif
+                    auto listener = has_value(l) ? get_value(l) : nullptr;
                     return PyTopic<T>(dp, n, t, q, listener, m);
                 }
             ),

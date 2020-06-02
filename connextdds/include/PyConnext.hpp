@@ -93,6 +93,33 @@ void add_conversion(py_to_class&& cls, const std::string& doc = "Convert to less
     py::implicitly_convertible<from_class, to_class>();
 }
 
+template<typename T>
+bool has_value(const T& opt) {
+#if rti_connext_version_gte(6, 0, 1)
+    return opt.has_value();
+#else
+    return opt.is_set();
+#endif
+}
+
+template<template<class> class U, class T>
+const T& get_value(const U<T>& opt) {
+#if rti_connext_version_gte(6, 0, 1)
+    return opt.value();
+#else
+    return opt.get();
+#endif
+}
+
+template<template<typename> class U, typename T>
+T& get_value(U<T>& opt) {
+#if rti_connext_version_gte(6, 0, 1)
+    return opt.value();
+#else
+    return opt.get();
+#endif
+} 
+
 py::object py_cast_type(dds::core::xtypes::DynamicType&);
 
 // Dummy classes
@@ -123,11 +150,7 @@ public:
     }
 
     static handle cast(const dds::core::optional<T*> &src, return_value_policy r, handle h) {
-#if rti_connext_version_gte(6, 0, 1)
-        if (src.has_value()) return base::cast(src.value(), r, h);
-#else
-        if (src.is_set()) return base::cast(src.get(), r, h);
-#endif
+        if (pyrti::has_value(src)) return base::cast(pyrti::get_value(src), r, h);
         return py::none().release();
     }
 };
@@ -155,11 +178,7 @@ public:
     }
 
     static handle cast(const dds::core::optional<T> &src, return_value_policy r, handle h) {
-#if rti_connext_version_gte(6, 0, 1)
-        if (src.has_value()) return base::cast(src.value(), r, h);
-#else
-        if (src.is_set()) return base::cast(src.get(), r, h);
-#endif
+        if (pyrti::has_value(src)) return base::cast(pyrti::get_value(src), r, h);
         return py::none().release();
     }
 };
@@ -186,11 +205,7 @@ public:
     }
 
     static handle cast(const rti::core::optional_value<T> &src, return_value_policy r, handle h) {
-#if rti_connext_version_gte(6, 0, 1)
-        if (src.has_value()) return base::cast(src.value(), r, h);
-#else
-        if (src.is_set()) return base::cast(src.get(), r, h);
-#endif
+        if (pyrti::has_value(src)) return base::cast(pyrti::get_value(src), r, h);
         return py::none().release();
     }
 };
