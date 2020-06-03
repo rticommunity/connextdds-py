@@ -37,8 +37,15 @@ def test_participant_creation_failure():
 #def test_set_get_qos():
 #    pass
     
-#def test_set_qos_exception():
-#    pass
+def test_set_qos_exception():
+    with pytest.raises(dds.ImmutablePolicyError):
+        p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+        qos = p.qos
+        d = dds.Duration(77)
+        db = dds.Database()
+        db.shutdown_cleanup_period = d
+        qos << db
+        p.qos = qos
     
 #def test_set_get_default_qos():
 #    pass
@@ -46,17 +53,39 @@ def test_participant_creation_failure():
 #def test_set_get_factory_qos():
 #    pass
 
-#def test_set_get_listener():
-#    pass
+def test_set_get_listener():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    assert p.listener == None
+    
+    l = dds.NoOpDomainParticipantListener()
+    p.bind_listener(l, dds.StatusMask.all())
+    assert p.listener == l
+
+    p.bind_listener(None, dds.StatusMask.none())
+    assert p.listener == None
 
 #def test_reference_assignment():
 #    pass
 
-#def test_find():
-#    pass
+def test_find():
+    id1 = DOMAIN_ID
+    id2 = DOMAIN_ID + 1
 
-#def test_close():
-#    pass
+    p = dds.DomainParticipant(id1, dds.DomainParticipantQos())
+    assert p.delegate.use_count == 1
+    found_p = dds.DomainParticipant.find(id1)
+    not_found_p = dds.DomainParticipant.find(id2)
+    assert found_p == p
+    assert found_p.delegate == p.delegate
+    assert not_found_p == None
+
+    assert p.delegate == 2
+
+def test_close():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    assert dds.DomainParticipant.find(DOMAIN_ID) == p
+    p.close()
+    assert dds.DomainParticipant.find(DOMAIN_ID) == None
     
 #def test_already_closed_exception():
 #    pass
@@ -67,8 +96,11 @@ def test_participant_creation_failure():
 #def test_creation_from_native():
 #    pass
 
-#def test_current_time():
-#    pass
+def test_current_time():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    t = p.current_time
+    assert t != dds.Time.invalid()
+    assert t > dds.Time(1,0)
     
 #def test_assert_liveliness():
 #    pass
