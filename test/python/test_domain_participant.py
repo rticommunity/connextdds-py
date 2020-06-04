@@ -1,5 +1,6 @@
 import rti.connextdds as dds
 import pytest
+import time
 
 DOMAIN_ID = 0
 
@@ -20,9 +21,21 @@ def test_participant_default_creation():
 #    assert p.domain_id = DOMAIN_ID
 #    default_qos << p.qos.policy
 #    default_qos.domain_participant_resource_limits.writer_property_string_max_length =
+#    Need to find writer_property_string
 
-# def test_participant_creation_w_qos():
-#    pass
+
+def test_participant_creation_w_qos():
+    user_data_values = [10, 11, 12, 13, 14, 15]
+    qos = dds.DomainParticipantQos()
+    qos.user_data.value = user_data_values
+    qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(100)
+    p = dds.DomainParticipant(DOMAIN_ID, qos)
+    retrieved_qos = p.qos
+    assert retrieved_qos.user_data.value == user_data_values
+    assert (
+        retrieved_qos.database.shutdown_cleanup_period
+        == dds.Duration.from_milliseconds(100)
+    )
 
 
 def test_participant_creation_w_listener():
@@ -155,7 +168,9 @@ def test_already_closed_exception():
 
 
 # def test_retain():
-#    pass
+# id1 = DOMAIN_ID
+# id2 = DOMAIN_ID + 1
+# How to handle scopes?
 
 # def test_creation_from_native():
 #    pass
@@ -168,17 +183,30 @@ def test_current_time():
     assert t > dds.Time(1, 0)
 
 
-# def test_assert_liveliness():
-#    pass
+def test_assert_liveliness():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p.assert_liveliness()
 
-# def test_ignore():
-#    pass
 
-# def test_add_peer():
-#    pass
+def test_ignore():
+    p1 = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p2 = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    dds.DomainParticipant.ignore_participant(p1, p2.instance_handle)
 
-# def test_remove_peer():
-#   pass
+
+def test_add_peer():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p.add_peer("udpv4://")
+    with pytest.raises(dds.InvalidArgumentError):
+        p.add_peer("")
+
+
+def test_remove_peer():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p.remove_peer("udpv4://")
+    with pytest.raises(dds.InvalidArgumentError):
+        p.remove_peer("")
+
 
 # def test_domain_participant_config_params():
 #    pass
@@ -186,20 +214,52 @@ def test_current_time():
 # def test_find_extensions():
 #    pass
 
-# def test_entity_lock():
-#    pass
+
+def test_entity_lock():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    # Check how to get lock
+
 
 # def test_retain_for_listener():
 #    pass
 
 # def test_discovered_participants():
-#    pass
+# qos = dds.DomainParticipantQos()
+# p1 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p1"))
+# p2 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p2"))
+# p3 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p3"))
+# time.sleep(3)
+# assert p
+
 
 # def test_dns_polling_period():
-#    pass
+# p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), None)
+# assert p != None
+# dur = dds.Duration(42, 12)
+# p.
+# need to find dns functions
 
-# def test_participant_factory_qos_to_string():
-#    pass
 
-# def test_domain_participant_qos_to_string():
-#    pass
+def test_participant_factory_qos_to_string():
+    the_qos = dds.DomainParticipantFactoryQos()
+    # No qos print format
+    assert str(the_qos) != ""
+    assert "<participant_factory_qos>" in str(the_qos)
+    assert "</participant_factory_qos>" in str(the_qos)
+    min_length = len(str(the_qos))
+    # Do we support qos format options?
+
+    the_qos << dds.EntityFactory(False)
+    assert min_length != len(str(the_qos))
+    assert "<entity_factory>" in str(the_qos)
+
+
+def test_domain_participant_qos_to_string():
+    the_qos = dds.DomainParticipantQos()
+    assert str(the_qos) != ""
+    assert "<participant_qos>" in str(the_qos)
+    assert "</participant_qos>" in str(the_qos)
+    min_length = len(str(the_qos))
+    the_qos << dds.EntityFactory(False)
+    assert min_length != len(str(the_qos))
+    assert "<entity_factory>" in str(the_qos)
