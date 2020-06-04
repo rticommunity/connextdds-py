@@ -52,8 +52,20 @@ def test_participant_creation_failure():
         dds.DomainParticipant(0, qos)
 
 
-# def test_set_get_qos():
-#    pass
+def test_set_get_qos():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    qos = p.qos
+    assert qos.policy.autoenable_created_entities()
+    qos << dds.EntityFactory.manually_enable()
+    assert not (qos.policy.autoenable_created_entities())
+    p.qos = qos
+    assert qos == p.qos
+    assert not (qos.policy.autoenable_created_entities())
+    qos << dds.EntityFactory.auto_enable()
+    p << qos
+    retrieved_qos = dds.DomainParticipantQos()
+    p >> retrieved_qos
+    assert retrieved_qos.policy.autoenabled_created_entities()
 
 
 def test_set_qos_exception():
@@ -68,10 +80,25 @@ def test_set_qos_exception():
 
 
 # def test_set_get_default_qos():
-#    pass
+# need dds core byte seq
 
-# def test_set_get_factory_qos():
-#    pass
+
+def test_set_get_factory_qos():
+    default_qos = dds.DomainParticipantFactoryQos()
+    set_qos = dds.DomainParticipantFactoryQos()
+    set_qos << dds.EntityFactory(False)
+    assert set_qos != default_qos
+
+    set_qos = dds.DomainParticipant.participant_factory_qos
+    get_qos = dds.DomainParticipant.participant_factory_qos
+    assert set_qos == get_qos
+
+    get_qos >> get_entity_factory
+    assert get_entity_factory == dds.EntityFactory(False)
+    set_qos << dds.EntityFactory(True)
+    set_qos = dds.DomainParticipant.participant_factory_qos
+    get_qos = dds.DomainParticipant.participant_factory_qos
+    assert set_qos == get_qos
 
 
 def test_set_get_listener():
@@ -87,7 +114,7 @@ def test_set_get_listener():
 
 
 # def test_reference_assignment():
-#    pass
+#    Does this have an equivalent feature?
 
 
 def test_find():
@@ -172,8 +199,10 @@ def test_already_closed_exception():
 # id2 = DOMAIN_ID + 1
 # How to handle scopes?
 
-# def test_creation_from_native():
-#    pass
+
+def test_creation_from_native():
+    assert dds.DomainParticipant.find(DOMAIN_ID) == None
+    # Is there an equivalent?
 
 
 def test_current_time():
@@ -208,8 +237,34 @@ def test_remove_peer():
         p.remove_peer("")
 
 
-# def test_domain_participant_config_params():
-#    pass
+def test_domain_participant_config_params():
+    default_params = dds.DomainParticipantConfigParams()
+    assert (
+        default_params.domain_id
+        == dds.DomainParticipantConfigParams.DOMAIN_ID_USE_XML_CONFIG
+    )
+    assert (
+        default_params.particpant_name
+        == dds.DomainParticipantConfigParams.ENTITY_NAME_USE_XML_CONFIG
+    )
+    assert (
+        default_params.particpant_qos_library_name
+        == dds.DomainParticipantConfigParams.QOS_ELEMENT_NAME_USE_XML_CONFIG
+    )
+
+    assert (
+        default_params.participant_qos_profile_name
+        == dds.DomainParticipantConfigParams.QOS_ELEMENT_NAME_USE_XML_CONFIG
+    )
+    assert (
+        default_params.domain_entity_qos_library_name
+        == dds.DomainParticipantConfigParams.QOS_ELEMENT_NAME_USE_XML_CONFIG
+    )
+    assert (
+        default_params.domain_entity_qos_profile_name
+        == dds.DomainParticipantConfigParams.QOS_ELEMENT_NAME_USE_XML_CONFIG
+    )
+
 
 # def test_find_extensions():
 #    pass
