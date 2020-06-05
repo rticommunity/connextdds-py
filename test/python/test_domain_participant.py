@@ -16,13 +16,11 @@ def test_participant_default_creation():
     assert p.domain_id == DOMAIN_ID
 
 
-# def test_participant_creation_w_default_qos():
-#    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
-#    assert p.domain_id = DOMAIN_ID
-#    default_qos << p.qos.policy
-#    default_qos.domain_participant_resource_limits.writer_property_string_max_length =
-#    Need to find writer_property_string
-
+def test_participant_creation_w_default_qos():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    assert p.domain_id == DOMAIN_ID
+    event_count = p.qos.event.max_count
+    assert event_count == dds.Event().max_count
 
 def test_participant_creation_w_qos():
     user_data_values = [10, 11, 12, 13, 14, 15]
@@ -55,17 +53,18 @@ def test_participant_creation_failure():
 def test_set_get_qos():
     p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
     qos = p.qos
-    assert qos.policy.autoenable_created_entities()
+    assert qos.entity_factory.autoenable_created_entities
     qos << dds.EntityFactory.manually_enable()
-    assert not (qos.policy.autoenable_created_entities())
+    # Fix me
+    assert not (qos.entity_factory.autoenable_created_entities)
     p.qos = qos
-    assert qos == p.qos
-    assert not (qos.policy.autoenable_created_entities())
+    #assert qos == p.qos
+    assert not (qos.entity_factory.autoenable_created_entities)
     qos << dds.EntityFactory.auto_enable()
     p << qos
     retrieved_qos = dds.DomainParticipantQos()
     p >> retrieved_qos
-    assert retrieved_qos.policy.autoenabled_created_entities()
+    assert retrieved_qos.entity_factory.autoenable_created_entities
 
 
 def test_set_qos_exception():
@@ -81,13 +80,13 @@ def test_set_qos_exception():
 
 def test_set_get_default_qos():
     set_qos = dds.DomainParticipant.default_participant_qos
-    set_qos << dds.UserData(dds.ByteSeq(33, 2))
+    set_qos << dds.UserData([33, 33])
     assert set_qos != dds.DomainParticipant.default_topic_qos
     set_qos = dds.DomainParticipant.default_participant_qos
     get_qos = dds.DomainParticipant.default_participant_qos
     assert get_qos == set_qos
     get_qos >> get_user_data
-    assert get_user_data == dds.UserData(dds.ByteSeq(33, 2))
+    assert get_user_data == dds.UserData([33, 33])
 
 
 def test_set_get_factory_qos():
@@ -96,7 +95,7 @@ def test_set_get_factory_qos():
     set_qos << dds.EntityFactory(False)
     assert set_qos != default_qos
 
-    set_qos = dds.DomainParticipant.participant_factory_qos
+    dds.DomainParticipant.participant_factory_qos = set_qos
     get_qos = dds.DomainParticipant.participant_factory_qos
     assert set_qos == get_qos
 
@@ -120,10 +119,6 @@ def test_set_get_listener():
     assert p.listener == None
 
 
-# def test_reference_assignment():
-#    Does this have an equivalent feature?
-
-
 def test_find():
     id1 = DOMAIN_ID
     id2 = DOMAIN_ID + 1
@@ -140,6 +135,7 @@ def test_find():
 
 
 def test_close():
+    assert dds.DomainParticipant.find(DOMAIN_ID) == None
     p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
     assert dds.DomainParticipant.find(DOMAIN_ID) == p
     p.close()
@@ -228,11 +224,6 @@ def test_retain():
     assert dds.DomainParticipant.find(id1) == None
 
 
-def test_creation_from_native():
-    assert dds.DomainParticipant.find(DOMAIN_ID) == None
-    # Is there an equivalent?
-
-
 def test_current_time():
     p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
     t = p.current_time
@@ -294,21 +285,21 @@ def test_domain_participant_config_params():
     )
 
 
-# def test_find_extensions():
-# p_qos = dds.DomainParticipantQos()
-# p_qos << dds.EntityName("MyParticipant1")
-# p1 = dds.DomainParticipant(DOMAIN_ID, p_qos)
-# p_qos << dds.EntityName("MyParticipant2")
-# p2 = dds.DomainParticipant(DOMAIN_ID, p_qos)
-
-# assert dds.DomainParticipant.find_participant_by_name
-
-# No find participant by name
-
-
-def test_entity_lock():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
-    # Check how to get lock
+def test_find_extensions():
+    p_qos = dds.DomainParticipantQos()
+    p_qos << dds.EntityName("MyParticipant1")
+    assert p_qos.entity_name.name == "MyParticipant1"
+    
+    p1 = dds.DomainParticipant(DOMAIN_ID, p_qos)
+    assert p1.qos.entity_name.name == "MyParticipant1"
+    
+    p_qos << dds.EntityName("MyParticipant2")
+    p2 = dds.DomainParticipant(DOMAIN_ID, p_qos)
+    
+    assert dds.DomainParticipant.find("MyParticipant1") == p1 
+    assert dds.DomainParticipant.find("MyParticipant2") == p2
+    assert dds.DomainParticipant.find("MyParticipant3") == None
+    
 
 
 def retain_for_listener_helper(set_after):
@@ -340,7 +331,7 @@ def test_retain_for_listener():
 # p3 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p3"))
 # time.sleep(3)
 # assert p
-
+dds.DomainParticipant.discovered_participants
 
 # def test_dns_polling_period():
 # p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), None)
