@@ -194,10 +194,31 @@ def test_already_closed_exception():
         p.default_datawriter_qos = dds.DataWriterQos()
 
 
-# def test_retain():
-# id1 = DOMAIN_ID
-# id2 = DOMAIN_ID + 1
-# How to handle scopes?
+def test_retain():
+    id1 = DOMAIN_ID
+    id2 = DOMAIN_ID + 1
+
+    def scope_1():
+        p1 = dds.DomainParticipant(id1, dds.DomainParticipantQos())
+        p2 = dds.DomainParticipant(id2, dds.DomainParticipantQos())
+        p1.retain()
+
+    def scope_2():
+        p3 = dds.DomainParticipant.find(id1)
+        p4 = dds.DomainParticipant.find(id2)
+        assert p3 != None
+        assert p4 == None
+        assert p3 == dds.DomainParticipant.find(id1)
+
+    def scope_3():
+        p5 = dds.DomainParticipant.find(id1)
+        assert p5 != None
+        p5.close()
+
+    scope_1()
+    scope_2()
+    scope_3()
+    assert dds.DomainParticipant.find(id1) == None
 
 
 def test_creation_from_native():
@@ -267,7 +288,15 @@ def test_domain_participant_config_params():
 
 
 # def test_find_extensions():
-#    pass
+# p_qos = dds.DomainParticipantQos()
+# p_qos << dds.EntityName("MyParticipant1")
+# p1 = dds.DomainParticipant(DOMAIN_ID, p_qos)
+# p_qos << dds.EntityName("MyParticipant2")
+# p2 = dds.DomainParticipant(DOMAIN_ID, p_qos)
+
+# assert dds.DomainParticipant.find_participant_by_name
+
+# No find participant by name
 
 
 def test_entity_lock():
@@ -275,8 +304,27 @@ def test_entity_lock():
     # Check how to get lock
 
 
-# def test_retain_for_listener():
-#    pass
+def retain_for_listener_helper(set_after):
+    listener = dds.NoOpDomainParticipantListener()
+    if set_after:
+        p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+        p.bind_listener(listener, dds.StatusMask.none())
+    else:
+        p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), listener)
+
+    def inner():
+        with dds.DomainParticipant.find(DOMAIN_ID) as new_p:
+            assert new_p != None
+            new_p.bind_listener(None, dds.StatusMask.none())
+
+    inner()
+    assert dds.DomainParticipant.find(DOMAIN_ID) == None
+
+
+def test_retain_for_listener():
+    retain_for_listener_helper(True)
+    retain_for_listener_helper(False)
+
 
 # def test_discovered_participants():
 # qos = dds.DomainParticipantQos()
