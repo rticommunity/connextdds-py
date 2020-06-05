@@ -79,8 +79,15 @@ def test_set_qos_exception():
         p.qos = qos
 
 
-# def test_set_get_default_qos():
-# need dds core byte seq
+def test_set_get_default_qos():
+    set_qos = dds.DomainParticipant.default_participant_qos
+    set_qos << dds.UserData(dds.ByteSeq(33, 2))
+    assert set_qos != dds.DomainParticipant.default_topic_qos
+    set_qos = dds.DomainParticipant.default_participant_qos
+    get_qos = dds.DomainParticipant.default_participant_qos
+    assert get_qos == set_qos
+    get_qos >> get_user_data
+    assert get_user_data == dds.UserData(dds.ByteSeq(33, 2))
 
 
 def test_set_get_factory_qos():
