@@ -24,6 +24,14 @@ void init_class_defs(py::class_<PublisherQos>& cls) {
             py::arg("publisher"),
             "Create a PublisherQos with the same settings as those applied to "
             "the provided Publisher object."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
 
     add_qos_property<PublisherQos, Presentation>(cls, "presentation", "Presentation");

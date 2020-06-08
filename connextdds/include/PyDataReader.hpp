@@ -44,18 +44,29 @@ public:
         const PyTopic<T>& t, 
         const dds::sub::qos::DataReaderQos& q,
         PyDataReaderListener<T>* l,
-        const dds::core::status::StatusMask& m) : dds::sub::DataReader<T>(s, t, q, l, m) {
-            if (nullptr != l) py::cast(l).inc_ref();
-        }
+        const dds::core::status::StatusMask& m
+    ) : dds::sub::DataReader<T>(s, t, q, l, m) {
+        if (nullptr != l) py::cast(l).inc_ref();
+    }
 
     PyDataReader(
         const PySubscriber& s, 
         const PyContentFilteredTopic<T>& t, 
         const dds::sub::qos::DataReaderQos& q,
         PyDataReaderListener<T>* l,
-        const dds::core::status::StatusMask& m) : dds::sub::DataReader<T>(s, t, q, l, m) {
-            if (nullptr != l) py::cast(l).inc_ref();
+        const dds::core::status::StatusMask& m
+    ) : dds::sub::DataReader<T>(s, t, q, l, m) {
+        if (nullptr != l) py::cast(l).inc_ref();
+    }
+
+    virtual
+    ~PyDataReader() {
+        if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
         }
+    }
 
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);
@@ -84,7 +95,14 @@ public:
         return PySubscriber(s);
     }
 
-    void py_close() override { this->close(); }
+    void py_close() override {
+        if (nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
+        }
+        this->close();
+    }
 
     void py_retain() override { this->retain(); }
 
@@ -94,7 +112,7 @@ public:
 
     dds::sub::Query create_query(const std::string& expression, const std::vector<std::string>& params) override {
         return dds::sub::Query(*this, expression, params);
-    } 
+    }
 };
 
 template<typename T>
@@ -108,6 +126,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
                 const PyTopic<T>&>(),
             py::arg("sub"),
             py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a DataReader."
         )
         .def(
@@ -128,6 +147,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a DataReader."
         )
         .def(
@@ -136,6 +156,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
                 const PyContentFilteredTopic<T>&>(),
             py::arg("sub"),
             py::arg("cft"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a DataReader with a ContentFilteredTopic."
         )
         .def(
@@ -156,6 +177,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a DataReader with a ContentFilteredTopic."
         )
         .def(
@@ -164,6 +186,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
                 return PyDataReader<T>(dr);
             }),
             py::arg("reader"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a typed DataReader from an AnyDataReader."
         )
         .def(
@@ -172,6 +195,7 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
                 return dds::core::polymorphic_cast<PyDataReader<T>>(entity);
             }),
             py::arg("entity"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a typed DataReader from an Entity."
         )
         .def_property(
@@ -591,22 +615,8 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
 }
 
 template<typename T>
-void init_dds_typed_datareader_del_listener(py::class_<PyDataReader<T>, PyIDataReader>& cls) {
-    cls
-        .def(
-            "__del__",
-            [](PyDataReader<T>& dr) {
-                if (nullptr != dr.listener()) {
-                    py::cast(dr.listener()).dec_ref();
-                }
-            }
-        );
-}
-
-template<typename T>
 void init_dds_typed_datareader_template(py::class_<PyDataReader<T>, PyIDataReader>& cls) {
     init_dds_typed_datareader_base_template<T>(cls);
-    init_dds_typed_datareader_del_listener<T>(cls);
 
     cls
         .def(
