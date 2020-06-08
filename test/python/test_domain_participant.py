@@ -46,7 +46,7 @@ def test_participant_creation_w_listener():
 def test_participant_creation_failure():
     with pytest.raises(dds.Error):
         qos = dds.DomainParticipantQos()
-        qos.domain_participant_resource_limits.type_object_max_serialized_length = -2
+        qos.resource_limits.type_object_max_serialized_length = -2
         dds.DomainParticipant(0, qos)
 
 
@@ -260,10 +260,10 @@ def test_domain_participant_config_params():
 def test_find_extensions():
     p_qos = dds.DomainParticipantQos()
     p_qos << dds.EntityName("MyParticipant1")
-    assert p_qos.entity_name.name == "MyParticipant1"
+    assert p_qos.participant_name.name == "MyParticipant1"
 
     p1 = dds.DomainParticipant(DOMAIN_ID, p_qos)
-    assert p1.qos.entity_name.name == "MyParticipant1"
+    assert p1.qos.participant_name.name == "MyParticipant1"
 
     p_qos << dds.EntityName("MyParticipant2")
     p2 = dds.DomainParticipant(DOMAIN_ID, p_qos)
