@@ -16,6 +16,7 @@ void init_class_defs(py::class_<PyIEntity>& cls) {
         .def(
             "enable",
             &PyIEntity::py_enable,
+            py::call_guard<py::gil_scoped_release>(),
             "Enables this entity (if it was created disabled)."
         )
         .def_property_readonly(

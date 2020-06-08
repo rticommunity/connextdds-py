@@ -17,9 +17,6 @@ void init_dds_typed_topic_template(py::class_<PyTopic<rti::topic::ServiceRequest
 }
 
 template<>
-void init_dds_typed_datareader_del_listener(py::class_<PyDataReader<rti::topic::ServiceRequest>, PyIDataReader>& cls) {}
-
-template<>
 void init_class_defs(py::class_<ServiceRequest>& cls) {
     cls
         .def_property_readonly(

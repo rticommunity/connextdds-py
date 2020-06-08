@@ -25,6 +25,14 @@ void init_class_defs(py::class_<DomainParticipantQos>& cls) {
             py::arg("participant"),
             "Create a DomainParticipantQos with settings equivalent to those "
             "of the provided DomainParticipant object."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
 
     add_qos_property<DomainParticipantQos, UserData>(cls, "user_data", "UserData");

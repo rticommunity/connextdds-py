@@ -94,6 +94,15 @@ public:
         if (nullptr != l) py::cast(l).inc_ref();
     }
 
+    virtual
+    ~PyTopic() {
+        if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
+        }
+    }
+
     dds::topic::TopicDescription<T> get_topic_description() override {
         return dds::topic::TopicDescription<T>(*this);
     }
@@ -119,7 +128,14 @@ public:
 
     const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-    void py_close() override { this->close(); }
+    void py_close() override {
+        if (nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
+        }
+        this->close();
+    }
 
     void py_retain() override { this->retain(); }
 
@@ -147,18 +163,18 @@ public:
 template<typename T>
 void init_itopic_description_defs(py::class_<PyITopicDescription<T>, PyIEntity>& cls) {
     cls
-        .def(
+        .def_property_readonly(
             "name",
             &PyITopicDescription<T>::py_name,
             "The name of the entity conforming to the ITopicDescription "
             "interface."
         )
-        .def(
+        .def_property_readonly(
             "type_name",
             &PyITopicDescription<T>::py_type_name,
             "The name of the associated type."
         )
-        .def(
+        .def_property_readonly(
             "participant",
             &PyITopicDescription<T>::py_participant,
             "The parent DomainParticipant."
@@ -210,6 +226,8 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
                     return dds::core::polymorphic_cast<PyTopic<T>>(entity);
                 }
             ),
+            py::arg("entity"),
+            py::call_guard<py::gil_scoped_release>(),
             "Cast an Entity to a Topic."
         )
         .def(
@@ -219,6 +237,8 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
                     return dds::core::polymorphic_cast<PyTopic<T>>(td);
                 }
             ),
+            py::arg("topic_description"),
+            py::call_guard<py::gil_scoped_release>(),
             "Cast an ITopicDescription to a Topic."
         )
         .def(
@@ -227,6 +247,7 @@ void init_dds_typed_topic_base_template(py::class_<PyTopic<T>, PyITopicDescripti
                 return PyTopic<T>(topic);
             }),
             py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a typed Topic from an AnyTopic."
         )
         .def_property_readonly(
@@ -306,6 +327,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
             >(),
             py::arg("participant"),
             py::arg("topic_name"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a new Topic."
         )
         .def(
@@ -317,6 +339,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("type_name"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a new Topic."
         )
         .def(
@@ -337,6 +360,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a new Topic."
         )
         .def(
@@ -359,6 +383,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<T>, PyITopicDescription<T>
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a new Topic."
         );
 }

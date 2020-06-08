@@ -37,6 +37,15 @@ public:
         if (nullptr != l) py::cast(l).inc_ref();
     }
 
+    virtual
+    ~PyDataWriter() {
+        if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
+        }
+    }
+
     dds::core::Entity get_entity() override {
         return dds::core::Entity(*this);
     }
@@ -66,7 +75,14 @@ public:
 
     void py_wait_for_acknowledgments(const dds::core::Duration& d) override { this->wait_for_acknowledgments(d); }
 
-    void py_close() override { this->close(); }
+    void py_close() override {
+        if (nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
+        }
+        this->close();
+    }
 
     void py_retain() override { this->retain(); }
 };
@@ -80,6 +96,7 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
                 const PyTopic<T>&>(),
             py::arg("pub"),
             py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a DataWriter."
         )
         .def(
@@ -100,6 +117,7 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a DataWriter with QoS and a listener."
         )
         .def(
@@ -107,6 +125,7 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
                 return PyDataWriter<T>(adw.get_any_datawriter().get<T>());
             }),
             py::arg("writer"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a typed DataWriter from an AnyDataWriter."
         )
         .def(
@@ -115,6 +134,7 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
                 return dds::core::polymorphic_cast<PyDataWriter<T>>(entity);
             }),
             py::arg("entity"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a typed DataWriter from an Entity."
         )
         .def(
@@ -697,14 +717,6 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         .def(
             py::self != py::self,
             "Test for inequality."
-        )
-        .def(
-            "__del__",
-            [](PyDataWriter<T>& dw) {
-                if (nullptr != dw.listener()) {
-                    py::cast(dw.listener()).dec_ref();
-                }
-            }
         )
         .def(
             "write_async",

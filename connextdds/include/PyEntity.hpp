@@ -85,13 +85,25 @@ public:
 
     const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-    void py_close() override { this->close(); }
+    void py_close() override;
 
     void py_retain() override { this->retain(); }
 
+    void py_add_prop(pybind11::object o) {
+        this->_properties.insert(o);
+    }
 
     virtual
-    ~PyDomainParticipant() {}
+    ~PyDomainParticipant();
+
+private:
+    struct PropertyHasher {
+        size_t operator()(const pybind11::object& o) const {
+            return reinterpret_cast<std::uintptr_t>(o.ptr());
+        }
+    };
+
+    std::unordered_set<pybind11::object, PropertyHasher> _properties;
 };
 
 class PyPublisher : public dds::pub::Publisher, public PyIEntity {
@@ -116,13 +128,12 @@ public:
 
     const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-    void py_close() override { this->close(); }
+    void py_close() override;
 
     void py_retain() override { this->retain(); }
 
-
     virtual
-    ~PyPublisher() {}
+    ~PyPublisher();
 };
 
 class PySubscriber : public dds::sub::Subscriber, public PyIEntity {
@@ -147,12 +158,12 @@ public:
 
     const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
 
-    void py_close() override { this->close(); }
+    void py_close() override;
 
     void py_retain() override { this->retain(); }
 
     virtual
-    ~PySubscriber() {}
+    ~PySubscriber();
 };
 
 }
