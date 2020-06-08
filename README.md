@@ -1,4 +1,4 @@
-# pyrti
+# connextdds-py
 
 > A full Python binding for RTI Connext DDS using pybind11
 
@@ -16,8 +16,8 @@
 > clone repo and submodules and cd to the project root
 
 ```shell
-$ git clone --recurse-submodules git@gitlab.com:rti-private/pyrti.git 
-$ cd pyrti
+$ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+$ cd connextdds-py
 ```
 
 > set environment variables
