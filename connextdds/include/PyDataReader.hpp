@@ -106,6 +106,14 @@ public:
 
     void py_retain() override { this->retain(); }
 
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
+
     dds::sub::Query create_query(const std::string& expression) override {
         return dds::sub::Query(*this, expression);
     }
