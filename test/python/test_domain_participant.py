@@ -10,6 +10,7 @@ DOMAIN_ID = 0
 # def test_participant_factory_qos_value_type():
 #    pass
 
+
 def test_participant_default_creation():
     p = dds.DomainParticipant(DOMAIN_ID)
     assert p.domain_id == DOMAIN_ID
@@ -330,3 +331,19 @@ def test_domain_participant_qos_to_string():
     the_qos << dds.EntityFactory(False)
     assert min_length != len(str(the_qos))
     assert "<entity_factory>" in str(the_qos)
+
+
+def test_close_after_close():
+    p1 = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p1.close()
+    with pytest.raises(dds.AlreadyClosedError):
+        p1.close()
+
+    # Shouldn't error out here
+    with dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos()) as p2:
+        p2.close()
+
+    with pytest.raises(dds.AlreadyClosedError):
+        with dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos()) as p3:
+            p3.close()
+            p3.qos.participant_name.name
