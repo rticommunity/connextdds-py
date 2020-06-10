@@ -64,6 +64,14 @@ public:
     void py_close() override { this->close(); }
 
     void py_retain() override { this->retain(); }
+
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
 };
 
 template<typename T>
@@ -138,6 +146,14 @@ public:
     }
 
     void py_retain() override { this->retain(); }
+
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
 
     dds::topic::AnyTopic get_any_topic() const override {
         return dds::topic::AnyTopic(*this);

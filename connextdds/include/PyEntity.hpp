@@ -33,6 +33,18 @@ public:
     void py_retain() = 0;
 
     virtual
+    bool py_closed() = 0;
+
+    virtual
+    bool py_enabled() = 0;
+
+    virtual
+    int py_use_count() = 0;
+
+    virtual
+    void py_unretain() = 0;
+
+    virtual
     ~PyIEntity() {}
 };
 
@@ -55,6 +67,14 @@ public:
     void py_close() override { this->close(); }
 
     void py_retain() override { this->retain(); }
+
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
 
     virtual
     ~PyEntity() {}
@@ -88,6 +108,14 @@ public:
     void py_close() override;
 
     void py_retain() override { this->retain(); }
+
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
 
     void py_add_prop(pybind11::object o) {
         this->_properties.insert(o);
@@ -132,6 +160,14 @@ public:
 
     void py_retain() override { this->retain(); }
 
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
+
     virtual
     ~PyPublisher();
 };
@@ -161,6 +197,14 @@ public:
     void py_close() override;
 
     void py_retain() override { this->retain(); }
+
+    bool py_closed() override { return this->delegate()->closed(); }
+
+    bool py_enabled() override { return this->delegate()->enabled(); }
+
+    int py_use_count() override { return this->delegate().use_count(); }
+
+    void py_unretain() override { this->delegate()->unretain(); }
 
     virtual
     ~PySubscriber();
