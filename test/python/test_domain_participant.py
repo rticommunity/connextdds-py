@@ -309,6 +309,8 @@ def test_retain_for_listener():
 # dur = dds.Duration(42, 12)
 # p.
 # need to find dns functions
+
+@pytest.mark.skip(reason="to_string not implemented yet")
 def test_participant_factory_qos_to_string():
     the_qos = dds.DomainParticipantFactoryQos()
     # No qos print format
@@ -322,6 +324,7 @@ def test_participant_factory_qos_to_string():
     assert "<entity_factory>" in str(the_qos)
 
 
+@pytest.mark.skip(reason="to_string not implemented yet")
 def test_domain_participant_qos_to_string():
     the_qos = dds.DomainParticipantQos()
     assert str(the_qos) != ""
