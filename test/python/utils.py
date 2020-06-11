@@ -23,6 +23,9 @@ class TestSystem:
             raise Exception(sample_type + " not supported in test system")
 
 
+#def create_participant():
+#    qos << dds.Database().shutdown_cleanup
+
 def wait(reader, t=10, count=1):
     curr = 0
     while t > curr:
