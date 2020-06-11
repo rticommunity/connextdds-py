@@ -5,7 +5,7 @@
 
 namespace pyrti {
 
-class _SYMBOL_HIDDEN PyAsyncioExecutor  {
+class PYRTI_SYMBOL_HIDDEN PyAsyncioExecutor  {
 public:
     template<typename T>
     static py::object run(std::function<T()> func) {

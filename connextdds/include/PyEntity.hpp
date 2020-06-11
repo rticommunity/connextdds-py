@@ -80,7 +80,7 @@ public:
     ~PyEntity() {}
 };
 
-class PyDomainParticipant : public dds::domain::DomainParticipant, public PyIEntity {
+class PYRTI_SYMBOL_PUBLIC PyDomainParticipant : public dds::domain::DomainParticipant, public PyIEntity {
 public:
     using dds::domain::DomainParticipant::DomainParticipant;
 
@@ -117,7 +117,7 @@ public:
 
     void py_unretain() override { this->delegate()->unretain(); }
 
-    void py_add_prop(pybind11::object o) {
+    void py_add_prop(pybind11::object o) PYRTI_SYMBOL_HIDDEN {
         this->_properties.insert(o);
     }
 
@@ -125,7 +125,7 @@ public:
     ~PyDomainParticipant();
 
 private:
-    struct PropertyHasher {
+    struct PYRTI_SYMBOL_HIDDEN PropertyHasher {
         size_t operator()(const pybind11::object& o) const {
             return reinterpret_cast<std::uintptr_t>(o.ptr());
         }

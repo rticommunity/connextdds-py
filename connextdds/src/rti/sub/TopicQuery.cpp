@@ -120,6 +120,19 @@ void init_class_defs(py::class_<TopicQuery>& cls) {
             "Gets the DataReader associated to this TopicQuery."
         )
         .def(
+            "retain",
+            [](TopicQuery& tq) {
+                tq.retain();
+            },
+            "Disable automatic destruction of this TopicQuery."
+        )
+        .def(
+            "unretain",
+            [](TopicQuery& tq) {
+                tq.delegate()->unretain();
+            }
+        )
+        .def(
             "__enter__",
             [](TopicQuery& tq) {
                 return tq;
@@ -140,6 +153,36 @@ void init_class_defs(py::class_<TopicQuery>& cls) {
         .def(
             py::self != py::self,
             "Compare DataStateEx objects for inequality."
+        )
+        .def_static(
+            "use_reader_content_filter",
+            [](PyIAnyDataReader& adr) {
+                auto dr = adr.get_any_datareader();
+                return TopicQuery::UseReaderContentFilter(dr);
+            },
+            py::arg("reader"),
+            "Create a TopicQuery with a DataReader's content filter."
+        )
+        .def_static(
+            "select_all",
+            [](PyIAnyDataReader& adr) {
+                auto dr = adr.get_any_datareader();
+                return TopicQuery::SelectAll(dr);
+            },
+            py::arg("reader"),
+            "Create a TopicQuery that requests all data."
+        )
+        .def_static(
+            "find",
+            [](PyIAnyDataReader& adr, rti::core::Guid& guid) {
+                dds::core::optional<TopicQuery> retval;
+                auto dr = adr.get_any_datareader();
+                auto tq = rti::sub::find_topic_query(dr, guid);
+                if (dds::core::null != tq) {
+                    retval = tq;
+                }
+                return retval;
+            }
         );
 }
 
