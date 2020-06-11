@@ -30,7 +30,7 @@ def test_data_reader_writer():
             writer.write("Hello World " + str(i))
         while len(reader.read()) < 5:
             time.sleep(0.001)
-        for x,y in reader.read():
+        for x, y in reader.read():
             count += 1
             assert x == f"Hello World {count}"
 
