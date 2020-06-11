@@ -9,8 +9,8 @@ def test_close_datareader_contained_entity():
         topic_query = dds.TopicQuery(dds.AnyDataReader(reader),
                                      dds.TopicQuerySelection(dds.Filter("foo = 1 or foo = 3")))
 
-        #if (retain):
-        #    topic_query.retain() <------ need retain()
+        if (retain):
+            topic_query.retain()
         reader.close()
         assert topic_query.closed
         assert reader.closed
