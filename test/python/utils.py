@@ -25,8 +25,8 @@ class TestSystem:
 
 def create_participant():
     qos = dds.DomainParticipantQos()
-    qos.database.shutdown_cleanup_period = (0, 10)
-    qos.database.shutdown_timeout = (0, 10)
+    qos.database.shutdown_cleanup_period = (0, 10000000)
+    qos.database.shutdown_timeout = (0, 10000000)
     return dds.DomainParticipant(0, qos)
 
 
