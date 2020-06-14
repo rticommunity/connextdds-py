@@ -87,6 +87,8 @@ target_compile_options(
     distlog
     PRIVATE
     "-fpic"
+    "$<$<CONFIG:RELEASE>:-Os>"
+    "$<$<CONFIG:RELEASE>:-g0>"
 )
 
 target_link_options(
@@ -94,3 +96,12 @@ target_link_options(
     PRIVATE
     "-fpic"
 )
+
+if (WIN32)
+else()
+    add_custom_command(
+        TARGET distlog
+        POST_BUILD
+        COMMAND $<$<CONFIG:Release>:strip>$<$<NOT:$<CONFIG:Release>>:echo> $<$<CONFIG:Release>:-x> $<$<CONFIG:Release>:$<TARGET_FILE:distlog>>
+    )
+endif()
