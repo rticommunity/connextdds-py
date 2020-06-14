@@ -15,12 +15,15 @@ PyLoggerOptions::PyLoggerOptions(const PyLoggerOptions& other) {
     RTI_DL_Options_copy(this->_options, other._options);
 }
 
-py::object PyLoggerOptions::participant() {
+dds::core::optional<PyDomainParticipant> PyLoggerOptions::participant() {
+    dds::core::optional<PyDomainParticipant> retval;
     auto dp = RTI_DL_Options_getDomainParticipant(this->_options);
-    if (dp == NULL) return py::cast(nullptr);
-    return py::cast(PyDomainParticipant(
-        dds::core::construct_from_native_tag_t(),
-        new rti::domain::DomainParticipantImpl(dp)));
+    if (dp != NULL) {
+        retval = PyDomainParticipant(
+            dds::core::construct_from_native_tag_t(),
+            new rti::domain::DomainParticipantImpl(dp));
+    }
+    return retval;
 }
 
 PyLoggerOptions& PyLoggerOptions::participant(const PyDomainParticipant& dp) {
@@ -151,7 +154,7 @@ void init_logger_options(py::module& m) {
         )
         .def_property(
             "participant",
-            (py::object (PyLoggerOptions::*)()) &PyLoggerOptions::participant,
+            (dds::core::optional<PyDomainParticipant> (PyLoggerOptions::*)()) &PyLoggerOptions::participant,
             (PyLoggerOptions& (PyLoggerOptions::*)(const PyDomainParticipant&)) &PyLoggerOptions::participant,
             "The DomainParticipant to use for the logger."
         )

@@ -6,7 +6,6 @@
 
 
 PYBIND11_MODULE(distlog, m) {
-    py:: module::import("rti.connextdds");
     pyrti::init_log_level(m);
     pyrti::init_logger_options(m);
     pyrti::init_message_params(m);

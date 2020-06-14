@@ -13,7 +13,7 @@ namespace pyrti {
         PyLoggerOptions();
         ~PyLoggerOptions();
         PyLoggerOptions(const PyLoggerOptions&);
-        py::object participant();
+        dds::core::optional<PyDomainParticipant> participant();
         PyLoggerOptions& participant(const PyDomainParticipant&);
         bool log_infrastructure_messages();
         PyLoggerOptions& log_infrastructure_messages(bool);
