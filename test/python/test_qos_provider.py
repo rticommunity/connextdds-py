@@ -1,9 +1,12 @@
 import rti.connextdds as dds
 import pytest
+import pathlib
+
+LOCATION = str(pathlib.Path(__file__).parent.absolute()) + "/"
 
 def test_string_uri_creation():
     assert (
-        len(dds.QosProvider("../xml/XmlApplication.xml").qos_profile_libraries()) == 4
+        len(dds.QosProvider(LOCATION + "../xml/XmlApplication.xml").qos_profile_libraries()) == 4
     )
 
 
@@ -15,7 +18,7 @@ def test_invalid_creation():
     with pytest.raises(dds.Error):
         dds.QosProvider("invalid_file.xml")
     with pytest.raises(dds.Error):
-        dds.QosProvider("../xml/InvalidXml.xml")
+        dds.QosProvider(LOCATION + "../xml/InvalidXml.xml")
 
 def test_default_provider():
     provider1 = dds.QosProvider.default()
@@ -28,7 +31,7 @@ def test_default_provider():
     assert 3 == len(provider4.qos_profile_libraries())
     
     params = dds.QosProviderParams()
-    params.url_profile = dds.StringSeq(["../xml/XmlApplication.xml"])
+    params.url_profile = dds.StringSeq([LOCATION + "../xml/XmlApplication.xml"])
     provider4.reload_profiles()
     provider4.provider_params = params
     
