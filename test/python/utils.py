@@ -3,8 +3,8 @@ import time
 
 
 class TestSystem:
-    def __init__(self, the_participant, sample_type):
-        self.participant = the_participant
+    def __init__(self, domain_id, sample_type):
+        self.participant = create_participant(domain_id)
         if sample_type == "StringTopicType":
             self.topic = dds.StringTopicType.Topic(self.participant, "StringTopicType")
             self.reader = dds.StringTopicType.DataReader(self.participant, self.topic)
@@ -23,11 +23,11 @@ class TestSystem:
             raise Exception(sample_type + " not supported in test system")
 
 
-def create_participant():
+def create_participant(domain_id=0):
     qos = dds.DomainParticipantQos()
     qos.database.shutdown_cleanup_period = (0, 10000000)
     qos.database.shutdown_timeout = (0, 10000000)
-    return dds.DomainParticipant(0, qos)
+    return dds.DomainParticipant(domain_id, qos)
 
 
 def wait(reader, t=10, count=1):

@@ -1,9 +1,10 @@
 import rti.connextdds as dds
+import utils
 
 
 def test_close_datareader_contained_entity():
     def helper(retain):
-        p = dds.DomainParticipant(0, dds.DomainParticipantQos())
+        p = utils.create_participant()
         topic = dds.StringTopicType.Topic(p, "test_topic")
         sub = dds.Subscriber(p)
         reader = dds.StringTopicType.DataReader(sub, topic)
