@@ -33,7 +33,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "participant_qos_profile",
             (DomainParticipantQos (QosProvider::*)(const std::string&)) &QosProvider::participant_qos,
             py::arg("profile_name"),
-            "Set the profile for the DomainParticipantQos associated with this QosProvider."
+            "Get the DomainParticipantQos from a qos profile."
         )
         .def_property_readonly(
             "topic_qos",
@@ -44,7 +44,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "topic_qos_profile",
             (TopicQos (QosProvider::*)(const std::string&)) &QosProvider::topic_qos,
             py::arg("profile_name"),
-            "Set the profile for the TopicQos associated with this QosProvider."
+            "Get the TopicQos from a qos profile."
         )
         .def_property_readonly(
             "subscriber_qos",
@@ -55,7 +55,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "subscriber_qos_profile",
             (SubscriberQos (QosProvider::*)(const std::string&)) &QosProvider::subscriber_qos,
             py::arg("profile"),
-            "Set the profile for the SubscriberQos associated with the QosProvider."
+            "Get the SubscriberQos from a qos profile."
         )
         .def_property_readonly(
             "datareader_qos",
@@ -66,7 +66,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "datareader_qos_profile",
             (DataReaderQos (QosProvider::*)(const std::string&)) &QosProvider::datareader_qos,
             py::arg("profile"),
-            "Set the profile for the DataReaderQos associated with this QosProvider."
+            "Get the DataReaderQos from a qos profile."
         )
         .def_property_readonly(
             "publisher_qos",
@@ -77,7 +77,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "publisher_qos_profile",
             (PublisherQos (QosProvider::*)(const std::string&)) &QosProvider::publisher_qos,
             py::arg("profile"),
-            "Set the profile for the PublisherQos associated with this QosProvider."
+            "Get the PublisherQos from a qos profile."
         )
         .def_property_readonly(
             "datawriter_qos",
@@ -88,7 +88,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "datawriter_qos_profile",
             (DataWriterQos (QosProvider::*)(const std::string&)) & QosProvider::datawriter_qos,
             py::arg("profile"),
-            "Set the profile for the DataWriterQos associated with this QosProvider."
+            "Get the DataWriterQos from a qos profile."
         )
         .def_property_static(
             "default_provider_params",
