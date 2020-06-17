@@ -79,9 +79,9 @@ def helper_close_participant_contained_entities(implicit_pub, test_retain):
     topic2 = dds.StringTopicType.Topic(p1, "test topic2")
     topic30 = dds.StringTopicType.Topic(p1, "test topic3")
     topic31 = dds.StringTopicType.Topic(p2, "test topic3")
-    cft10 = dds.StringTopicType.ContentFilteredTopic(topic1, "cft10", dds.Filter("foo = 1"))
-    cft11 = dds.StringTopicType.ContentFilteredTopic(topic1, "cft11", dds.Filter("foo = 1"))
-    cft20 = dds.StringTopicType.ContentFilteredTopic(topic31, "cft20", dds.Filter("foo = 1"))
+    cft10 = dds.StringTopicType.ContentFilteredTopic(topic1, "cft10", dds.Filter("value = '1'"))
+    cft11 = dds.StringTopicType.ContentFilteredTopic(topic1, "cft11", dds.Filter("value = '1'"))
+    cft20 = dds.StringTopicType.ContentFilteredTopic(topic31, "cft20", dds.Filter("value = '1'"))
 
     pub1 = None
     pub2 = None
@@ -117,8 +117,8 @@ def helper_close_participant_contained_entities(implicit_pub, test_retain):
     flow_controller12 = dds.FlowController(p1, "fc12")
     flow_controller20 = dds.FlowController(p2, "fc20")
 
-    tq1 = dds.TopicQuery(reader10, dds.TopicQuerySelection(dds.Filter("foo = 1 or foo = 3")))
-    tq2 = dds.TopicQuery(reader31, dds.TopicQuerySelection(dds.Filter("foo = 4 or foo = 6")))
+    tq1 = dds.TopicQuery(reader10, dds.TopicQuerySelection(dds.Filter("value = '1' or value = '3'")))
+    tq2 = dds.TopicQuery(reader31, dds.TopicQuerySelection(dds.Filter("value = '4' or value = '6'")))
     
     if test_retain:
         pub1.retain()
@@ -141,7 +141,7 @@ def helper_close_participant_contained_entities(implicit_pub, test_retain):
 
     assert topic1.closed
     assert topic2.closed
-    assert topiv30.closed
+    assert topic30.closed
     assert not topic31.closed
 
     assert cft10.closed
