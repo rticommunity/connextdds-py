@@ -9,7 +9,7 @@ def test_close_datareader_contained_entity():
         sub = dds.Subscriber(p)
         reader = dds.StringTopicType.DataReader(sub, topic)
         topic_query = dds.TopicQuery(
-            dds.AnyDataReader(reader),
+            reader,
             dds.TopicQuerySelection(dds.Filter("foo = 1 or foo = 3")),
         )
 
