@@ -45,9 +45,9 @@ def test_participant_creation_w_listener():
 
 
 def test_participant_creation_failure():
+    qos = dds.DomainParticipantQos()
+    qos.resource_limits.type_object_max_serialized_length = -2
     with pytest.raises(dds.Error):
-        qos = dds.DomainParticipantQos()
-        qos.resource_limits.type_object_max_serialized_length = -2
         dds.DomainParticipant(0, qos)
 
 
@@ -56,7 +56,6 @@ def test_set_get_qos():
     qos = p.qos
     assert qos.entity_factory.autoenable_created_entities
     qos << dds.EntityFactory.manually_enable()
-    # Fix me
     assert not (qos.entity_factory.autoenable_created_entities)
     p.qos = qos
     # assert qos == p.qos
@@ -69,13 +68,13 @@ def test_set_get_qos():
 
 
 def test_set_qos_exception():
+    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    qos = p.qos
+    d = dds.Duration(77)
+    db = dds.Database()
+    db.shutdown_cleanup_period = d
+    qos << db
     with pytest.raises(dds.ImmutablePolicyError):
-        p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
-        qos = p.qos
-        d = dds.Duration(77)
-        db = dds.Database()
-        db.shutdown_cleanup_period = d
-        qos << db
         p.qos = qos
 
 
