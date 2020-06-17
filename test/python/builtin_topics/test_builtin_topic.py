@@ -78,7 +78,6 @@ def publisher_main(domain_id, sample_count):
         BuiltinSubscriptionListener(),
         dds.StatusMask.data_available())
 
-    participant.enable()
 
     msg_type = dds.QosProvider('msg.xml').type('builtin_topics_lib', 'msg')
     topic = dds.DynamicData.Topic(participant, 'Example msg', msg_type)
