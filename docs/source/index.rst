@@ -10,9 +10,9 @@ Welcome to connextdds-py's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-rti
-rti.logging
-modules
+rti.rst
+rti.logging.rst
+modules.rst
 
 Indices and tables
 ==================
