@@ -200,3 +200,4 @@ def test_close_datareader_contained_entity(retain):
     reader.close()
     assert topic_query.closed
     assert reader.closed
+
