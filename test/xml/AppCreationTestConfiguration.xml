@@ -115,9 +115,9 @@
              <subscriber name="TestSubscriber">
                  <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationUserTestTopic">
                      <datareader_qos base_name="qosLibrary::DefaultProfile"/>
-                     <content_filter name="XMLAppCreationUserTestCft" kind="builtin.sql">
+                     <filter name="XMLAppCreationUserTestCft" kind="builtin.sql">
                          <expression> foo &gt; 5 </expression>
-                     </content_filter>
+                     </filter>
                  </data_reader>
              </subscriber>
         </domain_participant>

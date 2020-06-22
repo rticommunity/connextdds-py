@@ -6,8 +6,8 @@ import pathlib
 FILE = (
     str(pathlib.Path(__file__).parent.absolute())
     + "/"
-    + "../xml/AppCreationTestConfiguration.xml",)
-
+    + "../xml/AppCreationTestConfiguration.xml",
+)
 
 
 def setup_qos_provider_create_participant(name):
@@ -15,14 +15,12 @@ def setup_qos_provider_create_participant(name):
     provider_params = dds.QosProviderParams()
     provider_params.url_profile = FILE
 
-    dds.QosProvider.default_provider_params = provider_params 
+    dds.QosProvider.default_provider_params = provider_params
 
-    participant = dds.QosProvider(name).create_participant_from_config(name, params)
+    participant = dds.QosProvider.default().create_participant_from_config(name, params)
     assert not (participant is None)
     return participant
 
-    
-    
 
 @pytest.mark.parametrize(
     "pub_p_name,sub_p_name,writer_name,reader_name,filtered",
@@ -51,22 +49,21 @@ def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filte
 
     sample = range(1, 3)
     writer.write(sample)
-    
+
     sample = range(1, 9)
     writer.write(sample)
 
     if filtered:
         utils.wait(reader, 10, 2)
         samples = reader.take()
-        
+
         assert samples[0].data == range(1, 7)
         assert samples[1].data == range(1, 9)
 
     else:
         utils.wait(reader, 10, 3)
         samples = reader.take()
-        
+
         assert samples[0].data == range(1, 7)
         assert samples[1].data == range(1, 3)
         assert samples[2].data == range(1, 9)
-
