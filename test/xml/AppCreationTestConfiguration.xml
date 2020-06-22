@@ -1,0 +1,127 @@
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="../../../dds_c.1.0/resource/xsd/rti_dds_profiles.xsd">
+
+    <!-- Qos Library -->
+    <qos_library name="qosLibrary">
+        <qos_profile name="DefaultProfile">
+            <participant_qos>
+                <database>
+                  <shutdown_cleanup_period>
+                    <sec>DURATION_ZERO_SEC</sec>
+                    <nanosec>10000000</nanosec>
+                  </shutdown_cleanup_period>
+                </database>
+            </participant_qos>
+            <datawriter_qos>
+                <durability>
+                  <kind>TRANSIENT_LOCAL_DURABILITY_QOS</kind>
+                </durability>
+                <history>
+                    <kind>DDS_KEEP_ALL_HISTORY_QOS</kind>
+                    <depth>10</depth>
+                </history>
+            </datawriter_qos>
+            <datareader_qos>
+                <reliability>
+                  <kind>RELIABLE_RELIABILITY_QOS</kind>
+                </reliability>
+                <durability>
+                  <kind>TRANSIENT_LOCAL_DURABILITY_QOS</kind>
+                </durability>
+                <history>
+                    <kind>DDS_KEEP_ALL_HISTORY_QOS</kind>
+                </history>
+            </datareader_qos>
+            <topic_qos>
+                <history>
+                    <kind>DDS_KEEP_ALL_HISTORY_QOS</kind>
+                </history>
+            </topic_qos>
+        </qos_profile>
+    </qos_library>
+
+    <!-- types -->
+    <types>
+         <struct name="SimpleTestType">
+             <member name="foo" type="long"/>
+          </struct>
+    </types>
+
+    <!-- Domain Library -->
+    <domain_library name="TestDomainLibrary" >
+
+        <domain name="XMLAppCreationDynamicTestDomain" domain_id="0">
+        	<register_type name="SimpleTestType" kind="dynamicData" type_ref="SimpleTestType"/>
+        	<topic name="XMLAppCreationDynamicTestTopic" register_type_ref="SimpleTestType">
+                    <topic_qos base_name="qosLibrary::DefaultProfile"/>
+                </topic>
+        </domain>
+
+        <domain name="XMLAppCreationUserTestDomain" domain_id="0">
+        	<register_type name="SimpleUserTestType" kind ="userGenerated"/>
+        	<topic name="XMLAppCreationUserTestTopic" register_type_ref="SimpleUserTestType">
+                   <topic_qos base_name="qosLibrary::DefaultProfile"/>
+               </topic>
+        </domain>
+    </domain_library>
+
+    <!-- Participant library -->
+    <domain_participant_library name="TestParticipantLibrary">
+
+        <!-- Participants using DynamicData -->
+        <domain_participant name="DynamicPublicationParticipant"
+                            domain_ref="TestDomainLibrary::XMLAppCreationDynamicTestDomain">
+            <participant_qos base_name="qosLibrary::DefaultProfile"/>
+
+            <!-- Use the implicit publisher -->
+            <data_writer name="XMLAppCreationTestWriter" topic_ref="XMLAppCreationDynamicTestTopic">
+                <datawriter_qos base_name="qosLibrary::DefaultProfile"/>
+            </data_writer>
+        </domain_participant>
+
+         <domain_participant name="DynamicSubscriptionParticipant"
+                             domain_ref="TestDomainLibrary::XMLAppCreationDynamicTestDomain">
+            <participant_qos base_name="qosLibrary::DefaultProfile"/>
+
+            <subscriber name="TestSubscriber">
+                <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationDynamicTestTopic">
+                    <datareader_qos base_name="qosLibrary::DefaultProfile"/>
+                </data_reader>
+            </subscriber>
+        </domain_participant>
+
+        <!-- Participants using user-defined types -->
+        <domain_participant name="UserPublicationParticipant"
+                            domain_ref="TestDomainLibrary::XMLAppCreationUserTestDomain">
+            <participant_qos base_name="qosLibrary::DefaultProfile"/>
+
+            <publisher name="TestPublisher">
+                <data_writer name="XMLAppCreationTestWriter" topic_ref="XMLAppCreationUserTestTopic">
+                    <datawriter_qos base_name="qosLibrary::DefaultProfile"/>
+                </data_writer>
+            </publisher>
+        </domain_participant>
+
+         <domain_participant name="UserSubscriptionParticipant"
+                             domain_ref="TestDomainLibrary::XMLAppCreationUserTestDomain">
+             <participant_qos base_name="qosLibrary::DefaultProfile"/>
+
+             <!-- Use the implicit subscriber -->
+             <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationUserTestTopic">
+                 <datareader_qos base_name="qosLibrary::DefaultProfile"/>
+             </data_reader>
+
+             <!-- Create a content filtered topic -->
+             <subscriber name="TestSubscriber">
+                 <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationUserTestTopic">
+                     <datareader_qos base_name="qosLibrary::DefaultProfile"/>
+                     <content_filter name="XMLAppCreationUserTestCft" kind="builtin.sql">
+                         <expression> foo &gt; 5 </expression>
+                     </content_filter>
+                 </data_reader>
+             </subscriber>
+        </domain_participant>
+
+    </domain_participant_library>
+
+</dds>
