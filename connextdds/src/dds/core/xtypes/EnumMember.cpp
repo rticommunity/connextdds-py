@@ -30,6 +30,14 @@ void init_class_defs(py::class_<EnumMember>& cls) {
             (int32_t (EnumMember::*)() const) &EnumMember::ordinal,
             (EnumMember& (EnumMember::*)(int32_t)) &EnumMember::ordinal,
             "The member's ordinal."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

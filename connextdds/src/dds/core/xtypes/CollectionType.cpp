@@ -12,6 +12,14 @@ void init_class_defs(py::class_<CollectionType, DynamicType>& cls) {
             "content_type", 
             &CollectionType::content_type, 
             "Gets the type of elements of this collection."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

@@ -38,6 +38,14 @@ void init_class_defs(py::class_<DynamicDataMemberInfo>& cls) {
             "element_kind",
             &DynamicDataMemberInfo::element_kind,
             "The type kind of the elements in the member"
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 
