@@ -10,13 +10,20 @@ FILE = (
 )
 
 
-def write_dynamic_sample(writer, limit):
-    my_type = dds.StructType('my_type') 
-    my_type.add_member(dds.Member('value', dds.Int32Type()))
+def make_dynamic_data(limit):
+    my_type = dds.StructType("my_type")
+    my_type.add_member(dds.Member("value", dds.SequenceType(dds.Int32Type(), limit)))
     sample = dds.DynamicData(my_type)
-    for i in range(1, limit):
-        sample['value'] = i
-        writer.write(sample)
+    sample["value"] = range(1, limit)
+    return sample
+
+
+def write_dynamic_sample(writer, limit):
+    writer.write(make_dynamic_data(limit))
+
+    # for i in range(1, limit):
+    #    sample['value'] = i
+    #    writer.write(sample)
 
 
 def setup_qos_provider_create_participant(name):
@@ -54,22 +61,22 @@ def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filte
     assert not (reader is None)
 
     write_dynamic_sample(writer, 7)
-    
+
     write_dynamic_sample(writer, 3)
-    
+
     write_dynamic_sample(writer, 9)
 
     if filtered:
         utils.wait(reader, 10, 2)
         samples = reader.take()
 
-        assert samples[0].data == range(1, 7)
-        assert samples[1].data == range(1, 9)
+        assert samples[0].data == make_dynamic_data(7)
+        assert samples[1].data == make_dynamic_data(9)
 
     else:
         utils.wait(reader, 10, 3)
         samples = reader.take()
 
-        assert samples[0].data == range(1, 7)
-        assert samples[1].data == range(1, 3)
-        assert samples[2].data == range(1, 9)
+        assert samples[0].data == make_dynamic_data(7)
+        assert samples[1].data == make_dynamic_data(3)
+        assert samples[2].data == make_dynamic_data(9)
