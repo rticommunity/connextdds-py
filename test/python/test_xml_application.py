@@ -10,6 +10,15 @@ FILE = (
 )
 
 
+def write_dynamic_sample(writer, limit):
+    my_type = dds.StructType('my_type') 
+    my_type.add_member(dds.Member('value', dds.Int32Type()))
+    sample = dds.DynamicData(my_type)
+    for i in range(1, limit):
+        sample['value'] = i
+        writer.write(sample)
+
+
 def setup_qos_provider_create_participant(name):
     params = dds.DomainParticipantConfigParams(0)
     provider_params = dds.QosProviderParams()
@@ -38,20 +47,17 @@ def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filte
     pub_participant = setup_qos_provider_create_participant(pub_p_name)
     sub_participant = setup_qos_provider_create_participant(sub_p_name)
 
-    writer = pub_participant.find_datawriter(writer_name)
+    writer = dds.DynamicData.DataWriter.find_by_name(pub_participant, writer_name)
     assert not (writer is None)
 
-    reader = sub_participant.find_datareader(reader_name)
+    reader = dds.DynamicData.DataReader.find_by_name(sub_participant, reader_name)
     assert not (reader is None)
 
-    sample = range(1, 7)
-    writer.write(sample)
-
-    sample = range(1, 3)
-    writer.write(sample)
-
-    sample = range(1, 9)
-    writer.write(sample)
+    write_dynamic_sample(writer, 7)
+    
+    write_dynamic_sample(writer, 3)
+    
+    write_dynamic_sample(writer, 9)
 
     if filtered:
         utils.wait(reader, 10, 2)
