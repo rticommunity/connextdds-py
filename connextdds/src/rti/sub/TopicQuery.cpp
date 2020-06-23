@@ -54,6 +54,8 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls) {
         )
 #endif
         ;
+
+    py::implicitly_convertible<dds::topic::Filter, rti::sub::TopicQuerySelection>();
 }
 
 template<>
