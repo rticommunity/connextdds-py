@@ -12,7 +12,7 @@ FILE = (
 
 def make_dynamic_data(value):
     my_type = dds.StructType("SimpleTestType")
-    my_type.add_member(dds.Member("foo", dds.Int64Type()))
+    my_type.add_member(dds.Member("foo", dds.Int32Type()))
     sample = dds.DynamicData(my_type)
     sample["foo"] = value
     return sample
