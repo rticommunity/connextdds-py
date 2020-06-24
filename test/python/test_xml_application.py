@@ -10,20 +10,16 @@ FILE = (
 )
 
 
-def make_dynamic_data(limit):
-    my_type = dds.StructType("my_type")
-    my_type.add_member(dds.Member("value", dds.SequenceType(dds.Int32Type(), limit)))
+def make_dynamic_data(value):
+    my_type = dds.StructType("SimpleTestType")
+    my_type.add_member(dds.Member("foo", dds.Int64Type()))
     sample = dds.DynamicData(my_type)
-    sample["value"] = range(1, limit)
+    sample["foo"] = value
     return sample
 
 
-def write_dynamic_sample(writer, limit):
-    writer.write(make_dynamic_data(limit))
-
-    # for i in range(1, limit):
-    #    sample['value'] = i
-    #    writer.write(sample)
+def write_dynamic_sample(writer, value):
+    writer.write(make_dynamic_data(value))
 
 
 def setup_qos_provider_create_participant(name):
@@ -34,7 +30,7 @@ def setup_qos_provider_create_participant(name):
     dds.QosProvider.default_provider_params = provider_params
 
     participant = dds.QosProvider.default().create_participant_from_config(name, params)
-    assert not (participant is None)
+    assert participant is not None
     return participant
 
 
@@ -55,10 +51,10 @@ def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filte
     sub_participant = setup_qos_provider_create_participant(sub_p_name)
 
     writer = dds.DynamicData.DataWriter.find_by_name(pub_participant, writer_name)
-    assert not (writer is None)
+    assert writer is not None
 
     reader = dds.DynamicData.DataReader.find_by_name(sub_participant, reader_name)
-    assert not (reader is None)
+    assert reader is not None
 
     write_dynamic_sample(writer, 7)
 
