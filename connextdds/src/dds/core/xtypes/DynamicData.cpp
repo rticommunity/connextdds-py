@@ -1013,6 +1013,14 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                     return dd;
                 }
             )
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 
     py::class_<PyDynamicDataFieldsView> fields_view(dd_class, "FieldsView");

@@ -36,7 +36,11 @@ void init_class_defs(py::class_<EnumMember>& cls) {
             "Test for equality."
         )
         .def(
-            py::self != py::self,
+            "__ne__",
+            [](const EnumMember& member, const EnumMember& other) {
+                return !(member == other);
+            },
+            py::is_operator(),
             "Test for inequality."
         );
 }
