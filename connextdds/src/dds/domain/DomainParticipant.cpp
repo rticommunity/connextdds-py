@@ -20,6 +20,23 @@ PyDomainParticipant::PyDomainParticipant(
     if (nullptr != l) py::cast(l).inc_ref();
 }
 
+PyDomainParticipant::~PyDomainParticipant() {
+    if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+        py::object listener = py::cast(this->listener());
+        this->listener(nullptr, dds::core::status::StatusMask::none());
+        listener.dec_ref();
+    }
+}
+
+void PyDomainParticipant::py_close() {
+    if (nullptr != this->listener()) {
+        py::object listener = py::cast(this->listener());
+        this->listener(nullptr, dds::core::status::StatusMask::none());
+        listener.dec_ref();
+    }
+    this->close();
+}
+
 template<typename ParticipantFwdIterator>
 uint32_t find_participants(ParticipantFwdIterator begin)
 {
@@ -47,6 +64,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def(
             py::init<int32_t>(),
             py::arg("domain_id"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a new DomainParticipant with default QoS."
         )
         .def(
@@ -65,6 +83,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a new DomainParticipant"
         )
         .def(
@@ -75,6 +94,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 }
             ),
             py::arg("entity"),
+            py::call_guard<py::gil_scoped_release>(),
             "Downcast an IEntity to a DomainParticipant."
         )
         .def_property_readonly(
@@ -374,14 +394,19 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def(
             "__exit__",
             [](PyDomainParticipant& dp, py::object, py::object, py::object) {
-                dp.close();
+                if (!dp->closed()) dp.close();
             },
             "Exit the context for this Domain Participant, cleaning up resources."
         )
         .def_static(
             "find",
             [](const std::string& n) {
-                PyDomainParticipant(rti::domain::find_participant_by_name(n));
+                dds::core::optional<PyDomainParticipant> retval;
+                auto participant = rti::domain::find_participant_by_name(n);
+                if (participant != dds::core::null) {
+                  retval = PyDomainParticipant(participant);
+                }
+                return retval;
             },
             py::arg("name"),
             "Find a local DomainParticipant by its name."
@@ -398,7 +423,12 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def_static(
             "find",
             [](int32_t domain_id) {
-                return PyDomainParticipant(dds::domain::find(domain_id));
+                dds::core::optional<PyDomainParticipant> retval;
+                auto participant = dds::domain::find(domain_id);
+                if (participant != dds::core::null) {
+                  retval = PyDomainParticipant(participant);
+                }
+                return retval;
             },
             py::arg("domain_id"),
             "Find a local DomainParticipant with the given domain ID. If more "
@@ -425,14 +455,18 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def_property_readonly(
             "implicit_publisher",
             [](PyDomainParticipant& dp) {
-                return PyPublisher(rti::pub::implicit_publisher(dp));
+                auto retval = PyPublisher(rti::pub::implicit_publisher(dp));
+                dp.py_add_prop(py::cast(retval));
+                return retval;
             },
             "Get the implicit Publisher for the DomainParticipant."
         )
         .def_property_readonly(
             "builtin_subscriber",
             [](PyDomainParticipant& dp) {
-                return PySubscriber(dds::sub::builtin_subscriber(dp));
+                auto retval = PySubscriber(dds::sub::builtin_subscriber(dp));
+                dp.py_add_prop(py::cast(retval));
+                return retval;
             },
             "Get the built-in subscriber for the DomainParticipant."
         )
@@ -456,7 +490,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
         .def_property_readonly(
             "implicit_subscriber",
             [](PyDomainParticipant& dp) {
-                return PySubscriber(rti::sub::implicit_subscriber(dp));
+                auto retval = PySubscriber(rti::sub::implicit_subscriber(dp));
+                dp.py_add_prop(py::cast(retval));
+                return retval;
             },
             "Get the implicit Subscriber for the DomainParticipant."
         )
@@ -611,6 +647,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 dds::sub::find<PyDataReader<dds::topic::ParticipantBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::participant_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
+                dp.py_add_prop(py::cast(v[0]));
                 return v[0];
             },
             "Get the DomainParticipant built-in topic reader."
@@ -622,6 +659,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 dds::sub::find<PyDataReader<dds::topic::PublicationBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::publication_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
+                dp.py_add_prop(py::cast(v[0]));
                 return v[0];
             },
             "Get the publication built-in topic reader."
@@ -633,6 +671,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 dds::sub::find<PyDataReader<dds::topic::SubscriptionBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::subscription_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
+                dp.py_add_prop(py::cast(v[0]));
                 return v[0];
             },
             "Get the subscription built-in topic reader."
@@ -644,6 +683,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 dds::sub::find<PyDataReader<dds::topic::TopicBuiltinTopicData>>
                     (dds::sub::builtin_subscriber(dp), dds::topic::topic_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
+                dp.py_add_prop(py::cast(v[0]));
                 return v[0];
             },
             "Get the topic built-in topic reader."
@@ -655,6 +695,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls) {
                 dds::sub::find<PyDataReader<rti::topic::ServiceRequest>>
                     (dds::sub::builtin_subscriber(dp), rti::topic::service_request_topic_name(), std::back_inserter(v));
                 if (v.size() == 0) throw dds::core::Error("Unable to retrieve built-in topic reader.");
+                dp.py_add_prop(py::cast(v[0]));
                 return v[0];
             },
             "Get the ServiceRequest built-in topic reader."

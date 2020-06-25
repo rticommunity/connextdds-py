@@ -1,6 +1,18 @@
 #pragma once
 #include <ndds_version.h>
 
+#ifdef _MSVC_VER
+#define PYRTI_SYMBOL_HIDDEN
+#else
+#define PYRTI_SYMBOL_HIDDEN __attribute__((visibility("hidden")))
+#endif
+
+#ifdef _MSVC_VER
+#define PYRTI_SYMBOL_PUBLIC
+#else
+#define PYRTI_SYMBOL_PUBLIC __attribute__((visibility("default")))
+#endif
+
 #define rti_connext_version_gt(rti_major, rti_minor, rti_release) \
     ((rti_major < RTI_DDS_VERSION_MAJOR) || \
     (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor < RTI_DDS_VERSION_MINOR) || \
@@ -32,12 +44,6 @@
 #include <dds/core/xtypes/DynamicType.hpp>
 
 namespace py = pybind11;
-
-#ifdef _MSVC_VER
-#define _SYMBOL_HIDDEN
-#else
-#define _SYMBOL_HIDDEN __attribute__((visibility("hidden")))
-#endif
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, dds::core::external<T>);
 

@@ -24,6 +24,14 @@ void init_class_defs(py::class_<SubscriberQos>& cls) {
             py::arg("subscriber"),
             "Create a SubscriberQos with settings equivalent to those "
             "of the provided Subscriber object."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
 
     add_qos_property<SubscriberQos, Presentation>(cls, "presentation", "Presentation");

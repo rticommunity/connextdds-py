@@ -4,3 +4,7 @@ __pycache__/
 .DS_Store
 .vscode
 __pycache__/
+
+build/
+dist/
+rti.egg-info

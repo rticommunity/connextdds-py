@@ -24,6 +24,14 @@ void init_class_defs(py::class_<DataReaderQos>& cls) {
             py::arg("reader"),
             "Create a DataReaderQos with settings equivalent to those "
             "of the provided DataReader."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
 
     add_qos_property<DataReaderQos, Durability>(cls, "durability", "Durability");
