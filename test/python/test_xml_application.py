@@ -43,7 +43,14 @@ def setup_qos_provider_create_participant(name):
             "XMLAppCreationTestWriter",
             "TestSubscriber::XMLAppCreationTestReader",
             False,
-        )
+        ),
+        (
+            "TestParticipantLibrary::DynamicPublicationParticipant",
+            "TestParticipantLibrary::DynamicSubscriptionParticipant",
+            "XMLAppCreationTestWriter",
+            "TestSubscriber::XMLAppCreationTestReaderWithFilter",
+            True,
+        ),
     ],
 )
 def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filtered):

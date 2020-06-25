@@ -57,12 +57,6 @@
                 </topic>
         </domain>
 
-        <domain name="XMLAppCreationUserTestDomain" domain_id="0">
-        	<register_type name="SimpleUserTestType" kind ="userGenerated"/>
-        	<topic name="XMLAppCreationUserTestTopic" register_type_ref="SimpleUserTestType">
-                   <topic_qos base_name="qosLibrary::DefaultProfile"/>
-               </topic>
-        </domain>
     </domain_library>
 
     <!-- Participant library -->
@@ -83,43 +77,19 @@
                              domain_ref="TestDomainLibrary::XMLAppCreationDynamicTestDomain">
             <participant_qos base_name="qosLibrary::DefaultProfile"/>
 
-            <subscriber name="TestSubscriber">
+            <!-- Create a content filtered topic -->
+             <subscriber name="TestSubscriber">
                 <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationDynamicTestTopic">
                     <datareader_qos base_name="qosLibrary::DefaultProfile"/>
                 </data_reader>
-            </subscriber>
-        </domain_participant>
-
-        <!-- Participants using user-defined types -->
-        <domain_participant name="UserPublicationParticipant"
-                            domain_ref="TestDomainLibrary::XMLAppCreationUserTestDomain">
-            <participant_qos base_name="qosLibrary::DefaultProfile"/>
-
-            <publisher name="TestPublisher">
-                <data_writer name="XMLAppCreationTestWriter" topic_ref="XMLAppCreationUserTestTopic">
-                    <datawriter_qos base_name="qosLibrary::DefaultProfile"/>
-                </data_writer>
-            </publisher>
-        </domain_participant>
-
-         <domain_participant name="UserSubscriptionParticipant"
-                             domain_ref="TestDomainLibrary::XMLAppCreationUserTestDomain">
-             <participant_qos base_name="qosLibrary::DefaultProfile"/>
-
-             <!-- Use the implicit subscriber -->
-             <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationUserTestTopic">
-                 <datareader_qos base_name="qosLibrary::DefaultProfile"/>
-             </data_reader>
-
-             <!-- Create a content filtered topic -->
-             <subscriber name="TestSubscriber">
-                 <data_reader name="XMLAppCreationTestReader" topic_ref="XMLAppCreationUserTestTopic">
+                <data_reader name="XMLAppCreationTestReaderWithFilter" topic_ref="XMLAppCreationDynamicTestTopic">
                      <datareader_qos base_name="qosLibrary::DefaultProfile"/>
-                     <filter name="XMLAppCreationUserTestCft" kind="builtin.sql">
+                     <filter name="XMLAppCreationDynamicTestCft" kind="builtin.sql">
                          <expression> foo &gt; 5 </expression>
                      </filter>
-                 </data_reader>
+                </data_reader>
              </subscriber>
+
         </domain_participant>
 
     </domain_participant_library>
