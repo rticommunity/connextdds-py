@@ -273,7 +273,8 @@ def test_find_extensions():
     assert dds.DomainParticipant.find("MyParticipant3") == None
 
 
-def retain_for_listener_helper(set_after):
+@pytest.mark.parametrize("set_after", [True, False])
+def test_retain_for_listener(set_after):
     listener = dds.NoOpDomainParticipantListener()
     if set_after:
         p = utils.create_participant()
@@ -288,11 +289,6 @@ def retain_for_listener_helper(set_after):
 
     inner()
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
-
-
-def test_retain_for_listener():
-    retain_for_listener_helper(True)
-    retain_for_listener_helper(False)
 
 
 # def test_discovered_participants():
