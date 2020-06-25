@@ -1,6 +1,6 @@
 import rti.connextdds as dds
 import pytest
-import time
+import utils
 
 DOMAIN_ID = 0
 
@@ -52,7 +52,7 @@ def test_participant_creation_failure():
 
 
 def test_set_get_qos():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     qos = p.qos
     assert qos.entity_factory.autoenable_created_entities
     qos << dds.EntityFactory.manually_enable()
@@ -104,7 +104,7 @@ def test_set_get_factory_qos():
 
 
 def test_set_get_listener():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     assert p.listener == None
     l = dds.NoOpDomainParticipantListener()
     p.bind_listener(l, dds.StatusMask.all())
@@ -116,7 +116,7 @@ def test_set_get_listener():
 def test_find():
     id1 = DOMAIN_ID
     id2 = DOMAIN_ID + 1
-    p = dds.DomainParticipant(id1, dds.DomainParticipantQos())
+    p = utils.create_participant()
     found_p = dds.DomainParticipant.find(id1)
     not_found_p = dds.DomainParticipant.find(id2)
     assert found_p == p
@@ -125,14 +125,14 @@ def test_find():
 
 def test_close():
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     assert dds.DomainParticipant.find(DOMAIN_ID) == p
     p.close()
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
 
 
 def test_already_closed_exception():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     p.close()
     with pytest.raises(dds.AlreadyClosedError):
         p.contains_entity(dds.InstanceHandle())
@@ -175,7 +175,7 @@ def test_retain():
     id2 = DOMAIN_ID + 1
 
     def scope_1():
-        p1 = dds.DomainParticipant(id1, dds.DomainParticipantQos())
+        p1 = utils.create_participant()
         p2 = dds.DomainParticipant(id2, dds.DomainParticipantQos())
         p1.retain()
 
@@ -198,32 +198,32 @@ def test_retain():
 
 
 def test_current_time():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     t = p.current_time
     assert t != dds.Time.invalid()
     assert t > dds.Time(1, 0)
 
 
 def test_assert_liveliness():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     p.assert_liveliness()
 
 
 def test_ignore():
-    p1 = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
-    p2 = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p1 = utils.create_participant()
+    p2 = utils.create_participant()
     dds.DomainParticipant.ignore_participant(p1, p2.instance_handle)
 
 
 def test_add_peer():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     p.add_peer("udpv4://")
     with pytest.raises(dds.InvalidArgumentError):
         p.add_peer("")
 
 
 def test_remove_peer():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = utils.create_participant()
     p.remove_peer("udpv4://")
     with pytest.raises(dds.InvalidArgumentError):
         p.remove_peer("")
@@ -276,7 +276,7 @@ def test_find_extensions():
 def retain_for_listener_helper(set_after):
     listener = dds.NoOpDomainParticipantListener()
     if set_after:
-        p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+        p = utils.create_participant()
         p.bind_listener(listener, dds.StatusMask.none())
     else:
         p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), listener)
@@ -308,6 +308,9 @@ def test_retain_for_listener():
 # dur = dds.Duration(42, 12)
 # p.
 # need to find dns functions
+
+
+@pytest.mark.skip(reason="to_string not implemented yet")
 def test_participant_factory_qos_to_string():
     the_qos = dds.DomainParticipantFactoryQos()
     # No qos print format
@@ -321,6 +324,7 @@ def test_participant_factory_qos_to_string():
     assert "<entity_factory>" in str(the_qos)
 
 
+@pytest.mark.skip(reason="to_string not implemented yet")
 def test_domain_participant_qos_to_string():
     the_qos = dds.DomainParticipantQos()
     assert str(the_qos) != ""
@@ -333,16 +337,16 @@ def test_domain_participant_qos_to_string():
 
 
 def test_close_after_close():
-    p1 = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p1 = utils.create_participant()
     p1.close()
     with pytest.raises(dds.AlreadyClosedError):
         p1.close()
 
     # Shouldn't error out here
-    with dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos()) as p2:
+    with utils.create_participant() as p2:
         p2.close()
 
     with pytest.raises(dds.AlreadyClosedError):
-        with dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos()) as p3:
+        with utils.create_participant() as p3:
             p3.close()
             p3.qos.participant_name.name

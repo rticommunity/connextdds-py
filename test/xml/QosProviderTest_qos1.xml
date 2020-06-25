@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="../../dds_c.1.0/resource/xsd/rti_dds_qos_profiles.xsd">
+    <qos_library name="my_test_library1">
+        <qos_profile name="my_default_profile1" is_default_qos="true">
+
+            <datawriter_qos>
+                <publication_name>
+                    <name>defaultPublicationName</name>
+                    <role_name>defaultPublicationRoleName</role_name>
+                </publication_name>
+            </datawriter_qos>
+
+            <datawriter_qos topic_filter="topic_A">
+                <publication_name>
+                    <name>defaultPublicationNameA</name>
+                    <role_name>defaultPublicationRoleNameA</role_name>
+                </publication_name>
+            </datawriter_qos>
+
+            <datawriter_qos topic_filter="topic_B">
+                <publication_name>
+                    <name>defaultPublicationNameB</name>
+                    <role_name>defaultPublicationRoleNameB</role_name>
+                </publication_name>
+            </datawriter_qos>
+
+            <datareader_qos>
+                <subscription_name>
+                    <name>defaultSubscriptionName</name>
+                    <role_name>defaultSubscriptionRoleName</role_name>
+                </subscription_name>
+            </datareader_qos>
+
+            <datareader_qos topic_filter="topic_A">
+                <subscription_name>
+                    <name>defaultSubscriptionNameA</name>
+                    <role_name>defaultSubscriptionRoleNameA</role_name>
+                </subscription_name>
+            </datareader_qos>
+
+            <datareader_qos topic_filter="topic_B">
+                <subscription_name>
+                    <name>defaultSubscriptionNameB</name>
+                    <role_name>defaultSubscriptionRoleNameB</role_name>
+                </subscription_name>
+            </datareader_qos>
+
+            <publisher_qos>
+                <publisher_name>
+                    <name>defaultPublisherName</name>
+                    <role_name>defaultPublisherRoleName</role_name>
+                </publisher_name>
+            </publisher_qos>
+
+            <subscriber_qos>
+                <subscriber_name>
+                    <name>defaultSubscriberName</name>
+                    <role_name>defaultSubscriberRoleName</role_name>
+                </subscriber_name>
+            </subscriber_qos>
+
+            <participant_qos>
+                <participant_name>
+                    <name>defaultParticipantName</name>
+                    <role_name>defaultParticipantRoleName</role_name>
+                </participant_name>
+              </participant_qos>
+
+              <topic_qos>
+                  <resource_limits>
+                      <max_samples>100</max_samples>
+                  </resource_limits>
+              </topic_qos>
+
+              <topic_qos topic_filter="topic_A">
+                  <resource_limits>
+                      <max_samples>101</max_samples>
+                  </resource_limits>
+              </topic_qos>
+
+              <topic_qos topic_filter="topic_B">
+                  <resource_limits>
+                      <max_samples>102</max_samples>
+                  </resource_limits>
+              </topic_qos>
+        </qos_profile>
+
+        <qos_profile name="my_other_profile1">
+
+            <datawriter_qos>
+                <publication_name>
+                    <name>otherPublicationName</name>
+                    <role_name>otherPublicationRoleName</role_name>
+                </publication_name>
+            </datawriter_qos>
+
+            <datawriter_qos topic_filter="topic_A">
+                <publication_name>
+                    <name>otherPublicationNameA</name>
+                    <role_name>otherPublicationRoleNameA</role_name>
+                </publication_name>
+            </datawriter_qos>
+
+            <datawriter_qos topic_filter="topic_B">
+                <publication_name>
+                    <name>otherPublicationNameB</name>
+                    <role_name>otherPublicationRoleNameB</role_name>
+                </publication_name>
+            </datawriter_qos>
+
+            <datareader_qos>
+                <subscription_name>
+                    <name>otherSubscriptionName</name>
+                    <role_name>otherSubscriptionRoleName</role_name>
+                </subscription_name>
+            </datareader_qos>
+
+            <datareader_qos topic_filter="topic_A">
+                <subscription_name>
+                    <name>otherSubscriptionNameA</name>
+                    <role_name>otherSubscriptionRoleNameA</role_name>
+                </subscription_name>
+            </datareader_qos>
+
+            <datareader_qos topic_filter="topic_B">
+                <subscription_name>
+                    <name>otherSubscriptionNameB</name>
+                    <role_name>otherSubscriptionRoleNameB</role_name>
+                </subscription_name>
+            </datareader_qos>
+
+            <publisher_qos>
+                <publisher_name>
+                    <name>otherPublisherName</name>
+                    <role_name>otherPublisherRoleName</role_name>
+                </publisher_name>
+            </publisher_qos>
+
+            <subscriber_qos>
+                <subscriber_name>
+                    <name>otherSubscriberName</name>
+                    <role_name>otherSubscriberRoleName</role_name>
+                </subscriber_name>
+            </subscriber_qos>
+
+            <participant_qos>
+                <participant_name>
+                    <name>otherParticipantName</name>
+                    <role_name>otherParticipantRoleName</role_name>
+                </participant_name>
+              </participant_qos>
+
+              <topic_qos>
+                  <resource_limits>
+                      <max_samples>200</max_samples>
+                  </resource_limits>
+              </topic_qos>
+
+              <topic_qos topic_filter="topic_A">
+                  <resource_limits>
+                      <max_samples>201</max_samples>
+                  </resource_limits>
+              </topic_qos>
+
+              <topic_qos topic_filter="topic_B">
+                  <resource_limits>
+                      <max_samples>202</max_samples>
+                  </resource_limits>
+              </topic_qos>
+        </qos_profile>
+
+    </qos_library>
+    <qos_library name="my_second_library1">
+
+        <qos_profile name="my_second_default_profile1">
+            <participant_qos>
+                <participant_name>
+                    <name>defaultParticipantName2</name>
+                    <role_name>defaultParticipantRoleName2</role_name>
+                </participant_name>
+              </participant_qos>
+        </qos_profile>
+
+        <qos_profile name="my_second_other_profile1">
+            <participant_qos>
+                <participant_name>
+                    <name>otherParticipantName2</name>
+                    <role_name>otherParticipantRoleName2</role_name>
+                </participant_name>
+              </participant_qos>
+        </qos_profile>
+    </qos_library>
+</dds>

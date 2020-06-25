@@ -308,11 +308,22 @@ endif()
 target_compile_options(
     connextdds
     PRIVATE
-    "-fpic"
+    "-fPIC"
+    "$<$<CONFIG:RELEASE>:-Os>"
+    "$<$<CONFIG:RELEASE>:-g0>"
 )
 
 target_link_options(
     connextdds
     PRIVATE
-    "-fpic"
+    "-fPIC"
 )
+
+if (WIN32)
+else()
+    add_custom_command(
+        TARGET connextdds
+        POST_BUILD
+        COMMAND $<$<CONFIG:Release>:strip>$<$<NOT:$<CONFIG:Release>>:echo> $<$<CONFIG:Release>:-x> $<$<CONFIG:Release>:$<TARGET_FILE:connextdds>>
+    )
+endif()
