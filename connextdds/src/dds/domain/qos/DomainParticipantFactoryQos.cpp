@@ -16,6 +16,14 @@ void init_class_defs(py::class_<DomainParticipantFactoryQos>& cls) {
             py::init<>(),
             "Create a DomainParticipantFactoryQos with the default value for "
             "each policy."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
     add_qos_property<DomainParticipantFactoryQos, EntityFactory>(cls, "entity_factory", "EntityFactory");
     add_qos_property<DomainParticipantFactoryQos, SystemResourceLimits>(cls, "system_resource_limits", "SystemResourceLimits");

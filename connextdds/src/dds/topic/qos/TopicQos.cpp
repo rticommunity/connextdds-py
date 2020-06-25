@@ -23,6 +23,14 @@ void init_class_defs(py::class_<TopicQos>& cls) {
             py::arg("topic"),
             "Create a TopicQos with settings equivalent to those of the "
             "provided Topic."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
 
     add_qos_property<TopicQos, TopicData>(cls, "topic_data", "TopicData");

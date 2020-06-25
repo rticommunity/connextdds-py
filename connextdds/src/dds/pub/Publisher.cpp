@@ -20,6 +20,25 @@ dds::pub::Publisher(p, q, l, m) {
     if (nullptr != l) py::cast(l).inc_ref();
 }
 
+PyPublisher::~PyPublisher() {
+    if (this->delegate().use_count() <= 2 && 
+            !this->delegate()->closed() && 
+            nullptr != this->listener()) {
+        py::object listener = py::cast(this->listener());
+        this->listener(nullptr, dds::core::status::StatusMask::none());
+        listener.dec_ref();
+    }
+}
+
+void PyPublisher::py_close() {
+    if (nullptr != this->listener()) {
+        py::object listener = py::cast(this->listener());
+        this->listener(nullptr, dds::core::status::StatusMask::none());
+        listener.dec_ref();
+    }
+    this->close();
+}
+
 template<>
 void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
     cls
@@ -29,6 +48,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
                 const PyDomainParticipant&
             >(),
             py::arg("participant"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a publisher."
         )
         .def(
@@ -47,6 +67,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a Publisher with the desired QoS policies and specified listener"
         )
         .def(
@@ -55,7 +76,10 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
                     auto entity = e.get_entity();
                     return dds::core::polymorphic_cast<PyPublisher>(entity);
                 }
-            )
+            ),
+            py::arg("entity"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Cast an Entity to a Publisher."
         )
         .def_property(
             "qos",
@@ -165,31 +189,6 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls) {
                 return v;
             },
             "Find all DataWriters in the Publisher."
-        )
-        .def(
-            "enable",
-            &PyPublisher::enable,
-            "Enables this entity (if it was created disabled)."
-        )
-        .def_property_readonly(
-            "status_changes",
-            &PyPublisher::status_changes,
-            "The list of communication statuses that are triggered."
-        )
-        .def_property_readonly(
-            "instance_handle",
-            &PyPublisher::instance_handle,
-            "The instance handle that represents this entity."
-        )
-        .def(
-            "close",
-            &PyPublisher::close,
-            "Forces the destruction of this entity."
-        )
-        .def(
-            "retain",
-            &PyPublisher::retain,
-            "Disables the automatic destruction of this entity."
         )
         .def(
             py::self == py::self,

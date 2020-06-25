@@ -26,6 +26,14 @@ void init_class_defs(py::class_<DataWriterQos>& cls) {
              py::arg("writer"),
             "Create a DataWriterQos with settings equivalent to those "
             "of the provided DataWriter."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality"
+        )
+        .def (
+            py::self != py::self,
+            "Test for inequality."
         );
     
     add_qos_property<DataWriterQos, Durability>(cls, "durability", "Durability");

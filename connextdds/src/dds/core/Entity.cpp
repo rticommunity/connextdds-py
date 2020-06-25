@@ -16,6 +16,7 @@ void init_class_defs(py::class_<PyIEntity>& cls) {
         .def(
             "enable",
             &PyIEntity::py_enable,
+            py::call_guard<py::gil_scoped_release>(),
             "Enables this entity (if it was created disabled)."
         )
         .def_property_readonly(
@@ -37,6 +38,26 @@ void init_class_defs(py::class_<PyIEntity>& cls) {
             "retain",
             &PyIEntity::py_retain,
             "Disables the automatic destruction of this entity."
+        )
+        .def_property_readonly(
+            "closed",
+            &PyIEntity::py_closed,
+            "Returns a boolean indicating if this Entity is closed."
+        )
+        .def_property_readonly(
+            "enabled",
+            &PyIEntity::py_enabled,
+            "Returns a boolean indicating if this Entity is enabled."
+        )
+        .def_property_readonly(
+            "use_count",
+            &PyIEntity::py_use_count,
+            "Returns the internal use count value for this Entity."
+        )
+        .def(
+            "unretain",
+            &PyIEntity::py_unretain,
+            "Decrement the retention count."
         )
         .def(
             "__eq__",

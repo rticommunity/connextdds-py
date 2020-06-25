@@ -726,6 +726,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<DynamicData>, PyITopicDesc
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("topic_type"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a Topic with the given type."
         )
         .def(
@@ -752,7 +753,7 @@ void init_dds_typed_topic_template(py::class_<PyTopic<DynamicData>, PyITopicDesc
             py::arg("qos"),
             py::arg("listener") = py::none(),
             py::arg_v("mask", dds::core::status::StatusMask::all(), "StatusMask.all()"),
-            py::keep_alive<1,6>(),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a Topic with the given type."
         );
 }
@@ -832,7 +833,6 @@ void init_dds_typed_datawriter_template(py::class_<PyDataWriter<DynamicData>, Py
 template<>
 void init_dds_typed_datareader_template(py::class_<PyDataReader<DynamicData>, PyIDataReader>& cls) {
     init_dds_typed_datareader_base_template(cls);
-    init_dds_typed_datareader_del_listener(cls);
     cls
         .def(
             "key_value",
