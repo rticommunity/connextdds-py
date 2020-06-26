@@ -38,6 +38,14 @@ void init_class_defs(py::class_<AliasType, DynamicType>& cls) {
             "Resolves an AliasType recursively to get the final underlying "
             "type."
         )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
+        )
         .doc() = "Represents a typedef.";
 }
 

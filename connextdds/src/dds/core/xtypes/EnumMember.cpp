@@ -30,6 +30,18 @@ void init_class_defs(py::class_<EnumMember>& cls) {
             (int32_t (EnumMember::*)() const) &EnumMember::ordinal,
             (EnumMember& (EnumMember::*)(int32_t)) &EnumMember::ordinal,
             "The member's ordinal."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            "__ne__",
+            [](const EnumMember& member, const EnumMember& other) {
+                return !(member == other);
+            },
+            py::is_operator(),
+            "Test for inequality."
         );
 }
 

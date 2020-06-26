@@ -75,6 +75,14 @@ void init_class_defs(py::class_<UnionMember>& cls) {
             "INVALID_ID",
             &UnionMember::INVALID_ID,
             "The special ID of a member without the ID annotation."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

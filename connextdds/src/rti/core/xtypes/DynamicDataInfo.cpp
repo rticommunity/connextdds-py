@@ -29,6 +29,14 @@ void init_class_defs(py::class_<DynamicDataInfo>& cls) {
             "is_optimized_storage",
             &DynamicDataInfo::is_optimized_storage,
             "Flag indicating whether storage is optimized."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

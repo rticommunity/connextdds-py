@@ -62,6 +62,14 @@ void init_class_defs(py::class_<AbstractConstructedType<EnumMember>, DynamicType
             "INVALID_INDEX", 
             &AbstractConstructedType<EnumMember>::INVALID_INDEX, 
             "Indicates a member doesn't exist"
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

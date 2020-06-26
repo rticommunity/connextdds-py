@@ -10,7 +10,7 @@ def test_string_uri_creation():
         len(
             dds.QosProvider(
                 LOCATION + "../xml/XmlApplication.xml"
-            ).qos_profile_libraries()
+            ).qos_profile_libraries
         )
         == 4
     )
@@ -32,20 +32,20 @@ def test_default_provider():
     provider2 = dds.QosProvider.default()
     provider3 = provider2
     provider4 = provider3
-    assert 3 == len(provider1.qos_profile_libraries())
-    assert 3 == len(provider2.qos_profile_libraries())
-    assert 3 == len(provider3.qos_profile_libraries())
-    assert 3 == len(provider4.qos_profile_libraries())
+    assert 3 == len(provider1.qos_profile_libraries)
+    assert 3 == len(provider2.qos_profile_libraries)
+    assert 3 == len(provider3.qos_profile_libraries)
+    assert 3 == len(provider4.qos_profile_libraries)
 
     params = dds.QosProviderParams()
     params.url_profile = dds.StringSeq([LOCATION + "../xml/XmlApplication.xml"])
     provider4.reload_profiles()
     provider4.provider_params = params
 
-    assert 4 == len(provider1.qos_profile_libraries())
-    assert 4 == len(provider2.qos_profile_libraries())
-    assert 4 == len(provider3.qos_profile_libraries())
-    assert 4 == len(provider4.qos_profile_libraries())
+    assert 4 == len(provider1.qos_profile_libraries)
+    assert 4 == len(provider2.qos_profile_libraries)
+    assert 4 == len(provider3.qos_profile_libraries)
+    assert 4 == len(provider4.qos_profile_libraries)
 
 
 def test_getters():

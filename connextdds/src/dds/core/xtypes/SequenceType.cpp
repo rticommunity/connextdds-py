@@ -18,6 +18,14 @@ void init_class_defs(py::class_<SequenceType, UnidimensionalCollectionTypeImpl>&
             py::arg("data_type"),
             py::arg("bounds"),
             "Creates a bounded collection with an element type."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

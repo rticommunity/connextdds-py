@@ -13,6 +13,14 @@ void init_class_defs(py::class_<WStringType, UnidimensionalCollectionTypeImpl>& 
             py::init<uint32_t>(),
             py::arg("bounds"),
             "Creates a bounded wide string."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

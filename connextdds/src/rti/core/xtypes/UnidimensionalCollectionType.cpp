@@ -13,6 +13,14 @@ void init_class_defs(py::class_<UnidimensionalCollectionTypeImpl, CollectionType
             "bounds",
             &UnidimensionalCollectionTypeImpl::bounds,
             "Gets the maximum length of this collection."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

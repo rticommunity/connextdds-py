@@ -39,10 +39,12 @@ public:
 
     virtual
     ~PyDataWriter() {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+        if (*this != dds::core::null) {
+            if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+                py::object listener = py::cast(this->listener());
+                this->listener(nullptr, dds::core::status::StatusMask::none());
+                listener.dec_ref();
+            }
         }
     }
 
@@ -681,19 +683,6 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
         )
         .def_static(
             "find_by_name",
-            [](PyPublisher& pub, const std::string& name) {
-                dds::core::optional<PyDataWriter<T>> retval;
-                auto dw = rti::pub::find_datawriter_by_name<PyDataWriter<T>>(pub, name);
-                if (dw != dds::core::null) retval = dw;
-                return retval;
-            },
-            py::arg("publisher"),
-            py::arg("name"),
-            "Find DataWriter in Publisher with the DataReader's name, "
-            "returning the first found."
-        )
-        .def_static(
-            "find_by_name",
             [](PyDomainParticipant& dp, const std::string name) {
                 dds::core::optional<PyDataWriter<T>> retval;
                 auto dw = rti::pub::find_datawriter_by_name<PyDataWriter<T>>(dp, name);
@@ -703,6 +692,19 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             py::arg("participant"),
             py::arg("name"),
             "Find DataWriter in DomainParticipant with the provided name, "
+            "returning the first found."
+        )
+        .def_static(
+            "find_by_name",
+            [](PyPublisher& pub, const std::string& name) {
+                dds::core::optional<PyDataWriter<T>> retval;
+                auto dw = rti::pub::find_datawriter_by_name<PyDataWriter<T>>(pub, name);
+                if (dw != dds::core::null) retval = dw;
+                return retval;
+            },
+            py::arg("publisher"),
+            py::arg("name"),
+            "Find DataWriter in Publisher with the DataReader's name, "
             "returning the first found."
         )
         .def_static(

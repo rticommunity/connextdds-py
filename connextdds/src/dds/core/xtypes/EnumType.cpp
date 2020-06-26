@@ -51,6 +51,14 @@ void init_class_defs(py::class_<EnumType, AbstractConstructedType<EnumMember>>& 
             (EnumType& (EnumType::*)(const std::vector<EnumMember>&)) &EnumType::add_members<std::vector<EnumMember>>,
             py::arg("members"),
             "Adds a member at the end."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

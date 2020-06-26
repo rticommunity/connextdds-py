@@ -61,10 +61,12 @@ public:
 
     virtual
     ~PyDataReader() {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+        if (*this != dds::core::null) {
+            if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+                py::object listener = py::cast(this->listener());
+                this->listener(nullptr, dds::core::status::StatusMask::none());
+                listener.dec_ref();
+            }
         }
     }
 
@@ -502,19 +504,6 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
         )
         .def_static(
             "find_by_name",
-            [](PySubscriber& sub, const std::string& name)  {
-                dds::core::optional<PyDataReader<T>> retval;
-                auto dr = rti::sub::find_datareader_by_name<PyDataReader<T>>(sub, name);
-                if (dr != dds::core::null) retval = dr;
-                return retval;
-            },
-            py::arg("subscriber"),
-            py::arg("name"),
-            "Find DataReader in Subscriber with the DataReader's name, "
-            "returning the first found."
-        )
-        .def_static(
-            "find_by_name",
             [](PyDomainParticipant& dp, const std::string name) {
                 dds::core::optional<PyDataReader<T>> retval;
                 auto dr = rti::sub::find_datareader_by_name<PyDataReader<T>>(dp, name);
@@ -525,6 +514,19 @@ void init_dds_typed_datareader_base_template(py::class_<PyDataReader<T>, PyIData
             py::arg("name"),
             "Find DataReader in DomainParticipant with the DataReader's "
             "name, returning the first found."
+        )
+        .def_static(
+            "find_by_name",
+            [](PySubscriber& sub, const std::string& name)  {
+                dds::core::optional<PyDataReader<T>> retval;
+                auto dr = rti::sub::find_datareader_by_name<PyDataReader<T>>(sub, name);
+                if (dr != dds::core::null) retval = dr;
+                return retval;
+            },
+            py::arg("subscriber"),
+            py::arg("name"),
+            "Find DataReader in Subscriber with the DataReader's name, "
+            "returning the first found."
         )
         .def_static(
             "find_by_topic",
