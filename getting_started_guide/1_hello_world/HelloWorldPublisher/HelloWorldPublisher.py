@@ -17,7 +17,7 @@ import time
 FILE = (
     str(pathlib.Path(__file__).parent.absolute())
     + "/"
-    + "../xml/HelloWorld.xml",
+    + "../HelloWorld.xml",
 )
 
 
@@ -25,13 +25,15 @@ def main(domain_id, sample_count):
     with dds.DomainParticipant(domain_id) as participant:
         provider = dds.QosProvider(FILE)
         
-        topic = ?
+        provider_type = provider.type("HelloWorld")
+
+        topic = dds.DynamicData.Topic("Example HelloWorld", provider_type)
 
         publisher = dds.Publisher(participant)
         
-        writer = ?
-
-        sample = writer.create_data()
+        writer = dds.DynamicData.DataWriter(publisher, topic)
+        
+        sample = dds.DynamicData(provider_type) 
         for i in range(0, sample_count):
             sample['msg'] = f'Hello {i}'
             print("Writing " + "Hello " + str(i))

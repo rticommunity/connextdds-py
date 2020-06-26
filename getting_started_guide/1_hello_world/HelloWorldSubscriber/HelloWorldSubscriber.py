@@ -17,7 +17,7 @@ import time
 FILE = (
     str(pathlib.Path(__file__).parent.absolute())
     + "/"
-    + "../xml/HelloWorld.xml",
+    + "../HelloWorld.xml",
 )
 
 
@@ -34,10 +34,12 @@ def process_data(reader):
 def main(domain_id, sample_count):
     with dds.DomainParticipant(domain_id) as participant:
         provider = dds.QosProvider(FILE)
-        topic = participant.create_topic("Example HelloWorld", provider.get_type("HelloWorld"))
         
-        subscriber = participant.create_subscriber()
-        reader = subscriber.create_data_reader(topic)
+        provider_type = provider.type("HelloWorld")
+        topic = dds.DynamicData.Topic("Example HelloWorld", provider_type)
+        
+        subscriber = dds.Subscriber(participant)
+        reader = dds.DynamicData.DataReader(publisher, topic)
         
         reader.status_condition.enabled_status = #? Status mask?
         
