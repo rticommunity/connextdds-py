@@ -125,6 +125,14 @@ void init_class_defs(py::class_<StructType, AbstractConstructedType<Member>>& cl
             (StructType& (StructType::*)(const std::vector<Member>&)) &StructType::add_members,
             py::arg("members"),
             "Adds all members of the sequence to the end."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

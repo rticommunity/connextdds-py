@@ -47,6 +47,14 @@ void init_class_defs(py::class_<DynamicDataProperty>& cls) {
             (bool (DynamicDataProperty::*)() const) &DynamicDataProperty::buffer_check_size,
             (DynamicDataProperty& (DynamicDataProperty::*)(bool)) &DynamicDataProperty::buffer_check_size,
             "Check buffer size."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

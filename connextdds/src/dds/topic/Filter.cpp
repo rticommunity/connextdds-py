@@ -73,6 +73,8 @@ void init_class_defs(py::class_<Filter>& cls) {
             },
             "The name of the string match filter."
         );
+
+    py::implicitly_convertible<std::string, Filter>();
 }
 
 template<>

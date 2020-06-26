@@ -110,11 +110,11 @@ void init_class_defs(py::class_<DynamicType>& cls) {
         )
         .def(
             py::self == py::self,
-            "Compare DataStateEx objects for equality."
+            "Compare DynamicType objects for equality."
         )
         .def(
             py::self != py::self,
-            "Compare DataStateEx objects for inequality."
+            "Compare DynamicType objects for inequality."
         );
 }
 

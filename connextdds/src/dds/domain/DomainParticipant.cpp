@@ -21,10 +21,12 @@ PyDomainParticipant::PyDomainParticipant(
 }
 
 PyDomainParticipant::~PyDomainParticipant() {
-    if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
-        py::object listener = py::cast(this->listener());
-        this->listener(nullptr, dds::core::status::StatusMask::none());
-        listener.dec_ref();
+    if (*this != dds::core::null) {
+        if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
+            py::object listener = py::cast(this->listener());
+            this->listener(nullptr, dds::core::status::StatusMask::none());
+            listener.dec_ref();
+        }
     }
 }
 

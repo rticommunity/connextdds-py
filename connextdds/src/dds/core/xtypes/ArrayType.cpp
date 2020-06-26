@@ -40,6 +40,14 @@ void init_class_defs(py::class_<ArrayType, CollectionType>& cls) {
             "total_element_count",
             &ArrayType::total_element_count,
             "Total element count across all dimensions."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

@@ -68,6 +68,14 @@ void init_class_defs(py::class_<UnionType, AbstractConstructedType<UnionMember>>
             (ExtensibilityKind (UnionType::*)()const) &UnionType::extensibility_kind,
             (UnionType& (UnionType::*)(ExtensibilityKind)) &UnionType::extensibility_kind,
             "Struct's extensibility kind."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

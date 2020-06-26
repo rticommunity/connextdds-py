@@ -89,6 +89,14 @@ void init_class_defs(py::class_<Member>& cls) {
                 return Member::INVALID_ID;
             },
             "The special ID of a member without the ID annotation."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

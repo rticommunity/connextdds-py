@@ -15,6 +15,14 @@ void init_dds_dynamic_primitive_defs(py::class_<PrimitiveType<T>, DynamicType>& 
                 }
             ),
             ("Get the singleton for " + name).c_str()
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 

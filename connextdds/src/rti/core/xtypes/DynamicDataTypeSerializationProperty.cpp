@@ -55,6 +55,14 @@ void init_class_defs(py::class_<DynamicDataTypeSerializationProperty>& cls) {
             "DEFAULT",
             &DynamicDataTypeSerializationProperty::DEFAULT,
             "Constant used to specify default configuration."
+        )
+        .def(
+            py::self == py::self,
+            "Test for equality."
+        )
+        .def(
+            py::self != py::self,
+            "Test for inequality."
         );
 }
 
