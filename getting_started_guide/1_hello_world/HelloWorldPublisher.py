@@ -13,29 +13,26 @@
 import rti.connextdds as dds
 import argparse
 import time
+import pathlib
 
-FILE = (
-    str(pathlib.Path(__file__).parent.absolute())
-    + "/"
-    + "../HelloWorld.xml",
-)
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "HelloWorld.xml"
 
 
 def main(domain_id, sample_count):
     with dds.DomainParticipant(domain_id) as participant:
         provider = dds.QosProvider(FILE)
-        
+
         provider_type = provider.type("HelloWorld")
 
-        topic = dds.DynamicData.Topic("Example HelloWorld", provider_type)
+        topic = dds.DynamicData.Topic(participant, "Example HelloWorld", provider_type)
 
         publisher = dds.Publisher(participant)
-        
+
         writer = dds.DynamicData.DataWriter(publisher, topic)
-        
-        sample = dds.DynamicData(provider_type) 
+
+        sample = dds.DynamicData(provider_type)
         for i in range(0, sample_count):
-            sample['msg'] = f'Hello {i}'
+            sample["msg"] = f"Hello {i}"
             print("Writing " + "Hello " + str(i))
             writer.write(sample)
             time.sleep(1)

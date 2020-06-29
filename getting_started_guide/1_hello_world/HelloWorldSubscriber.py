@@ -13,41 +13,53 @@
 import rti.connextdds as dds
 import argparse
 import time
+import pathlib
 
-FILE = (
-    str(pathlib.Path(__file__).parent.absolute())
-    + "/"
-    + "../HelloWorld.xml",
-)
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "HelloWorld.xml"
+
+samples_read = 0
+reader = None
 
 
 def process_data(reader):
     samples_read = 0
     samples = reader.take()
-    
-    for sample in samples.valid_data:
+
+    for sample in samples:
         print(f"Received: {sample}")
         samples_read += 1
 
     return samples_read
 
+
 def main(domain_id, sample_count):
     with dds.DomainParticipant(domain_id) as participant:
         provider = dds.QosProvider(FILE)
-        
+
         provider_type = provider.type("HelloWorld")
-        topic = dds.DynamicData.Topic("Example HelloWorld", provider_type)
-        
+        topic = dds.DynamicData.Topic(participant, "Example HelloWorld", provider_type)
+
         subscriber = dds.Subscriber(participant)
-        reader = dds.DynamicData.DataReader(publisher, topic)
-        
-        reader.status_condition.enabled_status = #? Status mask?
-        
-        samples_read = 0
-        reader.status_condition.triggered += (samples_read += process_data(reader))
+        global reader
+        reader = dds.DynamicData.DataReader(subscriber, topic)
+
+        status_condition = dds.StatusCondition(reader)
+        global samples_read
+
+        def helper(x):
+            global samples_read
+            global reader
+            samples_read += process_data(reader)
+
+        status_condition.handler(helper)
+
+        waitset = dds.WaitSet()
+        waitset += status_condition
+
         while samples_read < sample_count:
             print("Hello World subscriber sleeping for 4 seconds...")
-            time.sleep(4)
+            waitset.dispatch(dds.Duration(4))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -70,4 +82,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(args.domain_id, args.sample_count)
-
