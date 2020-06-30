@@ -26,8 +26,9 @@ def process_data(reader):
     samples = reader.take()
 
     for sample in samples:
-        print(f"Received: {sample}")
-        samples_read += 1
+        if sample.info.valid:
+            print(f"Received: {sample.data}")
+            samples_read += 1
 
     return samples_read
 
@@ -44,6 +45,9 @@ def main(domain_id, sample_count):
         reader = dds.DynamicData.DataReader(subscriber, topic)
 
         status_condition = dds.StatusCondition(reader)
+
+        status_condition.enabled_statuses = dds.StatusMask.data_available()
+
         global samples_read
 
         def helper(x):
@@ -56,9 +60,12 @@ def main(domain_id, sample_count):
         waitset = dds.WaitSet()
         waitset += status_condition
 
-        while samples_read < sample_count:
-            print("Hello World subscriber sleeping for 4 seconds...")
-            waitset.dispatch(dds.Duration(4))
+        try:
+            while samples_read < sample_count:
+                print(f"Hello World subscriber sleeping for 4 seconds...")
+                waitset.dispatch(dds.Duration(4))
+        except KeyboardInterrupt:
+            print("Keyboard interrupt caught")
 
 
 if __name__ == "__main__":
