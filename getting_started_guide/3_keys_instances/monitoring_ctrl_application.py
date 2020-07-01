@@ -8,9 +8,10 @@ FILE = str(pathlib.Path(__file__).parent.absolute()) + "/chocolate_factory.xml"
 
 lots_processed = 0
 reader = None
-provider_type = dds.QosProvider(FILE).type("ChocolateLotState")
-LotStatusKind = dds.QosProvider(FILE).type("LotStatusKind")
-StationKind = dds.QosProvider(FILE).type("StationKind")
+provider = dds.QosProvider(FILE)
+provider_type = provider.type("ChocolateLotState")
+LotStatusKind = provider.type("LotStatusKind")
+StationKind = provider.type("StationKind")
 
 
 def publish_start_lot(writer, lots_to_process):
@@ -25,7 +26,7 @@ def publish_start_lot(writer, lots_to_process):
                 f"Starting lot:\n[lot_id: {sample['lot_id']} next_station: {sample['next_station']}]"
             )
             writer.write(sample)
-            time.sleep(1)
+            time.sleep(8)
             count += 1
     except KeyboardInterrupt:
         print("Process broken by user")

@@ -7,10 +7,12 @@ import random
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/chocolate_factory.xml"
 
-temperature_type = dds.QosProvider(FILE).type("Temperature")
-lot_type = dds.QosProvider(FILE).type("ChocolateLotState")
-StationKind = dds.QosProvider(FILE).type("StationKind")
-LotStatusKind = dds.QosProvider(FILE).type("LotStatusKind")
+provider = dds.QosProvider(FILE)
+
+temperature_type = provider.type("Temperature")
+lot_type = provider.type("ChocolateLotState")
+StationKind = provider.type("StationKind")
+LotStatusKind = provider.type("LotStatusKind")
 
 
 def publish_temperature(writer, sensor_id):
@@ -20,7 +22,7 @@ def publish_temperature(writer, sensor_id):
             temperature["sensor_id"] = sensor_id
             temperature["degrees"] = random.randint(30, 32)
             writer.write(temperature)
-            dds.sleep(0.1)
+            time.sleep(0.1)
 
     except KeyboardInterrupt:
         print("User ended process")
@@ -36,11 +38,13 @@ def process_lot(lot_state_reader, lot_state_writer):
         ):
             print(f"Processing lot #{sample.data['lot_id']}")
             updated_state = sample.data
-            updated_state["lot_status"] = LotStatusKind["PROCESSING"]
-            updated_state["next_station"] = StationKind["INVALID_CONTROLLER"]
-            updated_state["station"] = StationKind["TEMPERING_CONTROLLER"]
+            updated_state["lot_status"] = LotStatusKind["PROCESSING"].ordinal
+            updated_state["next_station"] = StationKind["INVALID_CONTROLLER"].ordinal
+            updated_state["station"] = StationKind["TEMPERING_CONTROLLER"].ordinal
             lot_state_writer.write(updated_state)
-            dds.sleep(5)
+            time.sleep(5)
+
+
 
 
 def main(domain_id, sensor_id):
@@ -63,9 +67,9 @@ def main(domain_id, sensor_id):
     status_condition.enabled_statuses = dds.StatusMask.data_available()
 
     def handler(_):
-        global lot_state_reader
-        global lot_state_writer
-        process_lot(lot_status_reader, lot_state_writer)
+        nonlocal lot_state_reader
+        nonlocal lot_state_writer
+        process_lot(lot_state_reader, lot_state_writer)
 
     status_condition.handler(handler)
 
