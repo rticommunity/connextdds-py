@@ -45,8 +45,6 @@ def process_lot(lot_state_reader, lot_state_writer):
             time.sleep(5)
 
 
-
-
 def main(domain_id, sensor_id):
     participant = dds.DomainParticipant(domain_id)
     temperature_topic = dds.DynamicData.Topic(

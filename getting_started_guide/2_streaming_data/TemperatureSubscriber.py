@@ -6,9 +6,6 @@ import time
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "temperature.xml"
 
-samples_read = 0
-reader = None
-
 
 def process_data(reader):
     samples_read = 0
@@ -30,18 +27,17 @@ def main(domain_id, sample_count, sensor_id):
 
     subscriber = dds.Subscriber(participant)
 
-    global reader
     reader = dds.DynamicData.DataReader(subscriber, topic)
 
     status_condition = dds.StatusCondition(reader)
 
     status_condition.enabled_statuses = dds.StatusMask.data_available()
 
-    global samples_read
+    samples_read = 0
 
     def helper(_):
-        global samples_read
-        global reader
+        nonlocal samples_read
+        nonlocal reader
         samples_read += process_data(reader)
 
     status_condition.handler(helper)

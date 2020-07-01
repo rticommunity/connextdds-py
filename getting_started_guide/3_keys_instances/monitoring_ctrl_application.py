@@ -6,8 +6,6 @@ import time
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/chocolate_factory.xml"
 
-lots_processed = 0
-reader = None
 provider = dds.QosProvider(FILE)
 provider_type = provider.type("ChocolateLotState")
 LotStatusKind = provider.type("LotStatusKind")
@@ -56,17 +54,16 @@ def main(domain_id, lots_to_process, sensor_id):
 
     subscriber = dds.Subscriber(participant)
 
-    global reader
     reader = dds.DynamicData.DataReader(subscriber, topic)
 
     status_condition = dds.StatusCondition(reader)
     status_condition.enabled_statuses = dds.StatusMask.data_available()
 
-    global lots_processed
+    lots_processed = 0
 
     def handler(_):
-        global lots_processed
-        global reader
+        nonlocal lots_processed
+        nonlocal reader
         lots_processed += monitor_lot_state(reader)
 
     status_condition.handler(handler)
