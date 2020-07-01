@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<dds>
 <types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="file:////home/hunter/rti_connext_dds-6.0.1/bin/../resource/app/app_support/rtiddsgen/schema/rti_dds_topic_types.xsd">
 <const name="CHOCOLATE_LOT_STATE_TOPIC" type="string" value="&quot;ChocolateLotState&quot;"/>
 <const name="CHOCOLATE_TEMPERATURE_TOPIC" type="string" value="&quot;ChocolateTemperature&quot;"/>
@@ -28,3 +29,4 @@
   <member name="lot_status" type="nonBasic"  nonBasicTypeName= "LotStatusKind"/>
 </struct>
 </types>
+</dds>

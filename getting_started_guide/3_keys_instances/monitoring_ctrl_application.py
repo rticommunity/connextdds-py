@@ -4,25 +4,29 @@ import pathlib
 import threading
 import time
 
-FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "temperature.xml"
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/chocolate_factory.xml"
 
 lots_processed = 0
 reader = None
 provider_type = dds.QosProvider(FILE).type("ChocolateLotState")
+LotStatusKind = dds.QosProvider(FILE).type("LotStatusKind")
+StationKind = dds.QosProvider(FILE).type("StationKind")
 
 
 def publish_start_lot(writer, lots_to_process):
     sample = dds.DynamicData(provider_type)
     try:
-        for count in range(0, lots_to_process):
+        count = 0
+        while lots_to_process is None or count < lots_to_process:
             sample["lot_id"] = count % 100
-            sample["lot_status"] = None  # enum status
-            sample["next_station"] = None  # enum station
+            sample["lot_status"] = LotStatusKind["WAITING"].ordinal
+            sample["next_station"] = StationKind["TEMPERING_CONTROLLER"].ordinal
             print(
                 f"Starting lot:\n[lot_id: {sample['lot_id']} next_station: {sample['next_station']}]"
             )
             writer.write(sample)
-            time.sleep(8)
+            time.sleep(1)
+            count += 1
     except KeyboardInterrupt:
         print("Process broken by user")
 
@@ -74,7 +78,7 @@ def main(domain_id, lots_to_process, sensor_id):
     )
     start_lot_thread.start()
     try:
-        while lots_processed < lots_to_process:
+        while lots_to_process is None or lots_processed < lots_to_process:
             waitset.dispatch(dds.Duration(10))
     except KeyboardInterrupt:
         print("Process broken by user")
