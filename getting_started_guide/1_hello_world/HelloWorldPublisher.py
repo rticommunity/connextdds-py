@@ -11,15 +11,15 @@
 #
 
 import rti.connextdds as dds
-import argparse # for argument parsing
-import time # for sleeping
-import pathlib #for getting the absolute path of this file to find the XML file
+import argparse  # for argument parsing
+import time  # for sleeping
+import pathlib  # for getting the absolute path of this file to find the XML file
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "HelloWorld.xml"
 
 
 def run_example(domain_id, sample_count):
-    
+
     # A DomainParticipant allows an application to begin communicating in
     # a DDS domain. Typically there is one DomainParticipant per application.
     # DomainParticipant QoS is configured in USER_QOS_PROFILES.xml
@@ -44,11 +44,11 @@ def run_example(domain_id, sample_count):
         sample = dds.DynamicData(provider_type)
         for i in range(0, sample_count):
             # Modify the data to be written here
-            
+
             sample["msg"] = f"Hello {i}"
-            
+
             print(f"Writing {sample['msg']}")
-            
+
             writer.write(sample)
             time.sleep(1)
 

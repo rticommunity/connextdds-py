@@ -11,15 +11,15 @@
 #
 
 import rti.connextdds as dds
-import argparse # for arg parsing
-import time # for sleep
-import pathlib # for finding the xml file
+import argparse  # for arg parsing
+import time  # for sleep
+import pathlib  # for finding the xml file
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "HelloWorld.xml"
 
 
 def process_data(reader):
-    
+
     # Take all samples.  Samples are loaned to application, loan is
     # returned when LoanedSamples destructor called.
     samples_read = 0
@@ -34,7 +34,7 @@ def process_data(reader):
 
 
 def run_example(domain_id, sample_count):
-    
+
     # A DomainParticipant allows an application to begin communicating in
     # a DDS domain. Typically there is one DomainParticipant per application.
     # Create a DomainParticipant with default Qos
@@ -42,7 +42,7 @@ def run_example(domain_id, sample_count):
         provider = dds.QosProvider(FILE)
 
         provider_type = provider.type("HelloWorld")
-        
+
         # A Topic has a name and a datatype. Create a Topic named
         # "HelloWorld Topic" with type HelloWorld
         topic = dds.DynamicData.Topic(participant, "Example HelloWorld", provider_type)
@@ -50,7 +50,7 @@ def run_example(domain_id, sample_count):
         # A Subscriber allows an application to create one or more DataReaders
         # Subscriber QoS is configured in USER_QOS_PROFILES.xml
         subscriber = dds.Subscriber(participant)
-        
+
         # This DataReader will read data of type HelloWorld on Topic
         # "HelloWorld Topic". DataReader QoS is configured in
         # USER_QOS_PROFILES.xml
@@ -83,14 +83,14 @@ def run_example(domain_id, sample_count):
                 # Dispatch will call the handlers associated to the WaitSet conditions
                 # when they activate
                 print(f"Hello World subscriber sleeping for 4 seconds...")
-                
-                waitset.dispatch(dds.Duration(4)) # Wait up to 4s each time
+
+                waitset.dispatch(dds.Duration(4))  # Wait up to 4s each time
         except KeyboardInterrupt:
             pass
 
 
 if __name__ == "__main__":
-    
+
     # Parse args
     parser = argparse.ArgumentParser()
     parser.add_argument(
