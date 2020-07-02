@@ -11,14 +11,17 @@
 #
 
 import rti.connextdds as dds
-import argparse
-import time
-import pathlib
+import argparse # for arg parsing
+import time # for sleep
+import pathlib # for finding the xml file
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "HelloWorld.xml"
 
 
 def process_data(reader):
+    
+    # Take all samples.  Samples are loaned to application, loan is
+    # returned when LoanedSamples destructor called.
     samples_read = 0
     samples = reader.take()
 
@@ -30,41 +33,65 @@ def process_data(reader):
     return samples_read
 
 
-def main(domain_id, sample_count):
+def run_example(domain_id, sample_count):
+    
+    # A DomainParticipant allows an application to begin communicating in
+    # a DDS domain. Typically there is one DomainParticipant per application.
+    # Create a DomainParticipant with default Qos
     with dds.DomainParticipant(domain_id) as participant:
         provider = dds.QosProvider(FILE)
 
         provider_type = provider.type("HelloWorld")
+        
+        # A Topic has a name and a datatype. Create a Topic named
+        # "HelloWorld Topic" with type HelloWorld
         topic = dds.DynamicData.Topic(participant, "Example HelloWorld", provider_type)
 
+        # A Subscriber allows an application to create one or more DataReaders
+        # Subscriber QoS is configured in USER_QOS_PROFILES.xml
         subscriber = dds.Subscriber(participant)
+        
+        # This DataReader will read data of type HelloWorld on Topic
+        # "HelloWorld Topic". DataReader QoS is configured in
+        # USER_QOS_PROFILES.xml
         reader = dds.DynamicData.DataReader(subscriber, topic)
 
+        # Obtain the DataReader's Status Condition
         status_condition = dds.StatusCondition(reader)
 
+        # Enable the 'data available' status.
         status_condition.enabled_statuses = dds.StatusMask.data_available()
 
+        # Associate a handler with the status condition. This will run when the
+        # condition is triggered, in the context of the dispatch call (see below)
         samples_read = 0
 
-        def helper(x):
+        def hander(_):  # condition argument is not used
             nonlocal samples_read
             nonlocal reader
             samples_read += process_data(reader)
 
-        status_condition.handler(helper)
+        status_condition.handler(hander)
 
+        # Create a WaitSet and attach the StatusCondition
         waitset = dds.WaitSet()
         waitset += status_condition
 
+        # Catch control c interrupt
         try:
             while samples_read < sample_count:
+                # Dispatch will call the handlers associated to the WaitSet conditions
+                # when they activate
                 print(f"Hello World subscriber sleeping for 4 seconds...")
-                waitset.dispatch(dds.Duration(4))
+                
+                waitset.dispatch(dds.Duration(4)) # Wait up to 4s each time
         except KeyboardInterrupt:
-            print("Keyboard interrupt caught")
+            pass
 
 
 if __name__ == "__main__":
+    
+    # Parse args
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--domain-id",
@@ -84,4 +111,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.domain_id, args.sample_count)
+    run_example(args.domain_id, args.sample_count)

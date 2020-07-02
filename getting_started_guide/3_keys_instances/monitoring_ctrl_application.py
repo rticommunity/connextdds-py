@@ -7,19 +7,21 @@ import time
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/chocolate_factory.xml"
 
 provider = dds.QosProvider(FILE)
-provider_type = provider.type("ChocolateLotState")
-LotStatusKind = provider.type("LotStatusKind")
-StationKind = provider.type("StationKind")
+CHOCOLATE_LOT_TYPE = provider.type("ChocolateLotState")
+LOT_STATUS_KIND_TYPE = provider.type("LotStatusKind")
+STATION_KIND_TYPE = provider.type("StationKind")
 
 
 def publish_start_lot(writer, lots_to_process):
-    sample = dds.DynamicData(provider_type)
+    sample = dds.DynamicData(CHOCOLATE_LOT_TYPE)
     try:
         count = 0
         while lots_to_process is None or count < lots_to_process:
             sample["lot_id"] = count % 100
-            sample["lot_status"] = LotStatusKind["WAITING"].ordinal
-            sample["next_station"] = StationKind["TEMPERING_CONTROLLER"].ordinal
+            # Enumeration members expect an integer, 
+            # which can be obtained from `LOT_STATUS_KIND_TYPE[name].ordinal
+            sample["lot_status"] = LOT_STATUS_KIND_TYPE["WAITING"].ordinal
+            sample["next_station"] = STATION_KIND_TYPE["TEMPERING_CONTROLLER"].ordinal
             print(
                 f"Starting lot:\n[lot_id: {sample['lot_id']} next_station: {sample['next_station']}]"
             )
@@ -45,7 +47,7 @@ def main(domain_id, lots_to_process, sensor_id):
     participant = dds.DomainParticipant(domain_id)
 
     topic = dds.DynamicData.Topic(
-        participant, "CHOCOLATE_LOT_STATE_TOPIC", provider_type
+        participant, "ChocolateLotState", CHOCOLATE_LOT_TYPE
     )
 
     publisher = dds.Publisher(participant)

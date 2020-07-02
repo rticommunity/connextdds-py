@@ -7,7 +7,7 @@ import time
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "temperature.xml"
 
 
-def main(domain_id, sample_count, sensor_id):
+def run_example(domain_id, sample_count, sensor_id):
     participant = dds.DomainParticipant(domain_id)
 
     provider_type = dds.QosProvider(FILE).type("Temperature")
@@ -20,13 +20,16 @@ def main(domain_id, sample_count, sensor_id):
 
     sample = dds.DynamicData(provider_type)
     i = 0
-    while sample_count is None or i < sample_count:
-        sample["sensor_id"] = sensor_id
-        sample["degrees"] = random.randint(30, 32)
-        print("Writing ChocolateTemperature, count " + str(i))
-        writer.write(sample)
-        time.sleep(1)
-        i += 1
+    try:
+        while sample_count is None or i < sample_count:
+            sample["sensor_id"] = sensor_id
+            sample["degrees"] = random.randint(30, 32)
+            print(f"Writing ChocolateTemperature, count {i}")
+            writer.write(sample)
+            time.sleep(1)
+            i += 1
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
@@ -57,4 +60,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.domain_id, args.sample_count, args.sensor_id)
+    run_example(args.domain_id, args.sample_count, args.sensor_id)

@@ -11,34 +11,50 @@
 #
 
 import rti.connextdds as dds
-import argparse
-import time
-import pathlib
+import argparse # for argument parsing
+import time # for sleeping
+import pathlib #for getting the absolute path of this file to find the XML file
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "HelloWorld.xml"
 
 
-def main(domain_id, sample_count):
+def run_example(domain_id, sample_count):
+    
+    # A DomainParticipant allows an application to begin communicating in
+    # a DDS domain. Typically there is one DomainParticipant per application.
+    # DomainParticipant QoS is configured in USER_QOS_PROFILES.xml
     with dds.DomainParticipant(domain_id) as participant:
         provider = dds.QosProvider(FILE)
 
         provider_type = provider.type("HelloWorld")
 
+        # A Topic has a name and a datatype. Create a Topic named
+        # "HelloWorld Topic" with type HelloWorld
         topic = dds.DynamicData.Topic(participant, "Example HelloWorld", provider_type)
 
+        # A Publisher allows an application to create one or more DataWriters
+        # Publisher QoS is configured in USER_QOS_PROFILES.xml
         publisher = dds.Publisher(participant)
 
+        # This DataWriter will write data on Topic "HelloWorld Topic"
+        # DataWriter QoS is configured in USER_QOS_PROFILES.xml
         writer = dds.DynamicData.DataWriter(publisher, topic)
 
+        # Create data sample for writing
         sample = dds.DynamicData(provider_type)
         for i in range(0, sample_count):
+            # Modify the data to be written here
+            
             sample["msg"] = f"Hello {i}"
-            print("Writing " + "Hello " + str(i))
+            
+            print(f"Writing {sample['msg']}")
+            
             writer.write(sample)
             time.sleep(1)
 
 
 if __name__ == "__main__":
+    # Parse args here
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--domain-id",
@@ -57,5 +73,8 @@ if __name__ == "__main__":
         dest="sample_count",
     )
     args = parser.parse_args()
-
-    main(args.domain_id, args.sample_count)
+    # Check for control c
+    try:
+        run_example(args.domain_id, args.sample_count)
+    except KeyboardInterrupt:
+        pass

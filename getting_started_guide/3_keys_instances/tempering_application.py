@@ -9,14 +9,14 @@ FILE = str(pathlib.Path(__file__).parent.absolute()) + "/chocolate_factory.xml"
 
 provider = dds.QosProvider(FILE)
 
-temperature_type = provider.type("Temperature")
-lot_type = provider.type("ChocolateLotState")
-StationKind = provider.type("StationKind")
-LotStatusKind = provider.type("LotStatusKind")
+TEMPERATURE_TYPE = provider.type("Temperature")
+CHOCOLATE_LOT_TYPE = provider.type("ChocolateLotState")
+STATION_KIND_TYPE = provider.type("StationKind")
+LOT_STATUS_KIND_TYPE = provider.type("LotStatusKind")
 
 
 def publish_temperature(writer, sensor_id):
-    temperature = dds.DynamicData(temperature_type)
+    temperature = dds.DynamicData(TEMPERATURE_TYPE)
     try:
         while True:
             temperature["sensor_id"] = sensor_id
@@ -34,13 +34,15 @@ def process_lot(lot_state_reader, lot_state_writer):
         if (
             sample.info.valid
             and sample.data["next_station"]
-            == StationKind["TEMPERING_CONTROLLER"].ordinal
+            == STATION_KIND_TYPE["TEMPERING_CONTROLLER"].ordinal
         ):
             print(f"Processing lot #{sample.data['lot_id']}")
             updated_state = sample.data
-            updated_state["lot_status"] = LotStatusKind["PROCESSING"].ordinal
-            updated_state["next_station"] = StationKind["INVALID_CONTROLLER"].ordinal
-            updated_state["station"] = StationKind["TEMPERING_CONTROLLER"].ordinal
+            updated_state["lot_status"] = LOT_STATUS_KIND_TYPE["PROCESSING"].ordinal
+            updated_state["next_station"] = STATION_KIND_TYPE[
+                "INVALID_CONTROLLER"
+            ].ordinal
+            updated_state["station"] = STATION_KIND_TYPE["TEMPERING_CONTROLLER"].ordinal
             lot_state_writer.write(updated_state)
             time.sleep(5)
 
@@ -48,10 +50,10 @@ def process_lot(lot_state_reader, lot_state_writer):
 def main(domain_id, sensor_id):
     participant = dds.DomainParticipant(domain_id)
     temperature_topic = dds.DynamicData.Topic(
-        participant, "CHOCOLATE_TEMPERATURE_TOPIC", temperature_type
+        participant, "CHOCOLATE_TEMPERATURE_TOPIC", TEMPERATURE_TYPE
     )
     lot_state_topic = dds.DynamicData.Topic(
-        participant, "CHOCOLATE_LOT_STATE_TOPIC", lot_type
+        participant, "CHOCOLATE_LOT_STATE_TOPIC", CHOCOLATE_LOT_TYPE
     )
 
     publisher = dds.Publisher(participant)
