@@ -130,6 +130,7 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
             [](const SubscriptionBuiltinTopicData& p) {
                 return p->type();
             },
+            py::return_value_policy::move,
             "The type."
         )
         .def_property_readonly(
@@ -220,7 +221,7 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls) {
             "The Service policy"
         )
         .def_property_readonly_static(
-            "topic_name",
+            "builtin_topic_name",
             [](py::object&) {
                 return dds::topic::subscription_topic_name();
             },

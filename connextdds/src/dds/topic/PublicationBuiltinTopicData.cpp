@@ -140,6 +140,7 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {
             [](const PublicationBuiltinTopicData& p) {
                 return p->type();
             },
+            py::return_value_policy::move,
             "The type."
         )
         .def_property_readonly(
@@ -223,7 +224,7 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {
             "The Service policy"
         )
         .def_property_readonly_static(
-            "topic_name",
+            "builtin_topic_name",
             [](py::object&) {
                 return dds::topic::publication_topic_name();
             },
