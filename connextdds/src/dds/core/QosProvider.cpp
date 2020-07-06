@@ -41,7 +41,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the TopicQos currently associated with the QosProvider."
         )
         .def(
-            "topic_qos_profile",
+            "get_topic_qos_profile",
             (TopicQos (QosProvider::*)(const std::string&)) &QosProvider::topic_qos,
             py::arg("profile_name"),
             "Get the TopicQos from a qos profile."
@@ -52,7 +52,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the SubscriberQos currently associated with this QosProvider."
         )
         .def(
-            "subscriber_qos_profile",
+            "get_subscriber_qos_profile",
             (SubscriberQos (QosProvider::*)(const std::string&)) &QosProvider::subscriber_qos,
             py::arg("profile"),
             "Get the SubscriberQos from a qos profile."
@@ -63,7 +63,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the DataReaderQos currently associated with the QosProvider."
         )
         .def(
-            "datareader_qos_profile",
+            "get_datareader_qos_profile",
             (DataReaderQos (QosProvider::*)(const std::string&)) &QosProvider::datareader_qos,
             py::arg("profile"),
             "Get the DataReaderQos from a qos profile."
@@ -74,7 +74,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the PublisherQos currently associated with the QosProvider."
         )
         .def(
-            "publisher_qos_profile",
+            "get_publisher_qos_profile",
             (PublisherQos (QosProvider::*)(const std::string&)) &QosProvider::publisher_qos,
             py::arg("profile"),
             "Get the PublisherQos from a qos profile."
@@ -85,7 +85,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of the DataWriterQos currently associated with the QosProvider."
         )
         .def(
-            "datawriter_qos_profile",
+            "get_datawriter_qos_profile",
             (DataWriterQos (QosProvider::*)(const std::string&)) & QosProvider::datawriter_qos,
             py::arg("profile"),
             "Get the DataWriterQos from a qos profile."
@@ -101,7 +101,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get a copy of or set the default QosProviderParams."
         )
         .def(
-            "topic_name_qos",
+            "set_topic_name_qos",
             [](QosProvider& qp, const std::string& profile, const std::string& topic) {
                 return qp->topic_qos_w_topic_name(profile, topic);
             },
@@ -110,7 +110,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Set the TopicQos for a given Topic name."
         )
         .def(
-            "topic_name_qos",
+            "get_topic_name_qos",
             [](QosProvider& qp, const std::string& topic) {
                 return qp->topic_qos_w_topic_name(topic);
             },
@@ -118,7 +118,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get the TopicQos associated with a given Topic name."
         )
         .def(
-            "topic_datareader_qos",
+            "set_topic_datareader_qos",
             [](QosProvider& qp, const std::string& profile, const std::string& topic) {
                 return qp->datareader_qos_w_topic_name(profile, topic);
             },
@@ -127,7 +127,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Set the DataReaderQos for a given Topic name."
         )
         .def(
-            "topic_datareader_qos",
+            "get_topic_datareader_qos",
             [](QosProvider& qp, const std::string& topic) {
                 return qp->datareader_qos_w_topic_name(topic);
             },
@@ -135,7 +135,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Get the DataReaderQos associated with a given Topic name."
         )
         .def(
-            "topic_datawriter_qos",
+            "set_topic_datawriter_qos",
             [](QosProvider& qp, const std::string& profile, const std::string& topic) {
                 return qp->datawriter_qos_w_topic_name(profile, topic);
             },
@@ -144,7 +144,7 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "Set the DataWriterQos for a given Topic name."
         )
         .def(
-            "topic_datawriter_qos",
+            "get_topic_datawriter_qos",
             [](QosProvider& qp, const std::string& topic) {
                 return qp->datawriter_qos_w_topic_name(topic);
             },

@@ -41,7 +41,7 @@ void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls) {
             "Get the Entity associated with this StatusCondition."
         )
         .def(
-            "handler",
+            "set_handler",
             [](PyStatusCondition& sc, std::function<void(PyICondition*)>& func) {
                 sc->handler([func](dds::core::cond::Condition c) {
                     py::gil_scoped_acquire acquire;

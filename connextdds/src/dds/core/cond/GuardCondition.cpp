@@ -22,7 +22,7 @@ void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls) {
             "Create a GuardCondition from a Condition."
         )
         .def(
-            "handler",
+            "set_handler",
             [](PyGuardCondition& gc, std::function<void(PyICondition*)>& func) {
                 gc->handler(
                     [func](dds::core::cond::Condition c) {
