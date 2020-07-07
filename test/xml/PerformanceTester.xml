@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<!--
+(c) 2005-2015 Copyright, Real-Time Innovations.  All rights reserved.
+No duplications, whole or partial, manual or electronic, may be made
+without express written permission.  Any such copies, or revisions thereof,
+must display this notice unaltered.
+This code contains trade secrets of Real-Time Innovations, Inc.
+ -->
+
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.1.0/rti_dds_profiles.xsd" version="5.1.0">
+
+    <!-- Qos Library -->
+  <qos_library name="QosLibrary">
+    <qos_profile name="DefaultProfile"
+             base_name="BuiltinQosLibExp::Generic.StrictReliable"
+           is_default_qos="true">
+      <participant_qos>
+        <transport_builtin>
+            <mask>UDPV4 | SHMEM</mask>
+        </transport_builtin>
+      </participant_qos>
+      <datawriter_qos>
+        <publish_mode>
+          <kind>ASYNCHRONOUS_PUBLISH_MODE_QOS</kind>
+        </publish_mode>
+      </datawriter_qos>
+    </qos_profile>
+  </qos_library>
+
+    <!-- types -->
+    <types>
+      <!-- A simple type containing a single long -->
+      <struct name="SimpleType">
+        <member name="x" id="1" type="long"/>
+      </struct>
+      <!-- The PrimitiveArray types (4 elements - 2048 elements) -->
+      <struct name="PrimitiveArrayType4">
+        <member name="longArray" id="1" type="long" arrayDimensions="4"/>
+      </struct>
+      <struct name="PrimitiveArrayType8">
+        <member name="longArray" id="1" type="long" arrayDimensions="8"/>
+      </struct>
+      <struct name="PrimitiveArrayType16">
+        <member name="longArray" id="1" type="long" arrayDimensions="16"/>
+      </struct>
+      <struct name="PrimitiveArrayType32">
+        <member name="longArray" id="1" type="long" arrayDimensions="32"/>
+      </struct>
+      <struct name="PrimitiveArrayType64">
+        <member name="longArray" id="1" type="long" arrayDimensions="64"/>
+      </struct>
+      <struct name="PrimitiveArrayType128">
+        <member name="longArray" id="1" type="long" arrayDimensions="128"/>
+      </struct>
+      <struct name="PrimitiveArrayType256">
+        <member name="longArray" id="1" type="long" arrayDimensions="256"/>
+      </struct>
+      <struct name="PrimitiveArrayType512">
+        <member name="longArray" id="1" type="long" arrayDimensions="512"/>
+      </struct>
+      <struct name="PrimitiveArrayType1024">
+        <member name="longArray" id="1" type="long" arrayDimensions="1024"/>
+      </struct>
+      <struct name="PrimitiveArrayType2048">
+        <member name="longArray" id="1" type="long" arrayDimensions="2048"/>
+      </struct>
+      <struct name="PrimitiveArrayType4096">
+        <member name="longArray" id="1" type="long" arrayDimensions="4096"/>
+      </struct>
+
+      <!-- The base type used for the nonprimitive arrays -->
+      <struct name="NonPrimitiveType">
+        <member name="x" type="long" id="1"/>
+        <member name="y" type="long" id="2"/>
+      </struct>
+  
+      <!-- The NonPrimitiveArray types (4 elements - 2048 elements) -->
+      <struct name="NonPrimitiveArrayType4">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="4"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType8">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="8"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType16">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="16"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType32">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="32"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType64">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="64"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType128">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="128"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType256">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="256"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType512">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="512"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType1024">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="1024"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType2048">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="2048"/>
+      </struct>
+      <struct name="NonPrimitiveArrayType4096">
+        <member name="longArray" id="1" type="nonBasic" nonBasicTypeName="NonPrimitiveType" arrayDimensions="4096"/>
+      </struct>
+
+      <!-- Type based on the test done in CON-42 -->
+      <struct name="Con42Type" extensibility="extensible">
+        <member name='myID' type="long"/>
+        <member name="myOctSeq" type="byte" sequenceMaxLength="600000"/>
+      </struct>
+
+  </types>
+
+    <!-- Domain Library -->
+    <domain_library name="MyDomainLibrary">
+        <domain name="MyDomain" domain_id="229">
+            <!-- Register the simple type -->
+            <register_type name="SimpleType" type_ref="SimpleType"/>
+            <topic name="SimpleTopic" register_type_ref="SimpleType"/>
+
+            <!-- Register all of the Primitive Array types -->
+            <register_type name="PrimitiveArrayType4"  type_ref="PrimitiveArrayType4"/>
+            <topic name="PrimitiveArray4"    register_type_ref="PrimitiveArrayType4"/>
+            <register_type name="PrimitiveArrayType8"  type_ref="PrimitiveArrayType8"/>
+            <topic name="PrimitiveArray8"    register_type_ref="PrimitiveArrayType8"/>
+            <register_type name="PrimitiveArrayType16"  type_ref="PrimitiveArrayType16"/>
+            <topic name="PrimitiveArray16"    register_type_ref="PrimitiveArrayType16"/>
+            <register_type name="PrimitiveArrayType32"  type_ref="PrimitiveArrayType32"/>
+            <topic name="PrimitiveArray32"    register_type_ref="PrimitiveArrayType32"/>
+            <register_type name="PrimitiveArrayType64"  type_ref="PrimitiveArrayType64"/>
+            <topic name="PrimitiveArray64"    register_type_ref="PrimitiveArrayType64"/>
+            <register_type name="PrimitiveArrayType128"  type_ref="PrimitiveArrayType128"/>
+            <topic name="PrimitiveArray128"    register_type_ref="PrimitiveArrayType128"/>
+            <register_type name="PrimitiveArrayType256"  type_ref="PrimitiveArrayType256"/>
+            <topic name="PrimitiveArray256"    register_type_ref="PrimitiveArrayType256"/>
+            <register_type name="PrimitiveArrayType512"  type_ref="PrimitiveArrayType512"/>
+            <topic name="PrimitiveArray512"    register_type_ref="PrimitiveArrayType512"/>
+            <register_type name="PrimitiveArrayType1024"  type_ref="PrimitiveArrayType1024"/>
+            <topic name="PrimitiveArray1024"    register_type_ref="PrimitiveArrayType1024"/>
+            <register_type name="PrimitiveArrayType2048"  type_ref="PrimitiveArrayType2048"/>
+            <topic name="PrimitiveArray2048"    register_type_ref="PrimitiveArrayType2048"/>
+            <register_type name="PrimitiveArrayType4096"  type_ref="PrimitiveArrayType4096"/>
+            <topic name="PrimitiveArray4096"    register_type_ref="PrimitiveArrayType4096"/>
+
+            <!-- Register all of the Non-Primitive Array types -->
+            <register_type name="NonPrimitiveArrayType4"  type_ref="NonPrimitiveArrayType4"/>
+            <topic name="NonPrimitiveArray4"    register_type_ref="NonPrimitiveArrayType4"/>
+            <register_type name="NonPrimitiveArrayType8"  type_ref="NonPrimitiveArrayType8"/>
+            <topic name="NonPrimitiveArray8"    register_type_ref="NonPrimitiveArrayType8"/>
+            <register_type name="NonPrimitiveArrayType16"  type_ref="NonPrimitiveArrayType16"/>
+            <topic name="NonPrimitiveArray16"    register_type_ref="NonPrimitiveArrayType16"/>
+            <register_type name="NonPrimitiveArrayType32"  type_ref="NonPrimitiveArrayType32"/>
+            <topic name="NonPrimitiveArray32"    register_type_ref="NonPrimitiveArrayType32"/>
+            <register_type name="NonPrimitiveArrayType64"  type_ref="NonPrimitiveArrayType64"/>
+            <topic name="NonPrimitiveArray64"    register_type_ref="NonPrimitiveArrayType64"/>
+            <register_type name="NonPrimitiveArrayType128"  type_ref="NonPrimitiveArrayType128"/>
+            <topic name="NonPrimitiveArray128"    register_type_ref="NonPrimitiveArrayType128"/>
+            <register_type name="NonPrimitiveArrayType256"  type_ref="NonPrimitiveArrayType256"/>
+            <topic name="NonPrimitiveArray256"    register_type_ref="NonPrimitiveArrayType256"/>
+            <register_type name="NonPrimitiveArrayType512"  type_ref="NonPrimitiveArrayType512"/>
+            <topic name="NonPrimitiveArray512"    register_type_ref="NonPrimitiveArrayType512"/>
+            <register_type name="NonPrimitiveArrayType1024"  type_ref="NonPrimitiveArrayType1024"/>
+            <topic name="NonPrimitiveArray1024"    register_type_ref="NonPrimitiveArrayType1024"/>
+            <register_type name="NonPrimitiveArrayType2048"  type_ref="NonPrimitiveArrayType2048"/>
+            <topic name="NonPrimitiveArray2048"    register_type_ref="NonPrimitiveArrayType2048"/>
+            <register_type name="NonPrimitiveArrayType4096"  type_ref="NonPrimitiveArrayType4096"/>
+            <topic name="NonPrimitiveArray4096"    register_type_ref="NonPrimitiveArrayType4096"/>
+
+            <register_type name="Con42Type" type_ref="Con42Type"/>
+            <topic name="Con42" register_type_ref="Con42Type"/>
+
+        </domain>
+    </domain_library>
+
+    <!-- Participant library -->
+    <domain_participant_library name="MyParticipantLibrary">
+      <domain_participant name="MyParticipant" domain_ref="MyDomainLibrary::MyDomain">
+
+        <publisher name="MyPublisher">
+          <!-- Create DataWriter for the simple topic -->
+          <data_writer name="SimpleTopicDataWriter" topic_ref="SimpleTopic"/>
+
+          <!-- Create DataWriters for all of the Primitive Array types -->
+          <data_writer name="PrimitiveArray4DataWriter" topic_ref="PrimitiveArray4"/>
+          <data_writer name="PrimitiveArray8DataWriter" topic_ref="PrimitiveArray8"/>
+          <data_writer name="PrimitiveArray16DataWriter" topic_ref="PrimitiveArray16"/>
+          <data_writer name="PrimitiveArray32DataWriter" topic_ref="PrimitiveArray32"/>
+          <data_writer name="PrimitiveArray64DataWriter" topic_ref="PrimitiveArray64"/>
+          <data_writer name="PrimitiveArray128DataWriter" topic_ref="PrimitiveArray128"/>
+          <data_writer name="PrimitiveArray256DataWriter" topic_ref="PrimitiveArray256"/>
+          <data_writer name="PrimitiveArray512DataWriter" topic_ref="PrimitiveArray512"/>
+          <data_writer name="PrimitiveArray1024DataWriter" topic_ref="PrimitiveArray1024"/>
+          <data_writer name="PrimitiveArray2048DataWriter" topic_ref="PrimitiveArray2048"/>
+          <data_writer name="PrimitiveArray4096DataWriter" topic_ref="PrimitiveArray4096"/>
+
+          <!-- Create DataWriters for all of the Non-Primitive Array types -->
+          <data_writer name="NonPrimitiveArray4DataWriter" topic_ref="NonPrimitiveArray4"/>
+          <data_writer name="NonPrimitiveArray8DataWriter" topic_ref="NonPrimitiveArray8"/>
+          <data_writer name="NonPrimitiveArray16DataWriter" topic_ref="NonPrimitiveArray16"/>
+          <data_writer name="NonPrimitiveArray32DataWriter" topic_ref="NonPrimitiveArray32"/>
+          <data_writer name="NonPrimitiveArray64DataWriter" topic_ref="NonPrimitiveArray64"/>
+          <data_writer name="NonPrimitiveArray128DataWriter" topic_ref="NonPrimitiveArray128"/>
+          <data_writer name="NonPrimitiveArray256DataWriter" topic_ref="NonPrimitiveArray256"/>
+          <data_writer name="NonPrimitiveArray512DataWriter" topic_ref="NonPrimitiveArray512"/>
+          <data_writer name="NonPrimitiveArray1024DataWriter" topic_ref="NonPrimitiveArray1024"/>
+          <data_writer name="NonPrimitiveArray2048DataWriter" topic_ref="NonPrimitiveArray2048"/>
+          <data_writer name="NonPrimitiveArray4096DataWriter" topic_ref="NonPrimitiveArray4096"/>
+
+          <data_writer name="Con42DataWriter" topic_ref="Con42"/>
+        </publisher>
+
+        <subscriber name="MySubscriber">
+          <!-- Create DataReader for the simple topic -->
+          <data_reader name="SimpleTopicDataReader" topic_ref="SimpleTopic"/>
+
+          <!-- Create DataReaders for all of the Primitive Array types -->
+          <data_reader name="PrimitiveArray4DataReader" topic_ref="PrimitiveArray4" />
+          <data_reader name="PrimitiveArray8DataReader" topic_ref="PrimitiveArray8"/>
+          <data_reader name="PrimitiveArray16DataReader" topic_ref="PrimitiveArray16"/>
+          <data_reader name="PrimitiveArray32DataReader" topic_ref="PrimitiveArray32"/>
+          <data_reader name="PrimitiveArray64DataReader" topic_ref="PrimitiveArray64"/>
+          <data_reader name="PrimitiveArray128DataReader" topic_ref="PrimitiveArray128"/>
+          <data_reader name="PrimitiveArray256DataReader" topic_ref="PrimitiveArray256"/>
+          <data_reader name="PrimitiveArray512DataReader" topic_ref="PrimitiveArray512"/>
+          <data_reader name="PrimitiveArray1024DataReader" topic_ref="PrimitiveArray1024"/>
+          <data_reader name="PrimitiveArray2048DataReader" topic_ref="PrimitiveArray2048"/>
+          <data_reader name="PrimitiveArray4096DataReader" topic_ref="PrimitiveArray4096"/>
+
+          <!-- Create DataReaders for all of the Non-Primitive Array types -->
+          <data_reader name="NonPrimitiveArray4DataReader" topic_ref="NonPrimitiveArray4" />
+          <data_reader name="NonPrimitiveArray8DataReader" topic_ref="NonPrimitiveArray8"/>
+          <data_reader name="NonPrimitiveArray16DataReader" topic_ref="NonPrimitiveArray16"/>
+          <data_reader name="NonPrimitiveArray32DataReader" topic_ref="NonPrimitiveArray32"/>
+          <data_reader name="NonPrimitiveArray64DataReader" topic_ref="NonPrimitiveArray64"/>
+          <data_reader name="NonPrimitiveArray128DataReader" topic_ref="NonPrimitiveArray128"/>
+          <data_reader name="NonPrimitiveArray256DataReader" topic_ref="NonPrimitiveArray256"/>
+          <data_reader name="NonPrimitiveArray512DataReader" topic_ref="NonPrimitiveArray512"/>
+          <data_reader name="NonPrimitiveArray1024DataReader" topic_ref="NonPrimitiveArray1024"/>
+          <data_reader name="NonPrimitiveArray2048DataReader" topic_ref="NonPrimitiveArray2048"/>
+          <data_reader name="NonPrimitiveArray4096DataReader" topic_ref="NonPrimitiveArray4096"/>
+
+          <data_reader name="Con42DataReader" topic_ref="Con42"/>
+        </subscriber>
+
+      </domain_participant>
+   </domain_participant_library>
+</dds>
