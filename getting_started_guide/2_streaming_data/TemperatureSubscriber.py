@@ -22,7 +22,7 @@ FILE = str(pathlib.Path(__file__).parent.absolute()) + "/" + "temperature.xml"
 
 def process_data(reader):
     # Take all samples.  Samples are loaned to application, loan is
-    # returned when LoanedSamples destructor called.
+    # returned when the variable sample goes out of scope
     samples_read = 0
     samples = reader.take()
 
@@ -40,10 +40,10 @@ def run_example(domain_id, sample_count, sensor_id):
     # Create a DomainParticipant with default Qos
     participant = dds.DomainParticipant(domain_id)
 
-    provider_type = dds.QosProvider(FILE).type("Temperature")
 
     # A Topic has a name and a datatype. Create a Topic named
     # "ChocolateTemperature" with type Temperature
+    provider_type = dds.QosProvider(FILE).type("Temperature")
     topic = dds.DynamicData.Topic(participant, "ChocolateTemperature", provider_type)
 
     # A Subscriber allows an application to create one or more DataReaders
@@ -65,12 +65,12 @@ def run_example(domain_id, sample_count, sensor_id):
     # condition is triggered, in the context of the dispatch call (see below)
     samples_read = 0
 
-    def helper(_):
+    def hander(_):
         nonlocal samples_read
         nonlocal reader
         samples_read += process_data(reader)
 
-    status_condition.handler(helper)
+    status_condition.handler(hander)
 
     # Create a WaitSet and attach the StatusCondition
     waitset = dds.WaitSet()
