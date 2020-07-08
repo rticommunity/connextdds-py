@@ -417,9 +417,10 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::ob
             try {
                 auto dd_dict = py::cast<py::dict>(value);
                 rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
-                DynamicData& dd_loan = loan.get();
-                update_dynamicdata_object(dd_loan, dd_dict);
+                DynamicData native_value(loan.get().type());
                 loan.return_loan();
+                update_dynamicdata_object(native_value, dd_dict);
+                dd.value<DynamicData>(key, native_value);
             }
             catch (py::builtin_exception::runtime_error e) {
                 auto native_value = py::cast<DynamicData>(value);
@@ -519,19 +520,19 @@ template <typename T>
 static
 void set_value(DynamicData& dd, const T& key, py::object value) {
     TypeKind::type field_type;
-    if (dd.member_exists_in_type(key)) {
+    if (dd.member_exists(key)) {
+        field_type = dd.member_info(key).member_kind().underlying();
+    }
+    else {
         if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
-            field_type = dd.member_info(key).member_kind().underlying();
+            rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
+            DynamicData& member = loan.get();
+            field_type = member.type().kind().underlying();
         }
         else {
             const UnionType& ut = static_cast<const UnionType&>(dd.type());
             field_type = ut.member(key).type().kind().underlying();
         }
-    }
-    else {
-        rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
-        DynamicData& member = loan.get();
-        field_type = member.type().kind().underlying();
     }
     set_member(dd, field_type, key, value);
 }
