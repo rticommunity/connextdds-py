@@ -107,8 +107,8 @@ def test_squence_of_nested_structs(size):
 
     # Assign values via a loan
     for i in range(0, size):
-        loaned = sample[i].loan_value("a")
-        loaned.data["x"] = -1 * i
+        loaned = sample.loan_value(i)
+        loaned.data["a.x"] = -1 * i
         loaned.return_loan()
 
     # Assert correct values
