@@ -1020,8 +1020,36 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "Test for equality."
         )
         .def(
+            "__eq__",
+            [](DynamicData& dd, py::dict& dict) {
+                try {
+                    DynamicData other(dd.type());
+                    update_dynamicdata_object(other, dict);
+                    return dd == other;
+                }
+                catch (dds::core::InvalidArgumentError&) {
+                    return false;
+                }
+            },
+            py::is_operator()
+        )
+        .def(
             py::self != py::self,
             "Test for inequality."
+        )
+        .def(
+            "__ne__",
+            [](DynamicData& dd, py::dict& dict) {
+                try {
+                    DynamicData other(dd.type());
+                    update_dynamicdata_object(other, dict);
+                    return dd != other;
+                }
+                catch (dds::core::InvalidArgumentError&) {
+                    return false;
+                }
+            },
+            py::is_operator()
         );
 
     py::class_<PyDynamicDataFieldsView> fields_view(dd_class, "FieldsView");
