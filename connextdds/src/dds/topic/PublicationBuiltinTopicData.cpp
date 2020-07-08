@@ -35,7 +35,9 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls) {
         )
         .def_property_readonly(
             "topic_name",
-            &PublicationBuiltinTopicData::topic_name,
+            [](const PublicationBuiltinTopicData& data) {
+                return data.topic_name().to_std_string();
+            },
             "The name of the related Topic."
         )
         .def_property_readonly(
