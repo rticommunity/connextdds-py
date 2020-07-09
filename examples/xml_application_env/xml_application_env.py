@@ -15,11 +15,11 @@ import random
 import time
 
 
-QOS_URL = 'file://application.xml'
-PARTICIPANT_NAME = 'domain_participant_library::participant'
-WRITER_NAME = 'publisher::writer'
-READER_NAME = 'subscriber::reader'
-KVP_TYPE_NAME = 'KeyValuePair'
+QOS_URL = "file://application.xml"
+PARTICIPANT_NAME = "domain_participant_library::participant"
+WRITER_NAME = "publisher::writer"
+READER_NAME = "subscriber::reader"
+KVP_TYPE_NAME = "KeyValuePair"
 
 
 class MyDataReaderListener(dds.DynamicData.NoOpDataReaderListener):
@@ -29,17 +29,18 @@ class MyDataReaderListener(dds.DynamicData.NoOpDataReaderListener):
                 if info.valid:
                     print(data)
                 else:
-                    print('  Received metadata')
+                    print("  Received metadata")
 
 
 def publish_env(id, writer, kvp_type, env):
     sample = dds.DynamicData(kvp_type)
-    sample['id'] = id
+    sample["id"] = id
 
     for var, value in env.items():
-        sample['key'] = var
-        sample['value'] = value
+        sample["key"] = var
+        sample["value"] = value
         writer.write(sample)
+
 
 qos_provider = dds.QosProvider(QOS_URL)
 
@@ -57,7 +58,6 @@ participant.ignore_participant(participant.instance_handle)
 id = random.randint(0, 2147483647)
 
 while True:
-    print('Publishing Environment')
+    print("Publishing Environment")
     publish_env(id, writer, my_type, os.environ)
     time.sleep(2)
-
