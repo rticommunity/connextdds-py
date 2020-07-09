@@ -29,7 +29,7 @@ def setup_qos_provider_create_participant(name):
 
     dds.QosProvider.default_provider_params = provider_params
 
-    participant = dds.QosProvider.default().create_participant_from_config(name, params)
+    participant = dds.QosProvider.default.create_participant_from_config(name, params)
     assert participant is not None
     return participant
 
