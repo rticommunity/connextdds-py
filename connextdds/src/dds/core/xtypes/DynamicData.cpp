@@ -70,16 +70,41 @@ std::vector<DynamicData> get_complex_values(DynamicData& data, const T& key) {
     }
 }
 
-
 template<typename T>
 void set_complex_values(DynamicData& data, const T& key, std::vector<DynamicData>& values) {
     auto info = data.member_info(key);
     if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
-        !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE))
-    {
-        DynamicData& member = data.loan_value(key).get();
-        for (uint32_t i = 0; i < values.size(); ++i) {
-            member.value<DynamicData>(i + 1, values[i]);
+      !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE)) {
+        auto loan = data.loan_value(key);
+        DynamicData& member = loan.get();
+        int i = 1;
+        for (auto& dd : values) {
+            member.value(i++, dd);
+        }
+    }
+    else {
+        throw py::key_error("member is not a collection of non-primitive values.");
+    }
+}
+
+
+template <typename T>
+static
+void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object value);
+
+
+template<typename T>
+void set_complex_values(DynamicData& data, const T& key, py::iterable& values) {
+    auto info = data.member_info(key);
+    if ((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) && 
+      !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE)) {
+        auto loan = data.loan_value(key);
+        DynamicData& member = loan.get();
+        int i = 1;
+        auto elem_kind = info.element_kind().underlying();
+        for (auto handle : values) {
+            set_member(member, elem_kind, i, py::cast<py::object>(handle));
+            i++;
         }
     }
     else {
@@ -321,7 +346,7 @@ void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& 
             break;
         }
         default: {
-            auto v = py::cast<std::vector<DynamicData>>(values);
+            auto v = py::cast<py::iterable>(values);
             set_complex_values(dd, key, v);
         }
     }
@@ -408,22 +433,22 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::ob
                 set_collection_member(dd, elem_kind, key, value);
             }
             catch (py::builtin_exception::runtime_error e) {
-                auto native_value = py::cast<DynamicData>(value);
+                auto& native_value = py::cast<DynamicData&>(value);
                 dd.value<DynamicData>(key, native_value);
             }
             break;
         }
         default: {
             try {
+                auto& native_value = py::cast<DynamicData&>(value);
+                dd.value<DynamicData>(key, native_value);
+            }
+            catch (py::builtin_exception::runtime_error e) {
                 auto dd_dict = py::cast<py::dict>(value);
                 rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
                 DynamicData native_value(loan.get().type());
                 loan.return_loan();
                 update_dynamicdata_object(native_value, dd_dict);
-                dd.value<DynamicData>(key, native_value);
-            }
-            catch (py::builtin_exception::runtime_error e) {
-                auto native_value = py::cast<DynamicData>(value);
                 dd.value<DynamicData>(key, native_value);
             }
         }
