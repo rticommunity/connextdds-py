@@ -22,15 +22,19 @@ def main(count):
     total_time = 0
 
     system = utils.TestSystem(0, "PerformanceTest")
+    perf_test_type = dds.QosProvider(FILE).type("PerformanceTest")
+    sample = dds.DynamicData(perf_test_type)
     for i in range(0, count):
 
-        system.writer.set_number("myOctetSeq[%d]" % (600000), 25)
-        system.writer.write()
-        system.reader.take()
+        loan = sample.loan_value("myOctSeq")
+        loan.data[i] = 25
+        loan.return_loan()
+        system.writer.write(sample)
+        recieved = system.reader.take()
 
         start = time.time()
-
-        sample = system.reader.samples.get_dictionary(0)
+        for s in recieved:
+            dictionary = s.data
         outArray = sample["myOctSeq"]
 
         elapsed = time.time() - start
