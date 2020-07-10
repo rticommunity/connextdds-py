@@ -273,9 +273,11 @@ void init_class_defs(py::class_<QosProvider>& cls) {
             "description provided in an XML configuration file that has been "
             "loaded by this QosProvider."
         )
-        .def_static(
+        .def_property_readonly_static(
             "default",
-            &QosProvider::Default,
+            [](py::object&) {
+                return QosProvider::Default();
+            },
             "Get the default QosProvider."
         )
         .def_static(

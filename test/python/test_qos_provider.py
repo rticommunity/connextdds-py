@@ -28,8 +28,8 @@ def test_invalid_creation():
 
 
 def test_default_provider():
-    provider1 = dds.QosProvider.default()
-    provider2 = dds.QosProvider.default()
+    provider1 = dds.QosProvider.default
+    provider2 = dds.QosProvider.default
     provider3 = provider2
     provider4 = provider3
     assert 3 == len(provider1.qos_profile_libraries)
