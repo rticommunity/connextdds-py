@@ -22,8 +22,10 @@ struct DynamicDataNestedIndex {
     int int_index;
     std::string string_index;
 
-    ~DynamicDataNestedIndex() {
-        while (!loan_list.empty()) loan_list.pop_back();
+    ~DynamicDataNestedIndex()
+    {
+        while (!loan_list.empty())
+            loan_list.pop_back();
     }
 };
 
