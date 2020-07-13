@@ -14,14 +14,93 @@ INIT_OPAQUE_TYPE_CONTAINERS(dds::core::xtypes::DynamicData);
 
 namespace pyrti {
 
+struct DynamicDataNestedIndex {
+    enum IdType {
+        INT,
+        STRING
+    };
+
+    std::list<rti::core::xtypes::LoanedDynamicData> loan_list;
+    IdType index_type;
+    int int_index;
+    std::string string_index;
+};
+
+
+static TypeKind::inner_enum resolve_type_kind(DynamicData& dd) {
+    auto kind = dd.type_kind().underlying();
+    if (kind == TypeKind::ALIAS_TYPE) {
+        auto alias = static_cast<const AliasType&>(dd.type());
+        DynamicType actual_type = rti::core::xtypes::resolve_alias(alias);
+        kind = actual_type.kind().underlying();
+    }
+    return kind;
+}
+
+
 template <typename T>
-static TypeKind::inner_enum resolve_type_kind(DynamicData& dd, TypeKind::inner_enum kind, const T& key) {
+static TypeKind::inner_enum resolve_member_type_kind(DynamicData& dd, TypeKind::inner_enum kind, const T& key) {
     if (kind == TypeKind::ALIAS_TYPE) {
         auto alias = static_cast<const AliasType&>(dd.loan_value(key).get().type());
         DynamicType actual_type = rti::core::xtypes::resolve_alias(alias);
         kind = actual_type.kind().underlying();
     }
     return kind;
+}
+
+static DynamicData& resolve_nested_member(
+  DynamicData& dd, 
+  std::string& key,
+  DynamicDataNestedIndex& id) {
+    std::stringstream ss(key);
+    std::string key_field;
+    DynamicData* current = &dd;
+    std::list<std::string> tokens;
+
+    while (std::getline(ss, key_field, '.')) {
+        tokens.push_back(key_field);
+    }
+    key_field = tokens.back();
+    tokens.pop_back();
+
+    for (auto& token : tokens) {
+        size_t pos = token.find('[');
+        if (pos != std::string::npos) {
+            int index;
+            if (sscanf(token.c_str() + pos, "[%d]", &index) > 0) {
+                id.loan_list.push_back(current->loan_value(token.substr(0, pos)));
+                id.loan_list.push_back(id.loan_list.back().get().loan_value(index + 1));
+                current = &id.loan_list.back().get();
+            }
+            else {
+                throw dds::core::Error("Invalid field name: " + token);
+            }
+        }
+        else {
+            id.loan_list.push_back(current->loan_value(token));
+            current = &id.loan_list.back().get();
+        }
+    }
+
+    size_t pos = key_field.find('[');
+    if (pos != std::string::npos) {
+        int index;
+        if (sscanf(key_field.c_str() + pos, "[%d]", &index) > 0) {
+            id.loan_list.push_back(current->loan_value(key_field.substr(0, pos)));
+            current = &id.loan_list.back().get();
+            id.index_type = DynamicDataNestedIndex::INT;
+            id.int_index = index + 1;
+        }
+        else {
+            throw dds::core::Error("Invalid field name: " + key_field);
+        }
+    }
+    else {
+        id.index_type = DynamicDataNestedIndex::STRING;
+        id.string_index = key_field;
+    }
+    
+    return *current;
 }
 
 static int calculate_multidimensional_offset(DynamicType& type, py::tuple& index) {
@@ -70,6 +149,7 @@ std::vector<DynamicData> get_complex_values(DynamicData& data, const T& key) {
     }
 }
 
+/*
 template<typename T>
 void set_complex_values(DynamicData& data, const T& key, std::vector<DynamicData>& values) {
     auto info = data.member_info(key);
@@ -86,11 +166,12 @@ void set_complex_values(DynamicData& data, const T& key, std::vector<DynamicData
         throw py::key_error("member is not a collection of non-primitive values.");
     }
 }
+*/
 
 
 template <typename T>
 static
-void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object value);
+void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object& value);
 
 
 template<typename T>
@@ -103,7 +184,8 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values) {
         int i = 1;
         auto elem_kind = info.element_kind().underlying();
         for (auto handle : values) {
-            set_member(member, elem_kind, i, py::cast<py::object>(handle));
+            auto obj = py::cast<py::object>(handle);
+            set_member(member, elem_kind, i, obj);
             i++;
         }
     }
@@ -116,7 +198,7 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values) {
 template<typename T>
 static
 py::object get_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key) {
-    kind = resolve_type_kind(dd, kind, key);
+    kind = resolve_member_type_kind(dd, kind, key);
     switch (kind) {
         case TypeKind::BOOLEAN_TYPE: {
             std::vector<bool> retval;
@@ -176,7 +258,8 @@ py::object get_collection_member(DynamicData& dd, TypeKind::inner_enum kind, con
         }
         case TypeKind::WSTRING_TYPE: {
             std::vector<std::wstring> retval;
-            DynamicData& member = dd.loan_value(key).get();
+            auto loan = dd.loan_value(key);
+            DynamicData& member = loan.get();
             for (int i = 1; i <= member.member_count(); ++i) {
                 std::wstring val;
                 auto dd_wstr = member.get_values<DDS_Wchar>(i);
@@ -197,7 +280,7 @@ py::object get_collection_member(DynamicData& dd, TypeKind::inner_enum kind, con
 template<typename T>
 static
 py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key) {
-    kind = resolve_type_kind(dd, kind, key);
+    kind = resolve_member_type_kind(dd, kind, key);
     switch (kind) {
         case TypeKind::BOOLEAN_TYPE:
             return py::cast(dd.value<bool>(key));
@@ -247,7 +330,7 @@ py::object get_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key) 
 template<typename T>
 static
 void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object& values) {
-    kind = resolve_type_kind(dd, kind, key);
+    kind = resolve_member_type_kind(dd, kind, key);
     switch (kind) {
         case TypeKind::BOOLEAN_TYPE: {
             auto v = py::cast<std::vector<bool>>(values);
@@ -312,7 +395,8 @@ void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& 
 #endif
         case TypeKind::STRING_TYPE: {
             auto v = py::cast<std::vector<std::string>>(values);
-            DynamicData& member = dd.loan_value(key);
+            auto loan = dd.loan_value(key);
+            DynamicData& member = loan.get();
             for (int i = 0; i < v.size(); ++i) {
                 member.value<std::string>(i+1, v[i]);
             }
@@ -320,7 +404,8 @@ void set_collection_member(DynamicData& dd, TypeKind::inner_enum kind, const T& 
         }
         case TypeKind::WSTRING_TYPE: {
             auto v = py::cast<std::vector<std::wstring>>(values);
-            DynamicData& member = dd.loan_value(key).get();
+            auto loan = dd.loan_value(key);
+            DynamicData& member = loan.get();
             for (int i = 0; i < v.size(); ++i) {
                 std::vector<DDS_Wchar> str;
                 for (auto c : v[i]) {
@@ -359,13 +444,13 @@ void update_dynamicdata_object(DynamicData& dd, py::dict& dict);
 
 template<typename T>
 static
-void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object value) {
+void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::object& value) {
     if (value.is_none()){
         dd.clear_optional_member(key);
         return;
     }
 
-    kind = resolve_type_kind(dd, kind, key);
+    kind = resolve_member_type_kind(dd, kind, key);
 
     switch (kind) {
         case TypeKind::BOOLEAN_TYPE:
@@ -426,7 +511,7 @@ void set_member(DynamicData& dd, TypeKind::inner_enum kind, const T& key, py::ob
         case TypeKind::ARRAY_TYPE:
         case TypeKind::SEQUENCE_TYPE: {
             try {
-                rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
+                auto loan = dd.loan_value(key);
                 DynamicData& member = loan.get();
                 auto elem_kind = static_cast<const CollectionType&>(member.type()).content_type().kind().underlying();
                 loan.return_loan();
@@ -510,7 +595,8 @@ void update_dynamicdata_object(DynamicData& dd, py::dict& dict) {
     for (auto kv : dict) {
         std::string key = py::cast<std::string>(kv.first);
         auto mi = dd.member_info(key);
-        set_member(dd, mi.member_kind().underlying(), key, py::cast<py::object>(kv.second));
+        auto obj = py::cast<py::object>(kv.second);
+        set_member(dd, mi.member_kind().underlying(), key, obj);
     }
 }
 
@@ -519,9 +605,6 @@ template <typename T>
 static
 py::object get_value(DynamicData& dd, const T& key) {
     auto mi = dd.member_info(key);
-    if (!dd.member_exists(mi.member_index())) {
-        throw dds::core::InvalidArgumentError("DynamicData get_value: member does not exist");
-    }
     return get_member(dd, mi.member_kind().underlying(), key);
 }
 
@@ -533,7 +616,7 @@ py::object get_values(DynamicData& dd, const T& key) {
         throw dds::core::InvalidArgumentError("DynamicData get_value: member does not exist");
     }
     auto mi = dd.member_info(key);
-    auto kind = resolve_type_kind(dd, mi.member_kind().underlying(), mi.member_index());
+    auto kind = resolve_member_type_kind(dd, mi.member_kind().underlying(), mi.member_index());
     if (kind != TypeKind::ARRAY_TYPE && kind != TypeKind::SEQUENCE_TYPE) {
         throw py::type_error("Cannot get collection from non-collection member.");
     }
@@ -543,7 +626,7 @@ py::object get_values(DynamicData& dd, const T& key) {
 
 template <typename T>
 static
-void set_value(DynamicData& dd, const T& key, py::object value) {
+void set_value(DynamicData& dd, const T& key, py::object& value) {
     TypeKind::type field_type;
     if (dd.member_exists(key)) {
         field_type = dd.member_info(key).member_kind().underlying();
@@ -565,15 +648,15 @@ void set_value(DynamicData& dd, const T& key, py::object value) {
 
 template <typename T>
 static
-void set_values(DynamicData& dd, const std::string& key, py::object values) {
+void set_values(DynamicData& dd, const T& key, py::object& values) {
     TypeKind::type field_type;
-    if (dd.member_exists_in_type(key)) {
-        field_type = resolve_type_kind(dd, dd.member_info(key).member_kind().underlying(), key);
+    if (dd.member_exists(key)) {
+        field_type = resolve_member_type_kind(dd, dd.member_info(key).member_kind().underlying(), key);
     }
     else {
         rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
         DynamicData& member = loan.get();
-        field_type = resolve_type_kind(dd, member.type().kind().underlying(), key);
+        field_type = resolve_member_type_kind(dd, member.type().kind().underlying(), key);
     }
     if (field_type != TypeKind::ARRAY_TYPE && field_type != TypeKind::SEQUENCE_TYPE) {
         throw py::type_error("Cannot set multiple values to non-collection member.");
@@ -1239,7 +1322,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         )
         .def(
             "set_complex_values",
-            [](DynamicData& data, const std::string& name, std::vector<DynamicData>& values) {
+            [](DynamicData& data, const std::string& name, py::iterable& values) {
                 set_complex_values(data, name, values);
             },
             py::arg("name"),
@@ -1248,7 +1331,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         )
         .def(
             "set_complex_values",
-            [](DynamicData& data, uint32_t index, std::vector<DynamicData>& values) {
+            [](DynamicData& data, uint32_t index, py::iterable& values) {
                 if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
                     index += 1;
                 }
@@ -1260,13 +1343,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         )
         .def(
             "loan_value",
-            (rti::core::xtypes::LoanedDynamicData (DynamicData::*)(const std::string&)) &DynamicData::loan_value,
-            py::arg("name"),
-            py::keep_alive<0, 1>(),
-            "Gets a view of a complex member."
-        )
-        .def(
-            "loan_value",
             [](DynamicData& data, uint32_t index) {
                 if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
                     index += 1;
@@ -1274,14 +1350,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                 return data.loan_value(index);
             },
             py::arg("index"),
-            py::keep_alive<0, 1>(),
-            "Gets a view of a complex member."
-        )
-        .def(
-            "loan_value",
-            (rti::core::xtypes::LoanedDynamicData& (DynamicData::*)(rti::core::xtypes::LoanedDynamicData&, const std::string&)) &DynamicData::loan_value,
-            py::arg("data"),
-            py::arg("name"),
             py::keep_alive<0, 1>(),
             "Gets a view of a complex member."
         )
@@ -1422,12 +1490,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "Returns info about a member."
         )
         .def(
-            "member_index",
-            &DynamicData::member_index,
-            py::arg("name"),
-            "Translates from member name to member index."
-        )
-        .def(
             "is_member_key",
             (bool (DynamicData::*)(const std::string&) const) &DynamicData::is_member_key,
             py::arg("name"),
@@ -1509,13 +1571,14 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                     throw py::type_error("Cannot extend non sequence type.");
                 }
                 auto collection_type = static_cast<const CollectionType&>(type);
-                auto elem_kind = collection_type.content_type().kind().underlying();
+                auto elem_kind = collection_type.content_type().kind().underlying(); 
                 for (auto value : values) {
+                    auto obj = py::cast<py::object>(value);
                     set_member(
                         dd, 
                         elem_kind,
                         dd.member_count() + 1,
-                        py::cast<py::object>(value));
+                        obj);
                 }
             },
             py::arg("values"),
@@ -1536,6 +1599,13 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                 return count;
             }    
         )
+        .def(
+            "update",
+            [](DynamicData& dd, py::dict& dict) {
+                update_dynamicdata_object(dd, dict);
+            }
+        )
+#if rti_connext_version_gte(6, 0, 0)
         .def(
             "get_value",
             &get_value<std::string>,
@@ -1563,10 +1633,30 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "Automatically resolve type and set collection for a field."
         )
         .def(
-            "update",
-            [](DynamicData& dd, py::dict& dict) {
-                update_dynamicdata_object(dd, dict);
-            }
+            "loan_value",
+            (rti::core::xtypes::LoanedDynamicData (DynamicData::*)(const std::string&)) &DynamicData::loan_value,
+            py::arg("name"),
+            py::keep_alive<0, 1>(),
+            "Gets a view of a complex member."
+        )
+        .def(
+            "loan_value",
+            (rti::core::xtypes::LoanedDynamicData& (DynamicData::*)(rti::core::xtypes::LoanedDynamicData&, const std::string&)) &DynamicData::loan_value,
+            py::arg("data"),
+            py::arg("name"),
+            py::keep_alive<0, 1>(),
+            "Gets a view of a complex member."
+        )
+        .def(
+            "member_index",
+            [](const DynamicData& data, const std::string& key) {
+                if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                    return data.member_index(key) - 1;
+                }
+                else return data.member_index(key);
+            },
+            py::arg("name"),
+            "Translates from member name to member index."
         )
         .def(
             "__getitem__",
@@ -1576,11 +1666,184 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
             "__setitem__",
             &set_value<std::string>
         )
+#else
+        .def(
+            "get_value",
+            [](DynamicData& dd, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return get_value(parent, id.int_index);
+                else return get_value(parent, id.string_index);
+            },
+            py::arg("field_path"),
+            "Automatically resolve type and return value for a field."
+        )
+        .def(
+            "get_values",
+            [](DynamicData& dd, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return get_values(parent, id.int_index);
+                else return get_values(parent, id.string_index);
+            },
+            py::arg("field_path"),
+            "Automatically resolve type and return collection for a field."
+        )
+        .def(
+            "set_value",
+            [](DynamicData& dd, std::string& key, py::object& value) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) set_value(parent, id.int_index, value);
+                else set_value(parent, id.string_index, value);
+            },
+            py::arg("field_path"),
+            py::arg("value"),
+            "Automatically resolve type and set value for a field."
+        )
+        .def(
+            "set_values",
+            [](DynamicData& dd, std::string& key, py::object& values) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) set_values(parent, id.int_index, values);
+                else set_values(parent, id.string_index, values);
+            },
+            py::arg("field_path"),
+            py::arg("values"),
+            "Automatically resolve type and set collection for a field."
+        )
+        .def(
+            "member_exists",
+            [](DynamicData& dd, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return parent.member_exists(id.int_index);
+                else return parent.member_exists(id.string_index);
+            },
+            py::arg("name"),
+            "Determine if an optional member is set by member name."
+        )
+        .def(
+            "member_exists_in_type",
+            [](DynamicData& dd, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return parent.member_exists_in_type(id.int_index);
+                else return parent.member_exists_in_type(id.string_index);
+            },
+            py::arg("name"),
+            "Determine if an optional member is set by member name."
+        )
+        .def(
+            "loan_value",
+            [](DynamicData& dd, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return parent.loan_value(id.int_index);
+                else return parent.loan_value(id.string_index);
+            },
+            py::arg("name"),
+            py::keep_alive<0, 1>(),
+            "Gets a view of a complex member."
+        )
+        .def(
+            "loan_value",
+            [](DynamicData& dd, rti::core::xtypes::LoanedDynamicData& data, std::string& key) -> rti::core::xtypes::LoanedDynamicData& {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return parent.loan_value(data, id.int_index);
+                else return parent.loan_value(data, id.string_index);
+            },
+            py::arg("data"),
+            py::arg("name"),
+            py::keep_alive<0, 1>(),
+            "Gets a view of a complex member."
+        )
+        .def(
+            "member_index",
+            [](DynamicData& data, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(data, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) {
+                    return static_cast<unsigned int>(id.int_index - 1);
+                }
+                else {
+                    auto kind = resolve_type_kind(data);
+                    if (kind != TypeKind::UNION_TYPE) {
+                        return data.member_index(key) - 1;
+                    }
+                    else return data.member_index(key);
+                }
+            },
+            py::arg("name"),
+            "Translates from member name to member index."
+        )
+        .def(
+            "__getitem__",
+            [](DynamicData& dd, std::string& key) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) return get_value(parent, id.int_index);
+                else return get_value(parent, id.string_index);
+            }
+        )
+        .def(
+            "__setitem__",
+            [](DynamicData& dd, std::string& key, py::object& value) {
+                DynamicDataNestedIndex id;
+                DynamicData& parent = resolve_nested_member(dd, key, id);
+                if (id.index_type == DynamicDataNestedIndex::INT) set_value(parent, id.int_index, value);
+                else set_value(parent, id.string_index, value);
+            }
+        )
+#endif
+        .def(
+            "get_value",
+            [](DynamicData& dd, size_t index) {
+                auto kind = resolve_type_kind(dd);
+                if (kind != TypeKind::UNION_TYPE) index += 1;
+                return get_value(dd, index);
+            },
+            py::arg("field_path"),
+            "Automatically resolve type and return value for a field."
+        )
+        .def(
+            "get_values",
+            [](DynamicData& dd, size_t index) {
+                auto kind = resolve_type_kind(dd);
+                if (kind != TypeKind::UNION_TYPE) index += 1;
+                return get_values(dd, index);
+            },
+            py::arg("field_path"),
+            "Automatically resolve type and return collection for a field."
+        )
+        .def(
+            "set_value",
+            [](DynamicData& dd, size_t index, py::object& value) {
+                auto kind = resolve_type_kind(dd);
+                if (kind != TypeKind::UNION_TYPE) index += 1;
+                else set_value(dd, index, value);
+            },
+            py::arg("field_path"),
+            py::arg("value"),
+            "Automatically resolve type and set value for a field."
+        )
+        .def(
+            "set_values",
+            [](DynamicData& dd, size_t index, py::object& values) {
+                auto kind = resolve_type_kind(dd);
+                if (kind != TypeKind::UNION_TYPE) index += 1;
+                else set_values(dd, index, values);
+            },
+            py::arg("field_path"),
+            py::arg("values"),
+            "Automatically resolve type and set collection for a field."
+        )
         .def(
             "__getitem__",
             [](DynamicData& dd, size_t index) -> py::object {
-                auto type = dd.type();
-                auto kind = resolve_type_kind(dd, type.kind().underlying(), index); 
+                auto kind = resolve_type_kind(dd);
                 if (kind != TypeKind::UNION_TYPE) {
                     index += 1; // Python index starts at 0 by language convention
                 }
@@ -1591,7 +1854,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                     }
                     case TypeKind::ARRAY_TYPE:
                     case TypeKind::SEQUENCE_TYPE: {
-                        auto collection_type = static_cast<const CollectionType&>(type);
+                        auto collection_type = static_cast<const CollectionType&>(dd.type());
                         return get_member(dd, collection_type.content_type().kind().underlying(), index);
                     }
                     default:
@@ -1602,11 +1865,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
         .def(
             "__setitem__",
             [](DynamicData& dd, size_t index, py::object& value) {
-                if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                auto kind = resolve_type_kind(dd);
+                if (kind != TypeKind::UNION_TYPE) {
                     index += 1; // Python index starts at 0 by language convention
                 }
-                auto type = dd.type();
-                auto kind = type.kind().underlying();
                 switch (kind) {
                     case TypeKind::STRUCTURE_TYPE:
                     case TypeKind::UNION_TYPE: {
@@ -1615,7 +1877,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                     }
                     case TypeKind::ARRAY_TYPE:
                     case TypeKind::SEQUENCE_TYPE: {
-                        auto collection_type = static_cast<const CollectionType&>(type);
+                        auto collection_type = static_cast<const CollectionType&>(dd.type());
                         set_member(dd, collection_type.content_type().kind().underlying(), index, value);
                         break;
                     }
@@ -1690,7 +1952,8 @@ void init_class_defs(py::class_<DynamicData>& dd_class) {
                 auto elem_kind = collection_type.content_type().kind().underlying();
 
                 for (auto value : values) {
-                    set_member(dd, elem_kind, start + 1, py::cast<py::object>(value));
+                    auto obj = py::cast<py::object>(value);
+                    set_member(dd, elem_kind, start + 1, obj);
                     start += step;
                 }
             } 

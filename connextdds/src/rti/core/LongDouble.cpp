@@ -2,6 +2,7 @@
 #include <sstream>
 #include <rti/core/LongDouble.hpp>
 #include <pybind11/stl_bind.h>
+#include "PyBindVector.hpp"
 
 using namespace rti::core;
 
@@ -75,7 +76,7 @@ void process_inits<LongDouble>(py::module& m, ClassInitList& l) {
     l.push_back(
         [m]() mutable {
             auto func = init_class<LongDouble>(m, "LongDouble");
-            py::bind_vector<std::vector<rti::core::LongDouble>>(m, "Float128Seq");
+            pyrti::bind_vector<rti::core::LongDouble>(m, "Float128Seq");
             py::implicitly_convertible<py::iterable, std::vector<rti::core::LongDouble>>();
             return func;
         }

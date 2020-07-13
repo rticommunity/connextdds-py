@@ -21,6 +21,7 @@
 #include "PyContentFilter.hpp"
 #include "PyWriterContentFilter.hpp"
 #include "PyWriterContentFilterHelper.hpp"
+#include "PyBindVector.hpp"
 
 #if rti_connext_version_gte(6, 0, 0)
 #include "PyValidLoanedSamples.hpp"
@@ -31,7 +32,7 @@ namespace pyrti {
 template<typename T, typename... Bases>
 DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::string& cls_name) {
     py::class_<T, Bases...> cls(parent, cls_name.c_str());
-    py::bind_vector<std::vector<T>>(parent, (cls_name + "Seq").c_str());
+    pyrti::bind_vector<T>(parent, (cls_name + "Seq").c_str());
     py::implicitly_convertible<py::iterable, std::vector<T>>();
 
     l.push_back(
@@ -78,7 +79,7 @@ DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::str
             py::class_<PyITopicDescription<T>, PyIEntity> itd(cls, "ITopicDescription");
             py::class_<PyTopicDescription<T>, PyITopicDescription<T>> td(cls, "TopicDescription");
             py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic> t(cls, "Topic");
-            py::bind_vector<std::vector<PyTopic<T>>>(cls, "TopicSeq");
+            pyrti::bind_vector<PyTopic<T>>(cls, "TopicSeq");
             py::implicitly_convertible<py::iterable, std::vector<PyTopic<T>>>();
 
             return (
@@ -92,12 +93,12 @@ DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::str
     l.push_back(
         [cls] {
             py::class_<dds::topic::TopicInstance<T>> ti(cls, "TopicInstance");
-            py::bind_vector<std::vector<dds::topic::TopicInstance<T>>>(cls, "TopicInstanceSeq");
+            pyrti::bind_vector<dds::topic::TopicInstance<T>>(cls, "TopicInstanceSeq");
             py::implicitly_convertible<py::iterable, std::vector<dds::topic::TopicInstance<T>>>();
 
             return (
                 [ti, cls]() mutable {
-                    py::bind_vector<std::vector<std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>>(cls, "TopicInstanceTimestampedSeq");
+                    pyrti::bind_vector<std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>(cls, "TopicInstanceTimestampedSeq");
                     py::implicitly_convertible<py::iterable, std::vector<std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>>();
                     init_topic_instance<T>(ti);
                 }
@@ -170,7 +171,7 @@ DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::str
     l.push_back(
         [cls] {
             py::class_<PyContentFilteredTopic<T>, PyITopicDescription<T>, PyIAnyTopic> cft(cls, "ContentFilteredTopic");
-            py::bind_vector<std::vector<PyContentFilteredTopic<T>>>(cls, "ContentFilteredTopicSeq");
+            pyrti::bind_vector<PyContentFilteredTopic<T>>(cls, "ContentFilteredTopicSeq");
             py::implicitly_convertible<py::iterable, std::vector<PyContentFilteredTopic<T>>>();
 
             return (
@@ -220,7 +221,7 @@ DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::str
     l.push_back(
         [cls] {
             py::class_<PyDataReader<T>, PyIDataReader> dr(cls, "DataReader");
-            py::bind_vector<std::vector<PyDataReader<T>>>(cls, "DataReaderSeq");
+            pyrti::bind_vector<PyDataReader<T>>(cls, "DataReaderSeq");
             py::implicitly_convertible<py::iterable, std::vector<PyDataReader<T>>>();
 
             return (
@@ -234,7 +235,7 @@ DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::str
     l.push_back(
         [cls] {
             py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter> dw(cls, "DataWriter");
-            py::bind_vector<std::vector<PyDataWriter<T>>>(cls, "DataWriterSeq");
+            pyrti::bind_vector<PyDataWriter<T>>(cls, "DataWriterSeq");
             py::implicitly_convertible<py::iterable, std::vector<PyDataWriter<T>>>();
 
             return (
@@ -247,7 +248,7 @@ DefInitFunc init_type_class(py::object& parent, ClassInitList& l, const std::str
 
     return (
         [cls, cls_name, parent]() mutable {
-            py::bind_vector<std::vector<std::pair<T, dds::core::Time>>>(parent, (cls_name + "TimestampedSeq").c_str());
+            pyrti::bind_vector<std::pair<T, dds::core::Time>>(parent, (cls_name + "TimestampedSeq").c_str());
             py::implicitly_convertible<py::iterable, std::vector<std::pair<T, dds::core::Time>>>();
             init_class_defs<T>(cls);
         }

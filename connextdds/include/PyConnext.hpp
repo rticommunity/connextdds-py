@@ -99,6 +99,7 @@ void add_conversion(py_to_class&& cls, const std::string& doc = "Convert to less
     py::implicitly_convertible<from_class, to_class>();
 }
 
+
 template<typename T>
 bool has_value(const T& opt) {
 #if rti_connext_version_gte(6, 0, 1)
