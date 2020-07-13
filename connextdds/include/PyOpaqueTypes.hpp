@@ -1,14 +1,14 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-#include "PyEntity.hpp"
-#include "PyCondition.hpp"
-#include <dds/core/xtypes/MemberType.hpp>
-#include <dds/core/xtypes/DynamicData.hpp>
-#include <dds/core/InstanceHandle.hpp>
 #include "PyAnyDataReader.hpp"
 #include "PyAnyDataWriter.hpp"
 #include "PyAnyTopic.hpp"
+#include "PyCondition.hpp"
+#include "PyEntity.hpp"
+#include <dds/core/InstanceHandle.hpp>
+#include <dds/core/xtypes/DynamicData.hpp>
+#include <dds/core/xtypes/MemberType.hpp>
+#include <pybind11/pybind11.h>
 #include <rti/core/EndpointGroup.hpp>
 #include <rti/core/Locator.hpp>
 #include <rti/core/policy/CorePolicy.hpp>

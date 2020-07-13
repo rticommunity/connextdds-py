@@ -5,20 +5,18 @@
 
 namespace pyrti {
 
-class PYRTI_SYMBOL_HIDDEN PyAsyncioExecutor  {
+class PYRTI_SYMBOL_HIDDEN PyAsyncioExecutor {
 public:
     template<typename T>
-    static py::object run(std::function<T()> func) {
+    static py::object run(std::function<T()> func)
+    {
         auto instance = PyAsyncioExecutor::get_instance();
         py::object loop = instance.get_running_loop();
         py::object run_in_executor = loop.attr("run_in_executor");
-        return run_in_executor(
-            nullptr,
-            std::function<T()>([func]() {
-                py::gil_scoped_release release;
-                return func();
-            })
-        );
+        return run_in_executor(nullptr, std::function<T()>([func]() {
+                                   py::gil_scoped_release release;
+                                   return func();
+                               }));
     }
 
 private:
@@ -30,4 +28,4 @@ private:
     static PyAsyncioExecutor& get_instance();
 };
 
-}
+}  // namespace pyrti

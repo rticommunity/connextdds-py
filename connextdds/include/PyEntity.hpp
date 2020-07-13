@@ -14,119 +14,170 @@ class PySubscriberListener;
 
 class PyIEntity {
 public:
-    virtual
-    dds::core::Entity get_entity() = 0;
+    virtual dds::core::Entity get_entity() = 0;
 
-    virtual
-    void py_enable() = 0;
+    virtual void py_enable() = 0;
 
-    virtual 
-    const dds::core::status::StatusMask py_status_changes() = 0;
+    virtual const dds::core::status::StatusMask py_status_changes() = 0;
 
-    virtual
-    const dds::core::InstanceHandle py_instance_handle() const = 0;
+    virtual const dds::core::InstanceHandle py_instance_handle() const = 0;
 
-    virtual
-    void py_close() = 0;
+    virtual void py_close() = 0;
 
-    virtual
-    void py_retain() = 0;
+    virtual void py_retain() = 0;
 
-    virtual
-    bool py_closed() = 0;
+    virtual bool py_closed() = 0;
 
-    virtual
-    bool py_enabled() = 0;
+    virtual bool py_enabled() = 0;
 
-    virtual
-    int py_use_count() = 0;
+    virtual int py_use_count() = 0;
 
-    virtual
-    void py_unretain() = 0;
+    virtual void py_unretain() = 0;
 
-    virtual
-    ~PyIEntity() {}
+    virtual ~PyIEntity()
+    {
+    }
 };
 
 class PyEntity : public dds::core::Entity, public PyIEntity {
 public:
     using dds::core::Entity::Entity;
 
-    PyEntity(const dds::core::Entity& e) : dds::core::Entity(e) {}
+    PyEntity(const dds::core::Entity& e) : dds::core::Entity(e)
+    {
+    }
 
-    dds::core::Entity get_entity() override {
+    dds::core::Entity get_entity() override
+    {
         return dds::core::Entity(*this);
     }
 
-    void py_enable() override { this->enable(); };
+    void py_enable() override
+    {
+        this->enable();
+    };
 
-    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    const dds::core::status::StatusMask py_status_changes() override
+    {
+        return this->status_changes();
+    }
 
-    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    const dds::core::InstanceHandle py_instance_handle() const override
+    {
+        return this->instance_handle();
+    }
 
-    void py_close() override { this->close(); }
+    void py_close() override
+    {
+        this->close();
+    }
 
-    void py_retain() override { this->retain(); }
+    void py_retain() override
+    {
+        this->retain();
+    }
 
-    bool py_closed() override { return this->delegate()->closed(); }
+    bool py_closed() override
+    {
+        return this->delegate()->closed();
+    }
 
-    bool py_enabled() override { return this->delegate()->enabled(); }
+    bool py_enabled() override
+    {
+        return this->delegate()->enabled();
+    }
 
-    int py_use_count() override { return this->delegate().use_count(); }
+    int py_use_count() override
+    {
+        return this->delegate().use_count();
+    }
 
-    void py_unretain() override { this->delegate()->unretain(); }
+    void py_unretain() override
+    {
+        this->delegate()->unretain();
+    }
 
-    virtual
-    ~PyEntity() {}
+    virtual ~PyEntity()
+    {
+    }
 };
 
-class PYRTI_SYMBOL_PUBLIC PyDomainParticipant : public dds::domain::DomainParticipant, public PyIEntity {
+class PYRTI_SYMBOL_PUBLIC PyDomainParticipant
+        : public dds::domain::DomainParticipant,
+          public PyIEntity {
 public:
     using dds::domain::DomainParticipant::DomainParticipant;
 
-    PyDomainParticipant& operator=(const dds::domain::DomainParticipant& dp) {
+    PyDomainParticipant& operator=(const dds::domain::DomainParticipant& dp)
+    {
         dds::domain::DomainParticipant::operator=(dp);
         return *this;
     }
 
     PyDomainParticipant(
-        int32_t d,
-        const dds::domain::qos::DomainParticipantQos& q,
-        PyDomainParticipantListener* l,
-        const dds::core::status::StatusMask& m);
+            int32_t d,
+            const dds::domain::qos::DomainParticipantQos& q,
+            PyDomainParticipantListener* l,
+            const dds::core::status::StatusMask& m);
 
-    dds::core::Entity get_entity() override {
+    dds::core::Entity get_entity() override
+    {
         return dds::core::Entity(*this);
     }
 
-    void py_enable() override { this->enable(); };
+    void py_enable() override
+    {
+        this->enable();
+    };
 
-    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    const dds::core::status::StatusMask py_status_changes() override
+    {
+        return this->status_changes();
+    }
 
-    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    const dds::core::InstanceHandle py_instance_handle() const override
+    {
+        return this->instance_handle();
+    }
 
     void py_close() override;
 
-    void py_retain() override { this->retain(); }
+    void py_retain() override
+    {
+        this->retain();
+    }
 
-    bool py_closed() override { return this->delegate()->closed(); }
+    bool py_closed() override
+    {
+        return this->delegate()->closed();
+    }
 
-    bool py_enabled() override { return this->delegate()->enabled(); }
+    bool py_enabled() override
+    {
+        return this->delegate()->enabled();
+    }
 
-    int py_use_count() override { return this->delegate().use_count(); }
+    int py_use_count() override
+    {
+        return this->delegate().use_count();
+    }
 
-    void py_unretain() override { this->delegate()->unretain(); }
+    void py_unretain() override
+    {
+        this->delegate()->unretain();
+    }
 
-    void py_add_prop(pybind11::object o) PYRTI_SYMBOL_HIDDEN {
+    void py_add_prop(pybind11::object o) PYRTI_SYMBOL_HIDDEN
+    {
         this->_properties.insert(o);
     }
 
-    virtual
-    ~PyDomainParticipant();
+    virtual ~PyDomainParticipant();
 
 private:
     struct PYRTI_SYMBOL_HIDDEN PropertyHasher {
-        size_t operator()(const pybind11::object& o) const {
+        size_t operator()(const pybind11::object& o) const
+        {
             return reinterpret_cast<std::uintptr_t>(o.ptr());
         }
     };
@@ -138,76 +189,128 @@ class PyPublisher : public dds::pub::Publisher, public PyIEntity {
 public:
     using dds::pub::Publisher::Publisher;
 
-    PyPublisher(const dds::pub::Publisher& pub) : dds::pub::Publisher(pub) {}
+    PyPublisher(const dds::pub::Publisher& pub) : dds::pub::Publisher(pub)
+    {
+    }
 
     PyPublisher(
-        const PyDomainParticipant& p,
-        const dds::pub::qos::PublisherQos& q,
-        PyPublisherListener* l,
-        const dds::core::status::StatusMask& m);
+            const PyDomainParticipant& p,
+            const dds::pub::qos::PublisherQos& q,
+            PyPublisherListener* l,
+            const dds::core::status::StatusMask& m);
 
-    dds::core::Entity get_entity() override {
+    dds::core::Entity get_entity() override
+    {
         return dds::core::Entity(*this);
     }
 
-    void py_enable() override { this->enable(); };
+    void py_enable() override
+    {
+        this->enable();
+    };
 
-    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    const dds::core::status::StatusMask py_status_changes() override
+    {
+        return this->status_changes();
+    }
 
-    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    const dds::core::InstanceHandle py_instance_handle() const override
+    {
+        return this->instance_handle();
+    }
 
     void py_close() override;
 
-    void py_retain() override { this->retain(); }
+    void py_retain() override
+    {
+        this->retain();
+    }
 
-    bool py_closed() override { return this->delegate()->closed(); }
+    bool py_closed() override
+    {
+        return this->delegate()->closed();
+    }
 
-    bool py_enabled() override { return this->delegate()->enabled(); }
+    bool py_enabled() override
+    {
+        return this->delegate()->enabled();
+    }
 
-    int py_use_count() override { return this->delegate().use_count(); }
+    int py_use_count() override
+    {
+        return this->delegate().use_count();
+    }
 
-    void py_unretain() override { this->delegate()->unretain(); }
+    void py_unretain() override
+    {
+        this->delegate()->unretain();
+    }
 
-    virtual
-    ~PyPublisher();
+    virtual ~PyPublisher();
 };
 
 class PySubscriber : public dds::sub::Subscriber, public PyIEntity {
 public:
     using dds::sub::Subscriber::Subscriber;
 
-    PySubscriber(const dds::sub::Subscriber& sub) : dds::sub::Subscriber(sub) {}
+    PySubscriber(const dds::sub::Subscriber& sub) : dds::sub::Subscriber(sub)
+    {
+    }
 
     PySubscriber(
-        const PyDomainParticipant& p,
-        const dds::sub::qos::SubscriberQos& q,
-        PySubscriberListener* l,
-        const dds::core::status::StatusMask& m);
+            const PyDomainParticipant& p,
+            const dds::sub::qos::SubscriberQos& q,
+            PySubscriberListener* l,
+            const dds::core::status::StatusMask& m);
 
-    dds::core::Entity get_entity() override {
+    dds::core::Entity get_entity() override
+    {
         return dds::core::Entity(*this);
     }
 
-    void py_enable() override { this->enable(); };
+    void py_enable() override
+    {
+        this->enable();
+    };
 
-    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+    const dds::core::status::StatusMask py_status_changes() override
+    {
+        return this->status_changes();
+    }
 
-    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
+    const dds::core::InstanceHandle py_instance_handle() const override
+    {
+        return this->instance_handle();
+    }
 
     void py_close() override;
 
-    void py_retain() override { this->retain(); }
+    void py_retain() override
+    {
+        this->retain();
+    }
 
-    bool py_closed() override { return this->delegate()->closed(); }
+    bool py_closed() override
+    {
+        return this->delegate()->closed();
+    }
 
-    bool py_enabled() override { return this->delegate()->enabled(); }
+    bool py_enabled() override
+    {
+        return this->delegate()->enabled();
+    }
 
-    int py_use_count() override { return this->delegate().use_count(); }
+    int py_use_count() override
+    {
+        return this->delegate().use_count();
+    }
 
-    void py_unretain() override { this->delegate()->unretain(); }
+    void py_unretain() override
+    {
+        this->delegate()->unretain();
+    }
 
-    virtual
-    ~PySubscriber();
+    virtual ~PySubscriber();
 };
 
-}
+}  // namespace pyrti

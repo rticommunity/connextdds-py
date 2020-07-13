@@ -1,13 +1,14 @@
-#include "PyConnext.hpp"
-#include <pybind11/stl_bind.h>
-#include "PyEntity.hpp"
-#include "PyAnyTopic.hpp"
 #include "PyAnyDataReader.hpp"
 #include "PyAnyDataWriter.hpp"
-#include "PyCondition.hpp"
+#include "PyAnyTopic.hpp"
 #include "PyBindVector.hpp"
+#include "PyCondition.hpp"
+#include "PyConnext.hpp"
+#include "PyEntity.hpp"
+#include <pybind11/stl_bind.h>
 
-void init_dds_stl_bindings(py::module& m) {
+void init_dds_stl_bindings(py::module& m)
+{
     pyrti::bind_vector<bool>(m, "BoolSeq");
     pyrti::bind_buffer_vector<uint8_t>(m, "OctetSeq");
     pyrti::bind_buffer_vector<char>(m, "CharSeq");
@@ -50,6 +51,8 @@ void init_dds_stl_bindings(py::module& m) {
     py::implicitly_convertible<py::iterable, std::vector<wchar_t>>();
     py::implicitly_convertible<py::iterable, std::vector<std::string>>();
     py::implicitly_convertible<py::iterable, std::vector<std::wstring>>();
-    
-    py::implicitly_convertible<py::iterable, std::vector<std::pair<std::string, std::string>>>();
+
+    py::implicitly_convertible<
+            py::iterable,
+            std::vector<std::pair<std::string, std::string>>>();
 }
