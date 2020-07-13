@@ -3,8 +3,7 @@
 
 using namespace rti::core::status;
 
-void init_namespace_rti_core_status(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_rti_core_status(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<DataReaderCacheStatus>(m, l);
     pyrti::process_inits<DataReaderProtocolStatus>(m, l);
     pyrti::process_inits<DataWriterCacheStatus>(m, l);

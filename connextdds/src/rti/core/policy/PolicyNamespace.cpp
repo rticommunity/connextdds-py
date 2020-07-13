@@ -3,8 +3,7 @@
 
 using namespace rti::core::policy;
 
-void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<AcknowledgmentKind>(m, l);
     pyrti::process_inits<AsynchronousPublisher>(m, l);
     pyrti::process_inits<Availability>(m, l);

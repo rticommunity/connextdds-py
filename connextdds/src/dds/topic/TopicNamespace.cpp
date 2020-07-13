@@ -4,8 +4,7 @@
 
 using namespace dds::topic;
 
-void init_namespace_dds_topic(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_dds_topic(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<AnyTopic>(m, l);
     pyrti::process_inits<AnyTopicListener>(m, l);
     pyrti::process_inits<BuiltinTopicKey>(m, l);

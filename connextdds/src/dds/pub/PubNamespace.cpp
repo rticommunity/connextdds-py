@@ -5,8 +5,7 @@
 
 using namespace dds::pub;
 
-void init_namespace_dds_pub(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_dds_pub(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<AnyDataWriter>(m, l);
     pyrti::process_inits<AnyDataWriterListener>(m, l);
     pyrti::process_inits<CoherentSet>(m, l);

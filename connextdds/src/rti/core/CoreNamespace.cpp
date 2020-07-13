@@ -4,8 +4,7 @@
 
 using namespace rti::core;
 
-void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<pyrti::PyBuiltinProfiles>(m, l);
     pyrti::process_inits<AllocationSettings>(m, l);
     pyrti::process_inits<ChannelSettings>(m, l);
@@ -33,3 +32,4 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l)
     init_namespace_rti_core_status(m, l);
     init_namespace_rti_core_xtypes(m, l);
 }
+

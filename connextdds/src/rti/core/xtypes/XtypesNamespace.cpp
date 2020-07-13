@@ -4,8 +4,7 @@
 using namespace rti::core::xtypes;
 using namespace dds::core::xtypes;
 
-void init_namespace_rti_core_xtypes(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_rti_core_xtypes(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<AbstractConstructedType<EnumMember>>(m, l);
     pyrti::process_inits<AbstractConstructedType<Member>>(m, l);
     pyrti::process_inits<AbstractConstructedType<UnionMember>>(m, l);

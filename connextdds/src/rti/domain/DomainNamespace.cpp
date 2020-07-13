@@ -3,7 +3,6 @@
 
 using namespace rti::domain;
 
-void init_namespace_rti_domain(py::module& m, pyrti::ClassInitList& l)
-{
+void init_namespace_rti_domain(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<DomainParticipantConfigParams>(m, l);
 }
