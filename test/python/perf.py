@@ -4,6 +4,7 @@ import pathlib
 import argparse
 import sys
 import math
+import array
 
 FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../xml/PerfTest.xml"
 
@@ -31,7 +32,7 @@ def all_test(count):
     max_time_all = float("-inf")
 
     total_time_all = 0
-    full_lst = [25] * 600000
+    full_lst = array.array("B", [25]) * 600000
     # First test setter
     for i in range(0, count):
         start_all = time.time()
