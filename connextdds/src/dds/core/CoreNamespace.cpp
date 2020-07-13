@@ -4,7 +4,8 @@
 
 using namespace dds::core;
 
-void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l) {
+void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l)
+{
     pyrti::process_inits<InstanceHandle>(m, l);
     pyrti::process_inits<BytesTopicType>(m, l);
     pyrti::process_inits<KeyedBytesTopicType>(m, l);

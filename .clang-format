@@ -134,3 +134,5 @@ MaxEmptyLinesToKeep: 2
 Cpp11BracedListStyle: false
 
 BreakBeforeBinaryOperators: NonAssignment
+
+SortIncludes: false
