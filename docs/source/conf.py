@@ -17,8 +17,8 @@ sys.path.insert(0, os.path.abspath('../../build/lib.linux-x86_64-3.8/rti/'))
 # -- Project information -----------------------------------------------------
 
 project = 'connextdds-py'
-copyright = '2020, RTI'
-author = 'RTI'
+copyright = '2020, Real-Time Innovations, Inc'
+author = 'Real-Time Innovations, Inc.'
 
 
 # -- General configuration ---------------------------------------------------
@@ -49,3 +49,27 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+def setup(app):
+    app.add_css_file('theme_overrides.css')
+
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
+html_theme_options = {
+    "collapse_navigation" : False
+}
+
+# The name of an image file (relative to this directory) to place at the top
+# of the sidebar.
+#
+html_logo = "_static/rti-logo-FINALv2-White-OrangeDot.png"
+
+# The name of an image file (relative to this directory) to use as a favicon of
+# the docs.  This file should be a Windows icon file (.ico) being 16x16 or
+# 32x32 pixels large.
+#
+html_favicon = "_static/favicon.ico"
