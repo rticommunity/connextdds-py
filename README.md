@@ -35,6 +35,21 @@ $ export NJOBS=<number of concurrent make jobs, default 1>
 $ pip install .
 ```
 
+## Running the tests
+To run the tests, first install pytest using pip.
+
+```shell
+$ pytest test/
+```
+If you want to run the performance test, you can run
+```shell
+$ python3 test/python/perf.py
+```
+You can add a number after it to indicate how many times to run it.
+You can also add either the ```-ind``` flag or the ```-all``` flag
+to choose which test you want to run. If you omit the flags, both
+will be executed.
+
 ## Example
 
 ```python
