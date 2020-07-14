@@ -50,6 +50,17 @@ You can also add either the ```-ind``` flag or the ```-all``` flag
 to choose which test you want to run. If you omit the flags, both
 will be executed.
 
+## Building and viewing the documentation
+To build the documentation, run
+
+```shell
+$ cd docs
+$ make html
+```
+
+To view the documentation, open in your web browser the file located at
+`docs/build/html/index.html`
+
 ## Example
 
 ```python
