@@ -20,8 +20,10 @@ except NameError:
 
 
 # A Listenener class for DDS Participant data that also enforces "password" authentication
-class BuiltinParticipantListener(dds.ParticipantBuiltinTopicData.NoOpDataReaderListener):
-    def __init__(self, auth='password'):
+class BuiltinParticipantListener(
+    dds.ParticipantBuiltinTopicData.NoOpDataReaderListener
+):
+    def __init__(self, auth="password"):
         super(BuiltinParticipantListener, self).__init__()
         self.expected_password = auth
 
@@ -31,23 +33,25 @@ class BuiltinParticipantListener(dds.ParticipantBuiltinTopicData.NoOpDataReaderL
             for sample in filter(lambda s: s.info.valid, samples):
                 # Convert Participant user data to a string
                 user_data = sample.data.user_data.value
-                user_auth = ''.join((chr(c) for c in user_data))
+                user_auth = "".join((chr(c) for c in user_data))
                 key = sample.data.key
 
-                print('Built-in Reader: found participant')
+                print("Built-in Reader: found participant")
                 print("\tkey->'{:08X} {:08X} {:08X}'".format(*key.value[:3]))
                 print("\tuser_data->'{}'".format(user_auth))
-                print('\tinstance_handle: {}'.format(sample.info.instance_handle))
+                print("\tinstance_handle: {}".format(sample.info.instance_handle))
 
                 # Check if the password match.Otherwise, ignore the participant.
                 if user_auth != self.expected_password:
-                    print('Bad authorization, ignoring participant')
+                    print("Bad authorization, ignoring participant")
                     participant = reader.subscriber.participant
                     participant.ignore_participant(sample.info.instance_handle)
 
 
 # Create a Subscription listener, print discovered DataReader information
-class BuiltinSubscriptionListener(dds.SubscriptionBuiltinTopicData.NoOpDataReaderListener):
+class BuiltinSubscriptionListener(
+    dds.SubscriptionBuiltinTopicData.NoOpDataReaderListener
+):
     def __init__(self):
         super(BuiltinSubscriptionListener, self).__init__()
 
@@ -58,10 +62,14 @@ class BuiltinSubscriptionListener(dds.SubscriptionBuiltinTopicData.NoOpDataReade
                 participant_key = sample.data.participant_key
                 key = sample.data.key
 
-                print('Built-in Reader: found subscriber')
-                print("\tparticipant_key->'{:08X} {:08X} {:08X}'".format(*participant_key.value[0:3]))
+                print("Built-in Reader: found subscriber")
+                print(
+                    "\tparticipant_key->'{:08X} {:08X} {:08X}'".format(
+                        *participant_key.value[0:3]
+                    )
+                )
                 print("\tkey->'{:08X} {:08X} {:08X}'".format(*key.value[0:3]))
-                print('instance_handle: {}'.format(sample.info.instance_handle))
+                print("instance_handle: {}".format(sample.info.instance_handle))
 
 
 def publisher_main(domain_id, sample_count):
@@ -69,17 +77,17 @@ def publisher_main(domain_id, sample_count):
 
     # Participant properties give access to the builtin readers
     participant.participant_reader.bind_listener(
-        BuiltinParticipantListener(),
-        dds.StatusMask.data_available())
+        BuiltinParticipantListener(), dds.StatusMask.data_available()
+    )
 
     participant.subscription_reader.bind_listener(
-        BuiltinSubscriptionListener(),
-        dds.StatusMask.data_available())
+        BuiltinSubscriptionListener(), dds.StatusMask.data_available()
+    )
 
     participant.enable()
 
-    msg_type = dds.QosProvider('msg.xml').type('builtin_topics_lib', 'msg')
-    topic = dds.DynamicData.Topic(participant, 'Example msg', msg_type)
+    msg_type = dds.QosProvider("msg.xml").type("builtin_topics_lib", "msg")
+    topic = dds.DynamicData.Topic(participant, "Example msg", msg_type)
     writer = dds.DynamicData.DataWriter(dds.Publisher(participant), topic)
     instance = dds.DynamicData(msg_type)
 
@@ -87,27 +95,21 @@ def publisher_main(domain_id, sample_count):
     count = 0
     while (sample_count == 0) or (count < sample_count):
         time.sleep(1)
-        instance['x'] = count
+        instance["x"] = count
         writer.write(instance, dds.InstanceHandle())
         count += 1
 
 
-parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using Builtin Topics (Publisher)')
+parser = argparse.ArgumentParser(
+    description="RTI Connext DDS Example: Using Builtin Topics (Publisher)"
+)
+parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
 parser.add_argument(
-    '-d',
-    '--domain',
-    type=int,
-    default=0,
-    help='DDS Domain ID')
-parser.add_argument(
-    '-c',
-    '--count',
-    type=int,
-    default=0,
-    help='Number of samples to send')
+    "-c", "--count", type=int, default=0, help="Number of samples to send"
+)
 
 args = parser.parse_args()
-assert(0 <= args.domain < 233)
-assert(args.count >= 0)
+assert 0 <= args.domain < 233
+assert args.count >= 0
 
 publisher_main(args.domain, args.count)

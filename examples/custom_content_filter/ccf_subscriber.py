@@ -27,21 +27,20 @@ class CcfListener(dds.DynamicData.NoOpDataReaderListener):
 def subscriber_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    ccf_type = dds.QosProvider('ccf.xml').type('ccf_lib', 'Foo')
-    topic = dds.DynamicData.Topic(participant, 'Example ccf', ccf_type)
+    ccf_type = dds.QosProvider("ccf.xml").type("ccf_lib", "Foo")
+    topic = dds.DynamicData.Topic(participant, "Example ccf", ccf_type)
 
     # Register the custom filter with the Participant
-    participant.register_contentfilter(ccf.CustomFilterType(), 'CustomFilter')
+    participant.register_contentfilter(ccf.CustomFilterType(), "CustomFilter")
 
     # Set a filter expression and the filter name, then create the CFT
-    custom_filter = dds.Filter('%0 %1 x', ['2', 'divides'])
-    custom_filter.name = 'CustomFilter'
+    custom_filter = dds.Filter("%0 %1 x", ["2", "divides"])
+    custom_filter.name = "CustomFilter"
     topic = dds.DynamicData.ContentFilteredTopic(
-        topic,
-        'ContentFilteredTopic',
-        custom_filter)
+        topic, "ContentFilteredTopic", custom_filter
+    )
 
-    print('Filter: 2 divides x')
+    print("Filter: 2 divides x")
 
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic)
     reader.bind_listener(CcfListener(), dds.StatusMask.data_available())
@@ -52,42 +51,42 @@ def subscriber_main(domain_id, sample_count):
 
         if count == 10:
             # Update the filter parameters after 10 seconds
-            print(textwrap.dedent(
-                """
+            print(
+                textwrap.dedent(
+                    """
                 ==========================
                 Changing Filter Parameters
                 Filter: 15 greater-than x
-                =========================="""))
-            topic.filter_parameters = ['15', 'greater-than']
+                =========================="""
+                )
+            )
+            topic.filter_parameters = ["15", "greater-than"]
         elif count == 20:
             # Update the filter again after 20 seconds
-            print(textwrap.dedent(
-                """
+            print(
+                textwrap.dedent(
+                    """
                 ==========================
                 Changing Filter Parameters
                 Filter: 3 divides x
-                =========================="""))
-            topic.filter_parameters = ['3', 'divides']
+                =========================="""
+                )
+            )
+            topic.filter_parameters = ["3", "divides"]
 
         count += 1
 
 
-parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Using Custom Filters (Publisher)')
+parser = argparse.ArgumentParser(
+    description="RTI Connext DDS Example: Using Custom Filters (Publisher)"
+)
+parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
 parser.add_argument(
-    '-d',
-    '--domain',
-    type=int,
-    default=0,
-    help='DDS Domain ID')
-parser.add_argument(
-    '-c',
-    '--count',
-    type=int,
-    default=0,
-    help='Number of samples to send')
+    "-c", "--count", type=int, default=0, help="Number of samples to send"
+)
 
 args = parser.parse_args()
-assert(0 <= args.domain < 233)
-assert(args.count >= 0)
+assert 0 <= args.domain < 233
+assert args.count >= 0
 
 subscriber_main(args.domain, args.count)

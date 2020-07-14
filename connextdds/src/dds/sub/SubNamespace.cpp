@@ -5,7 +5,8 @@
 
 using namespace dds::sub;
 
-void init_namespace_dds_sub(py::module& m, pyrti::ClassInitList& l) {
+void init_namespace_dds_sub(py::module& m, pyrti::ClassInitList& l)
+{
     pyrti::process_inits<AnyDataReader>(m, l);
     pyrti::process_inits<AnyDataReaderListener>(m, l);
     pyrti::process_inits<CoherentAccess>(m, l);

@@ -6,91 +6,61 @@ using namespace dds::core;
 namespace pyrti {
 
 template<>
-void process_inits<Exception>(py::module& m, ClassInitList& l) {
-    l.push_back(
-        [m]() {
-            auto ex = py::register_exception<Exception>(
-                m,
-                "Exception"
-            );
-            py::register_exception<AlreadyClosedError>(
+void process_inits<Exception>(py::module& m, ClassInitList& l)
+{
+    l.push_back([m]() {
+        auto ex = py::register_exception<Exception>(m, "Exception");
+        py::register_exception<AlreadyClosedError>(
                 m,
                 "AlreadyClosedError",
-                ex.ptr()
-            );
-            py::register_exception<Error>(
-                m,
-                "Error",
-                ex.ptr()
-            );
-            py::register_exception<IllegalOperationError>(
+                ex.ptr());
+        py::register_exception<Error>(m, "Error", ex.ptr());
+        py::register_exception<IllegalOperationError>(
                 m,
                 "IllegalOperationError",
-                ex.ptr()
-            );
-            py::register_exception<ImmutablePolicyError>(
+                ex.ptr());
+        py::register_exception<ImmutablePolicyError>(
                 m,
                 "ImmutablePolicyError",
-                ex.ptr()
-            );
-            py::register_exception<InconsistentPolicyError>(
+                ex.ptr());
+        py::register_exception<InconsistentPolicyError>(
                 m,
                 "InconsistentPolicyError",
-                ex.ptr()
-            );
-            py::register_exception<InvalidArgumentError>(
+                ex.ptr());
+        py::register_exception<InvalidArgumentError>(
                 m,
                 "InvalidArgumentError",
-                ex.ptr()
-            );
-            py::register_exception<InvalidDowncastError>(
+                ex.ptr());
+        py::register_exception<InvalidDowncastError>(
                 m,
                 "InvalidDowncastError",
-                ex.ptr()
-            );
+                ex.ptr());
 #if rti_connext_version_gte(6, 0, 0)
-            py::register_exception<NotAllowedBySecurityError>(
+        py::register_exception<NotAllowedBySecurityError>(
                 m,
                 "NotAllowedBySecurityError",
-                ex.ptr()
-            );
+                ex.ptr());
 #endif
-            py::register_exception<NotEnabledError>(
-                m,
-                "NotEnabledError",
-                ex.ptr()
-            );
-            py::register_exception<NullReferenceError>(
+        py::register_exception<NotEnabledError>(m, "NotEnabledError", ex.ptr());
+        py::register_exception<NullReferenceError>(
                 m,
                 "NullReferenceError",
-                ex.ptr()
-            );
-            py::register_exception<OutOfResourcesError>(
+                ex.ptr());
+        py::register_exception<OutOfResourcesError>(
                 m,
                 "OutOfResourcesError",
-                ex.ptr()
-            );
-            py::register_exception<PreconditionNotMetError>(
+                ex.ptr());
+        py::register_exception<PreconditionNotMetError>(
                 m,
                 "PreconditionNotMetError",
-                ex.ptr()
-            );
-            py::register_exception<TimeoutError>(
-                m,
-                "TimeoutError",
-                ex.ptr()
-            );
-            py::register_exception<UnsupportedError>(
+                ex.ptr());
+        py::register_exception<TimeoutError>(m, "TimeoutError", ex.ptr());
+        py::register_exception<UnsupportedError>(
                 m,
                 "UnsupportedError",
-                ex.ptr()
-            );
-            return (
-                []() {}     
-            );
-        }
-    ); 
-    
+                ex.ptr());
+        return ([]() {});
+    });
 }
 
-}
+}  // namespace pyrti

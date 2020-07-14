@@ -3,7 +3,8 @@
 
 using namespace dds::core::policy;
 
-void init_namespace_dds_core_policy(py::module& m, pyrti::ClassInitList& l) {
+void init_namespace_dds_core_policy(py::module& m, pyrti::ClassInitList& l)
+{
 #if rti_connext_version_gte(6, 0, 0)
     pyrti::process_inits<DataRepresentation>(m, l);
     pyrti::process_inits<DataTag>(m, l);

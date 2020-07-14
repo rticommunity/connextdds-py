@@ -1,0 +1,54 @@
+import rti.connextdds as dds
+import time
+
+
+class TestSystem:
+    def __init__(self, domain_id, sample_type):
+        self.participant = create_participant(domain_id)
+
+        reader_qos = self.participant.implicit_subscriber.default_datareader_qos
+        reader_qos << dds.Durability.transient_local()
+        reader_qos << dds.Reliability.reliable()
+        reader_qos << dds.History.keep_all()
+
+        writer_qos = self.participant.implicit_publisher.default_datawriter_qos
+        writer_qos << dds.Durability.transient_local()
+        writer_qos << dds.Reliability.reliable()
+        writer_qos << dds.History.keep_all()
+        if sample_type == "StringTopicType":
+            self.topic = dds.StringTopicType.Topic(self.participant, "StringTopicType")
+            self.reader = dds.StringTopicType.DataReader(
+                self.participant, self.topic, reader_qos
+            )
+            self.writer = dds.StringTopicType.DataWriter(
+                self.participant, self.topic, writer_qos
+            )
+        elif sample_type == "KeyedStringTopicType":
+            self.topic = dds.KeyedStringTopicType.Topic(
+                self.participant, "KeyedStringTopicType"
+            )
+            self.reader = dds.KeyedStringTopicType.DataReader(
+                self.participant, self.topic, reader_qos
+            )
+            self.writer = dds.KeyedStringTopicType.DataWriter(
+                self.participant, self.topic, writer_qos
+            )
+        else:
+            raise Exception(sample_type + " not supported in test system")
+
+
+def create_participant(domain_id=0):
+    qos = dds.DomainParticipantQos()
+    qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(10)
+    return dds.DomainParticipant(domain_id, qos)
+
+
+def wait(reader, t=10, count=1):
+    curr = 0
+    while t > curr:
+        if len(reader.read()) >= count:
+            break
+        time.sleep(0.5)
+        curr += 0.5
+    else:
+        raise Exception("Waited for " + str(t) + " seconds and recieved nothing")

@@ -4,7 +4,8 @@
 
 using namespace rti::sub;
 
-void init_namespace_rti_sub(py::module& m, pyrti::ClassInitList& l) {
+void init_namespace_rti_sub(py::module& m, pyrti::ClassInitList& l)
+{
     pyrti::process_inits<AckResponseData>(m, l);
     pyrti::process_inits<TopicQuery>(m, l);
 

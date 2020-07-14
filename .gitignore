@@ -5,3 +5,7 @@ __pycache__/
 .vscode
 __pycache__/
 docs/build/
+
+build/
+dist/
+rti.egg-info

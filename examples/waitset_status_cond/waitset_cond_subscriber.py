@@ -25,8 +25,11 @@ def status_handler(reader):
     status_mask = reader.status_changes
     if dds.StatusMask.liveliness_changed() in status_mask:
         liveliness_status = reader.liveliness_changed_status
-        print('Liveliness changed => active writers = {}'.format(
-            liveliness_status.alive_count))
+        print(
+            "Liveliness changed => active writers = {}".format(
+                liveliness_status.alive_count
+            )
+        )
 
 
 # Handle incoming data with a ReadCondition
@@ -39,8 +42,8 @@ def rc_handler(reader, count):
 def subscriber_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    wsqc_type = dds.QosProvider('waitset_cond.xml').type('wssc_lib', 'Foo')
-    topic = dds.DynamicData.Topic(participant, 'Example Foo', wsqc_type)
+    wsqc_type = dds.QosProvider("waitset_cond.xml").type("wssc_lib", "Foo")
+    topic = dds.DynamicData.Topic(participant, "Example Foo", wsqc_type)
     reader_qos = dds.QosProvider.default().datareader_qos
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)
 
@@ -66,22 +69,16 @@ def subscriber_main(domain_id, sample_count):
             rc_handler(reader, count)
 
 
-parser = argparse.ArgumentParser(description='RTI Connext DDS Example: Waitsets with Status Condition & Read Condition (Subscriber)')
+parser = argparse.ArgumentParser(
+    description="RTI Connext DDS Example: Waitsets with Status Condition & Read Condition (Subscriber)"
+)
+parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
 parser.add_argument(
-    '-d',
-    '--domain',
-    type=int,
-    default=0,
-    help='DDS Domain ID')
-parser.add_argument(
-    '-c',
-    '--count',
-    type=int,
-    default=0,
-    help='Number of samples to send')
+    "-c", "--count", type=int, default=0, help="Number of samples to send"
+)
 
 args = parser.parse_args()
-assert(0 <= args.domain < 233)
-assert(args.count >= 0)
+assert 0 <= args.domain < 233
+assert args.count >= 0
 
 subscriber_main(args.domain, args.count)

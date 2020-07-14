@@ -6,34 +6,33 @@ using namespace dds::core::xtypes;
 namespace pyrti {
 
 template<typename T>
-void init_dds_dynamic_primitive_defs(py::class_<PrimitiveType<T>, DynamicType>& cls, const std::string& name) {
-    cls.
-        def(
-            py::init(
-                []() {
-                    return primitive_type<T>();
-                }
-            ),
-            ("Get the singleton for " + name).c_str()
-        );
+void init_dds_dynamic_primitive_defs(
+        py::class_<PrimitiveType<T>, DynamicType>& cls,
+        const std::string& name)
+{
+    cls.def(py::init([]() { return primitive_type<T>(); }),
+            ("Get the singleton for " + name).c_str())
+            .def(py::self == py::self, "Test for equality.")
+            .def(py::self != py::self, "Test for inequality.");
 }
 
 template<typename T>
-void init_dds_dynamic_primitive(py::module& m, const std::string& name, ClassInitList& l) {
-    l.push_back(
-        [m, name]() mutable {
-            py::class_<PrimitiveType<T>, DynamicType> cls(m, name.c_str());
-            return (
-                [cls, name]() mutable {
-                    init_dds_dynamic_primitive_defs<T>(cls, name);
-                }     
-            );
-        }
-    );  
+void init_dds_dynamic_primitive(
+        py::module& m,
+        const std::string& name,
+        ClassInitList& l)
+{
+    l.push_back([m, name]() mutable {
+        py::class_<PrimitiveType<T>, DynamicType> cls(m, name.c_str());
+        return ([cls, name]() mutable {
+            init_dds_dynamic_primitive_defs<T>(cls, name);
+        });
+    });
 }
 
 template<>
-void process_inits<PyPrimitiveType>(py::module& m, ClassInitList& l) {
+void process_inits<PyPrimitiveType>(py::module& m, ClassInitList& l)
+{
     init_dds_dynamic_primitive<char>(m, "CharType", l);
     init_dds_dynamic_primitive<bool>(m, "BoolType", l);
     init_dds_dynamic_primitive<uint8_t>(m, "OctetType", l);
@@ -49,4 +48,4 @@ void process_inits<PyPrimitiveType>(py::module& m, ClassInitList& l) {
     init_dds_dynamic_primitive<wchar_t>(m, "WcharType", l);
 }
 
-}
+}  // namespace pyrti
