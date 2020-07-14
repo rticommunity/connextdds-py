@@ -48,8 +48,8 @@ def all_test(count):
 
     print("\tAssigning all at once setter")
     average_all = total_time_all / count
-    print(f"Average: {average_all}\nMinimum: {min_time_all}")
-    print(f"Maximum: {max_time_all}\nTotal:   {total_time_all}")
+    print(f"Average: {average_all} seconds\nMinimum: {min_time_all} seconds")
+    print(f"Maximum: {max_time_all} seconds\nTotal:   {total_time_all} seconds")
 
     min_time_all = float("inf")
     max_time_all = float("-inf")
@@ -70,8 +70,8 @@ def all_test(count):
 
     print("\tAssigning all at once getter")
     average_all = total_time_all / count
-    print(f"Average: {average_all}\nMinimum: {min_time_all}")
-    print(f"Maximum: {max_time_all}\nTotal:   {total_time_all}")
+    print(f"Average: {average_all} seconds\nMinimum: {min_time_all} seconds")
+    print(f"Maximum: {max_time_all} seconds\nTotal:   {total_time_all} seconds")
 
 
 def ind_test(count):
@@ -100,8 +100,8 @@ def ind_test(count):
 
     print("\tAssigning individually setter")
     average_ind = total_time_ind / count
-    print(f"Average: {average_ind}\nMinimum: {min_time_ind}")
-    print(f"Maximum: {max_time_ind}\nTotal:   {total_time_ind}")
+    print(f"Average: {average_ind} seconds\nMinimum: {min_time_ind} seconds")
+    print(f"Maximum: {max_time_ind} seconds\nTotal:   {total_time_ind} seconds")
 
     min_time_ind = float("inf")
     max_time_ind = float("-inf")
@@ -125,8 +125,8 @@ def ind_test(count):
 
     print("\tAssigning individually getter")
     average_ind = total_time_ind / count
-    print(f"Average: {average_ind}\nMinimum: {min_time_ind}")
-    print(f"Maximum: {max_time_ind}\nTotal:   {total_time_ind}")
+    print(f"Average: {average_ind} seconds\nMinimum: {min_time_ind} seconds")
+    print(f"Maximum: {max_time_ind} seconds\nTotal:   {total_time_ind} seconds")
 
 
 if __name__ == "__main__":
