@@ -50,6 +50,19 @@ You can also add either the ```-ind``` flag or the ```-all``` flag
 to choose which test you want to run. If you omit the flags, both
 will be executed.
 
+
+## Building for development
+To build for development, you must have the `wheel` package installed.
+You also need all of the enviornment variables that you need for the
+regular install. If you already have an install of any form, run
+`pip3 uninstall rti -y`
+
+```shell
+$ python3 setup.py bdist_wheel
+$ pip3 install dist/*
+```
+
+
 ## Building and viewing the documentation
 To build the documentation, run
 
@@ -57,7 +70,7 @@ To build the documentation, run
 $ cd docs
 $ make html
 ```
-
+You must have the development build built and installed for this to work.
 To view the documentation, open in your web browser the file located at
 `docs/build/html/index.html`
 
