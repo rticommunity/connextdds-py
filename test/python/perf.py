@@ -46,7 +46,30 @@ def all_test(count):
             print(".", end="", flush=True)
     print("")
 
-    print("\tAssigning all at once setter")
+    print("\tAssigning all at once setter from an array")
+    average_all = total_time_all / count
+    print(f"Average: {average_all} seconds\nMinimum: {min_time_all} seconds")
+    print(f"Maximum: {max_time_all} seconds\nTotal:   {total_time_all} seconds")
+
+    min_time_all = float("inf")
+    max_time_all = float("-inf")
+
+    total_time_all = 0
+    full_lst = [25] * 600000
+    # First test setter
+    for i in range(0, count):
+        start_all = time.time()
+        sample["myOctSeq"] = full_lst
+        elapsed_all = time.time() - start_all
+
+        min_time_all = min(min_time_all, elapsed_all)
+        max_time_all = max(max_time_all, elapsed_all)
+        total_time_all += elapsed_all
+        if (i % math.ceil(count / 20)) == 0:
+            print(".", end="", flush=True)
+    print("")
+
+    print("\tAssigning all at once setter from a list")
     average_all = total_time_all / count
     print(f"Average: {average_all} seconds\nMinimum: {min_time_all} seconds")
     print(f"Maximum: {max_time_all} seconds\nTotal:   {total_time_all} seconds")
