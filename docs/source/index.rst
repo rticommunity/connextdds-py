@@ -13,7 +13,11 @@ Welcome to connextdds-py's documentation!
    quick.rst
    rti.rst
    building.rst
-
+   participant.rst
+   sample.rst
+   topic.rst
+   writer.rst
+   reader.rst
 
 Indices and tables
 ==================
