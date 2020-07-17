@@ -12,6 +12,7 @@ Welcome to connextdds-py's documentation!
 
    quick.rst
    rti.rst
+   building.rst
 
 
 Indices and tables
