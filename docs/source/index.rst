@@ -14,7 +14,7 @@ Welcome to connextdds-py's documentation!
    rti.rst
    building.rst
    participant.rst
-   sample.rst
+   types.rst
    topic.rst
    writer.rst
    reader.rst
