@@ -99,17 +99,18 @@ def all_test(count):
 
 def ind_test(count):
     perf_test_type = dds.QosProvider(FILE).type("PerformanceTest")
-    sample = dds.DynamicData(perf_test_type)
     # For testing assigning to an array element by element
     min_time_ind = float("inf")
     max_time_ind = float("-inf")
     total_time_ind = 0
 
     for i in range(0, count):
+        sample = dds.DynamicData(perf_test_type)
         loan = sample.loan_value("myOctSeq")
+        data = loan.data
         start_ind = time.time()
         for j in range(0, 600000):
-            loan.data[j] = 25
+            data[j] = 25
 
         elasped_ind = time.time() - start_ind
         loan.return_loan()
@@ -133,8 +134,9 @@ def ind_test(count):
     for i in range(0, count):
         start_ind = time.time()
         loan = sample.loan_value("myOctSeq")
+        data = loan.data
         for j in range(0, 600000):
-            x = loan.data[j]
+            x = data[j]
         loan.return_loan()
 
         elasped_ind = time.time() - start_ind
