@@ -104,8 +104,13 @@ def ind_test(count):
     max_time_ind = float("-inf")
     total_time_ind = 0
 
+    sample = dds.DynamicData(perf_test_type)
+
+    # Here I fill the sequence once all the way through so that the space is
+    # already allocated
+    sample["myOctSeq"] = array.array("B", [25]) * 600000
+
     for i in range(0, count):
-        sample = dds.DynamicData(perf_test_type)
         loan = sample.loan_value("myOctSeq")
         data = loan.data
         start_ind = time.time()
