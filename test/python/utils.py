@@ -1,5 +1,6 @@
 import rti.connextdds as dds
 import time
+import pathlib
 
 
 class TestSystem:
@@ -32,6 +33,20 @@ class TestSystem:
             )
             self.writer = dds.KeyedStringTopicType.DataWriter(
                 self.participant, self.topic, writer_qos
+            )
+        elif sample_type == "PerformanceTest":
+            provider = dds.QosProvider(
+                str(pathlib.Path(__file__).parent.absolute()) + "/../xml/PerfTest.xml"
+            )
+            provider_type = provider.type("PerformanceTest")
+            self.topic = dds.DynamicData.Topic(
+                self.participant, "PerformanceTest", provider_type
+            )
+            self.reader = dds.DynamicData.DataReader(
+                dds.Subscriber(self.participant), self.topic, reader_qos
+            )
+            self.writer = dds.DynamicData.DataWriter(
+                dds.Publisher(self.participant), self.topic, writer_qos
             )
         else:
             raise Exception(sample_type + " not supported in test system")
