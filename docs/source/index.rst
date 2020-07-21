@@ -3,8 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+Welcome!
+========
+
 Welcome to connextdds-py's documentation!
-=========================================
+If you are new, you might want to check out the
+:ref:`intro:Introduction` section!
 
 .. toctree::
    :maxdepth: 2
@@ -12,6 +16,7 @@ Welcome to connextdds-py's documentation!
 
    quick.rst
    rti.rst
+   intro.rst
    building.rst
    participant.rst
    types.rst

@@ -24,38 +24,71 @@ Simple Installation
 ===================
 
 1. Clone the repo and submodules and enter the directory
-   ``$ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git``
-   ``$ cd connextdds-py``
+
+.. code-block:: shell
+
+    $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+    $ cd connextdds-py
+
 2. Set the environment variables
-   ``$ export NDDSHOME=<install location of Connext Pro>``
-   ``$ export CONNEXTDDS_ARCH=<target arch>``
-   ``$ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH``
-   ``$ export NJOBS=<number of concurrent make jobs, default 1>``
+
+.. code-block:: shell
+
+    $ export NDDSHOME=<install location of Connext Pro>
+    $ export CONNEXTDDS_ARCH=<target arch>
+    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
+    $ export NJOBS=<number of concurrent make jobs, default 1>
+
 3. Build and install
-   ``$ pip install .``
+
+.. code-block:: shell
+
+    $ pip install .
 
 Development Installation
 ========================
 If you want to cahce the build files, you can use wheels.
 
 1. Install the wheel package using pip.
-   ``$ pip install wheel``
+
+.. code-block:: shell
+
+    $ pip install wheel
+
 2. Clone the repo and submodules and enter the directory
-   ``$ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git``
-   ``$ cd connextdds-py``
+
+.. code-block:: shell
+
+    $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+    $ cd connextdds-py
+
 3. Set the environment variables
-   ``$ export NDDSHOME=<install location of Connext Pro>``
-   ``$ export CONNEXTDDS_ARCH=<target arch>``
-   ``$ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH``
-   ``$ export NJOBS=<number of concurrent make jobs, default 1>``
+
+.. code-block:: shell
+
+    $ export NDDSHOME=<install location of Connext Pro>
+    $ export CONNEXTDDS_ARCH=<target arch>
+    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
+    $ export NJOBS=<number of concurrent make jobs, default 1>
+
 4. Run the setup script
-   ``$ python setup.py bdist_wheel``
+
+.. code-block:: shell 
+
+    $ python setup.py bdist_wheel
+
 5. Install the package
-   ``$ pip install dist/*``
+
+.. code-block:: shell
+
+    $ pip install dist/*
 
 
 Uninstalling
 ============
 If you wish to install a new version or update the development version,
 you must uninstall the python package. To do so, run
-``$ pip uninstall rti -y``
+
+.. code-block:: shell
+
+    $ pip uninstall rti -y
