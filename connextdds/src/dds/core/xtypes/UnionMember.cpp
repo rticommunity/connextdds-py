@@ -36,7 +36,10 @@ void init_class_defs(py::class_<UnionMember>& cls)
                     "The union member's name.")
             .def_property_readonly(
                     "type",
-                    &UnionMember::type,
+                    [](const UnionMember& member) {
+                        auto dt = member.type();
+                        return py_cast_type(dt);
+                    },
                     "Gets the union member's type.")
             .def_property_readonly(
                     "has_id",
