@@ -8,12 +8,13 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<CollectionType, DynamicType>& cls)
 {
-    cls.def("content_type",
-            [](const CollectionType& ct) {
-                auto dt = ct.content_type();
-                return py_cast_type(dt);
-            },
-            "Gets the type of elements of this collection.")
+    cls.def(
+               "content_type",
+               [](const CollectionType& ct) {
+                   auto dt = ct.content_type();
+                   return py_cast_type(dt);
+               },
+               "Gets the type of elements of this collection.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }
