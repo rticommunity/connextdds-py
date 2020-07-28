@@ -1,10 +1,11 @@
 .. py:currentmodule:: rti.connextdds
 
-Writer
-~~~~~~
+Publications
+~~~~~~~~~~~~
 
-Creating a data writer in the Python API couldn't be easier!
-All you have to do is create a :ref:`topic:Topic` and a :ref:`participant:Participant`.
+To create a DataWriter, you need a :ref:`topic:Topics` 
+and a :ref:`participant:DomainParticipant`. Additionally,
+you may add a QoS parameter.
 
 .. code-block:: python
     

@@ -33,4 +33,5 @@ To make an instance of it, all you have to do is this:
     # we can assign it like this
     sample['x'] = 42
     
-And just like that, you have data you can use!
+Now you would be able to publish the sample which is discussed in
+:ref:`writer:Publications`

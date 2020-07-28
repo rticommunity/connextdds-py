@@ -1,7 +1,7 @@
 .. py:currentmodule:: rti.connextdds
 
-Topic
-~~~~~
+Topics
+~~~~~~
 
 DDS Topics allow for publishers and subscriber to communicate
 without knowing about each other. They dynamically discover
@@ -12,7 +12,7 @@ To create a topic, all you need to do is create a topic object.
 Due to the dynamic nature of Python, dynamic data types are used.
 To create a dynamic topics, you just need a domain participant
 and a data type. How to create a type and participant is
-discussed in :ref:`types:Types` and :ref:`participant:Participant`.
+discussed in :ref:`types:Types` and :ref:`participant:DomainParticipant`.
 
 .. code-block:: python
 

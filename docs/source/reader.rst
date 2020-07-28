@@ -1,10 +1,11 @@
 .. py:currentmodule:: rti.connextdds
 
-Reader
-~~~~~~
+Subscriptions
+~~~~~~~~~~~~~
 
-Creating a data reader in connextdds-py is super simple!
-All you need is create a :ref:`topic:Topic` and a :ref:`participant:Participant`.
+To create a DataReader, you need is create a :ref:`topic:Topics` and 
+a :ref:`participant:DomainParticipant`. Optionally, you can add
+a QoS parameter and a listener.
 
 .. code-block:: python
     

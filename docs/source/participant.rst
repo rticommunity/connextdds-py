@@ -1,7 +1,7 @@
 .. py:currentmodule:: rti.connextdds
 
-Participant
-~~~~~~~~~~~
+DomainParticipant
+~~~~~~~~~~~~~~~~~
 
 When using connextdds-py, one of the first things you'll need is to 
 make a participant object.  To create a participant, all you need to 
@@ -14,7 +14,8 @@ in the code below.
     DOMAIN_ID = 0 # Could be anything, I just chose 0
     participant = dds.DomainParticipant(DOMAIN_ID)
 
-Optionally, you can also create a participant using a with statement.
+Optionally, you can also create a participant using a with statement
+so it gets deleted when the block ends.
 
 .. code-block:: python
 
@@ -23,7 +24,7 @@ Optionally, you can also create a participant using a with statement.
     with dds.DomainParticipant(DOMAIN_ID) as participant:
         pass
 
-Additionally, you can supply an additional parameter to specify the qos.
+Additionally, you can supply an additional parameter to specify the QoS.
 For example, if you would like to have a participant with a quicker 
 shutdown cleanup period, you can follow the code below.
 
@@ -35,6 +36,8 @@ shutdown cleanup period, you can follow the code below.
     qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(10)
     participant = dds.DomainParticipant(DOMAIN_ID, qos)
     
-
+Another way to create a participant is to use the 
+:code:`QosProvider.create_participant_from_config` function. This will
+create the participant and its entities from the XML definition.
 
 
