@@ -30,6 +30,7 @@ or the full :ref:`API reference <rti:rti package>`.
    building.rst
    overview.rst
    API Reference <rti.rst>
+   examples.rst
 
 Indices and tables
 ==================

@@ -5,8 +5,8 @@ Topics
 
 DDS Topics allow for publishers and subscriber to communicate
 without knowing about each other. They dynamically discover
-each other through topics. The data that the DataReader and 
-DataWriter share is described by a topic. 
+each other through topics. The data that the :class:`DataReader` and 
+:class:`DataWriter` share is described by a topic. 
 
 To create a topic, all you need to do is create a topic object.
 Due to the dynamic nature of Python, dynamic data types are used.

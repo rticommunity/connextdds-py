@@ -4,7 +4,7 @@ DomainParticipant
 ~~~~~~~~~~~~~~~~~
 
 When using connextdds-py, one of the first things you'll need is to 
-make a participant object.  To create a participant, all you need to 
+make a :class:`DomainParticipant` object.  To create a participant, all you need to 
 do is import the module and then create the object. This can be seen
 in the code below.
 
@@ -14,8 +14,8 @@ in the code below.
     DOMAIN_ID = 0 # Could be anything, I just chose 0
     participant = dds.DomainParticipant(DOMAIN_ID)
 
-Optionally, you can also create a participant using a with statement
-so it gets deleted when the block ends.
+Optionally, you can also create a participant using a :code:`with`
+statement so it gets deleted when the block ends.
 
 .. code-block:: python
 
@@ -24,7 +24,8 @@ so it gets deleted when the block ends.
     with dds.DomainParticipant(DOMAIN_ID) as participant:
         pass
 
-Additionally, you can supply an additional parameter to specify the QoS.
+Additionally, you can supply an additional parameter to specify the
+:class:`DomainParticipantQos`.
 For example, if you would like to have a participant with a quicker 
 shutdown cleanup period, you can follow the code below.
 

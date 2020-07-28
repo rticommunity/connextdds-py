@@ -4,8 +4,8 @@ Types
 ~~~~~
 
 Types in connextdds-py are similar to the types in other RTI APIs
-but with a few differences. Due to Python's dynamic nature, Dynamic
-Data is used. You cannot directly use IDL files for your types,
+but with a few differences. Due to Python's dynamic nature, :class:`DynamicData`
+is used. You cannot directly use IDL files for your types,
 however, you can generate XML files from your IDL files. To do so,
 at the command line run:
 
@@ -23,7 +23,7 @@ you can get the type from the file like this:
     provider = dds.QosProvider(FILE)
     provider_type = provider.type("NameOfType")
 
-Now in the provider_type variable you have the type defined in the IDL file.
+Now in the :code:`provider_type` variable you have the type defined in the IDL file.
 To make an instance of it, all you have to do is this:
 
 .. code-block:: python
@@ -34,4 +34,16 @@ To make an instance of it, all you have to do is this:
     sample['x'] = 42
     
 Now you would be able to publish the sample which is discussed in
-:ref:`writer:Publications`
+:ref:`writer:Publications`.
+
+Sequences
+=========
+
+Data from Dictionaries
+======================
+
+Nested Sample Data
+==================
+
+Loaned Data
+===========
