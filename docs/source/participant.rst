@@ -11,7 +11,7 @@ in the code below.
 .. code-block:: python
 
     import rti.connextdds as dds 
-    DOMAIN_ID = 0 # Could be anything, I just chose 0
+    DOMAIN_ID = 0
     participant = dds.DomainParticipant(DOMAIN_ID)
 
 Optionally, you can also create a participant using a :code:`with`

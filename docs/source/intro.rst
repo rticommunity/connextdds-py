@@ -7,9 +7,18 @@ Welcome to connextdds-py! This is the Python API for RTI Connext DDS.
 It is based on the Modern C++ API and is similar but has a few key 
 differences. Due to the dynamic nature of Python, :class:`DynamicData` is 
 the way to define data types. This can be done in IDL files that
-can be converted to XML files, or in code. Additionally, there are 
-a few built in types that can be created in code such as :class:`Int32Type` 
-or :class:`StringType`. There are some other differences too. 
+can be converted to XML files, or in code. In addition to DynamicData, 
+you can create topcis, datawriters and datareaders for the types 
+:class:`StringTopicType`, :class:`KeyedStringTopicType`,
+:class:`BytesTopicType`, :class:`KeyedBytesTopicType`. For example
+
+.. code-block:: python
+
+    writer = dds.BytesTopicType.DataWriter(...)
+    sample = dds.BytesTopicType(...)
+    writer.write(sample)
+
+There are some other differences too. 
 For example, instead of getters and setters, we utilize properties.
 If there's a property that is write only, it is assigned typically 
 with a call to set_name_of_property. 
@@ -17,7 +26,7 @@ with a call to set_name_of_property.
 .. code-block:: python
 
     import rti.connextdds as dds 
-    DOMAIN_ID = 0 # Could be anything, I just chose 0
+    DOMAIN_ID = 0
     participant = dds.DomainParticipant(DOMAIN_ID)
     print(participant.domain_id) # Will print zero
 
@@ -48,6 +57,3 @@ and the reference for the C, C++, Java, and .NET APIs.
 RTI also provides RTI Connector, a limited, simpler API for Python 
 and JavaScript. RTI Connector for Python is production-ready, but 
 the RTI Connext DDS Python API is more complete.
-
-It is recommended that you read the following documentation to 
-understand the Python library.
