@@ -60,7 +60,7 @@ def all_test(count):
     # First test setter
     for i in range(0, count):
         start_all = time.time()
-        sample.set_uint8_values("myOctSeq", full_lst) 
+        sample.set_uint8_values("myOctSeq", full_lst)
         elapsed_all = time.time() - start_all
 
         min_time_all = min(min_time_all, elapsed_all)
