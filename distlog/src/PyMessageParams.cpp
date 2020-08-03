@@ -6,17 +6,19 @@ namespace pyrti {
 PyMessageParams::PyMessageParams(PyLogLevel level, const std::string& message, const std::string& category, const dds::core::Time& timestamp) {
     this->_message = message;
     this->_category = category;
-    DDS_Time_t ts = {
-        .sec = timestamp.sec(),
-        .nanosec = timestamp.nanosec()
-    };
+
+    DDS_Time_t ts;
+    ts.sec = timestamp.sec();
+    ts.nanosec = timestamp.nanosec();
+
     auto c = this->_category.empty() ? NULL : this->_category.c_str();
-    this->_params = {
-        .log_level = (int) level,
-        .message = this->_message.c_str(),
-        .category = c,
-        .timestamp = ts
-    };
+
+    RTI_DL_DistLogger_MessageParams params;
+    params.log_level = (int) level;
+    params.message = this->_message.c_str();
+    params.category = c;
+    params.timestamp = ts;
+    this->_params = params;
 }
 
 PyLogLevel PyMessageParams::log_level() {
@@ -53,10 +55,9 @@ dds::core::Time PyMessageParams::timestamp() {
 }
 
 PyMessageParams& PyMessageParams::timestamp(const dds::core::Time& timestamp) {
-    DDS_Time_t ts = {
-        .sec = timestamp.sec(),
-        .nanosec = timestamp.nanosec()
-    };
+    DDS_Time_t ts;
+    ts.sec = timestamp.sec(),
+    ts.nanosec = timestamp.nanosec();
     this->_params.timestamp = ts;
     return *this;
 }

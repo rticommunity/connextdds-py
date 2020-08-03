@@ -49,22 +49,24 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext, nddshome, arch):
 
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        cfg = 'Debug' if self.debug else 'Release'
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
                       '-DBUILD_SHARED_LIBS=ON',
                       '-DCONNEXTDDS_DIR=' + nddshome,
-                      '-DCONNEXTDDS_ARCH=' + arch]
+                      '-DCONNEXTDDS_ARCH=' + arch,
+                      '-DCMAKE_BUILD_TYPE=' + cfg]
 
-        cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
         if platform.system() == "Windows":
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            if ext != 'rti.connextdds':
+                cmake_args += ['-DBUILD_TEMP_DIRECTORY=' + os.path.abspath(self.build_temp)]
             if sys.maxsize > 2**32:
                 cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j' + self.get_job_count()]
 
         env = os.environ.copy()

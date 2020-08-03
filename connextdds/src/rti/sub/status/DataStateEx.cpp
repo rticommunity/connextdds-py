@@ -59,6 +59,7 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                     (void (DataStateEx::*)(const StreamKind&))
                             & DataStateEx::stream_kind,
                     "The StreamKind.")
+#ifndef _MSC_VER
             .def_property(
                     "sample_state",
                     (const dds::sub::status::SampleState& (DataStateEx::*) ()
@@ -85,6 +86,30 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                     (void (DataStateEx::*)(const dds::sub::status::ViewState&))
                             & DataStateEx::view_state,
                     "The ViewState of the DataStateEx.")
+#else
+            .def_property(
+                    "sample_state",
+                    [](const DataStateEx& ds) { return ds.sample_state(); },
+                    [](DataStateEx& ds,
+                       const dds::sub::status::SampleState& ss) {
+                        ds.sample_state(ss);
+                    },
+                    "The SampleState of the DataStateEx.")
+            .def_property(
+                    "instance_state",
+                    [](const DataStateEx& ds) { return ds.instance_state(); },
+                    [](DataStateEx& ds, dds::sub::status::InstanceState& is) {
+                        ds.instance_state(is);
+                    },
+                    "The InstanceState of the DataStateEx.")
+            .def_property(
+                    "view_state",
+                    [](const DataStateEx& ds) { return ds.view_state(); },
+                    [](DataStateEx& ds, dds::sub::status::ViewState& vs) {
+                        ds.view_state(vs);
+                    },
+                    "The ViewState of the DataStateEx.")
+#endif
             .def_static(
                     "any",
                     &DataStateEx::any,
@@ -118,6 +143,7 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                          & DataStateEx::operator<<,
                  py::is_operator(),
                  "Set the StreamKind for the DataStateEx.")
+#ifndef _MSC_VER
             .def("__lshift__",
                  (dds::sub::status::DataState
                   & (DataStateEx::*) (const dds::sub::status::SampleState&) )
@@ -136,6 +162,32 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                          & DataStateEx::operator<<,
                  py::is_operator(),
                  "Set the InstanceState for the DataState.");
+#else
+            .def(
+                    "__lshift__",
+                    [](DataStateEx& ds,
+                       const dds::sub::status::SampleState& ss) {
+                        return ds << ss;
+                    },
+                    py::is_operator(),
+                    "Set the SampleState for the DataState.")
+            .def(
+                    "__lshift__",
+                    [](DataStateEx& ds, const dds::sub::status::ViewState& vs) {
+                        return ds << vs;
+                    },
+                    py::is_operator(),
+                    "Set the ViewState for the DataState.")
+            .def(
+                    "__lshift__",
+                    [](DataStateEx& ds,
+                       const dds::sub::status::InstanceState& is) {
+                        return ds << is;
+                    },
+                    py::is_operator(),
+                    "Set the InstanceState for the DataState.");
+#endif
+
 
     py::implicitly_convertible<dds::sub::status::DataState, DataStateEx>();
 }

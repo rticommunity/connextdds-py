@@ -13,6 +13,12 @@ find_package(
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
 
+if (WIN32)
+    link_directories(
+        ${BUILD_TEMP_DIRECTORY}/rti.connextdds/$(Configuration)
+    )
+endif()
+
 pybind11_add_module(
     distlog 
     MODULE
@@ -83,25 +89,36 @@ else()
     )
 endif()
 
-target_compile_options(
-    distlog
-    PRIVATE
-    "-fpic"
-    "$<$<CONFIG:RELEASE>:-Os>"
-    "$<$<CONFIG:RELEASE>:-g0>"
-)
-
-target_link_options(
-    distlog
-    PRIVATE
-    "-fpic"
-)
-
 if (WIN32)
+    target_link_libraries(
+        distlog
+        PRIVATE
+        connextdds
+    )
+    add_definitions(/bigobj)
+    target_compile_options(
+        distlog
+        PRIVATE
+        "$<$<CONFIG:RELEASE>:-Os>"
+    )
 else()
+    target_compile_options(
+        distlog
+        PRIVATE
+        "-fPIC"
+        "$<$<CONFIG:RELEASE>:-Os>"
+        "$<$<CONFIG:RELEASE>:-g0>"
+    )
+
+    target_link_options(
+        distlog
+        PRIVATE
+        "-fPIC"
+    )
+
     add_custom_command(
         TARGET distlog
         POST_BUILD
-        COMMAND $<$<CONFIG:Release>:strip>$<$<NOT:$<CONFIG:Release>>:echo> $<$<CONFIG:Release>:-x> $<$<CONFIG:Release>:$<TARGET_FILE:distlog>>
+        COMMAND $<$<CONFIG:Release>:strip>$<$<NOT:$<CONFIG:Release>>:echo> $<$<CONFIG:Release>:-x> $<$<CONFIG:Release>:$<TARGET_FILE:connextdds>>
     )
 endif()

@@ -7,39 +7,39 @@ void init_log_level(py::module& m) {
     py::enum_<PyLogLevel>(m, "LogLevel")
         .value(
             "SILENT",
-            PyLogLevel::SILENT
+            PyLogLevel::PY_DISTLOG_SILENT
         )
         .value(
             "FATAL",
-            PyLogLevel::FATAL
+            PyLogLevel::PY_DISTLOG_FATAL
         )
         .value(
             "SEVERE",
-            PyLogLevel::SEVERE
+            PyLogLevel::PY_DISTLOG_SEVERE
         )
         .value(
             "ERROR",
-            PyLogLevel::ERROR
+            PyLogLevel::PY_DISTLOG_ERROR
         )
         .value(
             "WARNING",
-            PyLogLevel::WARNING
+            PyLogLevel::PY_DISTLOG_WARNING
         )
         .value(
             "NOTICE",
-            PyLogLevel::NOTICE
+            PyLogLevel::PY_DISTLOG_NOTICE
         )
         .value(
             "INFO",
-            PyLogLevel::INFO
+            PyLogLevel::PY_DISTLOG_INFO
         )
         .value(
             "DEBUG",
-            PyLogLevel::DEBUG
+            PyLogLevel::PY_DISTLOG_DEBUG
         )
         .value(
             "TRACE",
-            PyLogLevel::TRACE
+            PyLogLevel::PY_DISTLOG_TRACE
         );
 }
 

@@ -281,6 +281,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     py::arg("name"),
                     "Find content filter previously registered to this "
                     "DomainParticipant.")
+#ifndef _MSC_VER
             .def(
                     "register_type",
                     [](PyDomainParticipant& dp,
@@ -300,6 +301,22 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                             "DynamicDataTypeSerializationProperty.DEFAULT"),
                     "Registers a DynamicType with specific serialization "
                     "properties.")
+#else
+            .def(
+                    "register_type",
+                    [](PyDomainParticipant& dp,
+                       const std::string& n,
+                       const dds::core::xtypes::DynamicType& t,
+                       const rti::core::xtypes::
+                               DynamicDataTypeSerializationProperty& sp) {
+                        rti::domain::register_type(dp, n, t, sp);
+                    },
+                    py::arg("name"),
+                    py::arg("type"),
+                    py::arg("serialization_property"),
+                    "Registers a DynamicType with specific serialization "
+                    "properties.")
+#endif
             .def(
                     "unregister_type",
                     [](PyDomainParticipant& dp, const std::string& name) {
@@ -587,6 +604,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     },
                     py::arg("handles"),
                     "Ignore a list of DataReaders specified by their handles.")
+#ifndef _MSC_VER
             .def(
                     "find_topics",
                     [](PyDomainParticipant& dp) {
@@ -595,6 +613,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     "Find all Topics in the DomainParticipant.")
+#endif
             .def(
                     "discovered_topics",
                     [](const PyDomainParticipant& dp) {

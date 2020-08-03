@@ -305,22 +305,28 @@ else()
     )
 endif()
 
-target_compile_options(
-    connextdds
-    PRIVATE
-    "-fPIC"
-    "$<$<CONFIG:RELEASE>:-Os>"
-    "$<$<CONFIG:RELEASE>:-g0>"
-)
-
-target_link_options(
-    connextdds
-    PRIVATE
-    "-fPIC"
-)
-
 if (WIN32)
+    add_definitions(/bigobj)
+    target_compile_options(
+        connextdds
+        PRIVATE
+        "$<$<CONFIG:RELEASE>:-Os>"
+    )
 else()
+    target_compile_options(
+        connextdds
+        PRIVATE
+        "-fPIC"
+        "$<$<CONFIG:RELEASE>:-Os>"
+        "$<$<CONFIG:RELEASE>:-g0>"
+    )
+
+    target_link_options(
+        connextdds
+        PRIVATE
+        "-fPIC"
+    )
+
     add_custom_command(
         TARGET connextdds
         POST_BUILD
