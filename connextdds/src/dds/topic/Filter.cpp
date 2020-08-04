@@ -29,7 +29,7 @@ void init_class_defs(py::class_<Filter>& cls)
                     },
                     py::keep_alive<0, 1>())
             .def(
-                    "parameters",
+                    "set_parameters",
                     [](Filter& f, std::vector<std::string>& params) {
                         f.parameters(params.begin(), params.end());
                     },

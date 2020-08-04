@@ -166,7 +166,7 @@ void init_content_filtered_topics_defs(py::class_<
                     },
                     "Get/set the filter parameters.")
             .def(
-                    "filter",
+                    "set_filter",
                     [](PyContentFilteredTopic<T>& cft,
                        const dds::topic::Filter& filter) {
                         cft->filter(filter);
