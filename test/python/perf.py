@@ -36,7 +36,8 @@ def all_test(count):
     # First test setter
     for i in range(0, count):
         start_all = time.time()
-        sample["myOctSeq"] = full_lst
+
+        sample.set_uint8_values("myOctSeq", full_lst)
         elapsed_all = time.time() - start_all
 
         min_time_all = min(min_time_all, elapsed_all)
@@ -59,7 +60,7 @@ def all_test(count):
     # First test setter
     for i in range(0, count):
         start_all = time.time()
-        sample["myOctSeq"] = full_lst
+        sample.set_uint8_values("myOctSeq", full_lst)
         elapsed_all = time.time() - start_all
 
         min_time_all = min(min_time_all, elapsed_all)
@@ -115,7 +116,7 @@ def ind_test(count):
         data = loan.data
         start_ind = time.time()
         for j in range(0, 600000):
-            data[j] = 25
+            data.set_uint8(j, 25)
 
         elasped_ind = time.time() - start_ind
         loan.return_loan()
@@ -141,7 +142,7 @@ def ind_test(count):
         loan = sample.loan_value("myOctSeq")
         data = loan.data
         for j in range(0, 600000):
-            x = data[j]
+            x = data.get_uint8(j)
         loan.return_loan()
 
         elasped_ind = time.time() - start_ind
