@@ -94,6 +94,7 @@ Nested Sample Data
 Nested data allows you to have some complex data structures.
 
 .. code-block:: python
+
     # Here we are creating a nested type
     nested_type = dds.StructType("nested_type")
     # Here we use COORDINATE_TYPE, a type that would be
