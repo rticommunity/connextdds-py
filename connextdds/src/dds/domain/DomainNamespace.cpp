@@ -4,9 +4,9 @@
 
 using namespace dds::domain;
 
-void init_namespace_dds_domain(py::module& m, pyrti::ClassInitList& l) {
-    pyrti::process_inits<DomainParticipant>(m, l);
-    pyrti::process_inits<DomainParticipantListener>(m, l);
+void init_namespace_dds_domain(py::module &m, pyrti::ClassInitList &l) {
+  pyrti::process_inits<DomainParticipant>(m, l);
+  pyrti::process_inits<DomainParticipantListener>(m, l);
 
-    init_namespace_dds_domain_qos(m, l);
+  init_namespace_dds_domain_qos(m, l);
 }

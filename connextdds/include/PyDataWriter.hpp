@@ -1,105 +1,113 @@
 #pragma once
 
+#include "PyAnyDataWriter.hpp"
+#include "PyAsyncioExecutor.hpp"
 #include "PyConnext.hpp"
-#include <pybind11/stl_bind.h>
-#include <pybind11/functional.h>
+#include "PyDataWriterListener.hpp"
+#include "PyDynamicTypeMap.hpp"
+#include "PyEntity.hpp"
+#include "PyTopic.hpp"
 #include <dds/pub/DataWriter.hpp>
 #include <dds/pub/discovery.hpp>
-#include <dds/topic/TopicInstance.hpp>
 #include <dds/pub/find.hpp>
-#include "PyEntity.hpp"
-#include "PyAnyDataWriter.hpp"
-#include "PyDynamicTypeMap.hpp"
-#include "PyTopic.hpp"
-#include "PyDataWriterListener.hpp"
-#include "PyAsyncioExecutor.hpp"
-
+#include <dds/topic/TopicInstance.hpp>
+#include <pybind11/functional.h>
+#include <pybind11/stl_bind.h>
 
 namespace pyrti {
 
-template<typename T>
-class PyDataWriterListener;
+template <typename T> class PyDataWriterListener;
 
-template<typename T>
-class PyDataWriter :    public dds::pub::DataWriter<T>,
-                        public PyIAnyDataWriter, 
-                        public PyIEntity {
+template <typename T>
+class PyDataWriter : public dds::pub::DataWriter<T>,
+                     public PyIAnyDataWriter,
+                     public PyIEntity {
 public:
-    using dds::pub::DataWriter<T>::DataWriter;
+  using dds::pub::DataWriter<T>::DataWriter;
 
-    PyDataWriter(
-        const PyPublisher& p,
-        const PyTopic<T>& t,
-        const dds::pub::qos::DataWriterQos& q,
-        PyDataWriterListener<T>* l,
-        const dds::core::status::StatusMask& m
-    ) : dds::pub::DataWriter<T>(p, t, q, l, m) {
-        if (nullptr != l) py::cast(l).inc_ref();
+  PyDataWriter(const PyPublisher &p, const PyTopic<T> &t,
+               const dds::pub::qos::DataWriterQos &q,
+               PyDataWriterListener<T> *l,
+               const dds::core::status::StatusMask &m)
+      : dds::pub::DataWriter<T>(p, t, q, l, m) {
+    if (nullptr != l)
+      py::cast(l).inc_ref();
+  }
+
+  virtual ~PyDataWriter() {
+    if (*this != dds::core::null) {
+      if (this->delegate().use_count() <= 2 && !this->delegate()->closed() &&
+          nullptr != this->listener()) {
+        py::object listener = py::cast(this->listener());
+        this->listener(nullptr, dds::core::status::StatusMask::none());
+        listener.dec_ref();
+      }
     }
+  }
 
-    virtual
-    ~PyDataWriter() {
-        if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= 2 && !this->delegate()->closed() && nullptr != this->listener()) {
-                py::object listener = py::cast(this->listener());
-                this->listener(nullptr, dds::core::status::StatusMask::none());
-                listener.dec_ref();
-            }
-        }
+  dds::core::Entity get_entity() override { return dds::core::Entity(*this); }
+
+  dds::pub::AnyDataWriter get_any_datawriter() const override {
+    return dds::pub::AnyDataWriter(*this);
+  }
+
+  void py_enable() override { this->enable(); }
+
+  const dds::core::status::StatusMask py_status_changes() override {
+    return this->status_changes();
+  }
+
+  const dds::core::InstanceHandle py_instance_handle() const override {
+    return this->instance_handle();
+  }
+
+  dds::pub::qos::DataWriterQos py_qos() const override { return this->qos(); }
+
+  void py_qos(const dds::pub::qos::DataWriterQos &q) override {
+    return this->qos(q);
+  }
+
+  const std::string &py_topic_name() const override {
+    return this->topic().name();
+  }
+
+  const std::string &py_type_name() const override {
+    return this->topic().type_name();
+  }
+
+  const PyPublisher py_publisher() const override {
+    auto s = this->publisher();
+    return PyPublisher(s);
+  }
+
+  void py_wait_for_acknowledgments(const dds::core::Duration &d) override {
+    this->wait_for_acknowledgments(d);
+  }
+
+  void py_close() override {
+    if (nullptr != this->listener()) {
+      py::object listener = py::cast(this->listener());
+      this->listener(nullptr, dds::core::status::StatusMask::none());
+      listener.dec_ref();
     }
+    this->close();
+  }
 
-    dds::core::Entity get_entity() override {
-        return dds::core::Entity(*this);
-    }
+  void py_retain() override { this->retain(); }
 
-    dds::pub::AnyDataWriter get_any_datawriter() const override {
-        return dds::pub::AnyDataWriter(*this);
-    }
+  bool py_closed() override { return this->delegate()->closed(); }
 
-    void py_enable() override { this->enable(); }
+  bool py_enabled() override { return this->delegate()->enabled(); }
 
-    const dds::core::status::StatusMask py_status_changes() override { return this->status_changes(); }
+  int py_use_count() override { return this->delegate().use_count(); }
 
-    const dds::core::InstanceHandle py_instance_handle() const override { return this->instance_handle(); }
-
-    dds::pub::qos::DataWriterQos py_qos() const override { return this->qos(); }
-
-    void py_qos(const dds::pub::qos::DataWriterQos& q) override { return this->qos(q); }
-
-    const std::string& py_topic_name() const override { return this->topic().name(); }
-
-    const std::string& py_type_name() const override { return this->topic().type_name(); }
-
-    const PyPublisher py_publisher() const override {
-        auto s = this->publisher();
-        return PyPublisher(s);
-    }
-
-    void py_wait_for_acknowledgments(const dds::core::Duration& d) override { this->wait_for_acknowledgments(d); }
-
-    void py_close() override {
-        if (nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
-            listener.dec_ref();
-        }
-        this->close();
-    }
-
-    void py_retain() override { this->retain(); }
-
-    bool py_closed() override { return this->delegate()->closed(); }
-
-    bool py_enabled() override { return this->delegate()->enabled(); }
-
-    int py_use_count() override { return this->delegate().use_count(); }
-
-    void py_unretain() override { this->delegate()->unretain(); }
+  void py_unretain() override { this->delegate()->unretain(); }
 };
 
-template<typename T>
-void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& cls) {
-    cls
+template <typename T>
+void init_dds_typed_datawriter_base_template(
+    py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter> &cls) {
+  cls
         .def(
             py::init<
                 const PyPublisher&,
@@ -934,49 +942,45 @@ void init_dds_typed_datawriter_base_template(py::class_<PyDataWriter<T>, PyIEnti
             "asyncio."
         );
 
-    py::implicitly_convertible<PyIAnyDataWriter, PyDataWriter<T>>();
-    py::implicitly_convertible<PyIEntity, PyDataWriter<T>>();
+  py::implicitly_convertible<PyIAnyDataWriter, PyDataWriter<T>>();
+  py::implicitly_convertible<PyIEntity, PyDataWriter<T>>();
 }
 
-template<typename T>
-void init_dds_typed_datawriter_template(py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& cls) {
-    init_dds_typed_datawriter_base_template<T>(cls);
-    cls
+template <typename T>
+void init_dds_typed_datawriter_template(
+    py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter> &cls) {
+  init_dds_typed_datawriter_base_template<T>(cls);
+  cls
 #if rti_connext_version_gte(6, 0, 0)
-        .def(
-            "create_data",
-            [](PyDataWriter<T>& dw) {
-                return dw->create_data();
-            },
-            "Create data of the writer's associated type and initialize it."
-        )
+      .def(
+          "create_data", [](PyDataWriter<T> &dw) { return dw->create_data(); },
+          "Create data of the writer's associated type and initialize it.")
 #endif
-        .def(
-            "key_value",
-            [](PyDataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
-                T value;
-                dw.key_value(value, handle);
-                return value;
-            },
-            py::arg("handle"),
-            "Retrieve the instance key that corresponds to an instance handle."
-        )
-        .def(
-            "topic_instance_key_value",
-            [](PyDataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
-                T value;
-                dds::topic::TopicInstance<T> ti(handle, value);
-                dw.key_value(ti, handle);
-                return ti;
-            },
-            py::arg("handle"),
-            "Retrieve the instance key that corresponds to an instance handle."
-        );
+      .def(
+          "key_value",
+          [](PyDataWriter<T> &dw, const dds::core::InstanceHandle &handle) {
+            T value;
+            dw.key_value(value, handle);
+            return value;
+          },
+          py::arg("handle"),
+          "Retrieve the instance key that corresponds to an instance handle.")
+      .def(
+          "topic_instance_key_value",
+          [](PyDataWriter<T> &dw, const dds::core::InstanceHandle &handle) {
+            T value;
+            dds::topic::TopicInstance<T> ti(handle, value);
+            dw.key_value(ti, handle);
+            return ti;
+          },
+          py::arg("handle"),
+          "Retrieve the instance key that corresponds to an instance handle.");
 }
 
-template<typename T>
-void init_datawriter(py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& dw) {
-    init_dds_typed_datawriter_template(dw);
+template <typename T>
+void init_datawriter(
+    py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter> &dw) {
+  init_dds_typed_datawriter_template(dw);
 }
 
-}
+} // namespace pyrti
