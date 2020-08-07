@@ -12,7 +12,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../build/lib.*/rti/'))
+import glob
+for i in glob.glob('../..build/lib.*'):
+    sys.path.insert(0, os.path.abspath(i))
 
 # -- Project information -----------------------------------------------------
 
