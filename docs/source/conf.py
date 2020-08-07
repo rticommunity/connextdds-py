@@ -13,7 +13,7 @@
 import os
 import sys
 import glob
-for i in glob.glob('../..build/lib.*'):
+for i in glob.glob('../../build/lib.*'):
     sys.path.insert(0, os.path.abspath(i))
 
 # -- Project information -----------------------------------------------------
