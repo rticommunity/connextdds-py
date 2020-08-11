@@ -11,6 +11,12 @@ PRIMITIVES.add_member(dds.Member("myDouble", dds.Float64Type()))
 COMPLEX = dds.StructType("Complex")
 COMPLEX.add_member(dds.Member("myLongSeq", dds.SequenceType(dds.Int32Type(), 10)))
 COMPLEX.add_member(dds.Member("myLongArray", dds.ArrayType(dds.Int32Type(), 10)))
+COMPLEX.add_member(dds.Member("myOptional", dds.Int32Type(), is_optional=True))
+COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
+
+SIMPLE = dds.StructType("Simple")
+SIMPLE.add_member(dds.Member("key", dds.Int32Type(), is_key=True))
+SIMPLE.add_member(dds.Member("value", dds.Int32Type()))
 
 
 def test_clear_all_members():
@@ -46,19 +52,97 @@ def test_clear_all_members():
 
 
 def test_clear_member():
-    pass
+    data = dds.DynamicData(COMPLEX)
+    data["myOptional"] = 3
+    assert data["myOptional"] == 3
+    data.clear_optional_member("myOptional")
+    assert not data.member_exists("myOptional")
+
+    data["myString"] = "aStringValue"
+    assert data["myString"] == "aStringValue"
+    data.clear_member(3)
+    assert data["myString"] == ""
+
+    data["myLongSeq"] = list(range(1, 11))
+    assert data.get_values(0) == dds.Int32Seq(list(range(1, 11)))
+    data.clear_member("myLongSeq")
+    assert data["myLongSeq"].member_count == 0
+
+    data["myLongSeq"] = list(range(1, 11))
+    assert data.get_values(0) == dds.Int32Seq(list(range(1, 11)))
+
+    seq_member = data.loan_value("myLongSeq")
+    seq_member.data.clear_member(3)
+    seq_member.return_loan()
+
+    values = data.get_values(0)
+    for i in range(0, 10):
+        if i == 3:
+            assert 0 == values[i]
+        else:
+            assert i + 1 == values[i]
 
 
 def test_is_member_key():
-    pass
+    sample = dds.DynamicData(SIMPLE)
+    assert sample.is_member_key("key")
+    assert not sample.is_member_key("value")
+    assert sample.is_member_key(0)
+    assert not sample.is_member_key(1)
 
 
 def test_member_info():
-    pass
+    data = dds.DynamicData(SIMPLE)
+    info1 = data.member_info("key")
+    info2 = data.member_info(0)
+    assert info1 == info2
+
+    assert info1.member_index == 0
+    assert info1.member_name == "key"
+    assert info1.element_count == 0
+    assert info1.representation_count == 0
+
+    name = info2.member_name
+    assert name == "key"
+
+    assert data.member_index("key") == 1
+
+    # test_value_type?
+
+    data2 = dds.DynamicData(COMPLEX)
+    info = data2.member_info("myLongSeq")
+
+    assert info.member_kind == dds.SequenceType()
+    assert info.element_kind == dds.Int32Type()
+    assert data2.member_index("myLongSeq") == 5
+
+    info = data2.loan_value("myLongArray").data.member_info(1)
+    assert info.member_exists
+    assert info.member_kind == dds.Int32Type()
+
+    # Cases where member doesn't exist in sample
+    # but does in the type
+
+    # 1) Unset Optional
+    info = data2.member_info("myOptional")
+    assert info.member_kind == dds.Int32Type()
+    assert not info.member_exists
+    assert not data2.member_exists("myOptional")
+    data2["myOptional"] = 33
+    info = data2.member_info("myOptional")
+    assert info.member_exists
+    assert data2.member_exists("myOptional")
+
+    # 2) Unselected union member
+
+    # 3) Sequence element i such that length <= i < max_length
 
 
 def test_dynamic_data_info():
-    pass
+    data = dds.DynamicData(SIMPLE)
+    info = data.info
+    assert info.member_count == 2
+    assert info.is_optimized_storage
 
 
 def test_union():
