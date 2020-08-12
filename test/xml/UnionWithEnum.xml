@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds>
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="file:////home/hunter/rti_connext_dds-6.0.1/bin/../resource/app/app_support/rtiddsgen/schema/rti_dds_topic_types.xsd">
+<struct name= "SimpleType">
+  <member name="key" type="int32" key="true"/>
+  <member name="value" type="int32"/>
+</struct>
+<enum name="TestEnum">
+  <enumerator name="RED"/>
+  <enumerator name="GREEN" value="3"/>
+  <enumerator name="BLUE"/>
+</enum> 
+<union name="TestUnionWithEnum">
+<discriminator type="nonBasic" nonBasicTypeName="TestEnum"/>
+<case>
+  <caseDiscriminator value="(RED)"/>
+<caseDiscriminator value="(GREEN)"/>
+<member name="red_green" type="nonBasic"  nonBasicTypeName= "SimpleType"/>
+</case>
+<case>
+  <caseDiscriminator value="(BLUE)"/>
+<member name="blue" type="int16"/>
+</case>
+<case>
+  <caseDiscriminator value="default"/>
+<member name="x" type="int32"/>
+</case>
+</union>
+</types>
+</dds>
