@@ -59,7 +59,7 @@ static TypeKind::inner_enum resolve_member_type_kind(
 
 static DynamicData& resolve_nested_member(
         DynamicData& dd,
-        std::string& key,
+        const std::string& key,
         DynamicDataNestedIndex& id)
 {
     std::stringstream ss(key);
@@ -686,13 +686,27 @@ static void set_value(DynamicData& dd, const T& key, py::object& value)
     if (dd.member_exists(key)) {
         field_type = dd.member_info(key).member_kind().underlying();
     } else {
-        if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
-            rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
-            DynamicData& member = loan.get();
-            field_type = member.type().kind().underlying();
-        } else {
+        switch(dd.type_kind().underlying()) {
+        case TypeKind::STRUCTURE_TYPE: {
+            const StructType& st = static_cast<const StructType&>(dd.type());
+            field_type = st.member(key).type().kind().underlying();
+            break;
+        }
+        case TypeKind::STRING_TYPE:
+        case TypeKind::WSTRING_TYPE:
+        case TypeKind::SEQUENCE_TYPE:
+        case TypeKind::ARRAY_TYPE: {
+            const CollectionType& ct = static_cast<const CollectionType&>(dd.type());
+            field_type = ct.content_type().kind().underlying();
+            break;
+        }
+        case TypeKind::UNION_TYPE: {
             const UnionType& ut = static_cast<const UnionType&>(dd.type());
             field_type = ut.member(key).type().kind().underlying();
+            break;
+        }
+        default:
+            throw py::type_error("Cannot set value for this DynamicData type.");
         }
     }
     set_member(dd, field_type, key, value);
@@ -1623,6 +1637,10 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     py::arg("index"),
                     "Returns whether a member is a key.")
             .def(
+                    "__len__",
+                    &DynamicData::member_count,
+                    "Number of members in the DynamicData object")
+            .def(
                     "__str__",
                     [](const DynamicData& sample) {
                         return rti::core::xtypes::to_string(sample);
@@ -1734,6 +1752,25 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                  [](DynamicData& dd, py::dict& dict) {
                      update_dynamicdata_object(dd, dict);
                  })
+            .def(
+                "set_value",
+                [](DynamicData& dd, std::string& key, py::object& value) {
+                    DynamicDataNestedIndex id;
+                    DynamicData& parent = resolve_nested_member(dd, key, id);
+                    if (id.index_type == DynamicDataNestedIndex::INT) set_value(parent, id.int_index, value);
+                    else set_value(parent, id.string_index, value);
+                },
+                py::arg("field_path"),
+                py::arg("value"),
+                "Automatically resolve type and set value for a field.")
+            .def(
+                "__setitem__",
+                [](DynamicData& dd, std::string& key, py::object& value) {
+                    DynamicDataNestedIndex id;
+                    DynamicData& parent = resolve_nested_member(dd, key, id);
+                    if (id.index_type == DynamicDataNestedIndex::INT) set_value(parent, id.int_index, value);
+                    else set_value(parent, id.string_index, value);
+                })
 #if rti_connext_version_gte(6, 0, 0)
             .def("get_value",
                  &get_value<std::string>,
@@ -1744,11 +1781,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                  py::arg("field_path"),
                  "Automatically resolve type and return collection for a "
                  "field.")
-            .def("set_value",
-                 &set_value<std::string>,
-                 py::arg("field_path"),
-                 py::arg("value"),
-                 "Automatically resolve type and set value for a field.")
             .def("set_values",
                  &set_values<std::string>,
                  py::arg("field_path"),
@@ -1781,7 +1813,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     py::arg("name"),
                     "Translates from member name to member index.")
             .def("__getitem__", &get_value<std::string>)
-            .def("__setitem__", &set_value<std::string>)
 #else
         .def(
             "get_value",
@@ -1804,18 +1835,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
             },
             py::arg("field_path"),
             "Automatically resolve type and return collection for a field."
-        )
-        .def(
-            "set_value",
-            [](DynamicData& dd, std::string& key, py::object& value) {
-                DynamicDataNestedIndex id;
-                DynamicData& parent = resolve_nested_member(dd, key, id);
-                if (id.index_type == DynamicDataNestedIndex::INT) set_value(parent, id.int_index, value);
-                else set_value(parent, id.string_index, value);
-            },
-            py::arg("field_path"),
-            py::arg("value"),
-            "Automatically resolve type and set value for a field."
         )
         .def(
             "set_values",
@@ -1902,15 +1921,6 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                 DynamicData& parent = resolve_nested_member(dd, key, id);
                 if (id.index_type == DynamicDataNestedIndex::INT) return get_value(parent, id.int_index);
                 else return get_value(parent, id.string_index);
-            }
-        )
-        .def(
-            "__setitem__",
-            [](DynamicData& dd, std::string& key, py::object& value) {
-                DynamicDataNestedIndex id;
-                DynamicData& parent = resolve_nested_member(dd, key, id);
-                if (id.index_type == DynamicDataNestedIndex::INT) set_value(parent, id.int_index, value);
-                else set_value(parent, id.string_index, value);
             }
         )
 #endif
