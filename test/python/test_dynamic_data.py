@@ -4,6 +4,14 @@ import pytest
 import pathlib
 import array
 
+
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../xml/UnionWithEnum.xml"
+
+PROVIDER = dds.QosProvider(FILE)
+UNION = PROVIDER.type("TestUnionWithEnum")
+ENUM_TYPE = PROVIDER.type("TestEnum")
+
+
 PRIMITIVES = dds.StructType("Primitives")
 PRIMITIVES.add_member(dds.Member("myLong", dds.Int32Type()))
 PRIMITIVES.add_member(dds.Member("myDouble", dds.Float64Type()))
@@ -14,9 +22,7 @@ COMPLEX.add_member(dds.Member("myLongArray", dds.ArrayType(dds.Int32Type(), 10))
 COMPLEX.add_member(dds.Member("myOptional", dds.Int32Type(), is_optional=True))
 COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
 
-SIMPLE = dds.StructType("Simple")
-SIMPLE.add_member(dds.Member("key", dds.Int32Type(), is_key=True))
-SIMPLE.add_member(dds.Member("value", dds.Int32Type()))
+SIMPLE = PROVIDER.type("SimpleType")
 
 
 def test_clear_all_members():
@@ -146,4 +152,33 @@ def test_dynamic_data_info():
 
 
 def test_union():
-    pass
+    test_union = dds.DynamicData(UNION)
+    simple = dds.DynamicData(SIMPLE)
+    simple["key"] = 10
+    simple["value"] = 20
+    test_union["red_green"] = simple
+
+    assert test_union.discriminator_value == int(ENUM_TYPE["RED"].ordinal)
+    member_value = test_union.get_value(test_union.discriminator_value)
+
+    assert member_value.get_value(0) == 10
+    assert member_value.get_value(1) == 20
+
+    try:
+        test_union.get_value("blue")
+        print("Failded to throw exception")
+        assert False
+    except dds.InvalidArgumentError:
+        assert True
+    except Exception as e:
+        print("Failed to throw proper exception")
+        print("Expected InvalidArgumentError, got " + str(type(e)))
+        assert False
+
+    test_union["blue"] = 15
+    assert test_union.discriminator_value == int(ENUM_TYPE["BLUE"].ordinal)
+    assert 15 == test_union.get_value(test_union.discriminator_value)
+
+    test_union.clear_member("blue")
+    assert test_union.discriminator_value == int(ENUM_TYPE["BLUE"].ordinal)
+    assert 0 == test_union.get_value(test_union.discriminator_value)
