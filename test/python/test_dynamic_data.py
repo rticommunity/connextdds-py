@@ -123,11 +123,11 @@ def test_member_info():
 
     assert info.kind == dds.SequenceType(dds.Int32Type()).kind
     assert info.element_kind == dds.Int32Type().kind
-    # assert data2.member_index("myLongSeq") == 5
+    assert data2.member_index("myLongSeq") == 5
 
     loan = data2.loan_value("myLongArray")
     info = loan.data.member_info(1)
-    # assert info.member_exists
+    assert info.member_exists
     assert info.kind == dds.Int32Type().kind
 
     loan.return_loan()
@@ -165,6 +165,46 @@ def test_member_info():
     assert info == union_sample.info(0)
 
     # 3) Sequence element i such that length <= i < max_length
+    loan = data2.loan_value("myLongSeq")
+    info = loan.data.member_info(1)
+    assert not info.member_exists
+
+    data2.set_values("myLongSeq", [3] * 3)
+    assert info.member_exists
+
+    try:
+        data2.member_info("nonexistent")
+        assert False
+    except dds.InvalidArgumentError:
+        assert True
+    except:
+        assert False
+
+    try:
+        loan.data.member_info(12)
+        assert False
+    except dds.InvalidArgumentError:
+        assert True
+    except:
+        assert False
+
+    try:
+        data2.member_info("myLongSeq[12]")
+        assert False
+    except dds.InvalidArgumentError:
+        assert True
+    except:
+        assert False
+
+    assert not data2.member_exists("myLongSeq[12]")
+    array = data2.loan_value("myLongArray")
+    try:
+        array.data.member_info(11)
+        assert False
+    except dds.InvalidArgumentError:
+        assert True
+    except:
+        assert False
 
 
 def test_dynamic_data_info():
