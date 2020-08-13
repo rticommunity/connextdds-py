@@ -105,7 +105,7 @@ For example,
 
 .. code-block:: python
 
-    # Assuming we already have a datawriter for the correct type
+    # Assuming we already have a DataWriter for the correct type
     writer.write({"x": 1, "y": 42})
     # This will work if the data type that writer is working with
     # is a structure with values x and y that are of type integer

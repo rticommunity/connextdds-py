@@ -16,7 +16,7 @@ Requirements
 - Python 2.7, Python3.x with pip or pip3 respectively
 - RTI Connext DDS 5.3.1, 6.0.x
 
-**Note: On certain platforms (ie Ubuntu 20.04 LTS), you must explicity mention
+**Note: On certain platforms (ie Ubuntu 20.04 LTS), you must explicitly mention
 what python version you are using. To do so, just use pip3 or python3 in place of
 pip or python**
 
@@ -47,7 +47,7 @@ Simple Installation
 
 Development Installation
 ========================
-If you want to cahce the build files, you can use wheels.
+If you want to cache the build files, you can use wheels.
 
 1. Install the wheel package using pip.
 

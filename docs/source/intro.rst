@@ -16,7 +16,7 @@ It is based on the Modern C++ API and is similar but has a few key
 differences. Due to the dynamic nature of Python, :class:`DynamicData` is 
 the way to define data types. This can be done in IDL files that
 can be converted to XML files, or in code. In addition to DynamicData, 
-you can create topcis, datawriters and datareaders for the types 
+you can create topics, datawriters and datareaders for the types
 :class:`StringTopicType`, :class:`KeyedStringTopicType`,
 :class:`BytesTopicType`, :class:`KeyedBytesTopicType`. For example
 
@@ -43,7 +43,7 @@ library more ergonomic. For example, instead of a :code:`to_string`
 function anywhere, the python :code:`str()` is used. This allows you
 to do things like print a value without it being of type string.
 Another built in construct that is used is the :code:`iter()` function.
-This function alls the user to iterate through a data type. You can
+This function allows the user to iterate through a data type. You can
 also use :code:`for a in b` loop constructs. An example would look like 
 this:
 
