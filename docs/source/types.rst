@@ -3,6 +3,28 @@
 Types
 ~~~~~
 
+In data-centric communications, the applications participating in
+the communication need to share a common view of the types of data
+being passed around.
+
+Within different programming languages there are several ‘primitive’
+data types that all users of that language naturally share
+(integers, floating point numbers, characters, booleans, etc.).
+However, in any nontrivial software system, specialized data types
+are constructed out of the language primitives. So the data to be
+shared between applications in the communication system could be
+structurally simple, using the primitive language types mentioned
+above, or it could be more complicated, using, for example, C and
+C++ structures.
+
+Within a set of applications using DCPS, the different applications
+do not automatically know the structure of the data being sent, nor
+do they necessarily interpret it in the same way (if, for instance,
+they use different operating systems, were written with different
+languages, or were compiled with different compilers). There must
+be a way to share not only the data, but also information about
+how the data is structured.
+
 Types in connextdds-py are similar to the types in other RTI APIs
 but with a few differences. Due to Python's dynamic nature, :class:`DynamicData`
 is used. You cannot directly use IDL files for your types,

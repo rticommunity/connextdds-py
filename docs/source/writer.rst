@@ -3,6 +3,22 @@
 Publications
 ~~~~~~~~~~~~
 
+An application uses DataWriters to send data. A DataWriter
+is associated with a single Topic. You can have multiple
+DataWriters and Topics in a single application. In addition,
+you can have more than one DataWriter for a particular Topic
+in a single application.
+
+A Publisher is the DCPS object responsible for the actual
+sending of data. Publishers own and manage DataWriters. A
+DataWriter can only be owned by a single Publisher while a
+Publisher can own many DataWriters. Thus the same Publisher
+may be sending data for many different Topics of different
+data types. When user code calls the write() method on a
+DataWriter, the DDS data sample is passed to the Publisher
+object which does the actual dissemination of data on the
+network.
+
 To create a DataWriter, you need a :ref:`topic:Topics` 
 and a :ref:`participant:DomainParticipant`. Additionally,
 you may add a QoS parameter.

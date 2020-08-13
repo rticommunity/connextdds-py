@@ -4,6 +4,14 @@ Introduction
 ~~~~~~~~~~~~
 
 Welcome to connextdds-py! This is the Python API for RTI Connext DDS. 
+
+**Note**: Throughout this documentation, the term DCPS is used.
+DCPS is the portion of the OMG DDS (Data Distribution Service)
+Standard that addresses data-centric publish-subscribe communications.
+The DDS standard defines a language-independent model of publish-subscribe
+communications that has standardized mappings into various
+implementation languages.
+
 It is based on the Modern C++ API and is similar but has a few key 
 differences. Due to the dynamic nature of Python, :class:`DynamicData` is 
 the way to define data types. This can be done in IDL files that

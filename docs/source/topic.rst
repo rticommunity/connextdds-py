@@ -3,6 +3,13 @@
 Topics
 ~~~~~~
 
+Shared knowlege of the data types is a requirement for different
+applications to communicate with this API. THe applications must also
+share a way to identify what data is to be shared. Data (regardless of
+type) is uniquelu distinguished by using a name called a Topic.
+By definition, a Topic corresponds to a single data type. However,
+several Topics may refer to the same data type.
+
 DDS Topics allow for publishers and subscriber to communicate
 without knowing about each other. They dynamically discover
 each other through topics. The data that the :class:`DataReader` and 
