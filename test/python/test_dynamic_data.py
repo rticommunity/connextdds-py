@@ -97,6 +97,7 @@ def test_is_member_key():
     assert not sample.is_member_key(1)
 
 
+@pytest.mark.skip(reason="features not implemented yet")
 def test_member_info():
     data = dds.DynamicData(SIMPLE)
     info1 = data.member_info("key")
@@ -172,39 +173,20 @@ def test_member_info():
     data2.set_values("myLongSeq", [3] * 3)
     assert info.member_exists
 
-    try:
+    with pytest.raises(dds.InvalidArgumentError):
         data2.member_info("nonexistent")
-        assert False
-    except dds.InvalidArgumentError:
-        assert True
-    except:
-        assert False
 
-    try:
+    with pytest.raises(dds.InvalidArgumentError):
         loan.data.member_info(12)
-        assert False
-    except dds.InvalidArgumentError:
-        assert True
-    except:
-        assert False
 
-    try:
+    with pytest.raises(dds.InvalidArgumentError):
         data2.member_info("myLongSeq[12]")
-        assert False
-    except dds.InvalidArgumentError:
-        assert True
-    except:
-        assert False
 
     assert not data2.member_exists("myLongSeq[12]")
     array = data2.loan_value("myLongArray")
-    try:
+
+    with pytest.raises(dds.InvalidArgumentError):
         array.data.member_info(11)
-        assert False
-    except dds.InvalidArgumentError:
-        assert True
-    except:
-        assert False
 
 
 def test_dynamic_data_info():
@@ -227,16 +209,8 @@ def test_union():
     assert member_value.get_value(0) == 10
     assert member_value.get_value(1) == 20
 
-    try:
+    with pytest.raises(dds.InvalidArgumentError):
         test_union.get_value("blue")
-        print("Failded to throw exception")
-        assert False
-    except dds.InvalidArgumentError:
-        assert True
-    except Exception as e:
-        print("Failed to throw proper exception")
-        print("Expected InvalidArgumentError, got " + str(type(e)))
-        assert False
 
     test_union["blue"] = 15
     assert test_union.discriminator_value == int(ENUM_TYPE["BLUE"].ordinal)
