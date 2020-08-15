@@ -3,22 +3,16 @@
 Subscriptions
 ~~~~~~~~~~~~~
 
-An application uses DataReaders to access data received over DCPS.
+An application uses DataReaders to access data received over DDS.
 A DataReader is associated with a single Topic. You can have
 multiple DataReaders and Topics in a single application. In
 addition, you can have more than one DataReader for a particular
 Topic in a single application.
 
-A Subscriber is the DCPS object responsible for the actual receipt
+A Subscriber is the DDS object responsible for the actual receipt
 of published data. Subscribers own and manage DataReaders.
 A DataReader can only be owned by a single Subscriber while a
-Subscriber can own many DataReaders. Thus the same Subscriber
-may receive data for many different Topics of different data types.
-When data is sent to an application, it is first processed by a
-Subscriber; the DDS data sample is then stored in the appropriate
-DataReader. User code can either register a listener to be called
-when new data arrives or actively poll the DataReader for new data
-using its `read()` and `take()` methods.
+Subscriber can own many DataReaders.
 
 To create a DataReader, you need is create a :ref:`topic:Topics` and 
 a :ref:`participant:DomainParticipant`. Optionally, you can add
@@ -39,10 +33,10 @@ looks like this:
 
 .. code-block:: python
 
-    samples = reader.take()
-    for sample in samples:
-        if sample.info.valid:
-            print(sample)
+    with reader.take() as samples:
+        for sample in samples:
+            if sample.info.valid:
+                print(sample.data)
 
 If you would like to use a :class:`WaitSet` and a :class:`StatusCondition`,
 you can follow the example below:

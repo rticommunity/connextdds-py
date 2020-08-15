@@ -6,8 +6,6 @@
 Welcome to the RTI Connext DDS Python API!
 ==========================================
 
-Welcome to connextdds-py's documentation!
-
 RTI® Connext® DDS is a connectivity software framework for integrating data sources of all types.
 At its core is the world’s leading ultra-high performance, distributed networking data bus.
 

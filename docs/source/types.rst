@@ -7,50 +7,31 @@ In data-centric communications, the applications participating in
 the communication need to share a common view of the types of data
 being passed around.
 
-Within different programming languages there are several ‘primitive’
-data types that all users of that language naturally share
-(integers, floating point numbers, characters, booleans, etc.).
-However, in any nontrivial software system, specialized data types
-are constructed out of the language primitives. So the data to be
-shared between applications in the communication system could be
-structurally simple, using the primitive language types mentioned
-above, or it could be more complicated, using, for example, C and
-C++ structures.
-
-Within a set of applications using DCPS, the different applications
-do not automatically know the structure of the data being sent, nor
-do they necessarily interpret it in the same way (if, for instance,
-they use different operating systems, were written with different
-languages, or were compiled with different compilers). There must
-be a way to share not only the data, but also information about
-how the data is structured.
-
-Types in connextdds-py are similar to the types in other RTI APIs
-but with a few differences. Due to Python's dynamic nature, :class:`DynamicData`
-is used. You cannot directly use IDL files for your types,
-however, you can generate XML files from your IDL files. To do so,
+The Connext DDS Python API loads type definitions from XML. Other
+Connext DDS APIs support static types generated from an IDL definition.
+You can generate XML files from those IDL files. To do so,
 at the command line run:
 
 .. code-block:: shell
 
     $ rtiddsgen -convertToXml your_idl_file.idl 
 
-Generating types this way is very easy. After you have an XML file,
-you can get the type from the file like this:
+To load a type from the application:
 
 .. code-block:: python
 
     import rti.connextdds as dds
     FILE = "path to your xml file"
     provider = dds.QosProvider(FILE)
-    provider_type = provider.type("NameOfType")
+    my_type = provider.type("NameOfType")
 
-Now in the :code:`provider_type` variable you have the type defined in the IDL file.
-To make an instance of it, all you have to do is this:
+You can now use `my_type` to create a Topic (see :ref:`topic:Topics`
+or to instantiate a DynamicData object:
 
 .. code-block:: python
     
-    sample = dds.DynamicData(provider_type)
+    sample = dds.DynamicData(my_type)
+
     # Let's say we have a field x that takes a 32 bit integer,
     # we can assign it like this
     sample['x'] = 42
@@ -58,15 +39,38 @@ To make an instance of it, all you have to do is this:
 Now you would be able to publish the sample which is discussed in
 :ref:`writer:Publications`.
 
-Sequences
-=========
+Defining types programmatically
+===============================
 
-Sequences allow you to group data together and randomly access them.
-The easiest way to use a sequence is to define it in an IDL file then
-convert it to XML. Once it is XML, you can use the type. With sequences
-you have two options for accessing and two options for modifying.
-You can access it element by element or by getting the whole sequence at
-once. you can set it element by element or assigning a new sequence to it.
+Types can also be defined in the application, using :class:`DynamicType` and
+its derived classes.
+
+.. code-block:: python
+
+    # Here we are creating a nested type
+    nested_type = dds.StructType("nested_type")
+    # Here we use COORDINATE_TYPE, a type that would be
+    # defined in XML as two integers, an x and a y value
+    nested_type.add_member(dds.Member("a", COORDINATE_TYPE))
+
+Nested types
+============
+
+There are a few different ways to manipulate data with nested
+types. The `.` notation allows accessing nested primitive members:
+
+    sample = dds.DynamicData(nested_type)
+    sample["a.x"] = 1
+    sample["a.y"] = 2
+
+Nested members can be loaned:
+
+
+Sequences and arrays
+====================
+
+Sequences and arrays can be retrieved or set as a full python list,
+or element by element:
 
 
 .. code-block:: python
@@ -90,6 +94,11 @@ once. you can set it element by element or assigning a new sequence to it.
     # Options for getting
     lst = sample["MySeq"]
 
+
+It is also possible to loan a sequence or array (or an element if the type is complex):
+
+.. code-block:: python
+
     # OR you can do this
     loan = sample.loan_value("MySeq")
     data = loan.data
@@ -110,25 +119,4 @@ For example,
     # This will work if the data type that writer is working with
     # is a structure with values x and y that are of type integer
 
-Nested Sample Data
-==================
 
-Nested data allows you to have some complex data structures.
-
-.. code-block:: python
-
-    # Here we are creating a nested type
-    nested_type = dds.StructType("nested_type")
-    # Here we use COORDINATE_TYPE, a type that would be
-    # defined in XML as two integers, an x and a y value
-    nested_type.add_member(dds.Member("a", COORDINATE_TYPE))
-    sample = dds.DynamicData(nested_type)
-    sample["a.x"] = 1
-    sample["a.y"] = 2
-    # Now we have values that are nested in a struct
-
-Loaned Data
-===========
-
-Loans allow you to safely read and write data without race conditions.
-An example of this can be seen in the :ref:`types:Sequences` section of this document.
