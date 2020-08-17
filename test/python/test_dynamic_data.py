@@ -21,6 +21,7 @@ COMPLEX.add_member(dds.Member("myLongSeq", dds.SequenceType(dds.Int32Type(), 10)
 COMPLEX.add_member(dds.Member("myLongArray", dds.ArrayType(dds.Int32Type(), 10)))
 COMPLEX.add_member(dds.Member("myOptional", dds.Int32Type(), is_optional=True))
 COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
+COMPLEX.add_member(dds.Member("myEnum", ENUM_TYPE))
 COMPLEX.add_member(dds.Member("myEnumSeq", dds.SequenceType(ENUM_TYPE, 10)))
 
 SIMPLE = PROVIDER.type("SimpleType")
@@ -52,7 +53,6 @@ def test_clear_all_members():
     member.data.clear_all_members()
     member.return_loan()
 
-    print(data["myLongSeq"])
     assert data["myLongSeq"].member_count == 0
     for i in range(0, 10):
         assert data[f"myLongArray[{i}]"] == 0
@@ -132,6 +132,16 @@ def test_member_info():
         assert info.kind == dds.Int32Type().kind
 
     data2["myEnumSeq"] = [ENUM_TYPE["BLUE"], ENUM_TYPE["RED"]]
+    
+    with data2.loan_value("myEnumSeq") as loan:
+        assert loan.data.member_exists(1)
+        info = loan.data.member_info(1)
+        assert info.kind == dds.TypeKind.ENUMERATION_TYPE
+        assert loan.data[1] == ENUM_TYPE["RED"]
+        loan.data[0] = 3
+        info = loan.data.member_info(0)
+        assert info.kind == dds.TypeKind.ENUMERATION_TYPE
+        assert loan.data[0] == ENUM_TYPE["GREEN"]
 
     # Cases where member doesn't exist in sample
     # but does in the type
