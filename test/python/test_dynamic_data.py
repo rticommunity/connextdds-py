@@ -21,6 +21,7 @@ COMPLEX.add_member(dds.Member("myLongSeq", dds.SequenceType(dds.Int32Type(), 10)
 COMPLEX.add_member(dds.Member("myLongArray", dds.ArrayType(dds.Int32Type(), 10)))
 COMPLEX.add_member(dds.Member("myOptional", dds.Int32Type(), is_optional=True))
 COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
+COMPLEX.add_member(dds.Member("myEnumSeq", dds.SequenceType(ENUM_TYPE, 10)))
 
 SIMPLE = PROVIDER.type("SimpleType")
 
@@ -97,7 +98,6 @@ def test_is_member_key():
     assert not sample.is_member_key(1)
 
 
-@pytest.mark.skip(reason="features not implemented yet")
 def test_member_info():
     data = dds.DynamicData(SIMPLE)
     info1 = data.member_info("key")
@@ -124,54 +124,47 @@ def test_member_info():
 
     assert info.kind == dds.SequenceType(dds.Int32Type()).kind
     assert info.element_kind == dds.Int32Type().kind
-    assert data2.member_index("myLongSeq") == 5
+    assert data2.member_index("myLongSeq") == 0
 
-    loan = data2.loan_value("myLongArray")
-    info = loan.data.member_info(1)
-    assert info.member_exists
-    assert info.kind == dds.Int32Type().kind
+    with data2.loan_value("myLongArray") as loan:
+        assert loan.data.member_exists(1)
+        info = loan.data.member_info(1)
+        assert info.kind == dds.Int32Type().kind
 
-    loan.return_loan()
+    data2["myEnumSeq"] = [ENUM_TYPE["BLUE"], ENUM_TYPE["RED"]]
 
     # Cases where member doesn't exist in sample
     # but does in the type
 
     # 1) Unset Optional
-    info = data2.member_info("myOptional")
-    assert info.member_kind == dds.Int32Type()
-    assert not info.member_exists
     assert not data2.member_exists("myOptional")
+    assert data2.member_exists_in_type("myOptional")
     data2["myOptional"] = 33
-    info = data2.member_info("myOptional")
-    assert info.member_exists
     assert data2.member_exists("myOptional")
+    info = data2.member_info("myOptional")
+    assert info.kind == dds.Int32Type().kind
 
     # 2) Unselected union member
     union_sample = dds.DynamicData(UNION_DEFAULT_TYPE)
-    info = union_sample.member_info("case1")
-    assert info.kind == dds.StructType().kind
-    assert not info.member_exists
-    assert info == union_sample.info(1)
+    assert not union_sample.member_exists("case1")
     info = union_sample.member_info("case_default")
-    assert info.kind == dds.EnumType().kind
-    assert info.member_exists
+    assert info.kind == dds.TypeKind.ENUMERATION_TYPE
+    assert union_sample.member_exists("case_default")
     assert info == union_sample.member_info(0)
 
     union_sample["case1.key"] = 234
-    info = union_sample.info("case1")
-    assert info.member_exists
-    assert info == union_sample.info(1)
-    info = union_sample.info("case_default")
-    assert not info.member_exists
-    assert info == union_sample.info(0)
+    assert union_sample.member_exists("case1")
+    info = union_sample.member_info("case1")
+    assert info.kind == dds.TypeKind.STRUCTURE_TYPE
+    assert info == union_sample.member_info(1)
+    assert not union_sample.member_exists("case_default")
 
     # 3) Sequence element i such that length <= i < max_length
     loan = data2.loan_value("myLongSeq")
-    info = loan.data.member_info(1)
-    assert not info.member_exists
+    assert not loan.data.member_exists(1)
 
-    data2.set_values("myLongSeq", [3] * 3)
-    assert info.member_exists
+    loan.data[:] = [3] * 3
+    assert loan.data.member_exists(1)
 
     with pytest.raises(dds.InvalidArgumentError):
         data2.member_info("nonexistent")
@@ -179,8 +172,10 @@ def test_member_info():
     with pytest.raises(dds.InvalidArgumentError):
         loan.data.member_info(12)
 
-    with pytest.raises(dds.InvalidArgumentError):
+    with pytest.raises(dds.PreconditionNotMetError):
         data2.member_info("myLongSeq[12]")
+
+    loan.return_loan()
 
     assert not data2.member_exists("myLongSeq[12]")
     array = data2.loan_value("myLongArray")
@@ -203,7 +198,7 @@ def test_union():
     simple["value"] = 20
     test_union["red_green"] = simple
 
-    assert test_union.discriminator_value == int(ENUM_TYPE["RED"].ordinal)
+    assert test_union.discriminator_value == ENUM_TYPE["RED"]
     member_value = test_union.get_value(test_union.discriminator_value)
 
     assert member_value.get_value(0) == 10
@@ -212,10 +207,10 @@ def test_union():
     with pytest.raises(dds.InvalidArgumentError):
         test_union.get_value("blue")
 
-    test_union["blue"] = 15
-    assert test_union.discriminator_value == int(ENUM_TYPE["BLUE"].ordinal)
-    assert 15 == test_union.get_value(test_union.discriminator_value)
+    test_union["blue"] = 123
+    assert test_union.discriminator_value == ENUM_TYPE["BLUE"]
+    assert 123 == test_union.get_value(test_union.discriminator_value)
 
     test_union.clear_member("blue")
-    assert test_union.discriminator_value == int(ENUM_TYPE["BLUE"].ordinal)
+    assert test_union.discriminator_value == ENUM_TYPE["BLUE"]
     assert 0 == test_union.get_value(test_union.discriminator_value)

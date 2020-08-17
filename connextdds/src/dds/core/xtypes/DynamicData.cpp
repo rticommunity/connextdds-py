@@ -144,6 +144,74 @@ static int calculate_multidimensional_offset(
 }
 
 
+static
+EnumMember resolve_enum_member_in_type(const EnumType& enum_type, int32_t ordinal) {
+    return enum_type.member(enum_type.find_member_by_ordinal(ordinal));
+}
+
+
+static 
+UnionMember get_union_member(const UnionType& ut, const std::string& key) {
+    return ut.member(key);
+}
+
+
+static 
+UnionMember get_union_member(const UnionType& ut, const int32_t discriminator) {
+    return ut.member(ut.find_member_by_label(discriminator));
+}
+
+
+template<typename T>
+static
+EnumMember get_enum_member_base(const DynamicData& dd, const T& key, int32_t ordinal) {
+    switch(dd.type_kind().underlying()) {
+    case TypeKind::STRUCTURE_TYPE: {
+        auto& struct_type = static_cast<const StructType&>(dd.type());
+        return resolve_enum_member_in_type(
+            static_cast<const EnumType&>(struct_type.member(key).type()),
+            ordinal);
+    }
+    case TypeKind::ARRAY_TYPE:
+    case TypeKind::SEQUENCE_TYPE: {
+        auto& collection_type = static_cast<const CollectionType&>(dd.type());
+        return resolve_enum_member_in_type(
+            static_cast<const EnumType&>(collection_type.content_type()),
+            ordinal);
+    }
+    case TypeKind::UNION_TYPE: {
+        auto& union_type = static_cast<const UnionType&>(dd.type());
+        return resolve_enum_member_in_type(
+            static_cast<const EnumType&>(
+                get_union_member(union_type, key).type()),
+            ordinal);
+    }
+    default:
+        throw dds::core::InvalidArgumentError("Cannot get enum member from this data type");
+    }
+}
+
+
+template<typename T>
+static
+EnumMember get_enum_member(DynamicData& dd, const T& key, int32_t ordinal) {
+    return get_enum_member_base(dd, key, ordinal);
+}
+
+
+template<>
+EnumMember get_enum_member(DynamicData& dd, const std::string& key, int32_t ordinal) {
+    DynamicDataNestedIndex index;
+    DynamicData& parent = resolve_nested_member(dd, key, index);
+    if (index.index_type == DynamicDataNestedIndex::IdType::INT) {
+        return get_enum_member_base(parent, index.int_index, ordinal);
+    }
+    else {
+        return get_enum_member_base(parent, index.string_index, ordinal);
+    }
+}
+
+
 template<typename T>
 std::vector<DynamicData> get_complex_values(DynamicData& data, const T& key)
 {
@@ -236,8 +304,25 @@ static py::object get_collection_member(
     case TypeKind::UINT_16_TYPE:
         return py::cast(dd.get_values<uint16_t>(key));
     case TypeKind::INT_32_TYPE:
-    case TypeKind::ENUMERATION_TYPE:
         return py::cast(dd.get_values<int32_t>(key));
+    case TypeKind::ENUMERATION_TYPE: {
+        std::vector<EnumMember> retval;
+        auto loaned_collection = dd.loan_value(key);
+        auto& collection = loaned_collection.get();
+        auto& collection_type = static_cast<const CollectionType&>(collection.type());
+        auto& enum_type = static_cast<const EnumType&>(collection_type.content_type());
+        retval.reserve(collection.member_count());
+        for (int i = 1; i <= collection.member_count(); ++i) {
+            retval.push_back(
+                enum_type.member(
+                    enum_type.find_member_by_ordinal(
+                        collection.template value<int32_t>(i)
+                    )
+                )
+            );
+        }
+        return py::cast(retval);
+    }
     case TypeKind::UINT_32_TYPE:
         return py::cast(dd.get_values<uint32_t>(key));
     case TypeKind::INT_64_TYPE:
@@ -315,8 +400,9 @@ static py::object get_member(
     case TypeKind::UINT_16_TYPE:
         return py::cast(dd.value<uint16_t>(key));
     case TypeKind::INT_32_TYPE:
-    case TypeKind::ENUMERATION_TYPE:
         return py::cast(dd.value<int32_t>(key));
+    case TypeKind::ENUMERATION_TYPE:
+        return py::cast(get_enum_member(dd, key, dd.value<int32_t>(key)));
     case TypeKind::UINT_32_TYPE:
         return py::cast(dd.value<uint32_t>(key));
     case TypeKind::INT_64_TYPE:
@@ -380,9 +466,16 @@ static void set_collection_member(
         dd.set_values<uint16_t>(key, py::cast<std::vector<uint16_t>>(values));
         break;
     case TypeKind::INT_32_TYPE:
-    case TypeKind::ENUMERATION_TYPE:
         dd.set_values<int32_t>(key, py::cast<std::vector<int32_t>>(values));
         break;
+    case TypeKind::ENUMERATION_TYPE: {;
+        auto iter = py::cast<py::iterable>(values);
+        std::vector<int32_t> int_values;
+        for (auto& value: iter) {
+            int_values.push_back(int32_t(py::cast<py::int_>(value)));
+        }
+        dd.set_values<int32_t>(key, int_values);
+    }
     case TypeKind::UINT_32_TYPE:
         dd.set_values<uint32_t>(key, py::cast<std::vector<uint32_t>>(values));
         break;
@@ -505,8 +598,14 @@ static void set_member(
         dd.value<uint16_t>(key, py::cast<uint16_t>(value));
         break;
     case TypeKind::INT_32_TYPE:
-    case TypeKind::ENUMERATION_TYPE:
         dd.value<int32_t>(key, py::cast<int32_t>(value));
+        break;
+    case TypeKind::ENUMERATION_TYPE:
+        try {
+            dd.value<int32_t>(key, py::cast<int32_t>(value));
+        } catch (py::builtin_exception::runtime_error e) {
+            dd.value<int32_t>(key, py::cast<EnumMember>(value).ordinal());
+        }
         break;
     case TypeKind::UINT_32_TYPE:
         dd.value<uint32_t>(key, py::cast<uint32_t>(value));
