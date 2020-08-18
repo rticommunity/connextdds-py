@@ -60,19 +60,12 @@ void init_class_defs(py::class_<DynamicDataTypeSerializationProperty>& cls)
                             & DynamicDataTypeSerializationProperty::
                                     enable_fast_deserialization,
                     "Fast deserialization setting.")
-#ifndef _MSC_VER
-            .def_readonly_static(
-                    "DEFAULT",
-                    &DynamicDataTypeSerializationProperty::DEFAULT,
-                    "Constant used to specify default configuration.")
-#else
             .def_property_readonly_static(
                     "DEFAULT",
                     [](py::object&) {
                         return DynamicDataTypeSerializationProperty();
                     },
                     "Constant used to specify default configuration.")
-#endif
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

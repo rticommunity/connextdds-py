@@ -97,7 +97,7 @@ if (WIN32)
         PRIVATE
         connextdds
     )
-    add_definitions(/bigobj)
+    add_definitions(/bigobj /MP)
     target_compile_options(
         distlog
         PRIVATE

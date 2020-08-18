@@ -10,7 +10,6 @@ find_package(
     REQUIRED
     COMPONENTS
         core
-        routing_service
     )
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
@@ -255,14 +254,12 @@ set_target_properties(connextdds PROPERTIES CXX_VISIBILITY_PRESET "default")
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     target_link_libraries(connextdds PRIVATE
         ${CONNEXTDDS_EXTERNAL_LIBS}
-        RTIConnextDDS::cpp2_api
-        RTIConnextDDS::routing_service_infrastructure)
+        RTIConnextDDS::cpp2_api)
 else()
     string(TOUPPER ${CMAKE_BUILD_TYPE} RTI_LIB_BUILD_TYPE)
     target_link_libraries(connextdds PRIVATE
         ${CONNEXTDDS_EXTERNAL_LIBS}
-        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED}
-        ${ROUTING_SERVICE_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
+        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
 
     target_include_directories(connextdds PRIVATE ${CONNEXTDDS_INCLUDE_DIRS})
 
@@ -308,7 +305,7 @@ else()
 endif()
 
 if (WIN32)
-    add_definitions(/bigobj)
+    add_definitions(/bigobj /MP)
     target_compile_options(
         connextdds
         PRIVATE
