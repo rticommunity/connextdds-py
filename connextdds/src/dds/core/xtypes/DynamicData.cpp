@@ -470,20 +470,19 @@ static void set_collection_member(
         break;
     case TypeKind::ENUMERATION_TYPE: {
         auto iterable = py::cast<py::iterable>(values);
-        std::vector<int32_t> int_values;
-        rti::core::xtypes::LoanedDynamicData loan = dd.loan_value(key);
-        DynamicData& member = loan.get();
-        auto& collection_type = static_cast<const CollectionType&>(member.type());
+        int32_t index = 1;
+        auto loan = dd.loan_value(key);
+        DynamicData& enum_collection = loan.get();
+        auto& collection_type = static_cast<const CollectionType&>(enum_collection.type());
         auto& enum_type = static_cast<const EnumType&>(collection_type.content_type());
-        loan.return_loan();
+        enum_collection.clear_all_members();
         for (auto& value: iterable) {
-            auto member = enum_type.member(
+            auto enum_member = enum_type.member(
                 enum_type.find_member_by_ordinal(
                     int32_t(py::cast<py::int_>(value))
                 ));
-            int_values.push_back(member.ordinal());
+            enum_collection.value<int32_t>(index++, enum_member.ordinal());
         }
-        dd.set_values<int32_t>(key, int_values);
         break;
     }
     case TypeKind::UINT_32_TYPE:

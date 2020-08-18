@@ -132,6 +132,8 @@ def test_member_info():
         assert info.kind == dds.Int32Type().kind
 
     data2["myEnumSeq"] = [ENUM_TYPE["BLUE"], ENUM_TYPE["RED"]]
+    info = data2.member_info("myEnumSeq")
+    assert info.kind == dds.TypeKind.SEQUENCE_TYPE
     
     with data2.loan_value("myEnumSeq") as loan:
         assert loan.data.member_exists(1)
