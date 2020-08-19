@@ -78,10 +78,10 @@ def test_getters():
     dw_qos = qos_provider.datawriter_qos
     assert dw_qos.entity_name.name == "defaultPublicationName"
 
-    dw_qos = qos_provider.topic_datawriter_qos(topic_a)
+    dw_qos = qos_provider.get_topic_datawriter_qos(topic_a)
     assert dw_qos.entity_name.name == "defaultPublicationNameA"
 
-    dw_qos = qos_provider.topic_datawriter_qos(topic_b)
+    dw_qos = qos_provider.get_topic_datawriter_qos(topic_b)
     assert dw_qos.entity_name.name == "defaultPublicationNameB"
 
     sub_qos = qos_provider.subscriber_qos
@@ -90,19 +90,19 @@ def test_getters():
     dr_qos = qos_provider.datareader_qos
     assert dr_qos.entity_name.name == "defaultSubscriptionName"
 
-    dr_qos = qos_provider.topic_datareader_qos(topic_a)
+    dr_qos = qos_provider.get_topic_datareader_qos(topic_a)
     assert dr_qos.entity_name.name == "defaultSubscriptionNameA"
 
-    dr_qos = qos_provider.topic_datareader_qos(topic_b)
+    dr_qos = qos_provider.get_topic_datareader_qos(topic_b)
     assert dr_qos.entity_name.name == "defaultSubscriptionNameB"
 
     topic_qos = qos_provider.topic_qos
     assert topic_qos.resource_limits.max_samples == 100
 
-    topic_qos = qos_provider.topic_name_qos(topic_a)
+    topic_qos = qos_provider.get_topic_name_qos(topic_a)
     assert topic_qos.resource_limits.max_samples == 101
 
-    topic_qos = qos_provider.topic_name_qos(topic_b)
+    topic_qos = qos_provider.get_topic_name_qos(topic_b)
     assert topic_qos.resource_limits.max_samples == 102
 
     # Start using my_other_profile_name
@@ -110,37 +110,37 @@ def test_getters():
     domain_participant_qos = qos_provider.participant_qos_profile(my_other_profile_name)
     assert domain_participant_qos.participant_name.name == "otherParticipantName"
 
-    pub_qos = qos_provider.publisher_qos_profile(my_other_profile_name)
+    pub_qos = qos_provider.get_publisher_qos_profile(my_other_profile_name)
     assert pub_qos.entity_name.name == "otherPublisherName"
 
-    dw_qos = qos_provider.datawriter_qos_profile(my_other_profile_name)
+    dw_qos = qos_provider.get_datawriter_qos_profile(my_other_profile_name)
     assert dw_qos.entity_name.name == "otherPublicationName"
 
-    dw_qos = qos_provider.topic_datawriter_qos(my_other_profile_name, topic_a)
+    dw_qos = qos_provider.set_topic_datawriter_qos(my_other_profile_name, topic_a)
     assert dw_qos.entity_name.name == "otherPublicationNameA"
 
-    dw_qos = qos_provider.topic_datawriter_qos(my_other_profile_name, topic_b)
+    dw_qos = qos_provider.set_topic_datawriter_qos(my_other_profile_name, topic_b)
     assert dw_qos.entity_name.name == "otherPublicationNameB"
 
-    sub_qos = qos_provider.subscriber_qos_profile(my_other_profile_name)
+    sub_qos = qos_provider.get_subscriber_qos_profile(my_other_profile_name)
     assert sub_qos.entity_name.name == "otherSubscriberName"
 
-    dr_qos = qos_provider.datareader_qos_profile(my_other_profile_name)
+    dr_qos = qos_provider.get_datareader_qos_profile(my_other_profile_name)
     assert dr_qos.entity_name.name == "otherSubscriptionName"
 
-    dr_qos = qos_provider.topic_datareader_qos(my_other_profile_name, topic_a)
+    dr_qos = qos_provider.set_topic_datareader_qos(my_other_profile_name, topic_a)
     assert dr_qos.entity_name.name == "otherSubscriptionNameA"
 
-    dr_qos = qos_provider.topic_datareader_qos(my_other_profile_name, topic_b)
+    dr_qos = qos_provider.set_topic_datareader_qos(my_other_profile_name, topic_b)
     assert dr_qos.entity_name.name == "otherSubscriptionNameB"
 
-    topic_qos = qos_provider.topic_qos_profile(my_other_profile_name)
+    topic_qos = qos_provider.get_topic_qos_profile(my_other_profile_name)
     assert topic_qos.resource_limits.max_samples == 200
 
-    topic_qos = qos_provider.topic_name_qos(my_other_profile_name, topic_a)
+    topic_qos = qos_provider.set_topic_name_qos(my_other_profile_name, topic_a)
     assert topic_qos.resource_limits.max_samples == 201
 
-    topic_qos = qos_provider.topic_name_qos(my_other_profile_name, topic_b)
+    topic_qos = qos_provider.set_topic_name_qos(my_other_profile_name, topic_b)
     assert topic_qos.resource_limits.max_samples == 202
 
     # USE_DDS_DEFAULT_QOS_PROFILE does not exist and cannot be tested
