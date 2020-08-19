@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.15)
 project(connextdds)
 include(CheckCXXCompilerFlag)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
+file(TO_CMAKE_PATH $ENV{NDDSHOME} NDDSHOME)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 find_package(
     RTIConnextDDS "5.3.1"
     REQUIRED
     COMPONENTS
         core
-        routing_service
     )
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
@@ -253,14 +254,12 @@ set_target_properties(connextdds PROPERTIES CXX_VISIBILITY_PRESET "default")
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     target_link_libraries(connextdds PRIVATE
         ${CONNEXTDDS_EXTERNAL_LIBS}
-        RTIConnextDDS::cpp2_api
-        RTIConnextDDS::routing_service_infrastructure)
+        RTIConnextDDS::cpp2_api)
 else()
     string(TOUPPER ${CMAKE_BUILD_TYPE} RTI_LIB_BUILD_TYPE)
     target_link_libraries(connextdds PRIVATE
         ${CONNEXTDDS_EXTERNAL_LIBS}
-        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED}
-        ${ROUTING_SERVICE_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
+        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
 
     target_include_directories(connextdds PRIVATE ${CONNEXTDDS_INCLUDE_DIRS})
 
@@ -305,22 +304,28 @@ else()
     )
 endif()
 
-target_compile_options(
-    connextdds
-    PRIVATE
-    "-fPIC"
-    "$<$<CONFIG:RELEASE>:-Os>"
-    "$<$<CONFIG:RELEASE>:-g0>"
-)
-
-target_link_options(
-    connextdds
-    PRIVATE
-    "-fPIC"
-)
-
 if (WIN32)
+    add_definitions(/bigobj /MP)
+    target_compile_options(
+        connextdds
+        PRIVATE
+        "$<$<CONFIG:RELEASE>:-Os>"
+    )
 else()
+    target_compile_options(
+        connextdds
+        PRIVATE
+        "-fPIC"
+        "$<$<CONFIG:RELEASE>:-Os>"
+        "$<$<CONFIG:RELEASE>:-g0>"
+    )
+
+    target_link_options(
+        connextdds
+        PRIVATE
+        "-fPIC"
+    )
+
     add_custom_command(
         TARGET connextdds
         POST_BUILD

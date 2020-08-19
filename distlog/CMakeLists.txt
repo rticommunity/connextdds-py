@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 project(distlog)
 include(CheckCXXCompilerFlag)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "$ENV{NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
+file(TO_CMAKE_PATH $ENV{NDDSHOME} NDDSHOME)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 find_package(
     RTIConnextDDS "5.3.1"
     REQUIRED
@@ -12,6 +14,12 @@ find_package(
     )
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
+
+if (WIN32)
+    link_directories(
+        ${BUILD_TEMP_DIRECTORY}/rti.connextdds/$(Configuration)
+    )
+endif()
 
 pybind11_add_module(
     distlog 
@@ -83,22 +91,33 @@ else()
     )
 endif()
 
-target_compile_options(
-    distlog
-    PRIVATE
-    "-fpic"
-    "$<$<CONFIG:RELEASE>:-Os>"
-    "$<$<CONFIG:RELEASE>:-g0>"
-)
-
-target_link_options(
-    distlog
-    PRIVATE
-    "-fpic"
-)
-
 if (WIN32)
+    target_link_libraries(
+        distlog
+        PRIVATE
+        connextdds
+    )
+    add_definitions(/bigobj /MP)
+    target_compile_options(
+        distlog
+        PRIVATE
+        "$<$<CONFIG:RELEASE>:-Os>"
+    )
 else()
+    target_compile_options(
+        distlog
+        PRIVATE
+        "-fPIC"
+        "$<$<CONFIG:RELEASE>:-Os>"
+        "$<$<CONFIG:RELEASE>:-g0>"
+    )
+
+    target_link_options(
+        distlog
+        PRIVATE
+        "-fPIC"
+    )
+
     add_custom_command(
         TARGET distlog
         POST_BUILD

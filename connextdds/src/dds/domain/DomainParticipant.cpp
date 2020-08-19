@@ -295,8 +295,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     py::arg_v(
                             "serialization_property",
                             rti::core::xtypes::
-                                    DynamicDataTypeSerializationProperty::
-                                            DEFAULT,
+                                    DynamicDataTypeSerializationProperty(),
                             "DynamicDataTypeSerializationProperty.DEFAULT"),
                     "Registers a DynamicType with specific serialization "
                     "properties.")
@@ -587,6 +586,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     },
                     py::arg("handles"),
                     "Ignore a list of DataReaders specified by their handles.")
+#ifndef _MSC_VER
             .def(
                     "find_topics",
                     [](PyDomainParticipant& dp) {
@@ -595,6 +595,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     "Find all Topics in the DomainParticipant.")
+#endif
             .def(
                     "discovered_topics",
                     [](const PyDomainParticipant& dp) {

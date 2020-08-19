@@ -6,8 +6,7 @@
 
 ## Requirements
 
-- macOS or Linux (Windows support coming soon)
-- CMake 3.15+
+- Windows (requires Visual Studio 2015 or newer), macOS, and Linux
 - Python 2.7, Python 3.x with pip
 - RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
 
