@@ -8,7 +8,7 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<CollectionType, DynamicType>& cls)
 {
-    cls.def(
+    cls.def_property_readonly(
                "content_type",
                [](const CollectionType& ct) {
                    auto dt = ct.content_type();
