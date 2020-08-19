@@ -6,6 +6,7 @@ import subprocess
 import collections
 import shutil
 import filecmp
+import cmake
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -129,8 +130,9 @@ class CMakeBuild(build_ext):
         module_build_dir = os.path.join(self.build_temp, ext.name)
         if not os.path.exists(module_build_dir):
             os.makedirs(module_build_dir)
-        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=module_build_dir, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=module_build_dir)
+        cmake_cmd = os.path.join(cmake.CMAKE_BIN_DIR, 'cmake')
+        subprocess.check_call([cmake_cmd, ext.sourcedir] + cmake_args, cwd=module_build_dir, env=env)
+        subprocess.check_call([cmake_cmd, '--build', '.'] + build_args, cwd=module_build_dir)
 
 
 setup(
