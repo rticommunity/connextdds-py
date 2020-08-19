@@ -11,8 +11,7 @@ This section is for instructions on how to build and install connextdds-py.
 Requirements
 ============
 
-- macOS or Linux (Windows support coming soon)
-- CMake 3.15+
+- Windows, macOS, or Linux
 - Python 2.7, Python3.x with pip or pip3 respectively
 - RTI Connext DDS 5.3.1, 6.0.x
 
@@ -45,15 +44,42 @@ Simple Installation
 
     $ pip install .
 
-Development Installation
-========================
-If you want to cahce the build files, you can use wheels.
+Simple Wheel Build
+==================
 
-1. Install the wheel package using pip.
+1. Clone the repo and submodules and enter the directory
 
 .. code-block:: shell
 
+    $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+    $ cd connextdds-py
+
+2. Set the environment variables
+
+.. code-block:: shell
+
+    $ export NDDSHOME=<install location of Connext Pro>
+    $ export CONNEXTDDS_ARCH=<target arch>
+    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
+    $ export NJOBS=<number of concurrent make jobs, default 1>
+
+3. Build wheel
+
+.. code-block:: shell
+
+    $ pip wheel .
+
+Development Installation
+========================
+If you want to cache the build files, you can use wheels.
+
+1. Install requirements using pip.
+
+.. code-block:: shell
+
+    $ pip install setuptools
     $ pip install wheel
+    $ pip install cmake 
 
 2. Clone the repo and submodules and enter the directory
 
@@ -70,12 +96,13 @@ If you want to cahce the build files, you can use wheels.
     $ export CONNEXTDDS_ARCH=<target arch>
     $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
     $ export NJOBS=<number of concurrent make jobs, default 1>
+    $ export DEBUG=<1 for debug build, unset or any other value for release build>
 
 4. Run the setup script
 
 .. code-block:: shell 
 
-    $ python setup.py bdist_wheel
+    $ python wheel .
 
 5. Install the package
 
