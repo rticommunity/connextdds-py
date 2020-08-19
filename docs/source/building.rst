@@ -11,7 +11,7 @@ This section is for instructions on how to build and install connextdds-py.
 Requirements
 ============
 
-- Windows, macOS, or Linux
+- Windows (requires Visual Studio 2015 or newer), macOS, or Linux
 - Python 2.7, Python3.x with pip or pip3 respectively
 - RTI Connext DDS 5.3.1, 6.0.x
 
