@@ -5,6 +5,7 @@ import platform
 import subprocess
 import collections
 import shutil
+import filecmp
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -33,7 +34,10 @@ def get_rti_libs(pkg_name, pkg_dir):
         lib_files = [os.path.join(get_nddshome(), 'lib', get_arch(), filename)
                     for filename in libs]
         for filepath in lib_files:
-            shutil.copy(filepath, os.path.join(get_script_path(), pkg_dir))
+            dst_filepath = os.path.join(get_script_path(), pkg_dir, os.path.basename(filepath))
+            if not (os.path.exists(dst_filepath) and filecmp.cmp(filepath, dst_filepath)):
+                print('Copying {} to {}'.format(filepath, dst_filepath))
+                shutil.copy(filepath, os.path.join(get_script_path(), pkg_dir))
         return libs
     raise RuntimeError('Error setting up package name "{}" on platform "{}"'.format(
         pkg_name, platform.system()))
