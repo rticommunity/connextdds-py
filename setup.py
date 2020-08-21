@@ -109,7 +109,8 @@ class CMakeBuild(build_ext):
                       '-DBUILD_SHARED_LIBS=ON',
                       '-DCONNEXTDDS_DIR=' + nddshome,
                       '-DCONNEXTDDS_ARCH=' + arch,
-                      '-DCMAKE_BUILD_TYPE=' + cfg]
+                      '-DCMAKE_BUILD_TYPE=' + cfg,
+                      '-DNUM_JOBS=' + get_job_count()]
 
         build_args = ['--config', cfg]
 

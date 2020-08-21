@@ -305,7 +305,7 @@ else()
 endif()
 
 if (WIN32)
-    add_definitions(/bigobj /MP)
+    add_definitions(/bigobj /MP${NUM_JOBS})
     target_compile_options(
         connextdds
         PRIVATE

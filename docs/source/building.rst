@@ -35,8 +35,7 @@ Simple Installation
 
     $ export NDDSHOME=<install location of Connext Pro>
     $ export CONNEXTDDS_ARCH=<target arch>
-    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
-    $ export NJOBS=<number of concurrent make jobs, default 1>
+    $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
 
 3. Build and install
 
@@ -60,8 +59,7 @@ Simple Wheel Build
 
     $ export NDDSHOME=<install location of Connext Pro>
     $ export CONNEXTDDS_ARCH=<target arch>
-    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
-    $ export NJOBS=<number of concurrent make jobs, default 1>
+    $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
 
 3. Build wheel
 
@@ -94,8 +92,7 @@ If you want to cache the build files, you can use wheels.
 
     $ export NDDSHOME=<install location of Connext Pro>
     $ export CONNEXTDDS_ARCH=<target arch>
-    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
-    $ export NJOBS=<number of concurrent make jobs, default 1>
+    $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
     $ export DEBUG=<1 for debug build, unset or any other value for release build>
 
 4. Run the setup script

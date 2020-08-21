@@ -97,7 +97,7 @@ if (WIN32)
         PRIVATE
         connextdds
     )
-    add_definitions(/bigobj /MP)
+    add_definitions(/bigobj /MP${NUM_JOBS})
     target_compile_options(
         distlog
         PRIVATE
