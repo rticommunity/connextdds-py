@@ -10,18 +10,19 @@ type) is uniquely distinguished by using a name called a Topic.
 
 Topics allow for publishers and subscriber to communicate
 without knowing about each other. They dynamically discover
-each other through Topics. The data that the :class:`DataReader` and 
-:class:`DataWriter` share is described by a :class:`Topic`. 
+each other through topics. The data that the :class:`DataReader` and
+:class:`DataWriter` share is described by a topic.
 
-To create a Topics, you need a domain participant
-and a data type. How to create a type and participant is
-discussed in :ref:`types:Types` and :ref:`participant:DomainParticipant`.
+Topics are identified by a name and they are associated to a type and a
+:class:`DomainParticipant`.
+
+The following code creates a topic named "Example" for the type previously
+defined in :ref:`types:Data Types`.
 
 .. code-block:: python
 
-    import rti.connextdds as dds
-    # my_type and participant have already been created
-    topic = dds.DynamicData.Topic(participant, "Name of topic", my_type)
+    topic = dds.DynamicData.Topic(participant, "Example", my_type)
 
-
-
+A `DataReader` can also be created with a `ContentFilteredTopic`
+(see :class:`DynamicData.ContentFilteredTopic`), which specifies a content-based
+subscription with a filter on the data type.

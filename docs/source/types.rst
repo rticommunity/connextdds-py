@@ -1,7 +1,7 @@
 .. py:currentmodule:: rti.connextdds
 
-Types
-~~~~~
+Data Types
+~~~~~~~~~~
 
 In data-centric communications, the applications participating in
 the communication need to share a common view of the types of data
@@ -29,13 +29,13 @@ You can now use `my_type` to create a Topic (see :ref:`topic:Topics`
 or to instantiate a DynamicData object:
 
 .. code-block:: python
-    
+
     sample = dds.DynamicData(my_type)
 
     # Let's say we have a field x that takes a 32 bit integer,
     # we can assign it like this
     sample['x'] = 42
-    
+
 Now you would be able to publish the sample which is discussed in
 :ref:`writer:Publications`.
 
