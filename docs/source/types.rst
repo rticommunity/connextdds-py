@@ -1,7 +1,7 @@
 .. py:currentmodule:: rti.connextdds
 
-Types
-~~~~~
+Data Types
+~~~~~~~~~~
 
 Types in connextdds-py are similar to the types in other RTI APIs
 but with a few differences. Due to Python's dynamic nature, :class:`DynamicData`
@@ -21,14 +21,14 @@ you can get the type from the file like this:
     import rti.connextdds as dds
     FILE = "path to your xml file"
     provider = dds.QosProvider(FILE)
-    provider_type = provider.type("NameOfType")
+    my_type = provider.type("NameOfType")
 
-Now in the :code:`provider_type` variable you have the type defined in the IDL file.
+Now in the :code:`my_type` variable you have the type defined in the IDL file.
 To make an instance of it, all you have to do is this:
 
 .. code-block:: python
     
-    sample = dds.DynamicData(provider_type)
+    sample = dds.DynamicData(my_type)
     # Let's say we have a field x that takes a 32 bit integer,
     # we can assign it like this
     sample['x'] = 42

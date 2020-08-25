@@ -3,24 +3,24 @@
 Publications
 ~~~~~~~~~~~~
 
-To create a DataWriter, you need a :ref:`topic:Topics` 
-and a :ref:`participant:DomainParticipant`. Additionally,
-you may add a QoS parameter.
+To publish DDS data you need a :class:`Publisher` and a ``DataWriter`` for a
+``Topic``.
+
+A ``Publisher`` and a ``DataWriter`` can be configured with specific QoS and
+a listener to receive status updates.
+
+The following code creates a :class:`DynamicData.DataWriter` for the topic
+we created in the :ref:`topic:Topics` section.
 
 .. code-block:: python
-    
-    # At this point you should have a participant and a 
-    # topic already created. Instructions on this can be
-    # found in the documentation
-    # First, you need a publisher in order to create a writer
-    import rti.connextdds as dds 
+
     publisher = dds.Publisher(participant)
     writer = dds.DynamicData.DataWriter(publisher, topic)
 
-To use the writer, create some data. Once it is created, you
-can call:
+To publish data, create a sample, update its values and write it:
 
 .. code-block:: python
 
+    data = dds.DynamicData(my_type)
+    data["foo"] = "test"
     writer.write(data)
-
