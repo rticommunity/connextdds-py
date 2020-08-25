@@ -9,32 +9,29 @@ being passed around.
 
 The Connext DDS Python API loads type definitions from XML. Other
 Connext DDS APIs support static types generated from an IDL definition.
-You can generate XML files from those IDL files. To do so,
-at the command line run:
+You can generate XML files from those IDL files using ``rtiddsgen``:
 
 .. code-block:: shell
 
-    $ rtiddsgen -convertToXml your_idl_file.idl 
+    $ rtiddsgen -convertToXml your_types.idl
 
 To load a type from the application:
 
 .. code-block:: python
 
     import rti.connextdds as dds
-    FILE = "path to your xml file"
-    provider = dds.QosProvider(FILE)
-    my_type = provider.type("NameOfType")
+    provider = dds.QosProvider("your_types.xml")
+    my_type = provider.type("MyType")
 
-You can now use `my_type` to create a Topic (see :ref:`topic:Topics`
-or to instantiate a DynamicData object:
+You can now use ``my_type`` to create a ``Topic`` (see :ref:`topic:Topics`)
+and to instantiate a :class:`DynamicData` object:
 
 .. code-block:: python
 
     sample = dds.DynamicData(my_type)
 
-    # Let's say we have a field x that takes a 32 bit integer,
-    # we can assign it like this
-    sample['x'] = 42
+    # Let's say my_type has an int32 field
+    sample["x"] = 42
 
 Now you would be able to publish the sample which is discussed in
 :ref:`writer:Publications`.
@@ -42,81 +39,101 @@ Now you would be able to publish the sample which is discussed in
 Defining types programmatically
 ===============================
 
-Types can also be defined in the application, using :class:`DynamicType` and
-its derived classes.
+Types can also be defined dynamically in the application, using :class:`DynamicType`
+and its derived classes.
+
+The following example creates a type an instantiate a data sample:
 
 .. code-block:: python
 
-    # Here we are creating a nested type
-    nested_type = dds.StructType("nested_type")
-    # Here we use COORDINATE_TYPE, a type that would be
-    # defined in XML as two integers, an x and a y value
-    nested_type.add_member(dds.Member("a", COORDINATE_TYPE))
+    # struct Point {
+    #     double x, y;
+    # };
+    point_type = dds.StructType("Point")
+    point_type.add_member(dds.Member("x", dds.Float64Type()))
+    point_type.add_member(dds.Member("y", dds.Float64Type()))
 
-Nested types
-============
+    # struct MyType {
+    #     @key string<128> id;
+    #     Point location;
+    #     int32 int_array[5];
+    #     sequence<Point, 10> path;
+    # };
+    my_type = dds.StructType("MyType")
+    my_type.add_member(dds.Member(name="id", data_type=dds.StringType(128), is_key=True))
+    my_type.add_member(dds.Member(name="location", data_type=point_type))
+    my_type.add_member(dds.Member(name="int_array", data_type=dds.ArrayType(dds.Int32Type(), 5)))
+    my_type.add_member(dds.Member(name="path", data_type=dds.SequenceType(point_type, 10)))
+
+    # Instantiate the type
+    sample = dds.DynamicData(my_type)
+    sample["id"] = "object1"
+
+Accessing nested members
+========================
 
 There are a few different ways to manipulate data with nested
-types. The `.` notation allows accessing nested primitive members:
-
-    sample = dds.DynamicData(nested_type)
-    sample["a.x"] = 1
-    sample["a.y"] = 2
-
-Nested members can be loaned:
-
-
-Sequences and arrays
-====================
-
-Sequences and arrays can be retrieved or set as a full python list,
-or element by element:
-
+types. The `.` notation allows accessing nested primitive members at any level:
 
 .. code-block:: python
 
-    # my_type will have been set as discussed above
-    # my_type will have a sequence called MySeq that is an integer
-    # type of size 100
     sample = dds.DynamicData(my_type)
-    
-    # Options for setting
-    sample["MySeq"] = [42] * 100
-    
-    # OR you can do this
-    loan = sample.loan_value("MySeq")
-    data = loan.data
-    for i in range(0, 100):
-        data[i] = 42
-    # note this version is less efficient 
-    loan.return_loan()
+    sample["location.x"] = 1.5
+    sample["location.y"] = 2.5
 
-    # Options for getting
-    lst = sample["MySeq"]
-
-
-It is also possible to loan a sequence or array (or an element if the type is complex):
+To make multiple modifications to a complex member, you can get a temporary
+reference (a loan) to the member:
 
 .. code-block:: python
 
-    # OR you can do this
-    loan = sample.loan_value("MySeq")
-    data = loan.data
-    print(data[42])
-    loan.return_loan()
+    with sample.loan_value("location") as location:
+        location.data["x"] = 11.5
+        location.data["y"] = 12.5
 
-
-Data from Dictionaries
-======================
-
-You can also use native python dictionaries with DynamicData.
-For example,
+A nested member can be assigned from a dictionary, too:
 
 .. code-block:: python
 
-    # Assuming we already have a DataWriter for the correct type
-    writer.write({"x": 1, "y": 42})
-    # This will work if the data type that writer is working with
-    # is a structure with values x and y that are of type integer
+    sample["location"] = {"x": 4.5, "y": 5.5}
+    print(sample["location"])
+
+Accessing sequences and arrays
+==============================
+
+Sequences and arrays can be retrieved or set using python lists:
+
+.. code-block:: python
+
+    # We're using the type we created before
+    sample = dds.DynamicData(my_type)
+
+    # Set the array field with the values of a python list
+    sample["int_array"] = [1, 2, 3, 4, 5]
+
+    # Get all the array elements in a python list
+    lst = list(sample["int_array"])
+
+    # Set and get a single element:
+    sample["int_array[1]"] = 4
+    value = sample["int_array[1]"]
+
+Lists of structures can be accessed using lists of dictionaries:
+
+.. code-block:: python
+
+    sample["path"] = [{"x": 1, "y": 2}, {"x": 3, "y": 4}]
+    path = list(sample["path"])
+
+If you only need to set a few elements or fields, you can loan the sequence
+and its elements. Sequences are automatically resized when you
+access and index above the current length:
+
+.. code-block:: python
+
+    with sample.loan_value("path") as path:
+        with path.data.loan_value(2) as point:
+            point.data["x"] = 111
+            point.data["y"] = 222
+    print(sample["path[2].x"]) # prints 111
 
 
