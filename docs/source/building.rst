@@ -11,10 +11,9 @@ This section is for instructions on how to build and install connextdds-py.
 Requirements
 ============
 
-- macOS or Linux (Windows support coming soon)
-- CMake 3.15+
-- Python 2.7, Python3.x with pip or pip3 respectively
-- RTI Connext DDS 5.3.1, 6.0.x
+- Windows (requires Visual Studio 2015 or newer), macOS, or Linux
+- Python 2.7 or Python3.x with pip or pip3 respectively
+- RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
 
 **Note: On certain platforms (ie Ubuntu 20.04 LTS), you must explicitly mention
 what python version you are using. To do so, just use pip3 or python3 in place of
@@ -36,7 +35,6 @@ Simple Installation
 
     $ export NDDSHOME=<install location of Connext Pro>
     $ export CONNEXTDDS_ARCH=<target arch>
-    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
     $ export NJOBS=<number of concurrent make jobs, default 1>
 
 3. Build and install
@@ -49,11 +47,11 @@ Development Installation
 ========================
 If you want to cache the build files, you can use wheels.
 
-1. Install the wheel package using pip.
+1. Install the required python modules:
 
 .. code-block:: shell
 
-    $ pip install wheel
+    $ pip install wheel setuptools cmake
 
 2. Clone the repo and submodules and enter the directory
 
@@ -67,13 +65,12 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
 
     $ export NDDSHOME=<install location of Connext Pro>
-    $ export CONNEXTDDS_ARCH=<target arch>
-    $ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
+    $ export CONNEXTDDS_ARCH=<target architecture>
     $ export NJOBS=<number of concurrent make jobs, default 1>
 
 4. Run the setup script
 
-.. code-block:: shell 
+.. code-block:: shell
 
     $ python setup.py bdist_wheel
 
