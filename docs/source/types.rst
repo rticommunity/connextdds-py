@@ -42,7 +42,7 @@ Defining types programmatically
 Types can also be defined dynamically in the application, using :class:`DynamicType`
 and its derived classes.
 
-The following example creates a type an instantiate a data sample:
+The following example creates a type and instantiates a data sample:
 
 .. code-block:: python
 
