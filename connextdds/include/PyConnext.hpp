@@ -1,15 +1,11 @@
 #pragma once
 #include <ndds_version.h>
 
-#ifdef _MSVC_VER
+#ifdef _MSC_VER
     #define PYRTI_SYMBOL_HIDDEN
+    #define PYRTI_SYMBOL_PUBLIC __declspec(dllexport)
 #else
     #define PYRTI_SYMBOL_HIDDEN __attribute__((visibility("hidden")))
-#endif
-
-#ifdef _MSVC_VER
-    #define PYRTI_SYMBOL_PUBLIC
-#else
     #define PYRTI_SYMBOL_PUBLIC __attribute__((visibility("default")))
 #endif
 
@@ -49,6 +45,10 @@
 #include <dds/core/Optional.hpp>
 #include <rti/core/OptionalValue.hpp>
 #include <dds/core/xtypes/DynamicType.hpp>
+
+#ifdef _MSC_VER
+    #undef PLATFORM
+#endif
 
 namespace py = pybind11;
 

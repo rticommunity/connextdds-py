@@ -6,8 +6,7 @@
 
 ## Requirements
 
-- macOS or Linux (Windows support coming soon)
-- CMake 3.15+
+- Windows (requires Visual Studio 2015 or newer), macOS, and Linux
 - Python 2.7, Python 3.x with pip
 - RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
 
@@ -25,8 +24,7 @@ $ cd connextdds-py
 ```shell
 $ export NDDSHOME=<install location of Connext Pro>
 $ export CONNEXTDDS_ARCH=<target arch>
-$ export LD_LIBRARY_PATH=<location of target libs>:$LD_LIBRARY_PATH
-$ export NJOBS=<number of concurrent make jobs, default 1>
+$ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
 ```
 
 > build and install
@@ -58,6 +56,9 @@ regular install. If you already have an install of any form, run
 `pip3 uninstall rti -y`
 
 ```shell
+$ pip3 install wheel
+$ pip3 install setuptools
+$ pip3 install cmake
 $ python3 setup.py bdist_wheel
 $ pip3 install dist/*
 ```
@@ -119,5 +120,4 @@ while True:
     - implement a custom signal handler
     - send a SIGQUIT via keyboard shortcut instead of SIGINT
     - kill the Python process via the command line
-- SIP on macOS prevents Python from using DYLD_LIBRARY_PATH to find the target libraries, so it is recommended to put them somewhere on the standard search path (e.g. $HOME/lib)
 - Getter/setter APIs have been replaced by Python properties in most cases. The exception is write-only properties, which are still normal method calls with the new value as the argument.

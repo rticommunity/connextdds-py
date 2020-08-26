@@ -61,29 +61,25 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                     "The StreamKind.")
             .def_property(
                     "sample_state",
-                    (const dds::sub::status::SampleState& (DataStateEx::*) ()
-                             const)
-                            & DataStateEx::sample_state,
-                    (void (DataStateEx::*)(
-                            const dds::sub::status::SampleState&))
-                            & DataStateEx::sample_state,
+                    [](const DataStateEx& ds) { return ds.sample_state(); },
+                    [](DataStateEx& ds,
+                       const dds::sub::status::SampleState& ss) {
+                        ds.sample_state(ss);
+                    },
                     "The SampleState of the DataStateEx.")
             .def_property(
                     "instance_state",
-                    (const dds::sub::status::InstanceState& (DataStateEx::*) ()
-                             const)
-                            & DataStateEx::instance_state,
-                    (void (DataStateEx::*)(
-                            const dds::sub::status::InstanceState&))
-                            & DataStateEx::instance_state,
+                    [](const DataStateEx& ds) { return ds.instance_state(); },
+                    [](DataStateEx& ds, dds::sub::status::InstanceState& is) {
+                        ds.instance_state(is);
+                    },
                     "The InstanceState of the DataStateEx.")
             .def_property(
                     "view_state",
-                    (const dds::sub::status::ViewState& (DataStateEx::*) ()
-                             const)
-                            & DataStateEx::view_state,
-                    (void (DataStateEx::*)(const dds::sub::status::ViewState&))
-                            & DataStateEx::view_state,
+                    [](const DataStateEx& ds) { return ds.view_state(); },
+                    [](DataStateEx& ds, dds::sub::status::ViewState& vs) {
+                        ds.view_state(vs);
+                    },
                     "The ViewState of the DataStateEx.")
             .def_static(
                     "any",
@@ -118,24 +114,29 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                          & DataStateEx::operator<<,
                  py::is_operator(),
                  "Set the StreamKind for the DataStateEx.")
-            .def("__lshift__",
-                 (dds::sub::status::DataState
-                  & (DataStateEx::*) (const dds::sub::status::SampleState&) )
-                         & DataStateEx::operator<<,
-                 py::is_operator(),
-                 "Set the SampleState for the DataState.")
-            .def("__lshift__",
-                 (dds::sub::status::DataState
-                  & (DataStateEx::*) (const dds::sub::status::ViewState&) )
-                         & DataStateEx::operator<<,
-                 py::is_operator(),
-                 "Set the ViewState for the DataState.")
-            .def("__lshift__",
-                 (dds::sub::status::DataState
-                  & (DataStateEx::*) (const dds::sub::status::InstanceState&) )
-                         & DataStateEx::operator<<,
-                 py::is_operator(),
-                 "Set the InstanceState for the DataState.");
+            .def(
+                    "__lshift__",
+                    [](DataStateEx& ds,
+                       const dds::sub::status::SampleState& ss) {
+                        return ds << ss;
+                    },
+                    py::is_operator(),
+                    "Set the SampleState for the DataState.")
+            .def(
+                    "__lshift__",
+                    [](DataStateEx& ds, const dds::sub::status::ViewState& vs) {
+                        return ds << vs;
+                    },
+                    py::is_operator(),
+                    "Set the ViewState for the DataState.")
+            .def(
+                    "__lshift__",
+                    [](DataStateEx& ds,
+                       const dds::sub::status::InstanceState& is) {
+                        return ds << is;
+                    },
+                    py::is_operator(),
+                    "Set the InstanceState for the DataState.");
 
     py::implicitly_convertible<dds::sub::status::DataState, DataStateEx>();
 }
