@@ -12,10 +12,10 @@ Requirements
 ============
 
 - Windows (requires Visual Studio 2015 or newer), macOS, or Linux
-- Python 2.7, Python3.x with pip or pip3 respectively
-- RTI Connext DDS 5.3.1, 6.0.x
+- Python 2.7 or Python3.x with pip or pip3 respectively
+- RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
 
-**Note: On certain platforms (ie Ubuntu 20.04 LTS), you must explicity mention
+**Note: On certain platforms (ie Ubuntu 20.04 LTS), you must explicitly mention
 what python version you are using. To do so, just use pip3 or python3 in place of
 pip or python**
 
@@ -71,13 +71,11 @@ Development Installation
 ========================
 If you want to cache the build files, you can use wheels.
 
-1. Install requirements using pip.
+1. Install the required python modules:
 
 .. code-block:: shell
 
-    $ pip install setuptools
-    $ pip install wheel
-    $ pip install cmake 
+    $ pip install setuptools wheel cmake
 
 2. Clone the repo and submodules and enter the directory
 
@@ -91,13 +89,13 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
 
     $ export NDDSHOME=<install location of Connext Pro>
-    $ export CONNEXTDDS_ARCH=<target arch>
+    $ export CONNEXTDDS_ARCH=<target architecture>
     $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
     $ export DEBUG=<1 for debug build, unset or any other value for release build>
 
 4. Run the setup script
 
-.. code-block:: shell 
+.. code-block:: shell
 
     $ python wheel .
 

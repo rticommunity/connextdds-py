@@ -3,7 +3,7 @@
 
 Quick reference
 ~~~~~~~~~~~~~~~
-This section includes links to common rti.connextdds types.
+This section includes links to common ``rti.connextdds`` types.
 
 DDS Entities:
    - :class:`DomainParticipant`

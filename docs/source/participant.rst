@@ -28,7 +28,7 @@ deleted when the block ends.
     with dds.DomainParticipant(DOMAIN_ID) as participant:
         pass
 
-Like all :class:`IEntity` types, DomainParticipants have Qos policies and listeners.
+Like all :class:`IEntity` types, DomainParticipants have QoS policies and listeners.
 
 The following code shows how to specify the :class:`DomainParticipantQos`:
 

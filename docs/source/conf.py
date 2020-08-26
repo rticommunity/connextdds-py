@@ -18,7 +18,7 @@ for i in glob.glob('../../build/lib.*'):
 
 # -- Project information -----------------------------------------------------
 
-project = 'connextdds-py'
+project = 'RTI Connext DDS Python API'
 copyright = '2020, Real-Time Innovations, Inc'
 author = 'Real-Time Innovations, Inc.'
 
