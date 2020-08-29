@@ -12,7 +12,7 @@ Subpackages
 Submodules
 ----------
 
-rti.connextdds module
+rti.connextdds Module
 ---------------------
 
 .. automodule:: rti.connextdds
@@ -21,7 +21,7 @@ rti.connextdds module
    :show-inheritance:
 
 
-Module contents
+Module Contents
 ---------------
 
 .. automodule:: rti

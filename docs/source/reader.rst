@@ -3,25 +3,25 @@
 Subscriptions
 ~~~~~~~~~~~~~
 
-An application uses DataReaders to access data received over DDS.
-A DataReader is associated with a single Topic. You can have
-multiple DataReaders and Topics in a single application. In
-addition, you can have more than one DataReader for a particular
-Topic in a single application. Subscribers own and manage DataReaders.
+An application uses *DataReaders* to access data received over DDS.
+A *DataReader* is associated with a single *Topic*. You can have
+multiple *DataReaders* and *Topics* in a single application. In
+addition, you can have more than one *DataReader* for a particular
+*Topic* in a single application. *Subscribers* own and manage *DataReaders*.
 
-To create a DataReader, you need is create a :ref:`topic:Topics` and
+To create a *DataReader*, you need to create a *Topic* (see :ref:`topic:Topics`) and
 a :ref:`participant:DomainParticipant`. Optionally, you can add
 a QoS parameter and a listener.
 
-The following code creates a :class:`DynamicData.DataReader` for the topic
-we created in the :ref:`topic:Topics` section.
+The following code creates a :class:`DynamicData.DataReader` for the *Topic*
+we created in the :ref:`topic:Topics` section:
 
 .. code-block:: python
 
     subscriber = dds.Subscriber(participant)
     reader = dds.DynamicData.DataReader(subscriber, topic)
 
-To receive the data call ``read()`` or ``take()``, which return a collection of
+To receive the data, call ``read()`` or ``take()``, which return a collection of
 loaned data samples:
 
 .. code-block:: python
@@ -31,7 +31,7 @@ loaned data samples:
             if sample.info.valid:
                 print(sample.data)
 
-To get notified when new data is available you can use a :class:`StatusCondition`
+To get notified when new data is available, you can use a :class:`StatusCondition`
 and a :class:`WaitSet`:
 
 .. code-block:: python
