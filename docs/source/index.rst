@@ -11,11 +11,11 @@ At its core is the world’s leading ultra-high performance, distributed network
 
 This is the documentation for the *Connext DDS* Python API, an **experimental** product.
 
-If you are new, you should read the :ref:`intro:Introduction`, 
+If you are new, you should read the :ref:`intro:Introduction`,
 the :ref:`building:Building and Installing` section, and the
 :ref:`overview:API Overview`.
 
-If you're looking for specific documentation, check out the :ref:`quick:Quick reference`, 
+If you're looking for specific documentation, check out the :ref:`quick:Quick reference`,
 or the full :ref:`API reference <rti:rti package>`.
 
 
