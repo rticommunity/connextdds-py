@@ -23,9 +23,9 @@ or the full :ref:`API reference <rti:rti package>`.
    :maxdepth: 2
    :caption: Contents:
 
-   quick.rst
    intro.rst
    building.rst
+   quick.rst
    overview.rst
    API Reference <rti.rst>
    examples.rst

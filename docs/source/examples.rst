@@ -9,8 +9,8 @@ Getting Started Guide
 The RTI Connext DDS Getting Started Guide examples can be found 
 `in this repository <https://github.com/rticommunity/rticonnextdds-getting-started>`_.
 
-Clone the repository. In the folder ``1_hello_world/python``, a 
-**readme** will include instructions for how to go through the example.
+Clone the repository. In ``2_hello_world/python`` (and ``3_streaming_data/python``, 
+and so on), a **readme** includes instructions for how to go through the example.
 
 For a full walk-through, see the 
 `Getting Started Guide for Modern C++ <https://community.rti.com/static/documentation/connext-dds/6.0.1/doc/manuals/connext_dds/getting_started/index.html>`_.
@@ -20,5 +20,5 @@ of the Modern C++ version, so the Modern C++ Getting Started Guide is a great re
 Python Examples
 ===============
 
-Some Python examples can be found in the connextdds-py repository 
-`here <https://github.com/rticommunity/connextdds-py/tree/master/examples>`_.
+More Python examples can be found in the 
+`connextdds-py repository <https://github.com/rticommunity/connextdds-py/tree/master/examples>`_.

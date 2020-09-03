@@ -20,10 +20,10 @@ and easier to use, but the *Connext DDS* Python API is more extensive.
 This Python API is based on the Modern C++ API and is similar but has a few key 
 differences.
 
-:class:`DynamicData` is the main way to manipulate data samples. The type
-of a DynamicData sample is defined with :class:`DynamicType`. DynamicTypes
-can be defined programmatically or loaded from an XML definition. IDL definitions
-can be converted to XML.
+The main difference is that :class:`DynamicData` is the main way to manipulate 
+data samples. The type of a DynamicData sample is defined with :class:`DynamicType`. 
+DynamicTypes can be defined programmatically or loaded from an XML definition. 
+IDL definitions can be converted to XML.
 
 In addition to DynamicData, you can create *Topics* for the built-in types
 :class:`StringTopicType`, :class:`KeyedStringTopicType`, :class:`BytesTopicType`,
