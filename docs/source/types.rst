@@ -7,8 +7,8 @@ In data-centric communications, the applications participating in
 the communication need to share a common view of the types of data
 being passed around.
 
-The Connext DDS Python API loads type definitions from XML. Other
-Connext DDS APIs support static types generated from an IDL definition.
+The *Connext DDS* Python API loads type definitions from XML. Other
+*Connext DDS* APIs support static types generated from an IDL definition.
 You can generate XML files from those IDL files using ``rtiddsgen``:
 
 .. code-block:: shell
@@ -33,10 +33,10 @@ and to instantiate a :class:`DynamicData` object:
     # Let's say my_type has an int32 field
     sample["x"] = 42
 
-Now you would be able to publish the sample which is discussed in
+Now you would be able to publish the sample, which is discussed in
 :ref:`writer:Publications`.
 
-Defining types programmatically
+Defining Types Programmatically
 ===============================
 
 Types can also be defined dynamically in the application, using :class:`DynamicType`
@@ -69,11 +69,11 @@ The following example creates a type and instantiates a data sample:
     sample = dds.DynamicData(my_type)
     sample["id"] = "object1"
 
-Accessing nested members
+Accessing Nested Members
 ========================
 
 There are a few different ways to manipulate data with nested
-types. The `.` notation allows accessing nested primitive members at any level:
+types. The ``.`` notation allows accessing nested primitive members at any level:
 
 .. code-block:: python
 
@@ -97,10 +97,10 @@ A nested member can be assigned from a dictionary, too:
     sample["location"] = {"x": 4.5, "y": 5.5}
     print(sample["location"])
 
-Accessing sequences and arrays
+Accessing Sequences and Arrays
 ==============================
 
-Sequences and arrays can be retrieved or set using python lists:
+Sequences and arrays can be retrieved or set using Python lists:
 
 .. code-block:: python
 
