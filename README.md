@@ -99,7 +99,7 @@ an API reference.
 
 - Python DDS API supporting DynamicData and built-in topic types
 - Object-oriented design based on Modern C++ API
-- Supports QoS modifications in code and via `QosProvider`.
+- Supports QoS in code and via `QosProvider`.
 - Supports listeners
 - Supports waitsets and all conditions
 - Supports RTI Distributed Logger and integration with Python `logging` module
