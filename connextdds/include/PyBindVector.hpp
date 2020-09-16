@@ -62,7 +62,7 @@ std::vector<T>& vector_concat_inplace(std::vector<T>& v, std::vector<T>& other)
 
 
 template<typename T>
-void bind_buffer_vector(const py::object& m, const char* name)
+void bind_buffer_vector(const py::object& m, const char* name, const char* alias = nullptr)
 {
     auto cls = py::bind_vector<std::vector<T>>(m, name, py::buffer_protocol());
     cls.def("__mul__",
@@ -80,10 +80,14 @@ void bind_buffer_vector(const py::object& m, const char* name)
             .def("__iadd__",
                  &pyrti::vector_concat_inplace<T>,
                  py::return_value_policy::reference);
+
+    if (nullptr != alias) {
+        m.attr(alias) = cls;
+    }
 }
 
 template<typename T>
-void bind_vector(const py::object& m, const char* name)
+void bind_vector(const py::object& m, const char* name, const char* alias = nullptr)
 {
     auto cls = py::bind_vector<std::vector<T>>(m, name);
     cls.def("__mul__",
@@ -101,6 +105,10 @@ void bind_vector(const py::object& m, const char* name)
             .def("__iadd__",
                  &pyrti::vector_concat_inplace<T>,
                  py::return_value_policy::reference);
+
+    if (nullptr != alias) {
+        m.attr(alias) = cls;
+    }
 }
 
 }  // namespace pyrti

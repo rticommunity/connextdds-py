@@ -53,7 +53,7 @@ def test_clear_all_members():
     member.data.clear_all_members()
     member.return_loan()
 
-    assert data["myLongSeq"].member_count == 0
+    assert len(data["myLongSeq"]) == 0
     for i in range(0, 10):
         assert data[f"myLongArray[{i}]"] == 0
 
@@ -73,7 +73,7 @@ def test_clear_member():
     data["myLongSeq"] = list(range(1, 11))
     assert data.get_values(0) == dds.Int32Seq(list(range(1, 11)))
     data.clear_member("myLongSeq")
-    assert data["myLongSeq"].member_count == 0
+    assert len(data["myLongSeq"]) == 0
 
     data["myLongSeq"] = list(range(1, 11))
     assert data.get_values(0) == dds.Int32Seq(list(range(1, 11)))

@@ -183,3 +183,5 @@ def test_documentation_examples():
         sample["bad_member"] = "bad value"
     with pytest.raises(ValueError) as excinfo:
         sample["location"] = "bad value"
+
+test_sequence()
