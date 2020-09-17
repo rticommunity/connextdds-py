@@ -10,8 +10,8 @@
 void init_dds_stl_bindings(py::module& m)
 {
     pyrti::bind_vector<bool>(m, "BoolSeq");
-    pyrti::bind_buffer_vector<uint8_t>(m, "OctetSeq", "Uint8Seq");
-    pyrti::bind_buffer_vector<char>(m, "CharSeq", "Int8Seq");
+    pyrti::bind_buffer_vector<uint8_t>(m, "Uint8Seq", "OctetSeq");
+    pyrti::bind_buffer_vector<char>(m, "Int8Seq", "CharSeq");
     pyrti::bind_buffer_vector<uint16_t>(m, "Uint16Seq", "UshortSeq");
     pyrti::bind_buffer_vector<int16_t>(m, "Int16Seq", "ShortSeq");
     pyrti::bind_buffer_vector<uint32_t>(m, "Uint32Seq", "ULongSeq");
