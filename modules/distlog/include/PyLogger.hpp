@@ -38,6 +38,9 @@ namespace pyrti {
         static std::unique_ptr<PyLogger> _py_instance;
         static bool _options_set;
         static std::recursive_mutex _lock;
+#if rti_connext_version_lt(6, 0, 0)
+        static std::unique_ptr<PyLoggerOptions> _options;
+#endif
     };
 
     void init_logger(py::module&);

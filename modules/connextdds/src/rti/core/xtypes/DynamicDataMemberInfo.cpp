@@ -5,6 +5,24 @@ using namespace rti::core::xtypes;
 
 namespace pyrti {
 
+
+static 
+bool member_info_equal(const DynamicDataMemberInfo& mi, const DynamicDataMemberInfo& other) {
+    bool retval = mi.member_index() == other.member_index() &&
+                  mi.member_name() == other.member_name() &&
+                  mi.member_kind() == other.member_kind() &&
+                  mi.element_count() == other.element_count() &&
+                  mi.representation_count() == other.representation_count();
+    
+    if (retval && 
+     ((mi.member_kind().underlying() == dds::core::xtypes::TypeKind::ARRAY_TYPE) ||
+     (mi.member_kind().underlying() == dds::core::xtypes::TypeKind::SEQUENCE_TYPE))) {
+        retval = mi.element_kind() == other.element_kind();
+    }
+    return retval;
+}
+
+
 template<>
 void init_class_defs(py::class_<DynamicDataMemberInfo>& cls)
 {
@@ -31,8 +49,20 @@ void init_class_defs(py::class_<DynamicDataMemberInfo>& cls)
                     "element_kind",
                     &DynamicDataMemberInfo::element_kind,
                     "The type kind of the elements in the member")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+            .def(
+                "__eq__",
+                [](const DynamicDataMemberInfo& mi, const DynamicDataMemberInfo& other) {
+                    return member_info_equal(mi, other);
+                },
+                py::is_operator(),
+                "Test for equality.")
+            .def(
+                "__ne__",
+                [](const DynamicDataMemberInfo& mi, const DynamicDataMemberInfo& other) {
+                    return !member_info_equal(mi, other);
+                },
+                py::is_operator(),
+                "Test for inequality.");
 }
 
 template<>

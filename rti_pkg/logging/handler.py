@@ -1,4 +1,4 @@
-import rti.logging.distlog as distlog
+from . import distlog as distlog
 import logging
 
 

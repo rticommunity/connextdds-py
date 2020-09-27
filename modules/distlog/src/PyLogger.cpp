@@ -7,6 +7,9 @@ namespace pyrti {
 bool PyLogger::_options_set = false;
 std::recursive_mutex PyLogger::_lock;
 std::unique_ptr<PyLogger> PyLogger::_py_instance;
+#if rti_connext_version_lt(6, 0, 0)
+std::unique_ptr<PyLoggerOptions> PyLogger::_options;
+#endif
 
 PyLogger& PyLogger::instance() {
     std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
@@ -24,7 +27,13 @@ PyLogger& PyLogger::instance() {
 bool PyLogger::options(const PyLoggerOptions& options) {
     std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
 
+#if rti_connext_version_lt(6, 0, 0)
+    if (PyLogger::_options_set) return false;
+    PyLogger::_options.reset(new PyLoggerOptions(options));
+    bool retval = (bool)RTI_DL_DistLogger_setOptions(PyLogger::_options->_options);
+#else
     bool retval = (bool)RTI_DL_DistLogger_setOptions(options._options);
+#endif
 
     if (retval) {
         PyLogger::_options_set = true;
@@ -41,6 +50,10 @@ void PyLogger::finalize() {
 
     auto ptr = PyLogger::_py_instance.release();
     delete ptr;
+#if rti_connext_version_lt(6, 0, 0)
+    auto opt_ptr = PyLogger::_options.release();
+    delete opt_ptr;
+#endif
 }
 
 PyLogger::PyLogger() {
@@ -202,18 +215,21 @@ void init_logger(py::module& m) {
             [](py::object&) -> PyLogger& {
                 return PyLogger::instance();
             },
+            py::call_guard<py::gil_scoped_release>(),
             "Get the Logger instance."
         )
         .def_static(
             "options",
             &PyLogger::options,
             py::arg("options"),
+            py::call_guard<py::gil_scoped_release>(),
             "Set the options for the Logger instance (must be set prior to "
             "accessing the instance."
         )
         .def_static(
             "finalize",
             &PyLogger::finalize,
+            py::call_guard<py::gil_scoped_release>(),
             "Destroy the Logger. It should not be accessed after this call."
         );
 }

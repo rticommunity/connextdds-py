@@ -10,6 +10,30 @@ A full Python binding for RTI Connext DDS using pybind11
 - Python 2.7, Python 3.x with pip
 - RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
 
+## Configuration
+
+Before building/installing connextdds-py, it is necessary to run the configuration.py
+script.
+
+```shell
+$ python configure.py [options...] platform
+```
+
+Where "platform" specifies the RTI architecture/platform string and the options are
+specified in the following table.
+
+| Short Option | Long Option         | Description                                                                          |
+| ------------ | ------------------- | ------------------------------------------------------------------------------------ |
+| -n NDDSHOME  | --nddshome NDDSHOME | NDDSHOME directory. Defaults to NDDSHOME environment variable                        |
+| -j JOBS      | --jobs JOBS         | Number of concurrent build jobs/processes                                            |
+| -t           | --tcp               | Add the TCP transport plugin                                                         |
+| -m           | --monitoring        | Add the RTI Monitoring plugin                                                        |
+| -s           | --secure            | Add the RTI DDS Secure plugin + openssl libraries                                    |
+| -p PLUGIN    | --plugin PLUGIN     | Add a user-defined plugin. This option can be specified multiple times               |
+| -o OPENSSL   | --openssl OPENSSL   | Location of openssl libraries (defaults to platform library location under NDDSHOME) |
+| -d           | --debug             | Use debug libraries and build debug modules for connext-py                           |
+| -h           | --help              | show help message and exit                                                           |
+
 ## Installation
 
 Clone repo and submodules and cd to the project root
@@ -19,12 +43,10 @@ $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.g
 $ cd connextdds-py
 ```
 
-Set environment variables:
+Run configuration script:
 
 ```shell
-$ export NDDSHOME=<install location of Connext Pro>
-$ export CONNEXTDDS_ARCH=<target arch>
-$ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
+$ python configure.py [options...] <platform>
 ```
 
 Build and install
@@ -59,6 +81,8 @@ regular install. If you already have an install of any form, run
 $ pip3 install wheel
 $ pip3 install setuptools
 $ pip3 install cmake
+$ pip3 install patchelf-wrapper # Linux builds only
+$ pip3 install delocate         # macOS builds only
 $ python3 setup.py bdist_wheel
 $ pip3 install dist/*
 ```

@@ -1,10 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-project(connextdds)
-include(CheckCXXCompilerFlag)
-
-file(TO_CMAKE_PATH $ENV{NDDSHOME} NDDSHOME)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 find_package(
     RTIConnextDDS "5.3.1"
     REQUIRED
@@ -12,11 +5,17 @@ find_package(
         core
     )
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
+if(UNIX AND NOT APPLE)
+    set(CONNEXTDDS_INSTALL_RPATH "$ORIGIN")
+endif()
+
+if(APPLE)
+    set(CONNEXTDDS_INSTALL_RPATH "@loader_path")
+endif()
 
 pybind11_add_module(
     connextdds 
-    MODULE
+    SHARED
     NO_EXTRAS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"
@@ -249,20 +248,37 @@ pybind11_add_module(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/connextdds.cpp"
 )
 
-set_target_properties(connextdds PROPERTIES CXX_VISIBILITY_PRESET "default")
+set_target_properties(
+    connextdds
+    PROPERTIES
+    CXX_VISIBILITY_PRESET "default"
+    LIBRARY_OUTPUT_DIRECTORY "${RTI_CONNEXTDDS_LIBRARY_OUTPUT_DIRECTORY}"
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG "${RTI_CONNEXTDDS_LIBRARY_OUTPUT_DIRECTORY}"
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${RTI_CONNEXTDDS_LIBRARY_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY "${RTI_CONNEXTDDS_LIBRARY_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RTI_CONNEXTDDS_LIBRARY_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RTI_CONNEXTDDS_LIBRARY_OUTPUT_DIRECTORY}"
+    INSTALL_NAME_DIR "@rpath"
+    INSTALL_RPATH "${CONNEXTDDS_INSTALL_RPATH}"
+    PREFIX "${PYTHON_MODULE_PREFIX}"
+    SUFFIX "${PYTHON_MODULE_EXTENSION}"
+)
+
+target_link_libraries(
+    connextdds
+    PRIVATE
+    ${CONNEXTDDS_EXTERNAL_LIBS}
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscpp2${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddsc${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscore${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+)
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
-    target_link_libraries(connextdds PRIVATE
-        ${CONNEXTDDS_EXTERNAL_LIBS}
-        RTIConnextDDS::cpp2_api)
+    target_compile_definitions(
+        connextdds
+        PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}"
+        PRIVATE "${CONNEXTDDS_COMPILE_DEFINITIONS}")
 else()
-    string(TOUPPER ${CMAKE_BUILD_TYPE} RTI_LIB_BUILD_TYPE)
-    target_link_libraries(connextdds PRIVATE
-        ${CONNEXTDDS_EXTERNAL_LIBS}
-        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
-
-    target_include_directories(connextdds PRIVATE ${CONNEXTDDS_INCLUDE_DIRS})
-
     if(CONNEXTDDS_DEFINITIONS MATCHES "-m64")
         string(REGEX REPLACE "-m64[ \t\r\n]*" "" CONNEXTDDS_DEFINITIONS "${CONNEXTDDS_DEFINITIONS}")
         target_compile_options(connextdds PRIVATE "-m64")
@@ -271,19 +287,18 @@ else()
         target_compile_options(connextdds PRIVATE "-m32")
     endif()
 
-    target_compile_definitions(connextdds PRIVATE "${CONNEXTDDS_DEFINITIONS}")
+    target_compile_definitions(
+        connextdds
+        PRIVATE "${CONNEXTDDS_DEFINITIONS}"
+        PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}")
 endif()
 
+target_include_directories(
+    connextdds
+    PRIVATE "${CONNEXTDDS_INCLUDE_DIRS}"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
 
-target_include_directories(connextdds PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-set_target_properties(connextdds PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
-                                         SUFFIX "${PYTHON_MODULE_EXTENSION}")
-
-
-
-check_cxx_compiler_flag(-std=c++17 HAVE_FLAG_STD_CXX17)
-check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
 if (HAVE_FLAG_STD_CXX17 AND RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     set_target_properties(
         connextdds
@@ -304,7 +319,7 @@ else()
     )
 endif()
 
-if (WIN32)
+if(MSVC)
     add_definitions(/bigobj /MP${NUM_JOBS})
     target_compile_options(
         connextdds

@@ -1,0 +1,345 @@
+import argparse
+import os
+import collections
+import filecmp
+import re
+import shutil
+import ast
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
+
+
+def get_script_dir():
+    return os.path.dirname(os.path.realpath(__file__))
+
+
+def resolve_lib_dir(nddshome, platform):
+    lib_dir = os.path.join(nddshome, 'lib', platform)
+    if not os.path.isdir(lib_dir):
+        raise FileNotFoundError('rti: {} target library directory was not found.'.format(platform))
+    return lib_dir
+
+
+def get_wheel_plugins(args):
+    plugins = []
+    if args.tcp:
+        plugins.append('nddstransporttcp')
+    if args.secure:
+        plugins.append('nddssecurity')
+    if args.monitoring:
+        plugins.append('rtimonitoring')
+    return plugins
+
+
+def get_debug_suffix(is_debug):
+    return 'd' if is_debug else ''
+
+
+def dir_type(value):
+    if os.path.exists(value) and os.path.isdir(value):
+        return value
+    else:
+        raise FileNotFoundError('rti: {} is not a valid directory'.format(value))
+
+
+def file_type(value):
+    if os.path.exists(value) and os.path.isfile(value):
+        return value
+    else:
+        raise FileNotFoundError('rti: {} is not a valid file'.format(value))
+
+
+def get_openssl_libs(arch, arch_dir, openssl_dir, is_debug):
+    openssl_libs = []
+    if 'Win' in arch:
+        lib_ends = rti_platform_ends['Windows']
+        openssl_libs = [os.path.join(openssl_dir,
+                            lib_ends.prefix +
+                            lib_name +
+                            get_debug_suffix(is_debug) +
+                            lib_ends.suffix)
+                            for lib_name in ['libeay32', 'libssl32']]
+    else:
+        libs = ['ssl', 'crypto']
+        if 'Linux' in arch:
+            lib_ends = rti_platform_ends['Linux']
+        elif 'Darwin' in arch:
+            lib_ends = rti_platform_ends['Darwin']
+        else:
+            raise ValueError('rti: {} is not currently a supported platform'.format(arch))
+        lib_filename = ''.join(
+                        [lib_ends.prefix,
+                        'nddssecurity',
+                        get_debug_suffix(is_debug),
+                        lib_ends.suffix])
+        secure_lib = os.path.join(arch_dir, lib_filename)
+        with open(secure_lib, 'rb') as lib_file:
+            content = lib_file.read()
+            for lib in libs:
+                expression = lib_ends.prefix + lib + r'(\.\d+\.\d+(\.\d+)?)?' + lib_ends.suffix
+                match = re.search(expression.encode(), content)
+                if not match:
+                    raise RuntimeError(
+                        'rti: could not find versioned openssl library name in security library.')
+                lib_location = os.path.join(openssl_dir, match.group(0).decode())
+                if not os.path.isfile(lib_location):
+                    raise FileNotFoundError('rti: {} not found in {}'.format(
+                        os.path.basename(lib_location),
+                        openssl_dir))
+                openssl_libs.append(lib_location)
+    return openssl_libs
+
+
+def valid_lib_pair(original_lib, dst_lib):
+    lib_filename = os.path.basename(original_lib)
+    if not (os.path.isfile(dst_lib) and filecmp.cmp(original_lib, dst_lib)):
+        return (original_lib, dst_lib)
+    else:
+        print('INFO: {} already exists in destination, skipping copy...'.format(lib_filename))
+        return None
+
+
+def check_lib(name, arch, lib_ends, src_dir, dst_dir, is_debug):
+    lib_filename = lib_ends.prefix + name + get_debug_suffix(is_debug) + lib_ends.suffix
+    original_lib = os.path.join(src_dir, lib_filename)
+    dst_lib = os.path.join(dst_dir, lib_filename)
+    if not os.path.isfile(original_lib):
+        raise FileNotFoundError('rti: could not find {} for {}.'.format(lib_filename, arch))
+    return valid_lib_pair(original_lib, dst_lib)
+
+
+def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins, openssl_lib_dir, is_debug):
+    if 'Linux' in arch:
+        lib_ends = rti_platform_ends['Linux']
+    elif 'Win' in arch:
+        lib_ends = rti_platform_ends['Windows']
+    elif 'Darwin' in arch:
+        lib_ends = rti_platform_ends['Darwin']
+    else:
+        raise ValueError('rti: {} is not currently a supported platform'.format(arch))
+    copy_libs = []
+
+    dst_dir = os.path.join(get_script_dir(), 'lib', arch)
+    if not os.path.exists(dst_dir):
+        os.makedirs(dst_dir)
+
+    # Add required libraries
+    required_map = collections.defaultdict(lambda: [])
+    for package, module_libs in required_libs.items():
+        for lib in module_libs:
+            required_map[package].append(
+                lib_ends.prefix + lib + get_debug_suffix(is_debug) + lib_ends.suffix)
+            copy_libs.append(check_lib(lib, arch, lib_ends, platform_lib_dir, dst_dir, is_debug))
+            if 'Win' in arch:
+                copy_libs.append(
+                    check_lib(
+                        lib,
+                        arch,
+                        PlatformLibEnds('', '.lib'),
+                        platform_lib_dir,
+                        dst_dir,
+                        is_debug))
+
+    # Add standard RTI plugins as specified in command args
+    plugin_list = []
+    if 'Win' in arch:
+        import glob
+        msvc_lib = glob.glob(os.path.join(platform_lib_dir, 'msvc*.dll'))
+        assert len(msvc_lib) == 1
+        basename = os.path.basename(msvc_lib[0])
+        plugin_list.append(basename)
+        copy_libs.append(
+            check_lib(os.path.splitext(basename)[0],
+            arch,
+            lib_ends,
+            platform_lib_dir,
+            dst_dir,
+            False))
+    for plugin in plugins:
+        plugin_list.append(lib_ends.prefix + plugin + get_debug_suffix(is_debug) + lib_ends.suffix)
+        if plugin == 'nddssecurity':
+            # needs to also get openssl libs
+            if not openssl_lib_dir:
+                openssl_lib_dir = platform_lib_dir
+            openssl_libs = get_openssl_libs(arch, platform_lib_dir, openssl_lib_dir, is_debug)
+            for lib in openssl_libs:
+                plugin_list.append(os.path.basename(lib))
+                copy_libs.append(valid_lib_pair(lib, os.path.join(dst_dir, os.path.basename(lib))))
+
+        copy_libs.append(check_lib(plugin, arch, lib_ends, platform_lib_dir, dst_dir, is_debug))
+
+    # Add non-standard plugins
+    for plugin in user_plugins:
+        original_lib = plugin
+        dst_lib = os.path.join(dst_dir, os.path.basename(plugin))
+        plugin_list.append(os.path.basename(plugin))
+        copy_libs.append(valid_lib_pair(original_lib, dst_lib))
+
+    copy_libs = [lib_pair for lib_pair in copy_libs if lib_pair is not None]
+    for src, dst in copy_libs:
+        print('Copying {}...'.format(os.path.basename(src)))
+        shutil.copyfile(src, dst)
+    return required_map, list(set(plugin_list))
+
+
+def update_config(nddshome, platform, jobs, debug, lib_dict, plugins):
+    # Modify setup.cfg template
+    setup_filename = 'setup.cfg'
+    pyproject_filename = 'pyproject.toml'
+    packagecfg_filename = 'package.cfg'
+    lib_dict['rti'].extend(plugins)
+    config = configparser.ConfigParser()
+    config.read(os.path.join('templates', setup_filename))
+    package_data = dict(lib_dict)
+    package_data['*'] = ['*.pyi']
+    if 'options.package_data' not in config.sections():
+        config.add_section('options.package_data')
+    for key, value in package_data.items():
+        config.set('options.package_data', key, ','.join(value))
+    with open(setup_filename, 'w') as setup_file:
+        config.write(setup_file)
+
+    # Modify pyproject.toml template
+    config = configparser.ConfigParser()
+    config.read(os.path.join('templates',pyproject_filename))
+    requires = ast.literal_eval(config.get('build-system', 'requires'))
+    if 'Darwin' in platform:
+        requires.append('delocate')
+    elif 'Linux' in platform:
+        requires.append('patchelf-wrapper')
+    config.set('build-system', 'requires', str(requires))
+    with open(pyproject_filename, 'w') as pyproject_file:
+        config.write(pyproject_file)
+
+    # Create package.cfg file
+    config = configparser.ConfigParser()
+    config.add_section('package')
+    config.set('package', 'nddshome', nddshome)
+    config.set('package', 'platform', platform)
+    config.set('package', 'packages', ','.join(lib_dict.keys()))
+    for key, value in lib_dict.items():
+        config.set('package', 'libraries-' + key, ','.join(value))
+    config.set('package', 'build-type', 'debug' if debug else 'release')
+    config.set('package', 'build-jobs', str(jobs))
+    with open(packagecfg_filename, 'w') as packagecfg_file:
+        config.write(packagecfg_file)
+
+
+PlatformLibEnds = collections.namedtuple('PlatformLibEnds', ['prefix', 'suffix'])
+
+SETUPCFG_FILE = os.path.join(get_script_dir(), 'setup.cfg')
+BUILDCFG_FILE = os.path.join(get_script_dir(), 'build.cfg')
+
+rti_platform_ends = {
+    'Linux': PlatformLibEnds('lib','.so'),
+    'Windows': PlatformLibEnds('', '.dll'),
+    'Darwin': PlatformLibEnds('lib', '.dylib')
+}
+
+
+rti_required_libs = {
+    'rti': ['nddsc', 'nddscore', 'nddscpp2'],
+    'rti.logging': ['rtidlc']
+}
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Configure build of connextdds-py package',
+        add_help=True)
+
+    parser.add_argument(
+        '-n',
+        '--nddshome',
+        type=dir_type,
+        default=None,
+        help='Location of NDDSHOME.')
+
+    parser.add_argument(
+        '-j',
+        '--jobs',
+        type=int,
+        default=1,
+        help='Number of concurrent build jobs/processes.')
+
+    parser.add_argument(
+        '-t',
+        '--tcp',
+        action='store_true',
+        help='Add the TCP plugin to the output wheel')
+
+    parser.add_argument(
+        '-m',
+        '--monitoring',
+        action='store_true',
+        help='Add the RTI Monitoring plugin to the output wheel')
+
+    parser.add_argument(
+        '-s',
+        '--secure',
+        action='store_true',
+        help='Add the RTI DDS Secure libraries and dependencies to the output wheel.')
+
+    parser.add_argument(
+        '-p',
+        '--plugin',
+        action='append',
+        type=file_type,
+        help='Add a user-defined plugin to the output wheel. This option can be specified multiple times.')
+
+    parser.add_argument(
+        '-o',
+        '--openssl',
+        type=dir_type,
+        default=None,
+        help='Location of openssl lib directory. If not set, build will look for dependencies in NDDSHOME target lib directory.')
+
+    parser.add_argument(
+        '-d',
+        '--debug',
+        action="store_true",
+        help='Build a debug wheel.')
+
+    parser.add_argument(
+        'platform',
+        type=str,
+        help='Platform libs to use for the build.')
+
+
+    args = parser.parse_args()
+
+    if args.nddshome:
+        nddshome = args.nddshome
+    elif not 'NDDSHOME' in os.environ:
+        raise EnvironmentError('configure: NDDSHOME must be in environment or specified as a command option.')
+    else:
+        nddshome = os.environ['NDDSHOME']
+
+    debug = args.debug
+
+    platform = args.platform
+
+    lib_dir = resolve_lib_dir(nddshome, platform)
+
+    plugins = get_wheel_plugins(args)
+
+    user_plugins = args.plugin if args.plugin is not None else []
+
+    required, plugins = copy_arch_libs(
+                            args.platform,
+                            rti_required_libs,
+                            plugins,
+                            lib_dir,
+                            user_plugins,
+                            args.openssl,
+                            debug)
+
+    update_config(nddshome, platform, args.jobs, debug, required, plugins)
+
+    print('Finished! Run "pip wheel ." to create whl file.')
+
+
+if __name__ == '__main__':
+    main()

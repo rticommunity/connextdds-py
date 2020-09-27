@@ -12,6 +12,7 @@ PyLoggerOptions::~PyLoggerOptions() {
 }
 
 PyLoggerOptions::PyLoggerOptions(const PyLoggerOptions& other) {
+    this->_options = RTI_DL_Options_createDefault();
     RTI_DL_Options_copy(this->_options, other._options);
 }
 
