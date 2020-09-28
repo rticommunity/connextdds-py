@@ -1,11 +1,7 @@
 import os
-import re
 import sys
-import platform
 import subprocess
-import collections
 import shutil
-import filecmp
 import cmake
 try:
     import configparser
@@ -14,9 +10,10 @@ except:
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-from distutils.version import LooseVersion
+
 
 PACKAGE_CONFIG_FILENAME = 'package.cfg'
+
 
 def get_script_path():
     return os.path.dirname(os.path.realpath(__file__))
@@ -54,7 +51,7 @@ def get_debug():
 
 def find_libs(lib_list, platform):
     lib_locations = []
-    for root, directories, filenames in os.walk(os.path.join(get_script_path(), 'lib', platform)):
+    for root, _, filenames in os.walk(os.path.join(get_script_path(), 'lib', platform)):
         for filename in filenames:
             if filename in lib_list:
                 lib_locations.append(os.path.join(root, filename))
@@ -82,7 +79,6 @@ def process_darwin_libs(libs):
 
 def process_linux_libs(libs):
     # only need to set rpath for Linux
-    import subprocess
     for lib in libs:
         subprocess.check_call(
             ['patchelf', '--force-rpath', '--set-rpath', '$ORIGIN', lib]
@@ -113,18 +109,8 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        try:
-            out = subprocess.check_output(['cmake', '--version'])
-        except OSError:
-            raise RuntimeError("CMake must be installed to build the following extensions: " +
-                               ", ".join(e.name for e in self.extensions))
-
         nddshome = get_nddshome()
         arch = get_arch()
-        
-        cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
-        if cmake_version < '3.15.0':
-            raise RuntimeError("CMake >= 3.15.0 is required")
 
         if 'Win' in arch:
             link_lib_prefix = ''
@@ -154,7 +140,7 @@ class CMakeBuild(build_ext):
 
         build_args = ['--config', cfg]
 
-        if platform.system() == "Windows":
+        if 'Win' in arch:
             #cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             #if ext.name != 'rti.connextdds':
             #    cmake_args += ['-DBUILD_TEMP_DIRECTORY=' + os.path.abspath(self.build_temp)]
