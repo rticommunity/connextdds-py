@@ -60,7 +60,7 @@ def find_libs(lib_list, platform):
 
 
 def process_darwin_libs(libs):
-    from delocate import tools as tools
+    from delocate import tools
     for lib in libs:
         tools.set_install_id(lib, os.path.join('@rpath', os.path.basename(lib)))
         rpath = tools.get_rpaths(lib)
@@ -141,9 +141,6 @@ class CMakeBuild(build_ext):
         build_args = ['--config', cfg]
 
         if 'Win' in arch:
-            #cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
-            #if ext.name != 'rti.connextdds':
-            #    cmake_args += ['-DBUILD_TEMP_DIRECTORY=' + os.path.abspath(self.build_temp)]
             if sys.maxsize > 2**32:
                 cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']

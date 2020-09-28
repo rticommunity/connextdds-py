@@ -185,21 +185,10 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
 
 
 def update_config(nddshome, platform, jobs, debug, lib_dict, plugins):
-    # Modify setup.cfg template
-    setup_filename = 'setup.cfg'
     pyproject_filename = 'pyproject.toml'
     packagecfg_filename = 'package.cfg'
+
     lib_dict['rti'].extend(plugins)
-    config = configparser.ConfigParser()
-    config.read(os.path.join('templates', setup_filename))
-    package_data = dict(lib_dict)
-    package_data['*'] = ['*.pyi']
-    if 'options.package_data' not in config.sections():
-        config.add_section('options.package_data')
-    for key, value in package_data.items():
-        config.set('options.package_data', key, ','.join(value))
-    with open(setup_filename, 'w') as setup_file:
-        config.write(setup_file)
 
     # Modify pyproject.toml template
     config = configparser.ConfigParser()
