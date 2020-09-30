@@ -266,10 +266,15 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values)
 
     std::vector<T>::resize forces initialization of added elements. This
     workaround relies on compiler optimizations to avoid this forced
-    initialization when the vector type is a primitive.
+    initialization when the vector template type is a primitive.
  */
 template<typename T>
 static void resize_no_init(std::vector<T>& v, ssize_t newSize) {
+    /*
+        A continguous array of this struct must have the same memory layout
+        as a type T array or this optimization will not work (and the assert
+        following the struct definition will fail)
+    */
     struct vector_no_init_elem {
         typename std::vector<T>::value_type data;
         vector_no_init_elem() {}
@@ -277,14 +282,32 @@ static void resize_no_init(std::vector<T>& v, ssize_t newSize) {
     static_assert(
         sizeof(vector_no_init_elem[10]) == sizeof(typename std::vector<T>::value_type[10]), 
         "alignment error");
-    typedef std::vector<
-            vector_no_init_elem, 
-            typename std::allocator_traits<
-                typename std::vector<T>::allocator_type
-            >::template rebind_alloc<
-                vector_no_init_elem
-            >
-        > vector_no_init;
+
+    /*
+        To make use of this compiler optimization, we will use the allocator
+        from the primitive vector and rebind it for our struct with an empty
+        default constructor. The compiler will optimize away the overhead of
+        default initialization on calls to vector_no_init::resize.
+    */
+    using vector_allocator = 
+        typename std::vector<T>::allocator_type;
+
+    using vector_allocator_traits = 
+        std::allocator_traits<vector_allocator>;
+
+    using no_init_allocator = 
+        typename vector_allocator_traits::template rebind_alloc<vector_no_init_elem>;
+
+    typedef std::vector<vector_no_init_elem, no_init_allocator> vector_no_init;
+
+    /*
+        Because the memory layout of std::vector<T> matches that of our vector_no_init
+        we can perform a reinterpret cast on our input argument and use the
+        optimized resize. Note that added vector entries will contain unitialized
+        values, but since this function will only be used when returning vectors filled
+        with values from an existing DynamicData collection, the unitialized values
+        should never be accessible to the calling application.
+    */
     reinterpret_cast<vector_no_init&>(v).resize(newSize);
 }
 
@@ -469,7 +492,7 @@ template<typename T>
 static void assert_valid_buffer_type(const py::buffer_info& info) {
     if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T)))
         throw py::type_error("Only valid 1D buffers are allowed");
-    if (info.format != py::format_descriptor<T>::format() || (ssize_t) sizeof(T) != info.itemsize)
+    if (info.format != py::format_descriptor<T>::format() || static_cast<ssize_t>(sizeof(T)) != info.itemsize)
         throw py::type_error("Format mismatch (Python: " + info.format + " C++: " + py::format_descriptor<T>::format() + ")");
 }
 
@@ -482,7 +505,11 @@ static bool set_buffer_values(
     const py::buffer_info& info,
     F func)
 {
-    if ((info.strides[0] / static_cast<ssize_t>(sizeof(T))) != 1) {
+    if (info.ndim == 1 && (info.strides[0] / info.itemsize) != 1) {
+        /* 
+            let the default stl_bind buffer conversion handle case with stride > 1
+            for unidimensional buffer protocol object
+        */
         return false;
     }
     DDS_DynamicData* native_ptr = &dd.native();
@@ -1949,9 +1976,22 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     &DynamicData::info,
                     "Returns info about this sample")
             .def("member_info",
-                 (rti::core::xtypes::DynamicDataMemberInfo(DynamicData::*)(
-                         const std::string&) const)
-                         & DynamicData::member_info,
+                 [](DynamicData& dd, const std::string& key) {
+                    DynamicDataNestedIndex id;
+                    DynamicData& parent = resolve_nested_member(dd, key, id);
+                    rti::core::xtypes::DynamicDataMemberInfo mi;
+
+                    if (id.index_type == DynamicDataNestedIndex::INT) {
+                        mi = parent.member_info(id.int_index);
+                    }
+                    else {
+                        mi = parent.member_info(id.string_index);
+                    }
+                    if (parent.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                        mi.native().member_id -= 1;
+                    }
+                    return mi;
+                 },
                  py::arg("name"),
                  "Returns info about a member.")
             .def(
@@ -1961,7 +2001,11 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                             != TypeKind::UNION_TYPE) {
                             index += 1;
                         }
-                        return data.member_info(index);
+                        auto mi = data.member_info(index);
+                        if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                            mi.native().member_id -= 1;
+                        }
+                        return mi;
                     },
                     py::arg("index"),
                     "Returns info about a member.")

@@ -21,6 +21,7 @@ COMPLEX.add_member(dds.Member("myLongSeq", dds.SequenceType(dds.Int32Type(), 10)
 COMPLEX.add_member(dds.Member("myLongArray", dds.ArrayType(dds.Int32Type(), 10)))
 COMPLEX.add_member(dds.Member("myOptional", dds.Int32Type(), is_optional=True))
 COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
+COMPLEX.add_member(dds.Member("myStringSeq", dds.SequenceType(dds.StringType(10), 10)))
 COMPLEX.add_member(dds.Member("myEnum", ENUM_TYPE))
 COMPLEX.add_member(dds.Member("myEnumSeq", dds.SequenceType(ENUM_TYPE, 10)))
 
@@ -70,6 +71,11 @@ def test_clear_member():
     data.clear_member(3)
     assert data["myString"] == ""
 
+    data["myStringSeq"] = ["one", "two", "three", "four"]
+    assert data["myStringSeq[1]"] == "two"
+    data.clear_member(4)
+    assert len(data["myStringSeq"]) == 0
+
     data["myLongSeq"] = list(range(1, 11))
     assert data.get_values(0) == dds.Int32Seq(list(range(1, 11)))
     data.clear_member("myLongSeq")
@@ -104,7 +110,7 @@ def test_member_info():
     info2 = data.member_info(0)
     assert info1 == info2
 
-    assert info1.index == 1
+    assert info1.index == 0
     assert info1.name == "key"
     assert info1.element_count == 0
 
@@ -201,6 +207,23 @@ def test_dynamic_data_info():
     info = data.info
     assert info.member_count == 2
     assert info.is_optimized_storage
+
+
+def test_dynamic_data_buffer_numpy():
+    np = pytest.importorskip("numpy")
+    data = dds.DynamicData(COMPLEX)
+    my_array_unidim = np.array([1, 2, 3, 4, 5, 6], np.int32)
+    my_array_multidim = np.reshape(np.array([1, 2, 3, 4, 5, 6], np.int32), (2, 3))
+    my_array_short = np.array([1, 2, 3, 4, 5, 6], np.int16)
+    
+    data["myLongSeq"] = my_array_unidim
+    assert data["myLongSeq[2]"] == 3
+
+    with pytest.raises(TypeError):
+        data["myLongSeq"] = my_array_multidim
+    
+    with pytest.raises(TypeError):
+        data["myLongSeq"] = my_array_short
 
 
 def test_union():

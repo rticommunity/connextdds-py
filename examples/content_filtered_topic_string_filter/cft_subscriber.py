@@ -57,7 +57,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
             )
         )
 
-    reader_qos = dds.QosProvider.default().datareader_qos
+    reader_qos = dds.QosProvider.default.datareader_qos
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)
     reader.bind_listener(CftListener(), dds.StatusMask.data_available())
 

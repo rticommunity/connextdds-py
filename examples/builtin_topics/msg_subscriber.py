@@ -28,7 +28,7 @@ class MsgListener(dds.DynamicData.NoOpDataReaderListener):
 
 
 def subscriber_main(domain_id, sample_count, participant_auth):
-    participant_qos = dds.QosProvider.default().participant_qos
+    participant_qos = dds.QosProvider.default.participant_qos
     resource_limits_qos = participant_qos.resource_limits
     max_participant_user_data = resource_limits_qos.participant_user_data_max_length
 
