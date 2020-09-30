@@ -14,6 +14,10 @@ void init_class_defs(
                "bounds",
                &UnidimensionalCollectionTypeImpl::bounds,
                "Gets the maximum length of this collection.")
+            .def_property_readonly_static(
+                "UNBOUNDED",
+                [](py::object&) { return UnidimensionalCollectionTypeImpl::UNBOUNDED; },
+                "Constant for specifying an unbounded sequence.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

@@ -230,26 +230,6 @@ std::vector<DynamicData> get_complex_values(DynamicData& data, const T& key)
     }
 }
 
-/*
-template<typename T>
-void set_complex_values(DynamicData& data, const T& key,
-std::vector<DynamicData>& values) { auto info = data.member_info(key); if
-((info.member_kind().underlying() & TypeKind::COLLECTION_TYPE) &&
-      !(info.element_kind().underlying() & TypeKind::PRIMITIVE_TYPE)) {
-        auto loan = data.loan_value(key);
-        DynamicData& member = loan.get();
-        int i = 1;
-        for (auto& dd : values) {
-            member.value(i++, dd);
-        }
-    }
-    else {
-        throw py::key_error("member is not a collection of non-primitive
-values.");
-    }
-}
-*/
-
 
 template<typename T>
 static void set_member(
@@ -281,6 +261,69 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values)
 }
 
 
+/*
+    EXPERIMENTAL!!!
+
+    std::vector<T>::resize forces initialization of added elements. This
+    workaround relies on compiler optimizations to avoid this forced
+    initialization when the vector template type is a primitive.
+ */
+template<typename T>
+static void resize_no_init(std::vector<T>& v, ssize_t newSize) {
+    /*
+        A continguous array of this struct must have the same memory layout
+        as a type T array or this optimization will not work (and the assert
+        following the struct definition will fail)
+    */
+    struct vector_no_init_elem {
+        typename std::vector<T>::value_type data;
+        vector_no_init_elem() {}
+    };
+    static_assert(
+        sizeof(vector_no_init_elem[10]) == sizeof(typename std::vector<T>::value_type[10]), 
+        "alignment error");
+
+    /*
+        To make use of this compiler optimization, we will use the allocator
+        from the primitive vector and rebind it for our struct with an empty
+        default constructor. The compiler will optimize away the overhead of
+        default initialization on calls to vector_no_init::resize.
+    */
+    using vector_allocator = 
+        typename std::vector<T>::allocator_type;
+
+    using vector_allocator_traits = 
+        std::allocator_traits<vector_allocator>;
+
+    using no_init_allocator = 
+        typename vector_allocator_traits::template rebind_alloc<vector_no_init_elem>;
+
+    using vector_no_init = std::vector<vector_no_init_elem, no_init_allocator>;
+
+    /*
+        Because the memory layout of std::vector<T> matches that of our vector_no_init
+        we can perform a reinterpret cast on our input argument and use the
+        optimized resize. Note that added vector entries will contain unitialized
+        values, but since this function will only be used when returning vectors filled
+        with values from an existing DynamicData collection, the unitialized values
+        should never be accessible to the calling application.
+    */
+    reinterpret_cast<vector_no_init&>(v).resize(newSize);
+}
+
+
+template<typename V, typename K>
+static std::vector<V> get_collection_buffer_member(
+        const DynamicData& dd,
+        const K& key) {
+    std::vector<V> values;
+    auto mi = dd.member_info(key);
+    resize_no_init(values, mi.element_count());
+    dd.get_values<V>(key, values);
+    return values;
+}
+
+
 template<typename T>
 static py::object get_collection_member(
         DynamicData& dd,
@@ -298,13 +341,13 @@ static py::object get_collection_member(
         return py::cast(retval);
     }
     case TypeKind::UINT_8_TYPE:
-        return py::cast(dd.get_values<uint8_t>(key));
+        return py::cast(get_collection_buffer_member<uint8_t, T>(dd, key));
     case TypeKind::INT_16_TYPE:
-        return py::cast(dd.get_values<int16_t>(key));
+        return py::cast(get_collection_buffer_member<int16_t, T>(dd, key));
     case TypeKind::UINT_16_TYPE:
-        return py::cast(dd.get_values<uint16_t>(key));
+        return py::cast(get_collection_buffer_member<uint16_t, T>(dd, key));
     case TypeKind::INT_32_TYPE:
-        return py::cast(dd.get_values<int32_t>(key));
+        return py::cast(get_collection_buffer_member<int32_t, T>(dd, key));
     case TypeKind::ENUMERATION_TYPE: {
         std::vector<EnumMember> retval;
         auto loaned_collection = dd.loan_value(key);
@@ -324,15 +367,15 @@ static py::object get_collection_member(
         return py::cast(retval);
     }
     case TypeKind::UINT_32_TYPE:
-        return py::cast(dd.get_values<uint32_t>(key));
+        return py::cast(get_collection_buffer_member<uint32_t, T>(dd, key));
     case TypeKind::INT_64_TYPE:
-        return py::cast(dd.get_values<rti::core::int64>(key));
+        return py::cast(get_collection_buffer_member<rti::core::int64, T>(dd, key));
     case TypeKind::UINT_64_TYPE:
-        return py::cast(dd.get_values<rti::core::uint64>(key));
+        return py::cast(get_collection_buffer_member<rti::core::uint64, T>(dd, key));
     case TypeKind::FLOAT_32_TYPE:
-        return py::cast(dd.get_values<float>(key));
+        return py::cast(get_collection_buffer_member<float, T>(dd, key));
     case TypeKind::FLOAT_64_TYPE:
-        return py::cast(dd.get_values<double>(key));
+        return py::cast(get_collection_buffer_member<double, T>(dd, key));
     case TypeKind::FLOAT_128_TYPE: {
         std::vector<rti::core::LongDouble> retval;
         DynamicData& member = dd.loan_value(key).get();
@@ -343,7 +386,7 @@ static py::object get_collection_member(
         return py::cast(retval);
     }
     case TypeKind::CHAR_8_TYPE:
-        return py::cast(dd.get_values<char>(key));
+        return py::cast(get_collection_buffer_member<char, T>(dd, key));
 #if rti_connext_version_gte(6, 0, 0)
     case TypeKind::CHAR_16_TYPE: {
         std::vector<wchar_t> retval;
@@ -387,7 +430,8 @@ template<typename T>
 static py::object get_member(
         DynamicData& dd,
         TypeKind::inner_enum kind,
-        const T& key)
+        const T& key,
+        bool dict_access = false)
 {
     kind = resolve_member_type_kind(dd, kind, key);
     switch (kind) {
@@ -431,9 +475,126 @@ static py::object get_member(
         }
         return py::cast(s);
     }
+    case TypeKind::ARRAY_TYPE:
+    case TypeKind::SEQUENCE_TYPE: {
+        if (dict_access) {
+            auto mi = dd.member_info(key);
+            return get_collection_member(dd, mi.element_kind().underlying(), key);
+        }
+    }
     default:
         return py::cast(dd.value<DynamicData>(key));
     }
+}
+
+
+template<typename T>
+static bool validate_buffer_type(const py::buffer_info& info) {
+    /*
+        If this buffer is incompatible, throw a type exception.
+    */
+    if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T)))
+        throw py::type_error("Only valid 1D buffers are allowed");
+    if (info.format != py::format_descriptor<T>::format() || static_cast<ssize_t>(sizeof(T)) != info.itemsize)
+        throw py::type_error("Format mismatch (Python: " + info.format + " C++: " + py::format_descriptor<T>::format() + ")");
+    /*
+        This optimization only works with contiguous buffer objects; for a "step"
+        that is greater than 1, fall back to the default pybind11 stl_bind 
+        conversion.
+    */
+    return (info.strides[0] / static_cast<ssize_t>(sizeof(T))) == 1;
+}
+
+
+template<typename T, typename F>
+static bool set_buffer_values(
+    DynamicData& dd,
+    const char* field_name,
+    const int field_index,
+    const py::buffer_info& info,
+    F func)
+{
+    DDS_DynamicData* native_ptr = &dd.native();
+    if (!validate_buffer_type<T>(info)) return false;
+    T* ptr = static_cast<T*>(info.ptr);
+    DDS_UnsignedLong len = info.shape[0];
+    if (func(
+            native_ptr,
+            field_name,
+            field_index,
+            len,
+            ptr) != DDS_RETCODE_OK) {
+        throw dds::core::IllegalOperationError("Failed to set buffer collection member");
+    }
+    return true;
+}
+
+
+template<typename T, typename F>
+static bool set_buffer_values(
+    DynamicData& dd,
+    const std::string& key,
+    const py::buffer_info& info,
+    F func)
+{
+    return set_buffer_values<T>(
+        dd,
+        key.c_str(),
+        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED,
+        info,
+        func);
+}
+
+
+template<typename T, typename F>
+static bool set_buffer_values(
+    DynamicData& dd,
+    const int& key,
+    const py::buffer_info& info,
+    F func)
+{
+    return set_buffer_values<T>(
+        dd,
+        nullptr,
+        key,
+        info,
+        func);
+}
+
+
+template<typename T>
+static bool set_buffer_collection_member(
+        DynamicData& dd,
+        TypeKind::inner_enum kind,
+        const T& key,
+        py::buffer& values)
+{
+    auto info = values.request();
+    switch (kind) {
+    case TypeKind::UINT_8_TYPE:
+        return set_buffer_values<uint8_t>(dd, key, info, DDS_DynamicData_set_octet_array);
+    case TypeKind::INT_16_TYPE:
+        return set_buffer_values<int16_t>(dd, key, info, DDS_DynamicData_set_short_array);
+    case TypeKind::UINT_16_TYPE:
+        return set_buffer_values<uint16_t>(dd, key, info, DDS_DynamicData_set_ushort_array);
+    case TypeKind::INT_32_TYPE:
+        return set_buffer_values<int32_t>(dd, key, info, DDS_DynamicData_set_long_array);
+    case TypeKind::UINT_32_TYPE:
+        return set_buffer_values<uint32_t>(dd, key, info, DDS_DynamicData_set_ulong_array);
+    case TypeKind::INT_64_TYPE:
+        return set_buffer_values<rti::core::int64>(dd, key, info, DDS_DynamicData_set_longlong_array);
+    case TypeKind::UINT_64_TYPE:
+        return set_buffer_values<rti::core::uint64>(dd, key, info, DDS_DynamicData_set_ulonglong_array);
+    case TypeKind::FLOAT_32_TYPE:
+        return set_buffer_values<float>(dd, key, info, DDS_DynamicData_set_float_array);
+    case TypeKind::FLOAT_64_TYPE:
+        return set_buffer_values<double>(dd, key, info, DDS_DynamicData_set_double_array);
+    case TypeKind::CHAR_8_TYPE:
+        return set_buffer_values<char>(dd, key, info, DDS_DynamicData_set_char_array);
+    default:
+        throw dds::core::InvalidArgumentError("Not a valid buffer type");
+    }   
+    return true;
 }
 
 
@@ -445,6 +606,10 @@ static void set_collection_member(
         py::object& values)
 {
     kind = resolve_member_type_kind(dd, kind, key);
+    if (py::isinstance<py::buffer>(values)) {
+        auto buffer = py::cast<py::buffer>(values);
+        if (set_buffer_collection_member(dd, kind, key, buffer)) return;
+    }
     switch (kind) {
     case TypeKind::BOOLEAN_TYPE: {
         auto v = py::cast<std::vector<bool>>(values);
@@ -762,6 +927,14 @@ static py::object get_value(DynamicData& dd, const T& key)
 {
     auto mi = dd.member_info(key);
     return get_member(dd, mi.member_kind().underlying(), key);
+}
+
+
+template<typename T>
+static py::object get_value_as_dict(DynamicData& dd, const T& key)
+{
+    auto mi = dd.member_info(key);
+    return get_member(dd, mi.member_kind().underlying(), key, true);
 }
 
 
@@ -1288,12 +1461,18 @@ void add_field_type(
 template<typename T>
 void add_field_type_collection(
         py::class_<DynamicData>& cls,
+        const TypeKind::inner_enum kind,
         const std::string& type_str,
         const std::string& type_info)
 {
     cls.def(("get_" + type_str + "_values").c_str(),
-            (std::vector<T>(DynamicData::*)(const std::string&) const)
-                    & DynamicData::get_values<T>,
+            [](DynamicData& dd, const std::string& key) {
+                std::vector<T> values;
+                auto mi = dd.member_info(key);
+                resize_no_init(values, mi.element_count());
+                dd.get_values<T>(key, values);
+                return values;
+            },
             py::arg("name"),
             ("Get multiple " + type_info + " values by field name.").c_str())
             .def(("get_" + type_str + "_values").c_str(),
@@ -1301,26 +1480,29 @@ void add_field_type_collection(
                      if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
                          index += 1;
                      }
-                     return dd.get_values<T>(index);
+                     std::vector<T> values;
+                     auto mi = dd.member_info(index);
+                     resize_no_init(values, mi.element_count());
+                     dd.get_values<T>(index, values);
+                     return values;
                  },
                  py::arg("index"),
                  ("Get multiple " + type_info + " values by field name.")
                          .c_str())
             .def(("set_" + type_str + "_values").c_str(),
-                 (void (DynamicData::*)(
-                         const std::string&,
-                         const std::vector<T>&))
-                         & DynamicData::set_values<T>,
+                 [kind](DynamicData& dd, const std::string& key, py::object& v) {
+                     set_collection_member(dd, kind, key, v);
+                 },
                  py::arg("name"),
                  py::arg("values"),
                  ("Get multiple " + type_info + " values by field name.")
                          .c_str())
             .def(("set_" + type_str + "_values").c_str(),
-                 [](DynamicData& dd, uint32_t index, const std::vector<T>& v) {
+                 [kind](DynamicData& dd, uint32_t index, py::object& v) {
                      if (dd.type_kind().underlying() != TypeKind::UNION_TYPE) {
                          index += 1;
                      }
-                     dd.set_values<T>(index, v);
+                     set_collection_member(dd, kind, index, v);
                  },
                  py::arg("index"),
                  py::arg("values"),
@@ -1381,10 +1563,15 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
 
     add_field_type<char>(dd_class, "int8", "8-bit signed int");
     add_field_type<uint8_t>(dd_class, "uint8", "8-bit unsigned int");
+    add_field_type<uint8_t>(dd_class, "octet", "8-bit unsigned int");
     add_field_type<int16_t>(dd_class, "int16", "16-bit signed int");
+    add_field_type<int16_t>(dd_class, "short", "16-bit signed int");
     add_field_type<uint16_t>(dd_class, "uint16", "16-bit unsigned int");
+    add_field_type<uint16_t>(dd_class, "ushort", "16-bit unsigned int");
     add_field_type<int32_t>(dd_class, "int32", "32-bit signed int");
+    add_field_type<int32_t>(dd_class, "long", "32-bit signed int");
     add_field_type<uint32_t>(dd_class, "uint32", "32-bit unsigned int");
+    add_field_type<uint32_t>(dd_class, "ulong", "32-bit unsigned int");
     add_field_type<int>(dd_class, "int", "int (signed)");
     add_field_type<unsigned int>(dd_class, "uint", "32-bit unsigned int");
     add_field_type<rti::core::int64>(dd_class, "int64", "64-bit signed int");
@@ -1398,10 +1585,16 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
             "ulonglong",
             "64-bit unsigned int");
     add_field_type<float>(dd_class, "float32", "32-bit floating point");
+    add_field_type<float>(dd_class, "float", "32-bit floating point");
     add_field_type<double>(dd_class, "float64", "64-bit floating point");
+    add_field_type<double>(dd_class, "double", "64-bit floating point");
     add_field_type<rti::core::LongDouble>(
             dd_class,
             "float128",
+            "128-bit floating point");
+    add_field_type<rti::core::LongDouble>(
+            dd_class,
+            "longdouble",
             "128-bit floating point");
     add_field_type<bool>(dd_class, "boolean", "boolean");
     add_field_type<char>(dd_class, "char", "character");
@@ -1411,35 +1604,106 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
     // string");
     add_field_type<DynamicData>(dd_class, "complex", "complex data type");
 
-    add_field_type_collection<char>(dd_class, "int8", "8-bit signed int");
-    add_field_type_collection<uint8_t>(dd_class, "uint8", "8-bit unsigned int");
-    add_field_type_collection<int16_t>(dd_class, "int16", "16-bit signed int");
+    add_field_type_collection<char>(
+            dd_class,
+            TypeKind::CHAR_8_TYPE,
+            "int8",
+            "8-bit signed int");
+    add_field_type_collection<uint8_t>(
+            dd_class,
+            TypeKind::UINT_8_TYPE,
+            "uint8",
+            "8-bit unsigned int");
+    add_field_type_collection<uint8_t>(
+            dd_class,
+            TypeKind::UINT_8_TYPE,
+            "octet",
+            "8-bit unsigned int");
+    add_field_type_collection<int16_t>(
+            dd_class,
+            TypeKind::INT_16_TYPE,
+            "int16",
+            "16-bit signed int");
+    add_field_type_collection<int16_t>(
+            dd_class,
+            TypeKind::INT_16_TYPE,
+            "short",
+            "16-bit signed int");
     add_field_type_collection<uint16_t>(
             dd_class,
+            TypeKind::UINT_16_TYPE,
             "uint16",
             "16-bit unsigned int");
-    add_field_type_collection<DDS_Long>(dd_class, "int32", "32-bit signed int");
+    add_field_type_collection<uint16_t>(
+            dd_class,
+            TypeKind::UINT_16_TYPE,
+            "ushort",
+            "16-bit unsigned int");
+    add_field_type_collection<DDS_Long>(
+            dd_class,
+            TypeKind::INT_32_TYPE,
+            "int32",
+            "32-bit signed int");
+    add_field_type_collection<DDS_Long>(
+            dd_class,
+            TypeKind::INT_32_TYPE,
+            "long",
+            "32-bit signed int");
     add_field_type_collection<DDS_UnsignedLong>(
             dd_class,
+            TypeKind::UINT_32_TYPE,
             "uint32",
+            "32-bit unsigned int");
+    add_field_type_collection<DDS_UnsignedLong>(
+            dd_class,
+            TypeKind::UINT_32_TYPE,
+            "ulong",
             "32-bit unsigned int");
     add_field_type_collection<DDS_LongLong>(
             dd_class,
+            TypeKind::INT_64_TYPE,
             "int64",
+            "64-bit signed int");
+    add_field_type_collection<DDS_LongLong>(
+            dd_class,
+            TypeKind::INT_64_TYPE,
+            "longlong",
             "64-bit signed int");
     add_field_type_collection<DDS_UnsignedLongLong>(
             dd_class,
+            TypeKind::UINT_64_TYPE,
             "uint64",
+            "64-bit unsigned int");
+    add_field_type_collection<DDS_UnsignedLongLong>(
+            dd_class,
+            TypeKind::UINT_64_TYPE,
+            "ulonglong",
             "64-bit unsigned int");
     add_field_type_collection<float>(
             dd_class,
+            TypeKind::FLOAT_32_TYPE,
             "float32",
+            "32-bit floating point");
+    add_field_type_collection<float>(
+            dd_class,
+            TypeKind::FLOAT_32_TYPE,
+            "float",
             "32-bit floating point");
     add_field_type_collection<double>(
             dd_class,
+            TypeKind::FLOAT_64_TYPE,
             "float64",
             "64-bit floating point");
-    add_field_type_collection<char>(dd_class, "char", "character");
+    add_field_type_collection<double>(
+            dd_class,
+            TypeKind::FLOAT_64_TYPE,
+            "double",
+            "64-bit floating point");
+    add_field_type_collection<char>(
+            dd_class,
+            TypeKind::CHAR_8_TYPE,
+            "char",
+            "character");
 
     dd_class.def(
                     "get_wchar",
@@ -1714,9 +1978,22 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     &DynamicData::info,
                     "Returns info about this sample")
             .def("member_info",
-                 (rti::core::xtypes::DynamicDataMemberInfo(DynamicData::*)(
-                         const std::string&) const)
-                         & DynamicData::member_info,
+                 [](DynamicData& dd, const std::string& key) {
+                    DynamicDataNestedIndex id;
+                    DynamicData& parent = resolve_nested_member(dd, key, id);
+                    rti::core::xtypes::DynamicDataMemberInfo mi;
+
+                    if (id.index_type == DynamicDataNestedIndex::INT) {
+                        mi = parent.member_info(id.int_index);
+                    }
+                    else {
+                        mi = parent.member_info(id.string_index);
+                    }
+                    if (parent.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                        mi.native().member_id -= 1;
+                    }
+                    return mi;
+                 },
                  py::arg("name"),
                  "Returns info about a member.")
             .def(
@@ -1726,7 +2003,11 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                             != TypeKind::UNION_TYPE) {
                             index += 1;
                         }
-                        return data.member_info(index);
+                        auto mi = data.member_info(index);
+                        if (data.type_kind().underlying() != TypeKind::UNION_TYPE) {
+                            mi.native().member_id -= 1;
+                        }
+                        return mi;
                     },
                     py::arg("index"),
                     "Returns info about a member.")
@@ -1925,7 +2206,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                 },
                 py::arg("name"),
                 "Translates from member name to member index.")
-            .def("__getitem__", &get_value<std::string>)
+            .def("__getitem__", &get_value_as_dict<std::string>)
 #else
         .def(
             "get_value",
@@ -2021,7 +2302,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                 DynamicDataNestedIndex id;
                 DynamicData& parent = resolve_nested_member(dd, key, id);
                 if (id.index_type == DynamicDataNestedIndex::INT) return get_value(parent, id.int_index);
-                else return get_value(parent, id.string_index);
+                else return get_value_as_dict(parent, id.string_index);
             }
         )
 #endif
@@ -2081,7 +2362,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                      switch (kind) {
                      case TypeKind::STRUCTURE_TYPE:
                      case TypeKind::UNION_TYPE: {
-                         return get_value(dd, index);
+                         return get_value_as_dict(dd, index);
                      }
                      case TypeKind::ARRAY_TYPE:
                      case TypeKind::SEQUENCE_TYPE: {
@@ -2092,7 +2373,8 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                                  collection_type.content_type()
                                          .kind()
                                          .underlying(),
-                                 index);
+                                 index,
+                                 true);
                      }
                      default:
                          throw py::type_error(
@@ -2145,7 +2427,8 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                      return get_member(
                              dd,
                              collection_type.content_type().kind().underlying(),
-                             offset + 1);
+                             offset + 1,
+                             true);
                  })
             .def("__setitem__",
                  [](DynamicData& dd, py::tuple index, py::object& value) {
@@ -2192,7 +2475,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                              collection_type.content_type().kind().underlying();
 
                      for (size_t i = 0; i < slicelength; ++i) {
-                         seq.append(get_member(dd, elem_kind, start + 1));
+                         seq.append(get_member(dd, elem_kind, start + 1, true));
                          start += step;
                      }
                      return seq;

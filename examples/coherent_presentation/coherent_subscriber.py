@@ -21,12 +21,12 @@ class CoherentListener(dds.DynamicData.NoOpDataReaderListener):
 def subscriber_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    subscriber_qos = dds.QosProvider.default().subscriber_qos
+    subscriber_qos = dds.QosProvider.default.subscriber_qos
     subscriber = dds.Subscriber(participant, subscriber_qos)
 
     coherent_type = dds.QosProvider("coherent.xml").type("coherent_lib", "coherent")
     topic = dds.DynamicData.Topic(participant, "Example coherent", coherent_type)
-    datareader_qos = dds.QosProvider.default().datareader_qos
+    datareader_qos = dds.QosProvider.default.datareader_qos
     reader = dds.DynamicData.DataReader(subscriber, topic, datareader_qos)
     reader.bind_listener(CoherentListener(), dds.StatusMask.data_available())
 

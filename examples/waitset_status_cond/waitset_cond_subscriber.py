@@ -44,7 +44,7 @@ def subscriber_main(domain_id, sample_count):
 
     wsqc_type = dds.QosProvider("waitset_cond.xml").type("wssc_lib", "Foo")
     topic = dds.DynamicData.Topic(participant, "Example Foo", wsqc_type)
-    reader_qos = dds.QosProvider.default().datareader_qos
+    reader_qos = dds.QosProvider.default.datareader_qos
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)
 
     # Get the StatusCondition associated with the reader and set the mask to get liveliness updates
