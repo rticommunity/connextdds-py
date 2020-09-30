@@ -10,16 +10,16 @@
 void init_dds_stl_bindings(py::module& m)
 {
     pyrti::bind_vector<bool>(m, "BoolSeq");
-    pyrti::bind_buffer_vector<uint8_t>(m, "OctetSeq");
-    pyrti::bind_buffer_vector<char>(m, "CharSeq");
-    pyrti::bind_buffer_vector<uint16_t>(m, "Uin16Seq");
-    pyrti::bind_buffer_vector<int16_t>(m, "Int16Seq");
-    pyrti::bind_buffer_vector<uint32_t>(m, "Uint32Seq");
-    pyrti::bind_buffer_vector<int32_t>(m, "Int32Seq");
-    pyrti::bind_buffer_vector<rti::core::uint64>(m, "Uint64Seq");
-    pyrti::bind_buffer_vector<rti::core::int64>(m, "Int64Seq");
-    pyrti::bind_buffer_vector<float>(m, "Float32Seq");
-    pyrti::bind_buffer_vector<double>(m, "Float64Seq");
+    pyrti::bind_buffer_vector<uint8_t>(m, "Uint8Seq", "OctetSeq");
+    pyrti::bind_buffer_vector<char>(m, "Int8Seq", "CharSeq");
+    pyrti::bind_buffer_vector<uint16_t>(m, "Uint16Seq", "UshortSeq");
+    pyrti::bind_buffer_vector<int16_t>(m, "Int16Seq", "ShortSeq");
+    pyrti::bind_buffer_vector<uint32_t>(m, "Uint32Seq", "ULongSeq");
+    pyrti::bind_buffer_vector<int32_t>(m, "Int32Seq", "LongSeq");
+    pyrti::bind_buffer_vector<rti::core::uint64>(m, "Uint64Seq", "ULongLongSeq");
+    pyrti::bind_buffer_vector<rti::core::int64>(m, "Int64Seq", "LongLongSeq");
+    pyrti::bind_buffer_vector<float>(m, "Float32Seq", "FloatSeq");
+    pyrti::bind_buffer_vector<double>(m, "Float64Seq", "DoubleSeq");
     pyrti::bind_vector<wchar_t>(m, "WcharSeq");
     pyrti::bind_vector<std::string>(m, "StringSeq");
     pyrti::bind_vector<std::wstring>(m, "WstringSeq");

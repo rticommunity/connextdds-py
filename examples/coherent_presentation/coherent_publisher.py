@@ -23,12 +23,12 @@ except NameError:
 def publisher_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    publisher_qos = dds.QosProvider.default().publisher_qos
+    publisher_qos = dds.QosProvider.default.publisher_qos
     publisher = dds.Publisher(participant, publisher_qos)
 
     coherent_type = dds.QosProvider("coherent.xml").type("coherent_lib", "coherent")
     topic = dds.DynamicData.Topic(participant, "Example coherent", coherent_type)
-    datawriter_qos = dds.QosProvider.default().datawriter_qos
+    datawriter_qos = dds.QosProvider.default.datawriter_qos
     writer = dds.DynamicData.DataWriter(publisher, topic, datawriter_qos)
 
     sample = dds.DynamicData(coherent_type)

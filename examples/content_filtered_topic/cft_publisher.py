@@ -20,7 +20,7 @@ def publisher_main(domain_id, sample_count):
     cft_type = dds.QosProvider("cft.xml").type("cft_lib", "cft")
     topic = dds.DynamicData.Topic(participant, "Example cft", cft_type)
 
-    writer_qos = dds.QosProvider.default().datawriter_qos
+    writer_qos = dds.QosProvider.default.datawriter_qos
     writer = dds.DynamicData.DataWriter(dds.Publisher(participant), topic, writer_qos)
 
     instance = dds.DynamicData(cft_type)

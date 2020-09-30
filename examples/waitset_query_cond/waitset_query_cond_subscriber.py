@@ -29,7 +29,7 @@ def subscriber_main(domain_id, sample_count):
         "wsqc_lib", "waitset_query_cond"
     )
     topic = dds.DynamicData.Topic(participant, "Example waitset_query_cond", wsqc_type)
-    reader_qos = dds.QosProvider.default().datareader_qos
+    reader_qos = dds.QosProvider.default.datareader_qos
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)
 
     # Query against even samples at the start
