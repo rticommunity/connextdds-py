@@ -298,7 +298,7 @@ static void resize_no_init(std::vector<T>& v, ssize_t newSize) {
     using no_init_allocator = 
         typename vector_allocator_traits::template rebind_alloc<vector_no_init_elem>;
 
-    typedef std::vector<vector_no_init_elem, no_init_allocator> vector_no_init;
+    using vector_no_init = std::vector<vector_no_init_elem, no_init_allocator>;
 
     /*
         Because the memory layout of std::vector<T> matches that of our vector_no_init
@@ -489,11 +489,20 @@ static py::object get_member(
 
 
 template<typename T>
-static void assert_valid_buffer_type(const py::buffer_info& info) {
+static bool validate_buffer_type(const py::buffer_info& info) {
+    /*
+        If this buffer is incompatible, throw a type exception.
+    */
     if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T)))
         throw py::type_error("Only valid 1D buffers are allowed");
     if (info.format != py::format_descriptor<T>::format() || static_cast<ssize_t>(sizeof(T)) != info.itemsize)
         throw py::type_error("Format mismatch (Python: " + info.format + " C++: " + py::format_descriptor<T>::format() + ")");
+    /*
+        This optimization only works with contiguous buffer objects; for a "step"
+        that is greater than 1, fall back to the default pybind11 stl_bind 
+        conversion.
+    */
+    return (info.strides[0] / static_cast<ssize_t>(sizeof(T))) == 1;
 }
 
 
@@ -505,15 +514,8 @@ static bool set_buffer_values(
     const py::buffer_info& info,
     F func)
 {
-    if (info.ndim == 1 && (info.strides[0] / info.itemsize) != 1) {
-        /* 
-            let the default stl_bind buffer conversion handle case with stride > 1
-            for unidimensional buffer protocol object
-        */
-        return false;
-    }
     DDS_DynamicData* native_ptr = &dd.native();
-    assert_valid_buffer_type<T>(info);
+    if (!validate_buffer_type<T>(info)) return false;
     T* ptr = static_cast<T*>(info.ptr);
     DDS_UnsignedLong len = info.shape[0];
     if (func(
