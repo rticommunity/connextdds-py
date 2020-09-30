@@ -1,10 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-project(distlog)
-include(CheckCXXCompilerFlag)
-
-file(TO_CMAKE_PATH $ENV{NDDSHOME} NDDSHOME)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 find_package(
     RTIConnextDDS "5.3.1"
     REQUIRED
@@ -13,12 +6,12 @@ find_package(
         distributed_logger
     )
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
+if(UNIX AND NOT APPLE)
+    set(DISTLOG_INSTALL_RPATH "$ORIGIN:$ORIGIN/..")
+endif()
 
-if (WIN32)
-    link_directories(
-        ${BUILD_TEMP_DIRECTORY}/rti.connextdds/$(Configuration)
-    )
+if(APPLE)
+    set(DISTLOG_INSTALL_RPATH "@loader_path;@loader_path/..")
 endif()
 
 pybind11_add_module(
@@ -32,23 +25,38 @@ pybind11_add_module(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PyMessageParams.cpp"
 )
 
-set_target_properties(distlog PROPERTIES CXX_VISIBILITY_PRESET "default")
+set_target_properties(
+    distlog 
+    PROPERTIES 
+    CXX_VISIBILITY_PRESET "default"
+    LIBRARY_OUTPUT_DIRECTORY "${RTI_LOGGING_DISTLOG_LIBRARY_OUTPUT_DIRECTORY}"
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG "${RTI_LOGGING_DISTLOG_LIBRARY_OUTPUT_DIRECTORY}"
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${RTI_LOGGING_DISTLOG_LIBRARY_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY "${RTI_LOGGING_DISTLOG_LIBRARY_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RTI_LOGGING_DISTLOG_LIBRARY_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RTI_LOGGING_DISTLOG_LIBRARY_OUTPUT_DIRECTORY}"
+    INSTALL_RPATH "${DISTLOG_INSTALL_RPATH}"
+    PREFIX "${PYTHON_MODULE_PREFIX}"
+    SUFFIX "${PYTHON_MODULE_EXTENSION}"
+)
+
+target_link_libraries(
+    distlog
+    PRIVATE
+    ${CONNEXTDDS_EXTERNAL_LIBS}
+    connextdds
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}rtidlc${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscpp2${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddsc${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscore${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+)
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
-    target_link_libraries(
-        distlog PRIVATE
-        ${CONNEXTDDS_EXTERNAL_LIBS}
-        RTIConnextDDS::cpp2_api
-        RTIConnextDDS::distributed_logger_c)
+    target_compile_definitions(
+        distlog
+        PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}"
+        PRIVATE "${CONNEXTDDS_COMPILE_DEFINITIONS}")
 else()
-    string(TOUPPER ${CMAKE_BUILD_TYPE} RTI_LIB_BUILD_TYPE)
-    target_link_libraries(distlog PRIVATE
-        ${CONNEXTDDS_EXTERNAL_LIBS}
-        ${CONNEXTDDS_CPP2_API_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED}
-        ${DISTRIBUTED_LOGGER_C_LIBRARIES_${RTI_LIB_BUILD_TYPE}_SHARED})
-
-    target_include_directories(distlog PRIVATE ${CONNEXTDDS_INCLUDE_DIRS})
-
     if(CONNEXTDDS_DEFINITIONS MATCHES "-m64")
         string(REGEX REPLACE "-m64[ \t\r\n]*" "" CONNEXTDDS_DEFINITIONS "${CONNEXTDDS_DEFINITIONS}")
         target_compile_options(distlog PRIVATE "-m64")
@@ -57,20 +65,19 @@ else()
         target_compile_options(distlog PRIVATE "-m32")
     endif()
 
-    target_compile_definitions(distlog PRIVATE "${CONNEXTDDS_DEFINITIONS}")
+    target_compile_definitions(
+        distlog
+        PRIVATE "${CONNEXTDDS_DEFINITIONS}"
+        PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}")
 endif()
 
-
 target_include_directories(
-    distlog PRIVATE 
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../connextdds/include")
+    distlog
+    PRIVATE ${CONNEXTDDS_INCLUDE_DIRS}
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../connextdds/include"
+)
 
-set_target_properties(distlog PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
-                                         SUFFIX "${PYTHON_MODULE_EXTENSION}")
-
-check_cxx_compiler_flag(-std=c++17 HAVE_FLAG_STD_CXX17)
-check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
 if (HAVE_FLAG_STD_CXX17 AND RTIConnextDDS_VERSION_MAJOR GREATER_EQUAL 6)
     set_target_properties(
         distlog
@@ -91,12 +98,7 @@ else()
     )
 endif()
 
-if (WIN32)
-    target_link_libraries(
-        distlog
-        PRIVATE
-        connextdds
-    )
+if (MSVC)
     add_definitions(/bigobj /MP${NUM_JOBS})
     target_compile_options(
         distlog

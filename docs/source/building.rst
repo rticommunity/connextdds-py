@@ -21,6 +21,54 @@ Requirements
     what Python version you are using. To do so, just use pip3 or python3 in place of
     pip or python.
 
+Configuration
+===================
+
+Before building/installing connextdds-py, it is necessary to run the configuration.py
+script.
+
+.. code-block:: shell
+
+    $ python configure.py [options...] platform
+
+Where "platform" specifies the RTI target architecture/platform string and the options are
+specified in the following table.
+
+.. list-table::
+    :widths: auto
+    :header-rows: 1
+
+    * - Short Option
+      - Long Option
+      - Description
+    * - -n NDDSHOME
+      - --nddshome NDDSHOME
+      - NDDSHOME directory. Defaults to NDDSHOME environment variable.
+    * - -j JOBS
+      - --jobs JOBS
+      - Number of concurrent build jobs/processes
+    * - -t
+      - --tcp
+      - Add the TCP transport plugin
+    * - -m
+      - --monitoring
+      - Add the RTI Monitoring plugin
+    * - -s
+      - --secure
+      - Add the RTI DDS Secure plugin + openssl libraries
+    * - -p PLUGIN
+      - --plugin PLUGIN
+      - Add a user-defined plugin. This option can be specified multiple times
+    * - -o OPENSSL
+      - --openssl OPENSSL
+      - Location of openssl libraries (defaults to platform library location under NDDSHOME)
+    * - -d
+      - --debug
+      - Use debug libraries and build debug modules for connext-py
+    * - -h
+      - --help
+      - Show help message and exit
+
 Simple Installation
 ===================
 
@@ -31,13 +79,11 @@ Simple Installation
     $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
     $ cd connextdds-py
 
-2. Set the environment variables.
+2. Run configuration.py script
 
 .. code-block:: shell
 
-    $ export NDDSHOME=<install location of Connext Pro>
-    $ export CONNEXTDDS_ARCH=<target arch>
-    $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
+    $ python configure.py [options...] <platform>
 
 3. Build and install.
 
@@ -55,13 +101,11 @@ Simple Wheel Build
     $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
     $ cd connextdds-py
 
-2. Set the environment variables.
+2. Run configuration.py script
 
 .. code-block:: shell
 
-    $ export NDDSHOME=<install location of Connext Pro>
-    $ export CONNEXTDDS_ARCH=<target arch>
-    $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
+    $ python configure.py [options...] <platform>
 
 3. Build the wheel.
 
@@ -75,9 +119,25 @@ If you want to cache the build files, you can use wheels.
 
 1. Install the required Python modules:
 
+    * Windows
+
 .. code-block:: shell
 
     $ pip install setuptools wheel cmake
+
+    
+    * Linux
+
+.. code-block:: shell
+
+    $ pip install setuptools wheel cmake patchelf-wrapper
+
+
+    * macOS
+
+.. code-block:: shell
+
+    $ pip install setuptools wheel cmake delocate
 
 2. Clone the repository and submodules, and enter the directory.
 
@@ -86,20 +146,17 @@ If you want to cache the build files, you can use wheels.
     $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
     $ cd connextdds-py
 
-3. Set the environment variables.
+3. Run configuration.py script
 
 .. code-block:: shell
 
-    $ export NDDSHOME=<install location of Connext Pro>
-    $ export CONNEXTDDS_ARCH=<target architecture>
-    $ export NJOBS=<number of concurrent make jobs or VS build processes, default 1>
-    $ export DEBUG=<1 for debug build, unset or any other value for release build>
+    $ python configure.py [options...] <platform>
 
 4. Run the setup script.
 
 .. code-block:: shell
 
-    $ python wheel .
+    $ python setup.py bdist_wheel
 
 5. Install the package.
 
