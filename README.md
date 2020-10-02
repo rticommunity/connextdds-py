@@ -9,6 +9,7 @@ A full Python binding for RTI Connext DDS using pybind11
 - Windows (requires Visual Studio 2015 or newer), macOS, and Linux
 - Python 2.7, Python 3.x with pip
 - RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
+- [patchelf](https://github.com/NixOS/patchelf) (Python 2.7.x on Linux)
 
 ## Configuration
 

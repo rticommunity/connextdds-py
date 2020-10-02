@@ -14,6 +14,7 @@ Requirements
 - Windows® (requires Visual Studio® 2015 or newer), macOS®, or Linux®
 - Python® 2.7 or Python3.x with pip or pip3 respectively
 - *Connext DDS* 5.3.1, 6.0.0, or 6.0.1
+- `patchelf <https://github.com/NixOS/patchelf>`_ (Python 2.7.x on Linux)
 
 .. note::
 
