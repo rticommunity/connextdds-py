@@ -20,11 +20,45 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<SampleLostState>& cls)
 {
-    cls.def_static(
-               "not_lost",
-               &SampleLostState::not_lost,
-               "Create a SampleLostState indicating that the sample was not "
-               "lost.")
+    cls.def(
+            "__str__",
+            [](const SampleLostState& s) {
+                switch(s.to_ullong()) {
+                case DDS_NOT_LOST:
+                    return std::string("SampleLostState.NOT_LOST");
+                case DDS_LOST_BY_WRITER:
+                    return std::string("SampleLostState.LOST_BY_WRITER");
+                case DDS_LOST_BY_INSTANCES_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_INSTANCES_LIMIT");
+                case DDS_LOST_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT");
+                case DDS_LOST_BY_INCOMPLETE_COHERENT_SET:
+                    return std::string("SampleLostState.LOST_BY_INCOMPLETE_COHERENT_SET");
+                case DDS_LOST_BY_LARGE_COHERENT_SET:
+                    return std::string("SampleLostState.LOST_BY_LARGE_COHERENT_SET");
+                case DDS_LOST_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT");
+                case DDS_LOST_BY_VIRTUAL_WRITERS_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_VIRTUAL_WRITERS_LIMIT");
+                case DDS_LOST_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT");
+                case DDS_LOST_BY_AVAILABILITY_WAITING_TIME:
+                    return std::string("SampleLostState.LOST_BY_AVAILABILITY_WAITING_TIME");
+                case DDS_LOST_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
+                case DDS_LOST_BY_OUT_OF_MEMORY:
+                    return std::string("SampleLostState.LOST_BY_OUT_OF_MEMORY");
+                case DDS_LOST_BY_UNKNOWN_INSTANCE:
+                    return std::string("SampleLostState.LOST_BY_UNKNOWN_INSTANCE");
+                default:
+                    return std::string("SampleLostState.INVALID");
+                }
+            })
+            .def_static(
+                    "not_lost",
+                    &SampleLostState::not_lost,
+                    "Create a SampleLostState indicating that the sample was not "
+                    "lost.")
             .def_static(
                     "lost_by_writer",
                     &SampleLostState::lost_by_writer,
@@ -114,7 +148,8 @@ void process_inits<SampleLostState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type_no_int_constructor<SampleLostState>(
                 m,
                 "SampleLostState",
-                "Creates SampleLostState.not_lost()");
+                "Creates SampleLostState.not_lost()",
+                false);
         return [cls]() mutable { init_class_defs<SampleLostState>(cls); };
     });
 }

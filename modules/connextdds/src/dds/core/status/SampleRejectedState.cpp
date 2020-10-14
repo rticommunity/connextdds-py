@@ -20,7 +20,37 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<SampleRejectedState>& cls)
 {
-    cls.def_static(
+    cls.def(
+            "__str__",
+            [](const SampleRejectedState& s) {
+                switch(s.to_ullong()) {
+                case DDS_NOT_REJECTED:
+                    return std::string("SampleRejectedState.NOT_REJECTED");
+                case DDS_REJECTED_BY_INSTANCES_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_INSTANCES_LIMIT");
+                case DDS_REJECTED_BY_SAMPLES_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_LIMIT");
+                case DDS_REJECTED_BY_SAMPLES_PER_INSTANCE_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_PER_INSTANCE_LIMIT");
+                case DDS_REJECTED_BY_REMOTE_WRITERS_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_LIMIT");
+                case DDS_REJECTED_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT");
+                case DDS_REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT");
+                case DDS_REJECTED_BY_VIRTUAL_WRITERS_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_VIRTUAL_WRITERS_LIMIT");
+                case DDS_REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT");
+                case DDS_REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
+                case DDS_REJECTED_BY_UNKNOWN_INSTANCE:
+                    return std::string("SampleRejectedState.REJECTED_BY_UNKNOWN_INSTANCE");
+                default:
+                    return std::string("SampleRejectedState.INVALID_STATE");
+                }
+            })
+            .def_static(
                "not_rejected",
                &SampleRejectedState::not_rejected,
                "Create a SampleRejectedState indicating that no samples were "
@@ -116,7 +146,8 @@ void process_inits<SampleRejectedState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type_no_int_constructor<SampleRejectedState>(
                 m,
                 "SampleRejectedState",
-                "Creates SampleRejectedState.not_rejected()");
+                "Creates SampleRejectedState.not_rejected()",
+                false);
         return [cls]() mutable { init_class_defs<SampleRejectedState>(cls); };
     });
 }

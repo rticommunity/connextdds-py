@@ -20,10 +20,25 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<StreamKind>& cls)
 {
-    cls.def_static(
-               "live",
-               &rti::sub::status::StreamKind::live,
-               "Returns the StreamKind that selects the live stream.")
+    cls.def(
+            "__str__",
+            [](const StreamKind& s) {
+                switch(s.to_ulong()) {
+                case DDS_LIVE_STREAM:
+                    return std::string("StreamKind.LIVE");
+                case DDS_TOPIC_QUERY_STREAM:
+                    return std::string("StreamKind.TOPIC_QUERY");
+                case DDS_LIVE_STREAM | DDS_TOPIC_QUERY_STREAM:
+                case 0x0000FFFF:
+                    return std::string("StreamKind.ANY");
+                default:
+                    return std::string("StreamKind.INVALID");
+                }
+            })
+            .def_static(
+                    "live",
+                    &rti::sub::status::StreamKind::live,
+                    "Returns the StreamKind that selects the live stream.")
             .def_static(
                     "topic_query",
                     &rti::sub::status::StreamKind::topic_query,
@@ -159,7 +174,8 @@ void process_inits<DataStateEx>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type<StreamKind, uint32_t>(
                 m,
                 "StreamKind",
-                "Create a StreamKind with nothing enabled.");
+                "Create a StreamKind with nothing enabled.",
+                false);
         return [cls]() mutable { init_class_defs<StreamKind>(cls); };
     });
 

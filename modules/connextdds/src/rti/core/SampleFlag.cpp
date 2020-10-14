@@ -20,11 +20,29 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<SampleFlag>& cls)
 {
-    cls.def_static(
-               "redelivered",
-               &SampleFlag::redelivered,
-               "Indicates that a sample has been redelivered by RTI Queuing "
-               "Service.")
+    cls.def(
+            "__str__",
+            [](const SampleFlag& s) {
+                switch(s.to_ullong()) {
+                case DDS_REDELIVERED_SAMPLE:
+                    return std::string("SampleFlag.REDELIVERED");
+                case DDS_INTERMEDIATE_REPLY_SEQUENCE_SAMPLE:
+                    return std::string("SampleFlag.INTERMEDIATE_REPLY_SEQUENCE");
+                case DDS_REPLICATE_SAMPLE:
+                    return std::string("SampleFlag.REPLICATE");
+                case DDS_LAST_SHARED_READER_QUEUE_SAMPLE:
+                    return std::string("SampleFlag.LAST_SHARED_READER_QUEUE");
+                case DDS_INTERMEDIATE_TOPIC_QUERY_SAMPLE:
+                    return std::string("SampleFlag.INTERMEDIATE_TOPIC_QUERY");
+                default:
+                    return std::string("SampleFlag.INVALID");
+                }
+            })
+            .def_static(
+                    "redelivered",
+                    &SampleFlag::redelivered,
+                    "Indicates that a sample has been redelivered by RTI Queuing "
+                    "Service.")
             .def_static(
                     "intermediate_reply_sequence",
                     &SampleFlag::intermediate_reply_sequence,
@@ -59,7 +77,8 @@ void process_inits<SampleFlag>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type<SampleFlag, uint64_t>(
                 m,
                 "SampleFlag",
-                "Construct an empty SampleFlag with no bits set.");
+                "Construct an empty SampleFlag with no bits set.",
+                false);
         return [cls]() mutable { init_class_defs<SampleFlag>(cls); };
     });
 }

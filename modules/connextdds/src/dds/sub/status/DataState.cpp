@@ -20,7 +20,25 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<SampleState>& cls)
 {
-    cls.def_static("read", &SampleState::read, "Creates a read SampleState.")
+    cls.def(
+            "__str__",
+            [](const SampleState& s) {
+                switch(s.to_ulong()) {
+                case DDS_READ_SAMPLE_STATE:
+                    return std::string("SampleState.READ");
+                case DDS_NOT_READ_SAMPLE_STATE:
+                    return std::string("SampleState.NOT_READ");
+                case DDS_READ_SAMPLE_STATE | DDS_NOT_READ_SAMPLE_STATE:
+                case 0x0000FFFF:
+                    return std::string("SampleState.ANY");
+                default:
+                    return std::string("SampleState.INVALID");
+                }
+            })
+            .def_static(
+                    "read",
+                    &SampleState::read,
+                    "Creates a read SampleState.")
             .def_static(
                     "not_read",
                     &SampleState::not_read,
@@ -35,10 +53,25 @@ void init_class_defs(py::class_<SampleState>& cls)
 template<>
 void init_class_defs(py::class_<ViewState>& cls)
 {
-    cls.def_static(
-               "new_view",
-               &ViewState::new_view,
-               "Creates a new_view ViewState object.")
+    cls.def(
+            "__str__",
+            [](const ViewState& s) {
+                switch(s.to_ulong()) {
+                case DDS_NEW_VIEW_STATE:
+                    return std::string("ViewState.NEW");
+                case DDS_NOT_NEW_VIEW_STATE:
+                    return std::string("ViewState.NOT_NEW");
+                case DDS_NEW_VIEW_STATE | DDS_NOT_NEW_VIEW_STATE:
+                case 0x0000FFFF:
+                    return std::string("ViewState.ANY");
+                default:
+                    return std::string("ViewState.INVALID");
+                }
+            })
+            .def_static(
+                    "new_view",
+                    &ViewState::new_view,
+                    "Creates a new_view ViewState object.")
             .def_static(
                     "not_new_view",
                     &ViewState::not_new_view,
@@ -52,10 +85,29 @@ void init_class_defs(py::class_<ViewState>& cls)
 template<>
 void init_class_defs(py::class_<InstanceState>& cls)
 {
-    cls.def_static(
-               "alive",
-               &InstanceState::alive,
-               "Creates a alive InstanceState object.")
+    cls.def(
+            "__str__",
+            [](const InstanceState& s) {
+                switch(s.to_ulong()) {
+                case DDS_ALIVE_INSTANCE_STATE:
+                    return std::string("InstanceState.ALIVE");
+                case DDS_NOT_ALIVE_DISPOSED_INSTANCE_STATE:
+                    return std::string("InstanceState.NOT_ALIVE_DISPOSED");
+                case DDS_NOT_ALIVE_NO_WRITERS_INSTANCE_STATE:
+                    return std::string("InstanceState.NOT_ALIVE_NO_WRITERS");
+                case DDS_NOT_ALIVE_DISPOSED_INSTANCE_STATE | DDS_NOT_ALIVE_NO_WRITERS_INSTANCE_STATE:
+                    return std::string("InstanceState.NOT_ALIVE");
+                case DDS_ALIVE_INSTANCE_STATE | DDS_NOT_ALIVE_DISPOSED_INSTANCE_STATE | DDS_NOT_ALIVE_NO_WRITERS_INSTANCE_STATE:
+                case 0x0000FFFF:
+                    return std::string("InstanceState.ANY");
+                default:
+                    return std::string("InstanceState.INVALID");
+                }
+            })
+            .def_static(
+                    "alive",
+                    &InstanceState::alive,
+                    "Creates a alive InstanceState object.")
             .def_static(
                     "not_alive_disposed",
                     &InstanceState::not_alive_disposed,
@@ -181,7 +233,8 @@ void process_inits<DataState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type<SampleState, uint32_t>(
                 m,
                 "SampleState",
-                "Create a SampleState with no bits set.");
+                "Create a SampleState with no bits set.",
+                false);
         return [cls]() mutable { init_class_defs<SampleState>(cls); };
     });
 
@@ -189,7 +242,8 @@ void process_inits<DataState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type<ViewState, uint32_t>(
                 m,
                 "ViewState",
-                "Create a ViewState with no bits set.");
+                "Create a ViewState with no bits set.",
+                false);
         return [cls]() mutable { init_class_defs<ViewState>(cls); };
     });
 
@@ -197,7 +251,8 @@ void process_inits<DataState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type<InstanceState, uint32_t>(
                 m,
                 "InstanceState",
-                "Create an InstanceState with no bits set.");
+                "Create an InstanceState with no bits set.",
+                false);
         return [cls]() mutable { init_class_defs<InstanceState>(cls); };
     });
 

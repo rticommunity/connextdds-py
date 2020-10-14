@@ -24,7 +24,8 @@ py::class_<T> init_mask_type_no_int_constructor(
         py::object& m,
         const std::string& name,
         const std::string& noarg_constructor_doc_str =
-                "Creates a mask with no bits set.")
+                "Creates a mask with no bits set.",
+        bool default_string_conversion = true)
 {
     py::class_<T> mt(m, name.c_str());
     mt.def(py::init<>(), noarg_constructor_doc_str.c_str())
@@ -180,11 +181,14 @@ py::class_<T> init_mask_type_no_int_constructor(
                     },
                     py::is_operator(),
                     "Right shift bits in mask.")
-            .def(
-                    "__str__",
-                    [](T& mask) { return mask.to_string(); },
-                    "Convert mask to string.")
             .def("__int__", &T::to_ullong, "Convert mask to int.");
+
+    if (default_string_conversion) {
+        mt.def(
+            "__str__",
+            [](T& mask) { return mask.to_string(); },
+            "Convert mask to string.");
+    }
 
     return mt;
 }
@@ -194,12 +198,14 @@ py::class_<T> init_mask_type(
         py::object& m,
         const std::string& name,
         const std::string& noarg_constructor_doc_str =
-                "Creates a mask with no bits set.")
+                "Creates a mask with no bits set.",
+        bool default_string_conversion = true)
 {
     auto mt = init_mask_type_no_int_constructor<T>(
             m,
             name,
-            noarg_constructor_doc_str);
+            noarg_constructor_doc_str,
+            default_string_conversion);
     mt.def(py::init<INIT_TYPE>(),
            py::arg("value"),
            "Creates a mask from the bits in an integer.");
