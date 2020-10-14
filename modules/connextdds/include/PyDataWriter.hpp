@@ -460,6 +460,29 @@ void init_dds_typed_datawriter_base_template(
                     py::arg("timestamp"),
                     "Unregister an instance with timestamp.")
             .def(
+                    "unregister_instance",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder) {
+                        auto h = dw.lookup_instance(key_holder);
+                        dw.unregister_instance(h);
+                        return dw;
+                    },
+                    py::arg("key_holder"),
+                    "Unregister the instance associated with key_holder.")
+            .def(
+                    "unregister_instance",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder,
+                       const dds::core::Time& t) {
+                        auto h = dw.lookup_instance(key_holder);
+                        dw.unregister_instance(h, t);
+                        return dw;
+                    },
+                    py::arg("key_holder"),
+                    py::arg("timestamp"),
+                    "Unregister the instance associate with key_holder using a "
+                    "timestamp.")
+            .def(
                     "dispose_instance",
                     [](PyDataWriter<T>& dw,
                        const dds::core::InstanceHandle& h) {
@@ -478,7 +501,30 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("handle"),
                     py::arg("timestamp"),
-                    "Dispose an instance with a timestamp")
+                    "Dispose an instance with a timestamp.")
+            .def(
+                    "dispose_instance",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder) {
+                        auto h = dw.lookup_instance(key_holder);
+                        dw.dispose_instance(h);
+                        return dw;
+                    },
+                    py::arg("key_holder"),
+                    "Dispose the instance associated with key_holder.")
+            .def(
+                    "dispose_instance",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder,
+                       const dds::core::Time& t) {
+                        auto h = dw.lookup_instance(key_holder);
+                        dw.dispose_instance(h, t);
+                        return dw;
+                    },
+                    py::arg("key_holder"),
+                    py::arg("timestamp"),
+                    "Dispose the instance associated with key_holder using a "
+                    "timestamp")
             .def("key_value",
                  (T
                   & (PyDataWriter<
