@@ -24,7 +24,7 @@ void process_inits<DestinationOrderScopeKind>(py::module& m, ClassInitList& l)
             m,
             "DestinationOrderScopeKind",
             [](py::object& o) {
-                py::enum_<DestinationOrderScopeKind::type>(o, "Enum")
+                py::enum_<DestinationOrderScopeKind::type>(o, "DestinationOrderScopeKind")
                         .value("INSTANCE",
                                DestinationOrderScopeKind::type::INSTANCE,
                                "[default] Indicates that data is ordered on a "

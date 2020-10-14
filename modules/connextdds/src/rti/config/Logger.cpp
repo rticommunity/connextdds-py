@@ -82,7 +82,7 @@ template<>
 void process_inits<Logger>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<Verbosity_def>(m, "Verbosity", [](py::object& o) {
-        py::enum_<Verbosity::type>(o, "Enum")
+        py::enum_<Verbosity::type>(o, "Verbosity")
                 .value("SILENT",
                        Verbosity::type::SILENT,
                        "No further output will be logged.")
@@ -125,7 +125,7 @@ void process_inits<Logger>(py::module& m, ClassInitList& l)
     });
 
     init_dds_safe_enum<LogCategory_def>(m, "LogCategory", [](py::object& o) {
-        py::enum_<LogCategory::type>(o, "Enum")
+        py::enum_<LogCategory::type>(o, "LogCategory")
                 .value("PLATFORM",
                        LogCategory::type::PLATFORM,
                        "Log messages pertaining to the underlying platform "
@@ -160,7 +160,7 @@ void process_inits<Logger>(py::module& m, ClassInitList& l)
     });
 
     init_dds_safe_enum<PrintFormat_def>(m, "PrintFormat", [](py::object& o) {
-        py::enum_<PrintFormat::type>(o, "Enum")
+        py::enum_<PrintFormat::type>(o, "PrintFormat")
                 .value("DEFAULT",
                        PrintFormat::type::DEFAULT,
                        "Print message, method name, and activity context "

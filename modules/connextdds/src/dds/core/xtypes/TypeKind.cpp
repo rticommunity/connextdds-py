@@ -23,7 +23,7 @@ template<>
 void process_inits<TypeKind>(py::module& m, ClassInitList&)
 {
     init_dds_safe_enum<TypeKind_def>(m, "TypeKind", [](py::object& o) {
-        py::enum_<TypeKind::type>(o, "Enum")
+        py::enum_<TypeKind::type>(o, "TypeKind")
                 .value("NO_TYPE",
                        TypeKind::type::NO_TYPE,
                        "Sentinel indicating no value.")

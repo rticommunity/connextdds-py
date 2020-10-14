@@ -38,10 +38,13 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls)
                     "Get the info associated with the sample.")
             .def(
                     "__getitem__",
-                    [](rti::sub::LoanedSample<T>& ls, int index) {
+                    [](rti::sub::LoanedSample<T>& ls, int index) -> py::object {
                         switch (index) {
                         case 0:
-                            return py::cast(ls.data());
+                            if (ls.info().valid()) {
+                                return py::cast(ls.data());
+                            }
+                            return py::none();
                         case 1:
                             return py::cast(ls.info());
                         default:

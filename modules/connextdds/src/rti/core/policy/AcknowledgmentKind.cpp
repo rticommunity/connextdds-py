@@ -22,7 +22,7 @@ void process_inits<AcknowledgmentKind>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<
             AcknowledgmentKind_def>(m, "AcknowledgmentKind", [](py::object& o) {
-        py::enum_<AcknowledgmentKind::type>(o, "Enum")
+        py::enum_<AcknowledgmentKind::type>(o, "AcknowledgmentKind")
                 .value("PROTOCOL",
                        AcknowledgmentKind::type::PROTOCOL,
                        "Samples are acknowledged by RTPS protocol."

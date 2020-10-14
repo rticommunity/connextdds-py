@@ -39,7 +39,7 @@ void process_inits<TypeSupport>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<
             CdrPaddingKind_def>(m, "CdrPaddingKind", [](py::object& o) {
-        py::enum_<CdrPaddingKind::type>(o, "Enum")
+        py::enum_<CdrPaddingKind::type>(o, "CdrPaddingKind")
                 .value("ZERO",
                        CdrPaddingKind::type::ZERO,
                        "Set padding bytes to zero during CDR serialization.")

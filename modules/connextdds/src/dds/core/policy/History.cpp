@@ -62,7 +62,7 @@ void init_class_defs(py::class_<History>& cls)
 static void init_dds_history_kind(py::module& m)
 {
     init_dds_safe_enum<HistoryKind_def>(m, "HistoryKind", [](py::object& o) {
-        py::enum_<HistoryKind::type>(o, "Enum")
+        py::enum_<HistoryKind::type>(o, "HistoryKind")
                 .value("KEEP_LAST",
                        HistoryKind::type::KEEP_LAST,
                        "[default] Keep the last depth samples."

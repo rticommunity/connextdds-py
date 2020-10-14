@@ -60,7 +60,7 @@ static void init_dds_destination_order_kind(py::module& m)
             m,
             "DestinationOrderKind",
             [](py::object& o) {
-                py::enum_<DestinationOrderKind::type>(o, "Enum")
+                py::enum_<DestinationOrderKind::type>(o, "DestinationOrderKind")
                         .value("BY_RECEPTION_TIMESTAMP",
                                DestinationOrderKind::type::
                                        BY_RECEPTION_TIMESTAMP,

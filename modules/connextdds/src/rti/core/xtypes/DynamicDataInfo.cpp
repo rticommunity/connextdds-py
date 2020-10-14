@@ -49,7 +49,7 @@ void process_inits<DynamicDataInfo>(py::module& m, ClassInitList& l)
             m,
             "DynamicDataEncapsulationKind",
             [](py::object& o) {
-                py::enum_<DynamicDataEncapsulationKind::type>(o, "Enum")
+                py::enum_<DynamicDataEncapsulationKind::type>(o, "DynamicDataEncapsulationKind")
                         .value("CDR_BIG_ENDIAN",
                                DynamicDataEncapsulationKind::type::
                                        CDR_BIG_ENDIAN,

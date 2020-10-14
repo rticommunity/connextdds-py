@@ -64,7 +64,7 @@ void process_inits<ServiceRequest>(py::module& m, ClassInitList& l)
             m,
             "ServiceRequestId",
             [](py::object& o) {
-                py::enum_<rti::core::ServiceRequestId::type>(o, "Enum")
+                py::enum_<rti::core::ServiceRequestId::type>(o, "ServiceRequestId")
                         .value("UNKNOWN",
                                rti::core::ServiceRequestId::type::UNKNOWN,
                                "An unknown service.")

@@ -112,7 +112,7 @@ static void init_type_consistency_enforcement_kind(py::module& m)
             m,
             "TypeConsistencyEnforcementKind",
             [](py::object& o) {
-                py::enum_<TypeConsistencyEnforcementKind::type>(o, "Enum")
+                py::enum_<TypeConsistencyEnforcementKind::type>(o, "TypeConsistencyEnforcementKind")
                         .value("DISALLOW_TYPE_COERCION",
                                TypeConsistencyEnforcementKind::type::
                                        DISALLOW_TYPE_COERCION,

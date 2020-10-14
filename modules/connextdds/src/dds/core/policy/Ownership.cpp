@@ -46,7 +46,7 @@ static void init_dds_ownership_kind(py::module& m)
 {
     init_dds_safe_enum<
             OwnershipKind_def>(m, "OwnershipKind", [](py::object& o) {
-        py::enum_<OwnershipKind::type>(o, "Enum")
+        py::enum_<OwnershipKind::type>(o, "OwnershipKind")
                 .value("SHARED",
                        OwnershipKind::type::SHARED,
                        "[default] Indicates shared ownership for each instance."

@@ -31,10 +31,13 @@ void init_dds_typed_sample_base_template(py::class_<dds::sub::Sample<T>>& cls)
                  "Copy constructor.")
             .def(
                     "__getitem__",
-                    [](dds::sub::Sample<T>& s, int index) {
+                    [](dds::sub::Sample<T>& s, int index) -> py::object {
                         switch (index) {
                         case 0:
-                            return py::cast(s.data());
+                            if (s.info().valid()) {
+                                return py::cast(s.data());
+                            }
+                            return py::none();
                         case 1:
                             return py::cast(s.info());
                         default:

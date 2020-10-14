@@ -24,7 +24,7 @@ void process_inits<RefilterKind>(py::module& m, ClassInitList& l)
             m,
             "RefilterKind",
             [](py::object& o) {
-                py::enum_<RefilterKind::type>(o, "Enum")
+                py::enum_<RefilterKind::type>(o, "RefilterKind")
                         .value("NOTHING",
                                RefilterKind::type::NOTHING,
                                "[default] Do not filter existing samples for a "

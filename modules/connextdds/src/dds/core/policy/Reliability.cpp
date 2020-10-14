@@ -79,7 +79,7 @@ static void init_dds_reliability_kind(py::module& m)
 {
     init_dds_safe_enum<
             ReliabilityKind_def>(m, "ReliabilityKind", [](py::object& o) {
-        py::enum_<ReliabilityKind::type>(o, "Enum")
+        py::enum_<ReliabilityKind::type>(o, "ReliabilityKind")
                 .value("BEST_EFFORT",
                        ReliabilityKind::type::BEST_EFFORT,
                        "Indicates that it is acceptable to not retry "

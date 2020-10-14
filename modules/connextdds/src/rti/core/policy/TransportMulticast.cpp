@@ -156,7 +156,7 @@ void process_inits<TransportMulticast>(py::module& m, ClassInitList& l)
             m,
             "TransportMulticastKind",
             [](py::object& o) {
-                py::enum_<TransportMulticastKind::type>(o, "Enum")
+                py::enum_<TransportMulticastKind::type>(o, "TransportMulticastKind")
                         .value("AUTOMATIC",
                                TransportMulticastKind::type::AUTOMATIC,
                                "Selects the multicast address automatically."

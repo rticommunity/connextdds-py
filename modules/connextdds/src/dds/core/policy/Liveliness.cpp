@@ -104,7 +104,7 @@ static void init_dds_liveliness_kind(py::module& m)
 {
     init_dds_safe_enum<
             LivelinessKind_def>(m, "LivelinessKind", [](py::object& o) {
-        py::enum_<LivelinessKind::type>(o, "Enum")
+        py::enum_<LivelinessKind::type>(o, "LivelinessKind")
                 .value("AUTOMATIC",
                        LivelinessKind::type::AUTOMATIC,
                        "[default] The infrastructure will automatically signal "

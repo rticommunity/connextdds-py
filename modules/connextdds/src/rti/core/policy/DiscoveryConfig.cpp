@@ -439,7 +439,7 @@ void process_inits<DiscoveryConfig>(py::module& m, ClassInitList& l)
             m,
             "RemoteParticipantPurgeKind",
             [](py::object& o) {
-                py::enum_<RemoteParticipantPurgeKind::type>(o, "Enum")
+                py::enum_<RemoteParticipantPurgeKind::type>(o, "RemoteParticipantPurgeKind")
                         .value("LIVELINESS_BASED",
                                RemoteParticipantPurgeKind::type::
                                        LIVELINESS_BASED,

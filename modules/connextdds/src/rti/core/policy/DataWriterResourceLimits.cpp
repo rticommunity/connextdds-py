@@ -213,7 +213,7 @@ void process_inits<DataWriterResourceLimits>(py::module& m, ClassInitList& l)
                 py::enum_<
                         DataWriterResourceLimitsInstanceReplacementKind::type>(
                         o,
-                        "Enum")
+                        "DataWriterResourceLimitsInstaceReplacementKind")
                         .value("UNREGISTERED",
                                DataWriterResourceLimitsInstanceReplacementKind::
                                        type::UNREGISTERED,

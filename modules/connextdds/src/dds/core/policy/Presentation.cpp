@@ -83,7 +83,7 @@ static void init_dds_presentation_access_scope_kind(py::module& m)
             m,
             "PresentationAccessScopeKind",
             [](py::object& o) {
-                py::enum_<PresentationAccessScopeKind::type>(o, "Enum")
+                py::enum_<PresentationAccessScopeKind::type>(o, "PresentationAccessScopeKind")
                         .value("INSTANCE",
                                PresentationAccessScopeKind::type::INSTANCE,
                                "[default] Scope spans only a single instance."

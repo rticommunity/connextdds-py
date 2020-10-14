@@ -797,7 +797,7 @@ void process_inits<DomainParticipantResourceLimits>(
             m,
             "IgnoredEntityReplacementKind",
             [](py::object& o) {
-                py::enum_<IgnoredEntityReplacementKind::type>(o, "Enum")
+                py::enum_<IgnoredEntityReplacementKind::type>(o, "IgnoredEntityReplacementKind")
                         .value("NO_REPLACEMENT",
                                IgnoredEntityReplacementKind::type::
                                        NO_REPLACEMENT)

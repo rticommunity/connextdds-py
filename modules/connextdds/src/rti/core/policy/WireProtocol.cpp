@@ -237,7 +237,7 @@ void process_inits<WireProtocol>(py::module& m, ClassInitList& l)
             m,
             "WireProtocolAutoKind",
             [](py::object& o) {
-                py::enum_<WireProtocolAutoKind::type>(o, "Enum")
+                py::enum_<WireProtocolAutoKind::type>(o, "WireProtocolAutoKind")
                         .value("RTPS_AUTO_ID_FROM_IP",
                                WireProtocolAutoKind::type::RTPS_AUTO_ID_FROM_IP,
                                "Select the IPv4 based algorithm.")

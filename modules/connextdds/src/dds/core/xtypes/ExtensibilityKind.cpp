@@ -24,7 +24,7 @@ void process_inits<ExtensibilityKind>(py::module& m, ClassInitList&)
             m,
             "ExtensibilityKind",
             [](py::object& o) {
-                py::enum_<ExtensibilityKind::type>(o, "Enum")
+                py::enum_<ExtensibilityKind::type>(o, "ExtensibilityKind")
                         .value("FINAL",
                                ExtensibilityKind::type::FINAL,
                                "Final extensibility.")

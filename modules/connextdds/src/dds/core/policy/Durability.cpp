@@ -66,7 +66,7 @@ static void init_dds_durability_kind(py::module& m)
 {
     init_dds_safe_enum<
             DurabilityKind_def>(m, "DurabilityKind", [](py::object& o) {
-        py::enum_<DurabilityKind::type>(o, "Enum")
+        py::enum_<DurabilityKind::type>(o, "DurabilityKind")
                 .value("VOLATILE",
                        DurabilityKind::type::VOLATILE,
                        "[default] RTI Connext does not need to keep any "

@@ -199,7 +199,7 @@ void process_inits<FlowController>(py::module& m, ClassInitList& l)
             m,
             "FlowControllerSchedulingPolicy",
             [](py::object& o) {
-                py::enum_<FlowControllerSchedulingPolicy::type>(o, "Enum")
+                py::enum_<FlowControllerSchedulingPolicy::type>(o, "FlowControllerSchedulingPolicy")
                         .value("ROUND_ROBIN",
                                FlowControllerSchedulingPolicy::type::
                                        ROUND_ROBIN,

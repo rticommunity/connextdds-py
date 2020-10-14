@@ -136,7 +136,7 @@ void process_inits<ThreadSettings>(py::module& m, ClassInitList& l)
             m,
             "ThreadSettingsCpuRotationKind",
             [](py::object& o) {
-                py::enum_<ThreadSettingsCpuRotationKind::type>(o, "Enum")
+                py::enum_<ThreadSettingsCpuRotationKind::type>(o, "ThreadSettingsCpuRotationKind")
                         .value("NO_ROTATION",
                                ThreadSettingsCpuRotationKind::NO_ROTATION,
                                "Any thread controlled by this QoS can run on "

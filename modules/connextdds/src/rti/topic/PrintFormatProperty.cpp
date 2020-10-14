@@ -79,7 +79,7 @@ void process_inits<PrintFormatProperty>(py::module& m, ClassInitList& l)
             m,
             "PrintFormatKind",
             [](py::object& o) {
-                py::enum_<PrintFormatKind::type>(o, "Enum")
+                py::enum_<PrintFormatKind::type>(o, "PrintFormatKind")
                         .value("DEFAULT",
                                PrintFormatKind::type::DEFAULT,
                                "Use a default format specific to RTI Connext "

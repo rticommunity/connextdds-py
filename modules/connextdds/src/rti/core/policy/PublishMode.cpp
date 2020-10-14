@@ -79,7 +79,7 @@ void process_inits<PublishMode>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<
             PublishModeKind_def>(m, "PublishModeKind", [](py::object& o) {
-        py::enum_<PublishModeKind::type>(o, "Enum")
+        py::enum_<PublishModeKind::type>(o, "PublishModeKind")
                 .value("SYNCHRONOUS",
                        PublishModeKind::type::SYNCHRONOUS,
                        "Indicates to send data synchronously."

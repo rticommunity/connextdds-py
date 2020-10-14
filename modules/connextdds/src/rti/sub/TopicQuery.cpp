@@ -168,7 +168,7 @@ void process_inits<TopicQuery>(py::module& m, ClassInitList& l)
             m,
             "TopicQuerySelectionKind",
             [](py::object& o) {
-                py::enum_<TopicQuerySelectionKind::type>(o, "Enum")
+                py::enum_<TopicQuerySelectionKind::type>(o, "TopicQuerySelectionKind")
                         .value("HISTORY_SNAPSHOT",
                                TopicQuerySelectionKind::type::HISTORY_SNAPSHOT,
                                "[default] Indicates that the TopicQuery may "

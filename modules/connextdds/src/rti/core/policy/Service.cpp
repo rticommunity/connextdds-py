@@ -37,7 +37,7 @@ template<>
 void process_inits<Service>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<ServiceKind_def>(m, "ServiceKind", [](py::object& o) {
-        py::enum_<ServiceKind::type>(o, "Enum")
+        py::enum_<ServiceKind::type>(o, "ServiceKind")
                 .value("NO_SERVICE",
                        ServiceKind::type::NO_SERVICE,
                        "There is no service associated to the Entity.")

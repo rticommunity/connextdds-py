@@ -54,7 +54,7 @@ void process_inits<TransportInfo>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<
             TransportClassId_def>(m, "TransportClassId", [](py::object& o) {
-        py::enum_<TransportClassId::type>(o, "Enum")
+        py::enum_<TransportClassId::type>(o, "TransportClassId")
                 .value("INVALID", TransportClassId::type::INVALID, "Invalid.")
                 .value("ANY", TransportClassId::type::ANY, "Any.")
                 .value("UDPv4", TransportClassId::type::UDPv4, "UDPv4.")

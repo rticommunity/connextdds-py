@@ -62,7 +62,7 @@ template<>
 void process_inits<Locator>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<LocatorKind_def>(m, "LocatorKind", [](py::object& o) {
-        py::enum_<LocatorKind::type>(o, "Enum")
+        py::enum_<LocatorKind::type>(o, "LocatorKind")
                 .value("INVALID",
                        LocatorKind::type::INVALID,
                        "An invalid locator")
