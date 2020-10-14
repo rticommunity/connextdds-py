@@ -120,23 +120,19 @@ If you want to cache the build files, you can use wheels.
 
 1. Install the required Python modules:
 
-    * Windows
-
 .. code-block:: shell
+    :caption: Windows
 
     $ pip install setuptools wheel cmake
 
-    
-    * Linux
-
 .. code-block:: shell
+    :caption: Linux
 
     $ pip install setuptools wheel cmake patchelf-wrapper
 
 
-    * macOS
-
 .. code-block:: shell
+    :caption: macOS
 
     $ pip install setuptools wheel cmake delocate
 
