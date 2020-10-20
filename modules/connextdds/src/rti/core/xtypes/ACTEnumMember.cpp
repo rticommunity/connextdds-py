@@ -74,7 +74,7 @@ void process_inits<AbstractConstructedType<EnumMember>>(
     l.push_back([m]() mutable {
         return init_class<AbstractConstructedType<EnumMember>, DynamicType>(
                 m,
-                "AbstractConstructedType<EnumMember>");
+                "AbstractConstructedType");
     });
 }
 
