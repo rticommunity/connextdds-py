@@ -44,8 +44,10 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT");
                 case DDS_REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
+#if rti_connext_version_gte(6, 0, 0)
                 case DDS_REJECTED_BY_UNKNOWN_INSTANCE:
                     return std::string("SampleRejectedState.REJECTED_BY_UNKNOWN_INSTANCE");
+#endif
                 default:
                     return std::string("SampleRejectedState.INVALID_STATE");
                 }
@@ -126,6 +128,18 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     "rejected because the resource limit on the number of "
                     "remote "
                     "writers per sample was reached.")
+#if rti_connext_version_gte(6, 0, 0)
+            .def_static(
+                    "rejected_by_unknown_instance",
+                    []() {
+                        auto retval = SampleRejectedState::not_rejected();
+                        retval |= DDS_REJECTED_BY_UNKNOWN_INSTANCE;
+                        return retval;
+                    },
+                    "Create a SampleRejectedState indicating that the sample "
+                    "was "
+                    "rejected because this instance is unknown.")
+#endif
             .def_static(
                     "rejected_by_remote_writers_per_virtual_queue_limit",
                     &SampleRejectedState::
