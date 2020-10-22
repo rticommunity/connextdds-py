@@ -14,8 +14,12 @@ for the *Connext DDS* Getting Started Guide, User's Manual
 and the reference for the C, C++, Java, and .NET APIs.
 
 RTI also provides *RTI Connector*, a limited, simpler API for Python®
-and JavaScript. *RTI Connector* for Python is production-ready
-and easier to use, but the *Connext DDS* Python API is more extensive.
+and JavaScript. `RTI Connector for Python <https://community.rti.com/static/documentation/connector/current/api/python/index.html>`_ 
+is production-ready and easier to get started with; the experimental 
+*Connext DDS* Python API is more extensive. (The two APIs are based on 
+different technologies and do not share code. Experimental features should 
+not be used in production systems. 
+See `Experimental Features in the Connext DDS Core Libraries Release Notes <https://community.rti.com/static/documentation/connext-dds/6.0.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm#ReleaseNotes/Experimental_Features.htm>`_ for more information.)
 
 This Python API is based on the Modern C++ API and is similar but has a few key
 differences.
