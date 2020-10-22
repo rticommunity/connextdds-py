@@ -26,7 +26,7 @@ from setuptools.command.build_ext import build_ext
 PACKAGE_CONFIG_FILENAME = 'package.cfg'
 
 
-def get_script_path():
+def get_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
 
 
@@ -62,7 +62,7 @@ def get_debug():
 
 def find_libs(lib_list, platform):
     lib_locations = []
-    for root, _, filenames in os.walk(os.path.join(get_script_path(), 'lib', platform)):
+    for root, _, filenames in os.walk(os.path.join(get_script_dir(), 'lib', platform)):
         for filename in filenames:
             if filename in lib_list:
                 lib_locations.append(os.path.join(root, filename))
@@ -139,7 +139,7 @@ class CMakeBuild(build_ext):
                       '-DCONNEXTDDS_DIR=' + nddshome,
                       '-DCONNEXTDDS_ARCH=' + arch,
                       '-DCMAKE_BUILD_TYPE=' + cfg,
-                      '-DRTI_LINK_DIR=' + os.path.join(get_script_path(), 'lib', arch),
+                      '-DRTI_LINK_DIR=' + os.path.join(get_script_dir(), 'lib', arch),
                       '-DRTI_ARCH_LINK_PREFIX=' + link_lib_prefix,
                       '-DRTI_ARCH_LINK_SUFFIX=' + link_lib_suffix,
                       '-DNUM_JOBS=' + get_job_count()]
@@ -167,12 +167,27 @@ class CMakeBuild(build_ext):
         if not os.path.exists(module_build_dir):
             os.makedirs(module_build_dir)
         cmake_cmd = os.path.join(cmake.CMAKE_BIN_DIR, 'cmake')
-        subprocess.check_call([cmake_cmd, os.path.abspath(os.path.join(get_script_path(), 'modules'))] + cmake_args, cwd=module_build_dir, env=env)
+        subprocess.check_call([cmake_cmd, os.path.abspath(os.path.join(get_script_dir(), 'modules'))] + cmake_args, cwd=module_build_dir, env=env)
         subprocess.check_call([cmake_cmd, '--build', '.'] + build_args, cwd=module_build_dir)
+
+        # attempt to create interface files for type hinting; failure is not a fatal error
+        try:
+            sys.path.insert(0, os.path.join(get_script_dir(), 'resources', 'scripts'))
+            import stubgen
+            for ext in self.extensions:
+                extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+                sys.path.insert(0, extdir)
+                ext_module = stubgen.ModuleStubsGenerator(ext.name.split('.')[-1])
+                ext_module.parse()
+                if stubgen.FunctionSignature.n_fatal_errors() == 0:
+                    ext_module.write_file(extdir)
+                sys.path.pop(0)
+        except:
+            pass
 
     def copy_extension_libs(self, ext, extdir, arch):
         for lib in ext.dependencies:
-            shutil.copyfile(os.path.join(get_script_path(), 'lib', arch, lib), os.path.join(extdir, lib))
+            shutil.copyfile(os.path.join(get_script_dir(), 'lib', arch, lib), os.path.join(extdir, lib))
 
 
 package_cfg = process_config()
