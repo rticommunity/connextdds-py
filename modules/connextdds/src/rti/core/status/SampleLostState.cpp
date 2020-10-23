@@ -48,8 +48,10 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                     return std::string("SampleLostState.LOST_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
                 case DDS_LOST_BY_OUT_OF_MEMORY:
                     return std::string("SampleLostState.LOST_BY_OUT_OF_MEMORY");
+#if rti_connext_version_gte(6, 0, 0)
                 case DDS_LOST_BY_UNKNOWN_INSTANCE:
                     return std::string("SampleLostState.LOST_BY_UNKNOWN_INSTANCE");
+#endif
                 default:
                     return std::string("SampleLostState.INVALID");
                 }
@@ -131,6 +133,17 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                     "published "
                     "by a remote writer on behalf of a virtual writer that a "
                     "DataReader may store was reached.")
+#if rti_connext_version_gte(6, 0, 0)
+            .def_static(
+                    "lost_by_unknown_instance",
+                    []() {
+                        auto retval = SampleLostState::not_lost();
+                        retval |= DDS_LOST_BY_UNKNOWN_INSTANCE;
+                        return retval;
+                    },
+                    "Create a SampleLostState indicating that the sample was "
+                    "lost because the instance is unknown")
+#endif
             .def_static(
                     "lost_by_out_of_memory",
                     &SampleLostState::lost_by_out_of_memory,
