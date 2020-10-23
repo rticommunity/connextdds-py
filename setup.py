@@ -174,14 +174,21 @@ class CMakeBuild(build_ext):
         try:
             sys.path.insert(0, os.path.join(get_script_dir(), 'resources', 'scripts'))
             import stubgen
+            extdirs = set()
             for ext in self.extensions:
                 extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-                sys.path.insert(0, extdir)
-                ext_module = stubgen.ModuleStubsGenerator(ext.name.split('.')[-1])
+                extdirs.add(extdir)
+                pkg_components = ext.name.split('.')[:-1]
+                builddir = os.path.join(extdir, os.sep.join(['..'] * len(pkg_components)))
+                sys.path.insert(0, builddir)
+                ext_module = stubgen.ModuleStubsGenerator(ext.name)
                 ext_module.parse()
                 if stubgen.FunctionSignature.n_fatal_errors() == 0:
                     ext_module.write_file(extdir)
                 sys.path.pop(0)
+            for extdir in extdirs:
+                if os.path.isdir(os.path.join(extdir, '__pycache__')):
+                    shutil.rmtree(os.path.join(extdir, '__pycache__'))
         except:
             pass
 
