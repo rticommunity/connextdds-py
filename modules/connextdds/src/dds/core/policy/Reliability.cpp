@@ -26,7 +26,7 @@ void init_class_defs(py::class_<Reliability>& cls)
                  py::arg_v(
                          "max_blocking_time",
                          dds::core::Duration::from_millisecs(100),
-                         "dds.Duration.from_milliseconds(100)"),
+                         "Duration.from_milliseconds(100)"),
                  "Creates an instance with the specified reliability kind an "
                  "optionally a specific maximum blocking time.")
             .def_property(
@@ -63,7 +63,7 @@ void init_class_defs(py::class_<Reliability>& cls)
                     py::arg_v(
                             "max_blocking_time",
                             dds::core::Duration::from_millisecs(100),
-                            "dds.Duration.from_milliseconds(100)"),
+                            "Duration.from_milliseconds(100)"),
                     "Creates a policy with ReliabilityKind.RELIABLE and "
                     "optionally a "
                     "max blocking time.")

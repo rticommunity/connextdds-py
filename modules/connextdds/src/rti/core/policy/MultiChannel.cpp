@@ -28,7 +28,7 @@ void init_class_defs(py::class_<MultiChannel>& cls)
                  py::arg_v(
                          "filter_name",
                          rti::topic::stringmatch_filter_name(),
-                         "FilterType.stringmatch_filter_name"),
+                         "Filter.stringmatch_filter_name"),
                  "Creates an instance with the specified channels and filter "
                  "name.")
             .def_property(

@@ -389,7 +389,8 @@ static py::object get_collection_member(
         return py::cast(get_collection_buffer_member<double, T>(dd, key));
     case TypeKind::FLOAT_128_TYPE: {
         std::vector<rti::core::LongDouble> retval;
-        DynamicData& member = dd.loan_value(key).get();
+        auto loaned_member = dd.loan_value(key);
+        DynamicData& member = loaned_member.get();
         for (int i = 1; i <= member.member_count(); ++i) {
             auto ld = member.value<rti::core::LongDouble>(i);
             retval.push_back(ld);
@@ -410,7 +411,8 @@ static py::object get_collection_member(
 #endif
     case TypeKind::STRING_TYPE: {
         std::vector<std::string> retval;
-        DynamicData& member = dd.loan_value(key).get();
+        auto loaned_member = dd.loan_value(key);
+        DynamicData& member = loaned_member.get();
         for (int i = 1; i <= member.member_count(); ++i) {
             retval.push_back(member.value<std::string>(i));
         }
@@ -418,8 +420,8 @@ static py::object get_collection_member(
     }
     case TypeKind::WSTRING_TYPE: {
         std::vector<std::wstring> retval;
-        auto loan = dd.loan_value(key);
-        DynamicData& member = loan.get();
+        auto loaned_member = dd.loan_value(key);
+        DynamicData& member = loaned_member.get();
         for (int i = 1; i <= member.member_count(); ++i) {
             std::wstring val;
             auto dd_wstr = member.get_values<DDS_Wchar>(i);
