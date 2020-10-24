@@ -84,7 +84,7 @@ void init_class_defs(py::class_<Liveliness>& cls)
                     py::arg_v(
                             "lease",
                             dds::core::Duration::infinite(),
-                            "dds.Duration.infinite()"),
+                            "Duration.infinite()"),
                     "Creates a Liveliness instance with "
                     "LivelinessKind.MANUAL_BY_PARTICIPANT.")
             .def_static(
@@ -93,7 +93,7 @@ void init_class_defs(py::class_<Liveliness>& cls)
                     py::arg_v(
                             "lease",
                             dds::core::Duration::infinite(),
-                            "dds.Duration.infinite()"),
+                            "Duration.infinite()"),
                     "Creates a Liveliness instance with "
                     "LivelinessKind.MANUAL_BY_TOPIC.")
             .def(py::self == py::self, "Test for equality.")

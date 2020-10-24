@@ -27,7 +27,7 @@ void init_class_defs(py::class_<LocatorFilter>& cls)
                  py::arg_v(
                          "filter_name",
                          rti::topic::stringmatch_filter_name(),
-                         "FilterType.stringmatch_filter_name"),
+                         "Filter.stringmatch_filter_name"),
                  "Creates an instance with a sequence of filters and a filter "
                  "name.")
             .def_property(
