@@ -869,9 +869,10 @@ class ModuleStubsGenerator(StubsGenerator):
         # import used packages
         used_modules = sorted(self.get_involved_modules_names())
         if used_modules:
-            # result.append("if TYPE_CHECKING:")
-            # result.extend(map(self.indent, map(lambda m: "import {}".format(m), used_modules)))
-            result.extend(map(lambda mod: "import {}".format(mod), used_modules))
+            for mod in used_modules:
+                #check to see if this is a class instead of a module
+                if not [cls for cls in self.classes if cls.klass.__name__ == mod]:
+                    result.append("import {}".format(mod))
 
         if "numpy" in used_modules and not BARE_NUPMY_NDARRAY:
             result += [
@@ -972,7 +973,7 @@ def main(args=None):
                         help="Do not combine overload docstrings.")
     parser.add_argument("--bare-numpy-ndarray", action='store_true', default=False,
                         help="Render `numpy.ndarray` without (non-standardized) bracket-enclosed type and shape info")
-    parser.add_argument("module_names", nargs="+", metavar="MODULE_NAME", type=str, help="modules names")
+    parser.add_argument("module_name", metavar="MODULE_NAME", type=str, help="modules name")
     parser.add_argument("--log-level", default="INFO", help="Set output log level")
 
     sys_args = parser.parse_args(args or sys.argv[1:])
@@ -1018,27 +1019,26 @@ def main(args=None):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
-    with DirectoryWalkerGuard(output_path):
-        for _module_name in sys_args.module_names:
-            _module = ModuleStubsGenerator(_module_name)
-            _module.parse()
-            if FunctionSignature.n_fatal_errors() == 0:
-                _module.stub_suffix = sys_args.root_module_suffix
-                _module.write_setup_py = not sys_args.no_setup_py
-                recursive_mkdir_walker(_module_name.split(".")[:-1], lambda: _module.write())
+    _module_name = sys_args.module_name
+    _module = ModuleStubsGenerator(_module_name)
+    _module.parse()
+    if FunctionSignature.n_fatal_errors() == 0:
+        _module.stub_suffix = sys_args.root_module_suffix
+        _module.write_setup_py = not sys_args.no_setup_py
+        _module.write_file(output_path)
 
-        if FunctionSignature.n_invalid_signatures > 0:
-            logger.info("Useful link: Avoiding C++ types in docstrings:")
-            logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/misc.html"
-                        "#avoiding-cpp-types-in-docstrings")
+    if FunctionSignature.n_invalid_signatures > 0:
+        logger.info("Useful link: Avoiding C++ types in docstrings:")
+        logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/misc.html"
+                    "#avoiding-cpp-types-in-docstrings")
 
-        if FunctionSignature.n_invalid_default_values > 0:
-            logger.info("Useful link: Default argument representation:")
-            logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/functions.html"
-                        "#default-arguments-revisited")
+    if FunctionSignature.n_invalid_default_values > 0:
+        logger.info("Useful link: Default argument representation:")
+        logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/functions.html"
+                    "#default-arguments-revisited")
 
-        if FunctionSignature.n_fatal_errors() > 0:
-            exit(1)
+    if FunctionSignature.n_fatal_errors() > 0:
+        exit(1)
 
 
 if __name__ == "__main__":
