@@ -1,8 +1,10 @@
 from . import distlog as distlog
 import logging
+import threading
 
 
 class DistlogHandler(logging.Handler):
+    _lock = threading.Lock()
     _count = 0
     _levelMap = {
         logging.CRITICAL: distlog.LogLevel.SEVERE,
@@ -15,32 +17,31 @@ class DistlogHandler(logging.Handler):
     def __init__(self, options=None):
         # type: (Optional[distlog.LoggerOptions]) -> None
         logging.Handler.__init__(self)
+        DistlogHandler._lock.acquire()
         DistlogHandler._count += 1
-
-        if options is not None:
-            distlog.Logger.options(options)
-
-        self._instance = distlog.Logger.instance
+        distlog.Logger.init(options)
+        self._closed = False;
+        DistlogHandler._lock.release()
 
     def close(self):
         # type: () -> None
-        self.acquire()
-        if self._instance is None:
+        DistlogHandler._lock.acquire()
+        if self._closed:
             raise RuntimeError('Attempted multiple closure of DistlogHandler')
-        self._instance = None
+        self._closed = True
         DistlogHandler._count -= 1
         if DistlogHandler._count == 0:
             distlog.Logger.finalize()
-        self.release()
         logging.Handler.close(self)
+        DistlogHandler._lock.release()
 
     def emit(self, record):
         # type: (logging.LogRecord) -> None
         level = DistlogHandler._levelMap[record.levelno]
         try:
-            self._instance.log(level, record.getMessage(), record.category)
+            distlog.Logger.log(level, record.getMessage(), record.category)
         except:
-            self._instance.log(level, record.getMessage())
+            distlog.Logger.log(level, record.getMessage())
 
 
 
