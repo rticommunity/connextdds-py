@@ -56,6 +56,7 @@ void PyDomainParticipant::py_close()
 }
 
 template<typename ParticipantFwdIterator>
+static
 uint32_t find_participants(ParticipantFwdIterator begin)
 {
     DDS_DomainParticipantSeq native_participants = DDS_SEQUENCE_INITIALIZER;
@@ -75,6 +76,92 @@ uint32_t find_participants(ParticipantFwdIterator begin)
 
     return participants_adapter.size();
 }
+
+
+template<typename GetterFunc>
+static
+std::vector<dds::core::InstanceHandle> get_endpoint_handles(
+    PyDomainParticipant& dp,
+    GetterFunc func,
+    bool include_contained)
+{
+    using rti::core::native_conversions::from_native;
+
+    DDS_InstanceHandleSeq native_handles = DDS_SEQUENCE_INITIALIZER;
+    // Ensure sequence destruction
+    rti::core::detail::NativeSequenceAdapter<DDS_InstanceHandle_t>
+            handles_adapter(native_handles);
+
+    DDS_ReturnCode_t retcode = func(
+        dp.delegate()->native_participant(),
+        &native_handles,
+        include_contained);
+    rti::core::check_return_code(retcode, "get publication handles");
+
+    return from_native<dds::core::InstanceHandle, DDS_InstanceHandleSeq>(native_handles);
+}
+
+
+static
+dds::topic::PublicationBuiltinTopicData get_publication_data(
+    PyDomainParticipant& dp,
+    const dds::core::InstanceHandle& handle)
+{
+    dds::topic::PublicationBuiltinTopicData pbitd;
+    DDS_DomainParticipant_get_publication_data(
+            dp.delegate()->native_participant(),
+            pbitd->native(),
+            &handle.delegate().native());
+    return pbitd;
+}
+
+
+static
+std::vector<dds::topic::PublicationBuiltinTopicData> get_publication_data(
+    PyDomainParticipant& dp,
+    bool include_contained)
+{
+        std::vector<dds::topic::PublicationBuiltinTopicData> v;
+        auto handles = get_endpoint_handles(
+            dp,
+            DDS_DomainParticipant_get_publications,
+            include_contained);
+        for (auto& handle : handles) {
+            v.push_back(get_publication_data(dp, handle));
+        }
+        return v;
+}
+
+
+static
+dds::topic::SubscriptionBuiltinTopicData get_subscription_data(
+    PyDomainParticipant& dp,
+    const dds::core::InstanceHandle& handle)
+{
+    dds::topic::SubscriptionBuiltinTopicData sbitd;
+    DDS_DomainParticipant_get_subscription_data(
+            dp.delegate()->native_participant(),
+            sbitd->native(),
+            &handle.delegate().native());
+    return sbitd;
+}
+
+static
+std::vector<dds::topic::SubscriptionBuiltinTopicData> get_subscription_data(
+    PyDomainParticipant& dp,
+    bool include_contained)
+{
+        std::vector<dds::topic::SubscriptionBuiltinTopicData> v;
+        auto handles = get_endpoint_handles(
+            dp,
+            DDS_DomainParticipant_get_subscriptions,
+            include_contained);
+        for (auto& handle : handles) {
+            v.push_back(get_subscription_data(dp, handle));
+        }
+        return v;
+}
+
 
 
 template<>
@@ -647,7 +734,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     py::arg("handles"),
-                    "Get information about a discovered topic.")
+                    "Get information about discovered topics with their handles.")
             .def(
                     "discovered_topic_data",
                     [](const PyDomainParticipant& dp) {
@@ -814,21 +901,21 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Retrieve DomainParticipant information with a sequence of "
                     "handles.")
             .def(
-                    "publication_data",
-                    [](PyDomainParticipant& dp,
-                       const dds::core::InstanceHandle& handle) {
-                        DDS_PublicationBuiltinTopicData pbitd;
-                        DDS_DomainParticipant_get_publication_data(
-                                dp.delegate()->native_participant(),
-                                &pbitd,
-                                &handle.delegate().native());
-                        dds::topic::PublicationBuiltinTopicData* ptr =
-                                reinterpret_cast<
-                                        dds::topic::
-                                                PublicationBuiltinTopicData*>(
-                                        &pbitd);
-                        return *ptr;
+                    "publication_handles",
+                    [](PyDomainParticipant& dp, bool include_contained) {
+                        return get_endpoint_handles(
+                                dp,
+                                DDS_DomainParticipant_get_publications,
+                                include_contained);
                     },
+                    py::arg("include_contained"),
+                    "Retrieve publication handles from a DomainParticipant "
+                    "optionally excluding publications contained in "
+                    "this DomainParticipant."
+            )
+            .def(
+                    "publication_data",
+                    (dds::topic::PublicationBuiltinTopicData(*)(PyDomainParticipant&, const dds::core::InstanceHandle&)) &pyrti::get_publication_data,
                     py::arg("handle"),
                     "Retrieve publication data by handle.")
             .def(
@@ -837,38 +924,35 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const std::vector<dds::core::InstanceHandle>& handles) {
                         std::vector<dds::topic::PublicationBuiltinTopicData> v;
                         for (auto& handle : handles) {
-                            DDS_PublicationBuiltinTopicData pbitd;
-                            DDS_DomainParticipant_get_publication_data(
-                                    dp.delegate()->native_participant(),
-                                    &pbitd,
-                                    &handle.delegate().native());
-                            dds::topic::PublicationBuiltinTopicData* ptr =
-                                    reinterpret_cast<
-                                            dds::topic::
-                                                    PublicationBuiltinTopicData*>(
-                                            &pbitd);
-                            v.push_back(*ptr);
+                            v.push_back(get_publication_data(dp, handle));
                         }
                         return v;
                     },
                     py::arg("handles"),
                     "Retrieve publication data for a sequence of handles.")
             .def(
-                    "subscription_data",
-                    [](PyDomainParticipant& dp,
-                       const dds::core::InstanceHandle& handle) {
-                        DDS_SubscriptionBuiltinTopicData sbitd;
-                        DDS_DomainParticipant_get_subscription_data(
-                                dp.delegate()->native_participant(),
-                                &sbitd,
-                                &handle.delegate().native());
-                        dds::topic::SubscriptionBuiltinTopicData* ptr =
-                                reinterpret_cast<
-                                        dds::topic::
-                                                SubscriptionBuiltinTopicData*>(
-                                        &sbitd);
-                        return *ptr;
+                    "publication_data",
+                    (std::vector<dds::topic::PublicationBuiltinTopicData>(*)(PyDomainParticipant&, bool)) &pyrti::get_publication_data,
+                    py::arg("include_contained"),
+                    "Retrieve publication data from a DomainParticipant "
+                    "optionally excluding publications contained in "
+                    "this DomainParticipant.")
+            .def(
+                    "subscription_handles",
+                    [](PyDomainParticipant& dp, bool include_contained) {
+                        return get_endpoint_handles(
+                                dp,
+                                DDS_DomainParticipant_get_subscriptions,
+                                include_contained);
                     },
+                    py::arg("include_contained"),
+                    "Retrieve subscription handles from a DomainParticipant "
+                    "optionally excluding subscriptions contained in "
+                    "this DomainParticipant."
+            )
+            .def(
+                    "subscription_data",
+                    (dds::topic::SubscriptionBuiltinTopicData(*)(PyDomainParticipant&, const dds::core::InstanceHandle&)) &pyrti::get_subscription_data,
                     py::arg("handle"),
                     "Retrieve subscription data by handle.")
             .def(
@@ -877,22 +961,19 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const std::vector<dds::core::InstanceHandle>& handles) {
                         std::vector<dds::topic::SubscriptionBuiltinTopicData> v;
                         for (auto& handle : handles) {
-                            DDS_SubscriptionBuiltinTopicData sbitd;
-                            DDS_DomainParticipant_get_subscription_data(
-                                    dp.delegate()->native_participant(),
-                                    &sbitd,
-                                    &handle.delegate().native());
-                            dds::topic::SubscriptionBuiltinTopicData* ptr =
-                                    reinterpret_cast<
-                                            dds::topic::
-                                                    SubscriptionBuiltinTopicData*>(
-                                            &sbitd);
-                            v.push_back(*ptr);
+                            v.push_back(get_subscription_data(dp, handle));
                         }
                         return v;
                     },
                     py::arg("handles"),
                     "Retrieve subscription data for a sequence of handles.")
+            .def(
+                    "subscription_data",
+                    (std::vector<dds::topic::SubscriptionBuiltinTopicData>(*)(PyDomainParticipant&, bool)) &pyrti::get_subscription_data,
+                    py::arg("include_contained"),
+                    "Retrieve subscription data from a DomainParticipant "
+                    "optionally excluding subscriptions contained in "
+                    "this DomainParticipant.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.")
             .doc() =
