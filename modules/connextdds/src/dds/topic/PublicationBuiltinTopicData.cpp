@@ -136,7 +136,12 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls)
             .def_property_readonly(
                     "type",
                     [](const PublicationBuiltinTopicData& p) {
-                        return p->type();
+                        dds::core::optional<py::object> retval;
+                        auto dw_type = p->type();
+                        if (has_value(dw_type)) {
+                            retval = py_cast_type(get_value(dw_type));
+                        }
+                        return retval;
                     },
                     py::return_value_policy::move,
                     "The type.")
