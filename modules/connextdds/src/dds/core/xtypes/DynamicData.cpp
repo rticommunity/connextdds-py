@@ -2047,6 +2047,16 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     },
                     "DynamicData value to string.")
             .def(
+                    "to_string",
+                    [](const DynamicData& sample, const rti::topic::PrintFormatProperty& prop) {
+                        return rti::topic::to_string(sample, prop);
+                    },
+                    py::arg_v(
+                        "format",
+                        rti::topic::PrintFormatProperty::Default(),
+                        "PrintFormatProperty.default()"),
+                    "Convert DynamicData object to string with print format.")
+            .def(
                     "to_cdr_buffer",
                     [](const dds::core::xtypes::DynamicData& sample) {
                         std::vector<char> output;
