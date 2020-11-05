@@ -24,6 +24,7 @@ void init_class_defs(py::class_<PyAnyDataReader, PyIAnyDataReader>& cls)
 {
     cls.def(py::init<const PyIAnyDataReader&>(),
             py::arg("reader"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create an AnyDataReader instance from a object that conforms to "
             "the IAnyDataReader interface.");
 
@@ -39,6 +40,7 @@ void init_class_defs(py::class_<PyIAnyDataReader>& cls)
                        & PyIAnyDataReader::py_qos,
                (void (PyIAnyDataReader::*)(const DataReaderQos&))
                        & PyIAnyDataReader::py_qos,
+               py::call_guard<py::gil_scoped_release>(),
                "The QoS for this AnyDataReader."
                "\n\n"
                "This property's getter returns a deep copy.")
@@ -46,20 +48,28 @@ void init_class_defs(py::class_<PyIAnyDataReader>& cls)
                     "topic_name",
                     (std::string(PyIAnyDataReader::*)() const)
                             & PyIAnyDataReader::py_topic_name,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The Topic name for this AnyDataReader.")
             .def_property_readonly(
                     "type_name",
                     (std::string(PyIAnyDataReader::*)() const)
                             & PyIAnyDataReader::py_type_name,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The type name for this AnyDataReader.")
             .def_property_readonly(
                     "subscriber",
                     (const PySubscriber& (PyIAnyDataReader::*) () const)
                             & PyIAnyDataReader::py_subscriber,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The Publisher for this AnyDataReader.")
-            .def("close", &PyIAnyDataReader::py_close, "Close this DataReader.")
+            .def(
+                    "close",
+                    &PyIAnyDataReader::py_close,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Close this DataReader.")
             .def("retain",
                  &PyIAnyDataReader::py_retain,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Retain this DataReader.")
             .def(
                     "__eq__",
@@ -68,6 +78,7 @@ void init_class_defs(py::class_<PyIAnyDataReader>& cls)
                                 == other.get_any_datareader();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for equality.")
             .def(
                     "__ne__",
@@ -76,6 +87,7 @@ void init_class_defs(py::class_<PyIAnyDataReader>& cls)
                                 != other.get_any_datareader();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for inequality.");
 }
 

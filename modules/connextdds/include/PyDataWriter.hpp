@@ -429,6 +429,7 @@ void init_dds_typed_datawriter_base_template(
                          const T&))
                          & PyDataWriter<T>::register_instance,
                  py::arg("handle"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Informs RTI Connext that the application will be modifying a "
                  "particular instance.")
             .def("register_instance",
@@ -437,6 +438,7 @@ void init_dds_typed_datawriter_base_template(
                          & PyDataWriter<T>::register_instance,
                  py::arg("handle"),
                  py::arg("timestamp"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Informs RTI Connext that the application will be modifying a "
                  "particular instance and specified the timestamp.")
             .def(
@@ -447,6 +449,7 @@ void init_dds_typed_datawriter_base_template(
                         return dw;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister an instance.")
             .def(
                     "unregister_instance",
@@ -458,6 +461,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("handle"),
                     py::arg("timestamp"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister an instance with timestamp.")
             .def(
                     "unregister_instance",
@@ -468,6 +472,7 @@ void init_dds_typed_datawriter_base_template(
                         return dw;
                     },
                     py::arg("key_holder"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister the instance associated with key_holder.")
             .def(
                     "unregister_instance",
@@ -480,6 +485,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("key_holder"),
                     py::arg("timestamp"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister the instance associate with key_holder using a "
                     "timestamp.")
             .def(
@@ -490,6 +496,7 @@ void init_dds_typed_datawriter_base_template(
                         return dw;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Dispose an instance.")
             .def(
                     "dispose_instance",
@@ -501,6 +508,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("handle"),
                     py::arg("timestamp"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Dispose an instance with a timestamp.")
             .def(
                     "dispose_instance",
@@ -511,6 +519,7 @@ void init_dds_typed_datawriter_base_template(
                         return dw;
                     },
                     py::arg("key_holder"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Dispose the instance associated with key_holder.")
             .def(
                     "dispose_instance",
@@ -523,6 +532,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("key_holder"),
                     py::arg("timestamp"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Dispose the instance associated with key_holder using a "
                     "timestamp")
             .def("key_value",
@@ -532,6 +542,7 @@ void init_dds_typed_datawriter_base_template(
                          & PyDataWriter<T>::key_value,
                  py::arg("key_holder"),
                  py::arg("handle"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Retrieve the instance key that corresponds to an instance "
                  "handle.")
             .def("key_value",
@@ -540,11 +551,13 @@ void init_dds_typed_datawriter_base_template(
                          & PyDataWriter<T>::key_value,
                  py::arg("topic_instance"),
                  py::arg("handle"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Retrieve the instance key that corresponds to an instance "
                  "handle.")
             .def("lookup_instance",
                  &PyDataWriter<T>::lookup_instance,
                  py::arg("key_holder"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Retrieve the instance handle that corresponds to an instance "
                  "key_holder")
             .def_property(
@@ -554,6 +567,7 @@ void init_dds_typed_datawriter_base_template(
                     (void (PyDataWriter<T>::*)(
                             const dds::pub::qos::DataWriterQos&))
                             & PyDataWriter<T>::qos,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The DataWriterQos for this DataWriter."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -565,6 +579,7 @@ void init_dds_typed_datawriter_base_template(
                         return dw;
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Sets the DataWriterQos.")
             .def(
                     "__rshift__",
@@ -574,6 +589,7 @@ void init_dds_typed_datawriter_base_template(
                         return dw;
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataWriterQos.")
             .def_property_readonly(
                     "topic",
@@ -581,10 +597,12 @@ void init_dds_typed_datawriter_base_template(
                         dds::topic::Topic<T> t = dw.topic();
                         return PyTopic<T>(t);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the Topic object associated with this DataWriter.")
             .def_property_readonly(
                     "type_name",
                     [](const PyDataWriter<T>& dw) { return dw.py_type_name(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the type name for the topic object associated with "
                     "this DataWriter.")
             .def_property_readonly(
@@ -592,14 +610,17 @@ void init_dds_typed_datawriter_base_template(
                     [](const PyDataWriter<T>& dw) {
                         return dw.py_topic_name();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the topic name associated with this DataWriter.")
             .def_property_readonly(
                     "publisher",
                     &PyDataWriter<T>::py_publisher,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the Publisher that owns this DataWriter.")
             .def("wait_for_acknowledgments",
                  &PyDataWriter<T>::py_wait_for_acknowledgments,
                  py::arg("max_wait"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Blocks the calling thread until all data written by a "
                  "realiable DataWriter is acknowledged or until the timeout "
                  "expires.")
@@ -613,6 +634,7 @@ void init_dds_typed_datawriter_base_template(
                             l = ptr;
                         return l;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener associated with the DataWriter or set "
                     "the listener and status mask as a tuple.")
             .def(
@@ -631,25 +653,31 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and event mask for the DataWriter.")
             .def_property_readonly(
                     "liveliness_lost_status",
                     &PyDataWriter<T>::liveliness_lost_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the LivelinessLostStatus.")
             .def_property_readonly(
                     "offered_deadline_missed_status",
                     &PyDataWriter<T>::offered_deadline_missed_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the OfferedDeadlineMissedStatus.")
             .def_property_readonly(
                     "offered_incompatible_qos_status",
                     &PyDataWriter<T>::offered_incompatible_qos_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the OfferedIncompatibleQosStatus")
             .def_property_readonly(
                     "publication_matched_status",
                     &PyDataWriter<T>::publication_matched_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the PublicationMatchedStatus")
             .def("assert_liveliness",
                  &PyDataWriter<T>::assert_liveliness,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Manually asserts the liveliness of the DataWriter.")
             .def(
                     "unregister_instance",
@@ -657,6 +685,7 @@ void init_dds_typed_datawriter_base_template(
                         writer->unregister_instance(params);
                     },
                     py::arg("params"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister an instance with parameters.")
             .def(
                     "dispose_instance",
@@ -664,6 +693,7 @@ void init_dds_typed_datawriter_base_template(
                         writer->dispose_instance(params);
                     },
                     py::arg("params"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Dispose an instance with params.")
             .def(
                     "is_sample_app_acknowledged",
@@ -672,6 +702,7 @@ void init_dds_typed_datawriter_base_template(
                         return writer->is_sample_app_acknowledged(sample_id);
                     },
                     py::arg("sample_id"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Indicates if a sample is considered "
                     "application-acknowledged.")
             .def(
@@ -681,6 +712,7 @@ void init_dds_typed_datawriter_base_template(
                         writer->wait_for_asynchronous_publishing(max_wait);
                     },
                     py::arg("max_wait"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "This operation blocks the calling thread (up to max_wait) "
                     "until all data written by the asynchronous DataWriter is "
                     "sent and acknowledged (if reliable) by all matched "
@@ -704,6 +736,7 @@ void init_dds_typed_datawriter_base_template(
                     [](PyDataWriter<T>& writer) {
                         return writer->reliable_writer_cache_changed_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the reliable cache status for this writer.")
             .def_property_readonly(
                     "reliable_reader_activity_changed_status",
@@ -711,6 +744,7 @@ void init_dds_typed_datawriter_base_template(
                         return writer
                                 ->reliable_reader_activity_changed_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the reliable reader activity changed status "
                     "for this writer.")
             .def_property_readonly(
@@ -718,12 +752,14 @@ void init_dds_typed_datawriter_base_template(
                     [](PyDataWriter<T>& writer) {
                         return writer->datawriter_cache_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the cache status for this writer.")
             .def_property_readonly(
                     "datawriter_protocol_status",
                     [](PyDataWriter<T>& writer) {
                         return writer->datawriter_protocol_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the protocol status for this writer.")
             .def(
                     "matched_subscription_datawriter_procotol_status",
@@ -734,6 +770,7 @@ void init_dds_typed_datawriter_base_template(
                                         subscription_handle);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the protocol status for this writer per a "
                     "matched subscription handle.")
             .def(
@@ -752,6 +789,7 @@ void init_dds_typed_datawriter_base_template(
                     [](PyDataWriter<T>& writer) {
                         return writer->service_request_accepted_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the service request accepted status for "
                     "this writer.")
             .def(
@@ -768,6 +806,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("sample"),
                     py::arg("params"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Write with advanced parameters.")
             .def(
                     "register_instance",
@@ -778,12 +817,14 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("key_holder"),
                     py::arg("params"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Registers instance with parameters.")
             .def_property_readonly(
                     "matched_subscriptions",
                     [](const PyDataWriter<T>& dw) {
                         return dds::pub::matched_subscriptions(dw);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the list of the currently matched "
                     "subscription handles.")
             .def(
@@ -793,6 +834,7 @@ void init_dds_typed_datawriter_base_template(
                         return dds::pub::matched_subscription_data<T>(dw, h);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the SubscriptionBuiltinTopicData for a subscription "
                     "matched to this DataWriter.")
             .def_static(
@@ -807,6 +849,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("publisher"),
                     py::arg("topic_name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve all DataWriters for the given topic name in the "
                     "publisher.")
             .def_static(
@@ -821,6 +864,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("participant"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find DataWriter in DomainParticipant with the provided "
                     "name, "
                     "returning the first found.")
@@ -836,6 +880,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("publisher"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find DataWriter in Publisher with the DataReader's name, "
                     "returning the first found.")
             .def_static(
@@ -852,8 +897,14 @@ void init_dds_typed_datawriter_base_template(
                     py::arg("name"),
                     "Find DataWriter in publisher with a topic name, "
                     "returning the first found.")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.")
+            .def(
+                    py::self == py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for equality.")
+            .def(
+                    py::self != py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for inequality.")
             .def(
                     "write_async",
                     [](PyDataWriter<T>& dw, const T& sample) {
@@ -1104,6 +1155,7 @@ void init_dds_typed_datawriter_template(
             .def(
                     "create_data",
                     [](PyDataWriter<T>& dw) { return dw->create_data(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Create data of the writer's associated type and "
                     "initialize it.")
 #endif
@@ -1116,6 +1168,7 @@ void init_dds_typed_datawriter_template(
                         return value;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve the instance key that corresponds to an instance "
                     "handle.")
             .def(
@@ -1128,6 +1181,7 @@ void init_dds_typed_datawriter_template(
                         return ti;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve the instance key that corresponds to an instance "
                     "handle.");
 }

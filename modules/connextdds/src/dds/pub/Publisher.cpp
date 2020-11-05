@@ -94,6 +94,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                             & PyPublisher::qos,
                     (void (PyPublisher::*)(const dds::pub::qos::PublisherQos&))
                             & PyPublisher::qos,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The PublisherQos for this Publisher."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -103,6 +104,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         return PyPublisher(pub << qos);
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the PublisherQos.")
             .def(
                     "__rshift__",
@@ -110,6 +112,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         return PyPublisher(pub >> qos);
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Copy the PublisherQos.")
             .def_property(
                     "default_datawriter_qos",
@@ -118,6 +121,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                     [](PyPublisher& pub, qos::DataWriterQos& qos) {
                         return PyPublisher(pub.default_datawriter_qos(qos));
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default DataWriterQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -131,6 +135,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                             l = ptr;
                         return l;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener.")
             .def(
                     "bind_listener",
@@ -146,12 +151,14 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         }
                         pub.listener(listener, m);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     py::arg("listener"),
                     py::arg("event_mask"),
                     "Bind the listener and event mask to the Publisher.")
             .def("wait_for_acknowledgments",
                  &PyPublisher::wait_for_acknowledgments,
                  py::arg("max_wait"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Blocks until all data written by this Publisher's reliable "
                  "DataWriters is acknowledged or the timeout expires.")
             .def_property_readonly(
@@ -160,6 +167,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         auto dp = pub.participant();
                         return PyDomainParticipant(dp);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the parent DomainParticipant of this Publisher.")
             .def(
                     "wait_for_asynchronous_publishing",
@@ -167,6 +175,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         pub->wait_for_acknowledgments(max_wait);
                     },
                     py::arg("max_wait"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Blocks until asynchronous sending is complete or timeout "
                     "expires.")
             .def(
@@ -177,6 +186,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find a DataWriter in this Publisher by its name.")
             .def(
                     "find_topic_datawriter",
@@ -186,6 +196,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("topic_name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find a DataWriter in this Publisher by its topic name. If "
                     "more than one exists for this Topic, the first one found "
                     "is returned.")
@@ -196,9 +207,16 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                         rti::pub::find_datawriters(pub, std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find all DataWriters in the Publisher.")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+            .def(
+                py::self == py::self,
+                py::call_guard<py::gil_scoped_release>(),
+                "Test for equality.")
+            .def(
+                py::self != py::self,
+                py::call_guard<py::gil_scoped_release>(),
+                "Test for inequality.");
 
     py::implicitly_convertible<PyIEntity, PyPublisher>();
 }

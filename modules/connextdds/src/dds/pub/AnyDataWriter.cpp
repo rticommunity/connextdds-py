@@ -23,6 +23,7 @@ void init_class_defs(py::class_<PyAnyDataWriter, PyIAnyDataWriter>& cls)
 {
     cls.def(py::init<const PyIAnyDataWriter&>(),
             py::arg("writer"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create an AnyDataWriter instance from a object that conforms to "
             "the IAnyDataWriter interface.");
 
@@ -38,20 +39,24 @@ void init_class_defs(py::class_<PyIAnyDataWriter>& cls)
                        & PyIAnyDataWriter::py_qos,
                (void (PyIAnyDataWriter::*)(const dds::pub::qos::DataWriterQos&))
                        & PyIAnyDataWriter::py_qos,
+               py::call_guard<py::gil_scoped_release>(),
                "The QoS for this AnyDataWriter."
                "\n\n"
                "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "topic_name",
                     &PyIAnyDataWriter::py_topic_name,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The Topic name for this AnyDataWriter.")
             .def_property_readonly(
                     "type_name",
                     &PyIAnyDataWriter::py_type_name,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The type name for this AnyDataWriter.")
             .def_property_readonly(
                     "publisher",
                     &PyIAnyDataWriter::py_publisher,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The Publisher for this AnyDataWriter.")
             .def("wait_for_acknowledgments",
                  &PyIAnyDataWriter::py_wait_for_acknowledgments,
@@ -69,6 +74,7 @@ void init_class_defs(py::class_<PyIAnyDataWriter>& cls)
                                 == other.get_any_datawriter();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for equality.")
             .def(
                     "__ne__",
@@ -77,6 +83,7 @@ void init_class_defs(py::class_<PyIAnyDataWriter>& cls)
                                 != other.get_any_datawriter();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for inequality.");
 }
 

@@ -1309,6 +1309,7 @@ void init_dds_typed_datawriter_template(
                         return dds::core::xtypes::DynamicData(
                                 PyDynamicTypeMap::get(dw->type_name()));
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Create data of the writer's associated type and "
                     "initialize it.")
             .def(
@@ -1321,6 +1322,7 @@ void init_dds_typed_datawriter_template(
                         return d;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve the instance key that corresponds to an instance "
                     "handle.")
             .def(
@@ -1336,6 +1338,7 @@ void init_dds_typed_datawriter_template(
                         return ti;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve the instance key that corresponds to an instance "
                     "handle.");
 }
@@ -1356,6 +1359,7 @@ void init_dds_typed_datareader_template(
                    return dd;
                },
                py::arg("handle"),
+               py::call_guard<py::gil_scoped_release>(),
                "Retrieve the instance key that corresponds to an instance "
                "handle.")
             .def(
@@ -1372,6 +1376,7 @@ void init_dds_typed_datareader_template(
                         return ti;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve the instance key that corresponds to an instance "
                     "handle.")
             .def(
@@ -1389,6 +1394,7 @@ void init_dds_typed_datareader_template(
                         }
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Copy the next not-previously-accessed data value from the "
                     "DataReader via a read operation.")
             .def(
@@ -1406,6 +1412,7 @@ void init_dds_typed_datareader_template(
                         }
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Copy the next not-previously-accessed data value from the "
                     "DataReader via a take operation.");
 }

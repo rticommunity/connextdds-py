@@ -120,6 +120,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                             l = ptr;
                         return l;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener.")
             .def(
                     "bind_listener",
@@ -137,6 +138,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener and event mask to the "
                     "DomainParticipant.")
             .def_property(
@@ -146,6 +148,8 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     (void (PyDomainParticipant::*)(
                             const qos::DomainParticipantQos&))
                             & PyDomainParticipant::qos,
+
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the domain participant's QoS."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -156,6 +160,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return PyDomainParticipant(dp << q);
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the domain participant's QoS.")
             .def(
                     "__rshift__",
@@ -165,22 +170,27 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return PyDomainParticipant(participant);
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the domain participant's QoS.")
             .def_property_readonly(
                     "domain_id",
                     &PyDomainParticipant::domain_id,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The unique domain identifier.")
             .def("assert_liveliness",
                  &PyDomainParticipant::assert_liveliness,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Manually assert the liveliness of the DomainParticipant.")
             .def("contains_entity",
                  &PyDomainParticipant::contains_entity,
                  py::arg("handle"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Check whether or not the given handle represents an Entity "
                  "that was created from the DomainParticipant.")
             .def_property_readonly(
                     "current_time",
                     &PyDomainParticipant::current_time,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the current time.")
             .def_property(
                     "default_publisher_qos",
@@ -191,6 +201,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const dds::pub::qos::PublisherQos& q) {
                         return PyDomainParticipant(dp.default_publisher_qos(q));
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default PublisherQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -204,6 +215,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return PyDomainParticipant(
                                 dp.default_subscriber_qos(q));
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default SubscriberQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -215,6 +227,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const dds::topic::qos::TopicQos& q) {
                         return PyDomainParticipant(dp.default_topic_qos(q));
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default TopicQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -227,6 +240,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const dds::pub::qos::DataWriterQos& qos) {
                         return dp->default_datawriter_qos(qos);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default DataWriterQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -239,6 +253,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const dds::sub::qos::DataReaderQos& qos) {
                         return dp->default_datareader_qos(qos);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default DataReaderQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -258,6 +273,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     },
                     py::arg("filter"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Register a content filter which can be used to create a "
                     "ContentFiltertedTopic.")
             .def(
@@ -271,6 +287,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         }
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister content filter previously registered to this "
                     "DomainParticipant.")
             .def(
@@ -290,6 +307,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return retval;
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find content filter previously registered to this "
                     "DomainParticipant.")
             .def(
@@ -308,6 +326,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                             rti::core::xtypes::
                                     DynamicDataTypeSerializationProperty(),
                             "DynamicDataTypeSerializationProperty.DEFAULT"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Registers a DynamicType with specific serialization "
                     "properties.")
             .def(
@@ -316,6 +335,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return dp->unregister_type(name);
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Unregister a type previously registered to this "
                     "DomainParticipant.")
             .def(
@@ -324,6 +344,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return dp->is_type_registered(name);
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Check if a type has been registered to this "
                     "DomainParticipant.")
             .def(
@@ -333,6 +354,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp->add_peer(peer_desc_str);
                     },
                     py::arg("peer"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Attempt to contact an additional peer participant.")
             .def(
                     "add_peers",
@@ -343,6 +365,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         }
                     },
                     py::arg("peers"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Add a sequence of peers to be contacted.")
             .def(
                     "remove_peer",
@@ -351,6 +374,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp->remove_peer(peer_desc_str);
                     },
                     py::arg("peer"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Remove a peer participant from this list that this "
                     "DomainParticipant will attempt to communicate with.")
             .def(
@@ -362,6 +386,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         }
                     },
                     py::arg("peers"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Remove a sequence of peers from the contact list.")
             .def(
                     "resume_endpoint_discovery",
@@ -370,6 +395,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp->resume_endpoint_discovery(rph);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Initiates endpoint discovery with the remote "
                     "DomainParticipant identified by its InstanceHandle.")
             .def(
@@ -379,6 +405,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp->delete_durable_subscription(group);
                     },
                     py::arg("group"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Deletes an existing Durable Subscription on all "
                     "Persistence Services.")
             .def(
@@ -390,6 +417,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     },
                     py::arg("group"),
                     py::arg("topic_name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Registers a Durable Subscription on the specified Topic "
                     "on all Persistence Services")
             .def_property_readonly(
@@ -397,6 +425,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     [](PyDomainParticipant& dp) {
                         return dp->participant_protocol_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the protocol status for this participant")
             .def_property_static(
                     "participant_factory_qos",
@@ -408,6 +437,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                qos) {
                         PyDomainParticipant::participant_factory_qos(qos);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of or set the DomainParticipantFactoryQos.")
             .def_static(
                     "finalize_participant_factory",
@@ -422,6 +452,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const dds::domain::qos::DomainParticipantQos& qos) {
                         PyDomainParticipant::default_participant_qos(qos);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of or set the default DomainParticipantQos.")
             .def(
                     "__enter__",
@@ -437,6 +468,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         if (!dp->closed())
                             dp.close();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for this Domain Participant, cleaning up "
                     "resources.")
             .def_static(
@@ -451,6 +483,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return retval;
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find a local DomainParticipant by its name.")
             .def_static(
                     "find",
@@ -459,6 +492,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         find_participants(std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find all local DomainParticipants.")
             .def_static(
                     "find",
@@ -482,6 +516,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return PyPublisher(rti::pub::find_publisher(dp, name));
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Lookup a Publisher within the DomainParticipant by its "
                     "entity name.")
             .def(
@@ -491,6 +526,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         rti::pub::find_publishers(dp, std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find all Publishers within the DomainParticipant.")
             .def_property_readonly(
                     "implicit_publisher",
@@ -500,6 +536,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(retval));
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the implicit Publisher for the DomainParticipant.")
             .def_property_readonly(
                     "builtin_subscriber",
@@ -509,6 +546,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(retval));
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the built-in subscriber for the DomainParticipant.")
             .def(
                     "find_subscriber",
@@ -517,6 +555,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 rti::sub::find_subscriber(dp, name));
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find a Subscriber in the DomainParticipant by its entity "
                     "name.")
             .def(
@@ -535,6 +574,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(retval));
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the implicit Subscriber for the DomainParticipant.")
             .def(
                     "ignore_participant",
@@ -543,6 +583,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::domain::ignore(dp, h);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a DomainParticipant given it's handle.")
             .def("ignore_participants",
                  [](PyDomainParticipant& dp,
@@ -556,6 +597,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::topic::ignore(dp, handle);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a Topic matching the provided handle.")
             .def(
                     "ignore_topics",
@@ -564,6 +606,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::topic::ignore(dp, v.begin(), v.end());
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a list of Topics specified by their handles.")
             .def(
                     "ignore_datawriter",
@@ -572,6 +615,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::pub::ignore(dp, handle);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a DataWriter matching the provided handle.")
             .def(
                     "ignore_datawriters",
@@ -580,6 +624,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::pub::ignore(dp, v.begin(), v.end());
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a list of DataWriters specified by their handles.")
             .def(
                     "ignore_datareader",
@@ -588,6 +633,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::sub::ignore(dp, handle);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a DataReader matching the provided handle.")
             .def(
                     "ignore_datareaders",
@@ -596,6 +642,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dds::sub::ignore(dp, v.begin(), v.end());
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Ignore a list of DataReaders specified by their handles.")
 #ifndef _MSC_VER
             .def(
@@ -605,6 +652,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         rti::topic::find_topics(dp, std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find all Topics in the DomainParticipant.")
 #endif
             .def(
@@ -616,6 +664,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get all Topic handles discovered by this "
                     "DomainParticipant.")
             .def(
@@ -625,6 +674,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return dds::topic::discover_topic_data(dp, handle);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get information about a discovered topic using its "
                     "handle.")
             .def(
@@ -635,6 +685,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 topic.py_instance_handle());
                     },
                     py::arg("topic"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get information about a discovered topic.")
             .def(
                     "discovered_topic_data",
@@ -647,6 +698,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get information about a discovered topic.")
             .def(
                     "discovered_topic_data",
@@ -657,6 +709,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get information about all discovered topics.")
             .def(
                     "find_datawriter",
@@ -666,6 +719,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find a DataWriter by its name.")
             .def(
                     "find_datareader",
@@ -675,6 +729,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return PyAnyDataReader(dr);
                     },
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find a DataReader by its name.")
             .def(
                     "find_registered_content_filters",
@@ -685,6 +740,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve a list of all registered content filter names.")
             .def_property_readonly(
                     "participant_reader",
@@ -704,6 +760,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(v[0]));
                         return v[0];
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DomainParticipant built-in topic reader.")
             .def_property_readonly(
                     "publication_reader",
@@ -723,6 +780,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(v[0]));
                         return v[0];
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the publication built-in topic reader.")
             .def_property_readonly(
                     "subscription_reader",
@@ -742,6 +800,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(v[0]));
                         return v[0];
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the subscription built-in topic reader.")
             .def_property_readonly(
                     "topic_reader",
@@ -761,6 +820,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(v[0]));
                         return v[0];
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the topic built-in topic reader.")
             .def_property_readonly(
                     "service_request_reader",
@@ -778,6 +838,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         dp.py_add_prop(py::cast(v[0]));
                         return v[0];
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the ServiceRequest built-in topic reader.")
             .def(
                     "discovered_participants",
@@ -796,6 +857,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 handle);
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve DomainParticipant information by handle.")
             .def(
                     "discovered_participant_data",
@@ -811,6 +873,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve DomainParticipant information with a sequence of "
                     "handles.")
             .def(
@@ -830,6 +893,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return *ptr;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve publication data by handle.")
             .def(
                     "publication_data",
@@ -852,6 +916,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve publication data for a sequence of handles.")
             .def(
                     "subscription_data",
@@ -870,6 +935,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return *ptr;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve subscription data by handle.")
             .def(
                     "subscription_data",
@@ -892,9 +958,16 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         return v;
                     },
                     py::arg("handles"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve subscription data for a sequence of handles.")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.")
+            .def(
+                    py::self == py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for equality.")
+            .def(
+                    py::self != py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for inequality.")
             .doc() =
             "Container for all Entity objects.\n"
             "* It acts as a container for all other Entity objects.\n"

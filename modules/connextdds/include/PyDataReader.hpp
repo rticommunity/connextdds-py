@@ -262,16 +262,25 @@ void init_dds_typed_datareader_base_template(
                         dr.default_filter_state(ds);
                         return dr;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Returns the filter state for the read/take operations.")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.")
+            .def(
+                    py::self == py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for equality.")
+            .def(
+                    py::self != py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for inequality.")
             .def("read",
                  (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
                          & PyDataReader<T>::read,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Read all samples using the default filter state")
             .def("take",
                  (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
                          & PyDataReader<T>::take,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Take all samples using the default filter state")
 #if rti_connext_version_gte(6, 0, 0)
             .def(
@@ -280,6 +289,7 @@ void init_dds_typed_datareader_base_template(
                         return rti::sub::ValidLoanedSamples<T>(dr.read());
                         ;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Read only valid samples.")
             .def(
                     "take_valid",
@@ -287,6 +297,7 @@ void init_dds_typed_datareader_base_template(
                         return rti::sub::ValidLoanedSamples<T>(dr.take());
                         ;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Take only valid samples.")
 #endif
             .def(
@@ -294,6 +305,7 @@ void init_dds_typed_datareader_base_template(
                     [](PyDataReader<T>& dr) {
                         return typename PyDataReader<T>::Selector(dr.select());
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a Selector to perform complex data selections, such "
                     "as "
                     "per-instance selection, content, and status filtering.")
@@ -302,11 +314,13 @@ void init_dds_typed_datareader_base_template(
                     [](const PyDataReader<T>& dr) {
                         return PyTopicDescription<T>(dr.topic_description());
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Returns the TopicDescription associated with the "
                     "DataReader.")
             .def_property_readonly(
                     "subscriber",
                     &PyDataReader<T>::py_subscriber,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Returns the parent Subscriber of the DataReader.")
             .def_property_readonly(
                     "listener",
@@ -318,6 +332,7 @@ void init_dds_typed_datareader_base_template(
                             l = ptr;
                         return l;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener object.")
             .def(
                     "bind_listener",
@@ -336,6 +351,7 @@ void init_dds_typed_datareader_base_template(
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and associated event mask.")
             .def_property(
                     "qos",
@@ -344,6 +360,7 @@ void init_dds_typed_datareader_base_template(
                     (void (PyDataReader<T>::*)(
                             const dds::sub::qos::DataReaderQos&))
                             & PyDataReader<T>::qos,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The DataReaderQos for this DataReader."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -355,6 +372,7 @@ void init_dds_typed_datareader_base_template(
                         return dr;
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the DataReaderQos for this DataReader.")
             .def(
                     "__rshift__",
@@ -363,6 +381,7 @@ void init_dds_typed_datareader_base_template(
                         return dr;
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataReaderQos from this DataReader"
 
                     )
@@ -393,39 +412,47 @@ void init_dds_typed_datareader_base_template(
             .def_property_readonly(
                     "liveliness_changed_status",
                     &PyDataReader<T>::liveliness_changed_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the LivelinessChangedStatus for this DataReader.")
             .def_property_readonly(
                     "sample_rejected_status",
                     &PyDataReader<T>::sample_rejected_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the SampleRejectedStatus for the DataReader.")
             .def_property_readonly(
                     "sample_lost_status",
                     &PyDataReader<T>::sample_lost_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the SampleLostStatus for the DataReader.")
             .def_property_readonly(
                     "requested_deadline_missed_status",
                     &PyDataReader<T>::requested_deadline_missed_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the RequestedDeadlineMissed status for the DataReader")
             .def_property_readonly(
                     "requested_incompatible_qos_status",
                     &PyDataReader<T>::requested_incompatible_qos_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the RequestedIncompatibleQosStatus for the "
                     "DataReader.")
             .def_property_readonly(
                     "subscription_matched_status",
                     &PyDataReader<T>::subscription_matched_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the SubscriptionMatchedStatus for the DataReader.")
             .def_property_readonly(
                     "datareader_cache_status",
                     [](PyDataReader<T>& dr) {
                         return dr->datareader_cache_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataReaderCacheStatus for the DataReader.")
             .def_property_readonly(
                     "datareader_protocol_status",
                     [](PyDataReader<T>& dr) {
                         return dr->datareader_protocol_status();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataReaderProtocolStatus for the DataReader.")
             .def(
                     "matched_publication_datareader_protocol_status",
@@ -436,12 +463,14 @@ void init_dds_typed_datareader_base_template(
                                         handle);
                     },
                     py::arg("publication_handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataReaderProtocolStatus for the DataReader based "
                     "on the "
                     "matched publication handle.")
             .def(
                     "acknowledge_all",
                     [](PyDataReader<T>& dr) { dr->acknowledge_all(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Acknowledge all previously accessed samples.")
             .def(
                     "acknowledge_all",
@@ -449,6 +478,7 @@ void init_dds_typed_datareader_base_template(
                        const rti::sub::AckResponseData& rd) {
                         dr->acknowledge_all(rd);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Acknowledge all previously accessed samples.")
             .def(
                     "acknowledge_sample",
@@ -456,6 +486,7 @@ void init_dds_typed_datareader_base_template(
                         dr->acknowledge_sample(info);
                     },
                     py::arg("sample_info"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Acknowledge a single sample.")
 #if rti_connext_version_gte(6, 0, 0)
             .def(
@@ -467,6 +498,7 @@ void init_dds_typed_datareader_base_template(
                     },
                     py::arg("sample_data"),
                     py::arg("sample_info"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Checks if the sample has been overwritten by the "
                     "DataWriter.")
             .def(
@@ -477,6 +509,7 @@ void init_dds_typed_datareader_base_template(
                                 sample.info());
                     },
                     py::arg("sample"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Checks if the sample has been overwritten by the "
                     "DataWriter.")
             .def(
@@ -486,24 +519,29 @@ void init_dds_typed_datareader_base_template(
                         return dr->is_data_consistent(sample);
                     },
                     py::arg("sample"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Checks if the sample has been overwritten by the "
                     "DataWriter.")
 #endif
             .def_property_readonly(
                     "topic_name",
                     [](PyDataReader<T>& dr) { return dr.py_topic_name(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the topic name associated with this DataReader.")
             .def_property_readonly(
                     "type_name",
                     [](PyDataReader<T>& dr) { return dr.py_type_name(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the type name associated with this DataReader.")
             .def(
                     "close",
                     [](PyDataReader<T>& dr) { dr->close(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Close this DataReader.")
             .def(
                     "__enter__",
                     [](PyDataReader<T>& dr) { return dr; },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Enter a context for this DataReader, to be cleaned up on "
                     "exiting context")
             .def(
@@ -512,6 +550,7 @@ void init_dds_typed_datareader_base_template(
                        py::object,
                        py::object,
                        py::object) { dr->close(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for this DataReader, cleaning up "
                     "resources.")
             .def_static(
@@ -526,6 +565,7 @@ void init_dds_typed_datareader_base_template(
                     },
                     py::arg("subscriber"),
                     py::arg("topic_name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve all DataReaders for the given topic name in the "
                     "subscriber.")
             .def_static(
@@ -540,6 +580,7 @@ void init_dds_typed_datareader_base_template(
                     },
                     py::arg("participant"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find DataReader in DomainParticipant with the "
                     "DataReader's "
                     "name, returning the first found.")
@@ -555,6 +596,7 @@ void init_dds_typed_datareader_base_template(
                     },
                     py::arg("subscriber"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find DataReader in Subscriber with the DataReader's name, "
                     "returning the first found.")
             .def_static(
@@ -569,29 +611,35 @@ void init_dds_typed_datareader_base_template(
                     },
                     py::arg("subscriber"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find DataReader in Subscriber with a topic name, "
                     "returning the first found.");
 
     selector.def(py::init<PyDataReader<T>&>(),
                  py::arg("datareader"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a Selector for a DataReader to read/take based on "
                  "selected conditions")
             .def("instance",
                  &PyDataReader<T>::Selector::instance,
                  py::arg("handle"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Select a specific instance to read/take.")
             .def("next_instance",
                  &PyDataReader<T>::Selector::next_instance,
                  py::arg("previous"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Select the instance after the specified instance to "
                  "read/take.")
             .def("state",
                  &PyDataReader<T>::Selector::state,
                  py::arg("state"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Select samples with a specified data state.")
             .def("content",
                  &PyDataReader<T>::Selector::content,
                  py::arg("query"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Select samples based on a Query.")
             .def(
                     "condition",
@@ -601,14 +649,17 @@ void init_dds_typed_datareader_base_template(
                         return sel.condition(cond);
                     },
                     py::arg("condition"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Select samples based on a ReadCondition.")
             .def("max_samples",
                  &PyDataReader<T>::Selector::max_samples,
                  py::arg("max"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Limit the number of samples read/taken by the Select.")
             .def("read",
                  (dds::sub::LoanedSamples<T>(PyDataReader<T>::Selector::*)())
                          & PyDataReader<T>::Selector::read,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Read samples based on Selector settings.")
 #if rti_connext_version_gte(6, 0, 0)
             .def(
@@ -616,11 +667,13 @@ void init_dds_typed_datareader_base_template(
                     [](typename PyDataReader<T>::Selector& s) {
                         return rti::sub::ValidLoanedSamples<T>(s.read());
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Read valid samples based on Selector settings.")
 #endif
             .def("take",
                  (dds::sub::LoanedSamples<T>(PyDataReader<T>::Selector::*)())
                          & PyDataReader<T>::Selector::take,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Take samples based on Selector settings.")
 #if rti_connext_version_gte(6, 0, 0)
             .def(
@@ -628,6 +681,7 @@ void init_dds_typed_datareader_base_template(
                     [](typename PyDataReader<T>::Selector& s) {
                         return rti::sub::ValidLoanedSamples<T>(s.take());
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Take valid samples based on Selector settings.")
 #endif
             ;
@@ -651,6 +705,7 @@ void init_dds_typed_datareader_template(
                    return d;
                },
                py::arg("handle"),
+               py::call_guard<py::gil_scoped_release>(),
                "Retrieve the instance key that corresponds to an instance "
                "handle.")
             .def(
@@ -663,6 +718,7 @@ void init_dds_typed_datareader_template(
                         return ti;
                     },
                     py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Retrieve the instance key that corresponds to an instance "
                     "handle.")
             .def(
@@ -676,6 +732,7 @@ void init_dds_typed_datareader_template(
                         }
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Copy the next not-previously-accessed data value from the "
                     "DataReader via a read operation.")
             .def(
@@ -689,6 +746,7 @@ void init_dds_typed_datareader_template(
                         }
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Copy the next not-previously-accessed data value from the "
                     "DataReader via a take operation.");
 }

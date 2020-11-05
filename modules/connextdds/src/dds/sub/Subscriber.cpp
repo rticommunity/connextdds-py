@@ -87,6 +87,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                  "Cast an Entity to a Subscriber.")
             .def("notify_datareaders",
                  &PySubscriber::notify_datareaders,
+                 py::call_guard<py::gil_scoped_release>(),
                  "This operation invokes the operation on_data_available on "
                  "the DataReaderListener objects attached to contained "
                  "DataReader entities with a DATA_AVAILABLE status that is "
@@ -101,6 +102,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                             l = ptr;
                         return l;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener.")
             .def(
                     "bind_listener",
@@ -125,6 +127,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                             & PySubscriber::qos,
                     (void (PySubscriber::*)(const qos::SubscriberQos&))
                             & PySubscriber::qos,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The SubscriberQos for this Subscriber."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -135,6 +138,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                     [](PySubscriber& sub, const qos::DataReaderQos& qos) {
                         return PySubscriber(sub.default_datareader_qos(qos));
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The default DataReaderQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -144,6 +148,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                         auto dp = sub.participant();
                         return PyDomainParticipant(dp);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the parent DomainParticipant for this Subscriber.")
             .def(
                     "find_datareaders",
@@ -152,9 +157,16 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                         rti::sub::find_datareaders(sub, std::back_inserter(v));
                         return v;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find all DataReaders in the Subscriber.")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+            .def(
+                py::self == py::self,
+                py::call_guard<py::gil_scoped_release>(),
+                "Test for equality.")
+            .def(
+                py::self != py::self,
+                py::call_guard<py::gil_scoped_release>(),
+                "Test for inequality.");
 
     py::implicitly_convertible<PyIEntity, PySubscriber>();
 }

@@ -267,15 +267,18 @@ void init_itopic_description_defs(
     cls.def_property_readonly(
                "name",
                &PyITopicDescription<T>::py_name,
+               py::call_guard<py::gil_scoped_release>(),
                "The name of the entity conforming to the ITopicDescription "
                "interface.")
             .def_property_readonly(
                     "type_name",
                     &PyITopicDescription<T>::py_type_name,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The name of the associated type.")
             .def_property_readonly(
                     "participant",
                     &PyITopicDescription<T>::py_participant,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The parent DomainParticipant.");
 }
 
@@ -294,6 +297,7 @@ void init_topic_description_defs(
                              entity);
                  }),
                  py::arg("entity"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Cast a Topic to a TopicDescription.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
@@ -337,6 +341,7 @@ void init_dds_typed_topic_base_template(
                             l = ptr;
                         return l;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "The listener.")
             .def(
                     "bind_listener",
@@ -354,6 +359,7 @@ void init_dds_typed_topic_base_template(
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and event mask.")
             .def_property(
                     "qos",
@@ -361,12 +367,14 @@ void init_dds_typed_topic_base_template(
                             & PyTopic<T>::qos,
                     (void (PyTopic<T>::*)(const dds::topic::qos::TopicQos&))
                             & PyTopic<T>::qos,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the TopicQos for this Topic."
                     "\n\n"
                     "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "inconsistent_topic_status",
                     &PyTopic<T>::inconsistent_topic_status,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the current InconsistentTopicStatus for "
                     "this Topic.")
             .def_static(
@@ -380,6 +388,7 @@ void init_dds_typed_topic_base_template(
                             retval = PyTopic<T>(t);
                         return retval;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     py::arg("participant"),
                     py::arg("name"),
                     "Look up a Topic by its name in the DomainParticipant.")
