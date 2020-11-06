@@ -35,28 +35,37 @@ void init_class_defs(py::class_<PyIAnyDataWriter>& cls)
 {
     cls.def_property(
                "qos",
-               (dds::pub::qos::DataWriterQos(PyIAnyDataWriter::*)() const)
-                       & PyIAnyDataWriter::py_qos,
-               (void (PyIAnyDataWriter::*)(const dds::pub::qos::DataWriterQos&))
-                       & PyIAnyDataWriter::py_qos,
-               py::call_guard<py::gil_scoped_release>(),
+               [](const PyIAnyDataWriter& dw) {
+                   py::gil_scoped_release guard;
+                   return dw.py_qos();
+               },
+               [](PyIAnyDataWriter& dw, const dds::pub::qos::DataWriterQos& qos) {
+                   py::gil_scoped_release guard;
+                   dw.py_qos(qos);
+               },
                "The QoS for this AnyDataWriter."
                "\n\n"
                "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "topic_name",
-                    &PyIAnyDataWriter::py_topic_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyDataWriter& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.py_topic_name();
+                    },
                     "The Topic name for this AnyDataWriter.")
             .def_property_readonly(
                     "type_name",
-                    &PyIAnyDataWriter::py_type_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyDataWriter& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.py_type_name();
+                    },
                     "The type name for this AnyDataWriter.")
             .def_property_readonly(
                     "publisher",
-                    &PyIAnyDataWriter::py_publisher,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyDataWriter& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.py_publisher();
+                    },
                     "The Publisher for this AnyDataWriter.")
             .def("wait_for_acknowledgments",
                  &PyIAnyDataWriter::py_wait_for_acknowledgments,

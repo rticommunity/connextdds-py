@@ -255,14 +255,16 @@ void init_dds_typed_datareader_base_template(
                  "Create a typed DataReader from an Entity.")
             .def_property(
                     "default_filter_state",
-                    (const dds::sub::status::DataState& (PyDataReader<T>::*) ())
-                            & PyDataReader<T>::default_filter_state,
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.default_filter_state();
+                    },
                     [](PyDataReader<T>& dr,
                        const dds::sub::status::DataState& ds) {
+                        py::gil_scoped_release guard;
                         dr.default_filter_state(ds);
                         return dr;
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Returns the filter state for the read/take operations.")
             .def(
                     py::self == py::self,
@@ -287,7 +289,6 @@ void init_dds_typed_datareader_base_template(
                     "read_valid",
                     [](PyDataReader<T>& dr) {
                         return rti::sub::ValidLoanedSamples<T>(dr.read());
-                        ;
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Read only valid samples.")
@@ -295,7 +296,6 @@ void init_dds_typed_datareader_base_template(
                     "take_valid",
                     [](PyDataReader<T>& dr) {
                         return rti::sub::ValidLoanedSamples<T>(dr.take());
-                        ;
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Take only valid samples.")
@@ -312,19 +312,22 @@ void init_dds_typed_datareader_base_template(
             .def_property_readonly(
                     "topic_description",
                     [](const PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
                         return PyTopicDescription<T>(dr.topic_description());
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Returns the TopicDescription associated with the "
                     "DataReader.")
             .def_property_readonly(
                     "subscriber",
-                    &PyDataReader<T>::py_subscriber,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.py_subscriber();
+                    },
                     "Returns the parent Subscriber of the DataReader.")
             .def_property_readonly(
                     "listener",
                     [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
                         dds::core::optional<PyDataReaderListener<T>*> l;
                         auto ptr = dynamic_cast<PyDataReaderListener<T>*>(
                                 dr.listener());
@@ -332,7 +335,6 @@ void init_dds_typed_datareader_base_template(
                             l = ptr;
                         return l;
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener object.")
             .def(
                     "bind_listener",
@@ -355,12 +357,14 @@ void init_dds_typed_datareader_base_template(
                     "Set the listener and associated event mask.")
             .def_property(
                     "qos",
-                    (dds::sub::qos::DataReaderQos(PyDataReader<T>::*)() const)
-                            & PyDataReader<T>::qos,
-                    (void (PyDataReader<T>::*)(
-                            const dds::sub::qos::DataReaderQos&))
-                            & PyDataReader<T>::qos,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.qos();
+                    },
+                    [](PyDataReader<T>& dr, const dds::sub::qos::DataReaderQos& qos) {
+                        py::gil_scoped_release guard;
+                        dr.qos(qos);
+                    },
                     "The DataReaderQos for this DataReader."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -411,48 +415,60 @@ void init_dds_typed_datareader_base_template(
                     "awaitable and only for use with asyncio.")
             .def_property_readonly(
                     "liveliness_changed_status",
-                    &PyDataReader<T>::liveliness_changed_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.liveliness_changed_status();
+                    },
                     "Get the LivelinessChangedStatus for this DataReader.")
             .def_property_readonly(
                     "sample_rejected_status",
-                    &PyDataReader<T>::sample_rejected_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.sample_rejected_status();
+                    },
                     "Get the SampleRejectedStatus for the DataReader.")
             .def_property_readonly(
                     "sample_lost_status",
-                    &PyDataReader<T>::sample_lost_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.sample_lost_status();
+                    },
                     "Get the SampleLostStatus for the DataReader.")
             .def_property_readonly(
                     "requested_deadline_missed_status",
-                    &PyDataReader<T>::requested_deadline_missed_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.requested_deadline_missed_status();
+                    },
                     "Get the RequestedDeadlineMissed status for the DataReader")
             .def_property_readonly(
                     "requested_incompatible_qos_status",
-                    &PyDataReader<T>::requested_incompatible_qos_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.requested_incompatible_qos_status();
+                    },
                     "Get the RequestedIncompatibleQosStatus for the "
                     "DataReader.")
             .def_property_readonly(
                     "subscription_matched_status",
-                    &PyDataReader<T>::subscription_matched_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.subscription_matched_status();
+                    },
                     "Get the SubscriptionMatchedStatus for the DataReader.")
             .def_property_readonly(
                     "datareader_cache_status",
                     [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
                         return dr->datareader_cache_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataReaderCacheStatus for the DataReader.")
             .def_property_readonly(
                     "datareader_protocol_status",
                     [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
                         return dr->datareader_protocol_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the DataReaderProtocolStatus for the DataReader.")
             .def(
                     "matched_publication_datareader_protocol_status",
@@ -525,13 +541,17 @@ void init_dds_typed_datareader_base_template(
 #endif
             .def_property_readonly(
                     "topic_name",
-                    [](PyDataReader<T>& dr) { return dr.py_topic_name(); },
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) { 
+                        py::gil_scoped_release guard;
+                        return dr.py_topic_name();
+                    },
                     "Get the topic name associated with this DataReader.")
             .def_property_readonly(
                     "type_name",
-                    [](PyDataReader<T>& dr) { return dr.py_type_name(); },
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.py_type_name();
+                    },
                     "Get the type name associated with this DataReader.")
             .def(
                     "close",
@@ -541,7 +561,6 @@ void init_dds_typed_datareader_base_template(
             .def(
                     "__enter__",
                     [](PyDataReader<T>& dr) { return dr; },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Enter a context for this DataReader, to be cleaned up on "
                     "exiting context")
             .def(

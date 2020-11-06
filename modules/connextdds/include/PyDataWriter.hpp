@@ -562,12 +562,14 @@ void init_dds_typed_datawriter_base_template(
                  "key_holder")
             .def_property(
                     "qos",
-                    (dds::pub::qos::DataWriterQos(PyDataWriter<T>::*)() const)
-                            & PyDataWriter<T>::qos,
-                    (void (PyDataWriter<T>::*)(
-                            const dds::pub::qos::DataWriterQos&))
-                            & PyDataWriter<T>::qos,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.qos();
+                    },
+                    [](PyDataWriter<T>& dw, const dds::pub::qos::DataWriterQos& qos) {
+                        py::gil_scoped_release guard;
+                        dw.qos(qos);
+                    },
                     "The DataWriterQos for this DataWriter."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -594,28 +596,32 @@ void init_dds_typed_datawriter_base_template(
             .def_property_readonly(
                     "topic",
                     [](const PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
                         dds::topic::Topic<T> t = dw.topic();
                         return PyTopic<T>(t);
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the Topic object associated with this DataWriter.")
             .def_property_readonly(
                     "type_name",
-                    [](const PyDataWriter<T>& dw) { return dw.py_type_name(); },
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.py_type_name();
+                    },
                     "Get the type name for the topic object associated with "
                     "this DataWriter.")
             .def_property_readonly(
                     "topic_name",
                     [](const PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
                         return dw.py_topic_name();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the topic name associated with this DataWriter.")
             .def_property_readonly(
                     "publisher",
-                    &PyDataWriter<T>::py_publisher,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.py_publisher();
+                    },
                     "Get the Publisher that owns this DataWriter.")
             .def("wait_for_acknowledgments",
                  &PyDataWriter<T>::py_wait_for_acknowledgments,
@@ -627,6 +633,7 @@ void init_dds_typed_datawriter_base_template(
             .def_property_readonly(
                     "listener",
                     [](PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
                         dds::core::optional<PyDataWriterListener<T>*> l;
                         auto ptr = dynamic_cast<PyDataWriterListener<T>*>(
                                 dw.listener());
@@ -634,7 +641,6 @@ void init_dds_typed_datawriter_base_template(
                             l = ptr;
                         return l;
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener associated with the DataWriter or set "
                     "the listener and status mask as a tuple.")
             .def(
@@ -657,23 +663,31 @@ void init_dds_typed_datawriter_base_template(
                     "Set the listener and event mask for the DataWriter.")
             .def_property_readonly(
                     "liveliness_lost_status",
-                    &PyDataWriter<T>::liveliness_lost_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.liveliness_lost_status();
+                    },
                     "Get a copy of the LivelinessLostStatus.")
             .def_property_readonly(
                     "offered_deadline_missed_status",
-                    &PyDataWriter<T>::offered_deadline_missed_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.offered_deadline_missed_status();
+                    },
                     "Get a copy of the OfferedDeadlineMissedStatus.")
             .def_property_readonly(
                     "offered_incompatible_qos_status",
-                    &PyDataWriter<T>::offered_incompatible_qos_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.offered_incompatible_qos_status();
+                    },
                     "Get a copy of the OfferedIncompatibleQosStatus")
             .def_property_readonly(
                     "publication_matched_status",
-                    &PyDataWriter<T>::publication_matched_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
+                        return dw.publication_matched_status();
+                    },
                     "Get a copy of the PublicationMatchedStatus")
             .def("assert_liveliness",
                  &PyDataWriter<T>::assert_liveliness,
@@ -731,35 +745,65 @@ void init_dds_typed_datawriter_base_template(
                     "If the DataWriter does not have PublishMode kind set to "
                     "PublishModeKind.ASYNCHRONOUS the operation will complete "
                     "immediately")
+            .def(
+                    "wait_for_asynchronous_publishing_async",
+                    [](PyDataWriter<T>& writer,
+                       const dds::core::Duration& max_wait) {
+                        return PyAsyncioExecutor::run<void>(
+                                std::function<void()>([&writer, &max_wait]() {
+                                    writer->wait_for_asynchronous_publishing(max_wait);
+                                }));
+                    },
+                    py::arg("max_wait"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "This function is awaitable until either a timeout of "
+                    "max_wait or all data written by the asynchronous "
+                    "DataWriter is sent and acknowledged (if reliable) by all "
+                    "matched DataReader entities. A successful completion "
+                    "indicates that "
+                    "all the samples written have been sent and acknowledged "
+                    "where applicable; a time out indicates that max_wait "
+                    "elapsed "
+                    "before all the data was sent and/or acknowledged."
+                    "This function works with asyncio."
+                    "\n\n"
+                    "In other words, this guarantees that sending to best "
+                    "effort "
+                    "DataReader is complete in addition to what "
+                    "DataWriter.wait_for_acknowledgments() provides."
+                    "\n\n"
+                    "If the DataWriter does not have PublishMode kind set to "
+                    "PublishModeKind.ASYNCHRONOUS the operation will complete "
+                    "immediately")
             .def_property_readonly(
                     "reliable_writer_cache_changed_status",
                     [](PyDataWriter<T>& writer) {
+                        py::gil_scoped_release guard;
                         return writer->reliable_writer_cache_changed_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the reliable cache status for this writer.")
             .def_property_readonly(
                     "reliable_reader_activity_changed_status",
                     [](PyDataWriter<T>& writer) {
+                        py::gil_scoped_release guard;
                         return writer
                                 ->reliable_reader_activity_changed_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the reliable reader activity changed status "
                     "for this writer.")
             .def_property_readonly(
                     "datawriter_cache_status",
                     [](PyDataWriter<T>& writer) {
+                        py::gil_scoped_release guard;
                         return writer->datawriter_cache_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the cache status for this writer.")
             .def_property_readonly(
                     "datawriter_protocol_status",
                     [](PyDataWriter<T>& writer) {
+                        py::gil_scoped_release guard;
                         return writer->datawriter_protocol_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the protocol status for this writer.")
             .def(
                     "matched_subscription_datawriter_procotol_status",
@@ -782,19 +826,21 @@ void init_dds_typed_datawriter_base_template(
                                         subscription_locator);
                     },
                     py::arg("locator"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the protocol status for this writer per a "
                     "matched subscription locator.")
             .def_property_readonly(
                     "service_request_accepted_status",
                     [](PyDataWriter<T>& writer) {
+                        py::gil_scoped_release guard;
                         return writer->service_request_accepted_status();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the service request accepted status for "
                     "this writer.")
             .def(
                     "flush",
                     [](PyDataWriter<T>& writer) { return writer->flush(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Flushes the batch in progress in the context of the "
                     "calling thread.")
             .def(
@@ -822,9 +868,9 @@ void init_dds_typed_datawriter_base_template(
             .def_property_readonly(
                     "matched_subscriptions",
                     [](const PyDataWriter<T>& dw) {
+                        py::gil_scoped_release guard;
                         return dds::pub::matched_subscriptions(dw);
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get a copy of the list of the currently matched "
                     "subscription handles.")
             .def(
@@ -895,6 +941,7 @@ void init_dds_typed_datawriter_base_template(
                     },
                     py::arg("publisher"),
                     py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Find DataWriter in publisher with a topic name, "
                     "returning the first found.")
             .def(
@@ -1139,7 +1186,26 @@ void init_dds_typed_datawriter_base_template(
                     "Write a sequence of samples with their instance handles "
                     "and a "
                     "timestamp. This method is awaitable and only for use with "
-                    "asyncio.");
+                    "asyncio.")
+            .def(
+                    "close",
+                    [](PyDataWriter<T>& dw) { dw->close(); },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Close this DataWriter.")
+            .def(
+                    "__enter__",
+                    [](PyDataWriter<T>& dw) { return dw; },
+                    "Enter a context for this DataWriter, to be cleaned up on "
+                    "exiting context")
+            .def(
+                    "__exit__",
+                    [](PyDataWriter<T>& dr,
+                       py::object,
+                       py::object,
+                       py::object) { dr->close(); },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Exit the context for this DataWriter, cleaning up "
+                    "resources.");
 
     py::implicitly_convertible<PyIAnyDataWriter, PyDataWriter<T>>();
     py::implicitly_convertible<PyIEntity, PyDataWriter<T>>();

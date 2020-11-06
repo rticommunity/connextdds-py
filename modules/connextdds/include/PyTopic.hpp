@@ -266,19 +266,25 @@ void init_itopic_description_defs(
 {
     cls.def_property_readonly(
                "name",
-               &PyITopicDescription<T>::py_name,
-               py::call_guard<py::gil_scoped_release>(),
+               [](const PyITopicDescription<T>& td) {
+                   py::gil_scoped_release guard;
+                   return td.py_name();
+               },
                "The name of the entity conforming to the ITopicDescription "
                "interface.")
             .def_property_readonly(
                     "type_name",
-                    &PyITopicDescription<T>::py_type_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyITopicDescription<T>& td) {
+                        py::gil_scoped_release guard;
+                        return td.py_type_name();
+                    },
                     "The name of the associated type.")
             .def_property_readonly(
                     "participant",
-                    &PyITopicDescription<T>::py_participant,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyITopicDescription<T>& td) {
+                        py::gil_scoped_release guard;
+                        return td.py_participant();
+                    },
                     "The parent DomainParticipant.");
 }
 
@@ -334,6 +340,7 @@ void init_dds_typed_topic_base_template(
             .def_property_readonly(
                     "listener",
                     [](PyTopic<T>& t) {
+                        py::gil_scoped_release guard;
                         dds::core::optional<PyTopicListener<T>*> l;
                         auto ptr =
                                 dynamic_cast<PyTopicListener<T>*>(t.listener());
@@ -341,7 +348,6 @@ void init_dds_typed_topic_base_template(
                             l = ptr;
                         return l;
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "The listener.")
             .def(
                     "bind_listener",
@@ -363,18 +369,23 @@ void init_dds_typed_topic_base_template(
                     "Set the listener and event mask.")
             .def_property(
                     "qos",
-                    (dds::topic::qos::TopicQos(PyTopic<T>::*)() const)
-                            & PyTopic<T>::qos,
-                    (void (PyTopic<T>::*)(const dds::topic::qos::TopicQos&))
-                            & PyTopic<T>::qos,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyTopic<T>& t) {
+                        py::gil_scoped_release guard;
+                        return t.qos();
+                    },
+                    [](PyTopic<T>& t, dds::topic::qos::TopicQos& qos) {
+                        py::gil_scoped_release guard;
+                        t.qos(qos);
+                    },
                     "Get the TopicQos for this Topic."
                     "\n\n"
                     "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "inconsistent_topic_status",
-                    &PyTopic<T>::inconsistent_topic_status,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyTopic<T>& t) {
+                        py::gil_scoped_release guard;
+                        return t.inconsistent_topic_status();
+                    },
                     "Get a copy of the current InconsistentTopicStatus for "
                     "this Topic.")
             .def_static(

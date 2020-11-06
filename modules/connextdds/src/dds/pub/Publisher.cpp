@@ -90,11 +90,14 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                  "Cast an Entity to a Publisher.")
             .def_property(
                     "qos",
-                    (const dds::pub::qos::PublisherQos (PyPublisher::*)() const)
-                            & PyPublisher::qos,
-                    (void (PyPublisher::*)(const dds::pub::qos::PublisherQos&))
-                            & PyPublisher::qos,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyPublisher& pub) {
+                        py::gil_scoped_release guard;
+                        return pub.qos();
+                    },
+                    [](PyPublisher& pub, const qos::PublisherQos& qos) {
+                        py::gil_scoped_release guard;
+                        pub.qos(qos);
+                    },
                     "The PublisherQos for this Publisher."
                     "\n\n"
                     "This property's getter returns a deep copy.")
@@ -116,18 +119,21 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                     "Copy the PublisherQos.")
             .def_property(
                     "default_datawriter_qos",
-                    (dds::pub::qos::DataWriterQos(PyPublisher::*)() const)
-                            & PyPublisher::default_datawriter_qos,
-                    [](PyPublisher& pub, qos::DataWriterQos& qos) {
-                        return PyPublisher(pub.default_datawriter_qos(qos));
+                    [](const PyPublisher& pub) {
+                        py::gil_scoped_release guard;
+                        return pub.default_datawriter_qos();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PyPublisher& pub, const qos::DataWriterQos& qos) {
+                        py::gil_scoped_release guard;
+                        pub.default_datawriter_qos(qos);
+                    },
                     "The default DataWriterQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "listener",
                     [](const PyPublisher& pub) {
+                        py::gil_scoped_release guard;
                         dds::core::optional<PyPublisherListener*> l;
                         auto ptr = dynamic_cast<PyPublisherListener*>(
                                 pub.listener());
@@ -135,7 +141,6 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                             l = ptr;
                         return l;
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener.")
             .def(
                     "bind_listener",
@@ -164,10 +169,10 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
             .def_property_readonly(
                     "participant",
                     [](PyPublisher& pub) {
+                        py::gil_scoped_release guard;
                         auto dp = pub.participant();
                         return PyDomainParticipant(dp);
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the parent DomainParticipant of this Publisher.")
             .def(
                     "wait_for_asynchronous_publishing",

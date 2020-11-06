@@ -36,23 +36,30 @@ void init_class_defs(py::class_<PyIAnyTopic>& cls)
 {
     cls.def_property(
                "qos",
-               (TopicQos(PyIAnyTopic::*)() const) & PyIAnyTopic::py_qos,
-               (void (PyIAnyTopic::*)(const TopicQos&)) & PyIAnyTopic::py_qos,
-               py::call_guard<py::gil_scoped_release>(),
+               [](const PyIAnyTopic& topic) {
+                    py::gil_scoped_release guard;
+                    return topic.py_qos();
+               },
+               [](PyIAnyTopic& topic, const dds::topic::qos::TopicQos& qos) {
+                    py::gil_scoped_release guard;
+                    topic.py_qos(qos);
+               },
                "The QoS for this AnyTopic."
                "\n\n"
                "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "name",
-                    (std::string(PyIAnyTopic::*)() const)
-                            & PyIAnyTopic::py_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyTopic& topic) {
+                        py::gil_scoped_release guard;
+                        return topic.py_name();
+                    },
                     "The Topic name for this AnyTopic.")
             .def_property_readonly(
                     "type_name",
-                    (std::string(PyIAnyTopic::*)() const)
-                            & PyIAnyTopic::py_type_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyTopic& topic) {
+                        py::gil_scoped_release guard;
+                        return topic.py_type_name();
+                    },
                     "The type name for this AnyTopic.")
             .def(
                 "close",

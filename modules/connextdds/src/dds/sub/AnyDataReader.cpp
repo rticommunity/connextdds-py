@@ -36,31 +36,37 @@ void init_class_defs(py::class_<PyIAnyDataReader>& cls)
 {
     cls.def_property(
                "qos",
-               (DataReaderQos(PyIAnyDataReader::*)() const)
-                       & PyIAnyDataReader::py_qos,
-               (void (PyIAnyDataReader::*)(const DataReaderQos&))
-                       & PyIAnyDataReader::py_qos,
-               py::call_guard<py::gil_scoped_release>(),
+               [](const PyIAnyDataReader& dr) {
+                    py::gil_scoped_release guard;
+                    return dr.py_qos();
+               },
+               [](PyIAnyDataReader& dr, const dds::sub::qos::DataReaderQos& qos) {
+                    py::gil_scoped_release guard;
+                    dr.py_qos(qos);
+               },
                "The QoS for this AnyDataReader."
                "\n\n"
                "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "topic_name",
-                    (std::string(PyIAnyDataReader::*)() const)
-                            & PyIAnyDataReader::py_topic_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyDataReader& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.py_topic_name();
+                    },
                     "The Topic name for this AnyDataReader.")
             .def_property_readonly(
                     "type_name",
-                    (std::string(PyIAnyDataReader::*)() const)
-                            & PyIAnyDataReader::py_type_name,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyDataReader& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.py_type_name();
+                    },
                     "The type name for this AnyDataReader.")
             .def_property_readonly(
                     "subscriber",
-                    (const PySubscriber& (PyIAnyDataReader::*) () const)
-                            & PyIAnyDataReader::py_subscriber,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PyIAnyDataReader& dr) {
+                        py::gil_scoped_release guard;
+                        return dr.py_subscriber();
+                    },
                     "The Publisher for this AnyDataReader.")
             .def(
                     "close",

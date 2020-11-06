@@ -95,6 +95,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
             .def_property_readonly(
                     "listener",
                     [](const PySubscriber& sub) {
+                        py::gil_scoped_release guard;
                         dds::core::optional<PySubscriberListener*> l;
                         auto ptr = dynamic_cast<PySubscriberListener*>(
                                 sub.listener());
@@ -102,7 +103,6 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                             l = ptr;
                         return l;
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the listener.")
             .def(
                     "bind_listener",
@@ -123,32 +123,37 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                     "Bind the listener and event mask to the Subscriber.")
             .def_property(
                     "qos",
-                    (qos::SubscriberQos(PySubscriber::*)() const)
-                            & PySubscriber::qos,
-                    (void (PySubscriber::*)(const qos::SubscriberQos&))
-                            & PySubscriber::qos,
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](const PySubscriber& sub) {
+                        py::gil_scoped_release guard;
+                        return sub.qos();
+                    },
+                    [](PySubscriber& sub, const qos::SubscriberQos& qos) {
+                        py::gil_scoped_release guard;
+                        sub.qos(qos);
+                    },
                     "The SubscriberQos for this Subscriber."
                     "\n\n"
                     "This property's getter returns a deep copy.")
             .def_property(
                     "default_datareader_qos",
-                    (qos::DataReaderQos(PySubscriber::*)() const)
-                            & PySubscriber::default_datareader_qos,
-                    [](PySubscriber& sub, const qos::DataReaderQos& qos) {
-                        return PySubscriber(sub.default_datareader_qos(qos));
+                    [](const PySubscriber& sub) {
+                        py::gil_scoped_release guard;
+                        return sub.default_datareader_qos();
                     },
-                    py::call_guard<py::gil_scoped_release>(),
+                    [](PySubscriber& sub, const qos::DataReaderQos& qos) {
+                        py::gil_scoped_release guard;
+                        sub.default_datareader_qos(qos);
+                    },
                     "The default DataReaderQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
             .def_property_readonly(
                     "participant",
                     [](PySubscriber& sub) {
+                        py::gil_scoped_release guard;
                         auto dp = sub.participant();
                         return PyDomainParticipant(dp);
                     },
-                    py::call_guard<py::gil_scoped_release>(),
                     "Get the parent DomainParticipant for this Subscriber.")
             .def(
                     "find_datareaders",
