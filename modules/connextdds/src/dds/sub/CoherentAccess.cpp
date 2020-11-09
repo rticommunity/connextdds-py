@@ -34,12 +34,12 @@ void init_class_defs(py::class_<CoherentAccess>& cls)
                  "Subscriber.")
             .def(
                     "__enter__",
-                    [](CoherentAccess* ca) { return ca; },
+                    [](CoherentAccess& ca) -> CoherentAccess& { return ca; },
                     "Start a context managed coherent access block.")
             .def(
                     "__exit__",
-                    [](CoherentAccess* ca, py::object, py::object, py::object) {
-                        ca->end();
+                    [](CoherentAccess& ca, py::object, py::object, py::object) {
+                        ca.end();
                     },
                     "End a context managed coherent access block.");
 }

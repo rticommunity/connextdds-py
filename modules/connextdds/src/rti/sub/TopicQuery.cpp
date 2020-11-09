@@ -119,7 +119,7 @@ void init_class_defs(py::class_<TopicQuery>& cls)
             .def("unretain", [](TopicQuery& tq) { tq.delegate()->unretain(); })
             .def(
                     "__enter__",
-                    [](TopicQuery& tq) { return tq; },
+                    [](TopicQuery& tq) ->TopicQuery& { return tq; },
                     "Enter a context managed block for a TopicQuery.")
             .def(
                     "__exit__",

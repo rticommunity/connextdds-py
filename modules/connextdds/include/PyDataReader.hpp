@@ -560,7 +560,7 @@ void init_dds_typed_datareader_base_template(
                     "Close this DataReader.")
             .def(
                     "__enter__",
-                    [](PyDataReader<T>& dr) { return dr; },
+                    [](PyDataReader<T>& dr) -> PyDataReader<T>& { return dr; },
                     "Enter a context for this DataReader, to be cleaned up on "
                     "exiting context")
             .def(

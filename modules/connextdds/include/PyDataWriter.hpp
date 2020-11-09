@@ -1194,7 +1194,7 @@ void init_dds_typed_datawriter_base_template(
                     "Close this DataWriter.")
             .def(
                     "__enter__",
-                    [](PyDataWriter<T>& dw) { return dw; },
+                    [](PyDataWriter<T>& dw) -> PyDataWriter<T>& { return dw; },
                     "Enter a context for this DataWriter, to be cleaned up on "
                     "exiting context")
             .def(

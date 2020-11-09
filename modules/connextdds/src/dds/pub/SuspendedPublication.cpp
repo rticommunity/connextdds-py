@@ -27,7 +27,7 @@ void init_class_defs(py::class_<SuspendedPublication>& cls)
                  "Indicates that the application has completed these changes.")
             .def(
                     "__enter__",
-                    [](SuspendedPublication& s) { return s; },
+                    [](SuspendedPublication& s) -> SuspendedPublication& { return s; },
                     "Context manage the SuspendedPublication.")
             .def("__exit__",
                  [](SuspendedPublication& s,

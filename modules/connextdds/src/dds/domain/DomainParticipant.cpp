@@ -22,6 +22,10 @@ using namespace dds::domain;
 
 namespace pyrti {
 
+
+std::recursive_mutex PyDomainParticipant::_property_lock;
+
+
 PyDomainParticipant::PyDomainParticipant(
         int32_t d,
         const dds::domain::qos::DomainParticipantQos& q,
@@ -32,6 +36,7 @@ PyDomainParticipant::PyDomainParticipant(
     if (nullptr != l)
         py::cast(l).inc_ref();
 }
+
 
 PyDomainParticipant::~PyDomainParticipant()
 {
@@ -45,6 +50,7 @@ PyDomainParticipant::~PyDomainParticipant()
     }
 }
 
+
 void PyDomainParticipant::py_close()
 {
     if (nullptr != this->listener()) {
@@ -54,6 +60,50 @@ void PyDomainParticipant::py_close()
     }
     this->close();
 }
+
+
+template<typename T, typename F>
+PyDataReader<T>& PyDomainParticipant::py_builtin_reader(
+        PyDomainParticipant::Property key,
+        F topic_name_func)
+{
+    std::lock_guard<std::recursive_mutex> lock(PyDomainParticipant::_property_lock);
+    if (this->_properties.count(key)) {
+        auto& dr = py::cast<PyDataReader<T>&>(this->_properties[key]);
+        if (!dr->closed()) return dr;
+    }
+    std::vector<PyDataReader<T>> v;
+    dds::sub::find<PyDataReader<T>>(
+            dds::sub::builtin_subscriber(*this),
+            topic_name_func(),
+            std::back_inserter(v));
+    if (v.size() == 0)
+        throw dds::core::Error(
+                "Unable to retrieve built-in topic "
+                "reader.");
+    auto dr = v[0];
+    auto obj = py::cast(dr);
+    this->_properties[key] = obj;
+    return py::cast<PyDataReader<T>&>(obj);
+}
+
+
+template<typename T, typename F>
+T& PyDomainParticipant::py_entity_property(
+        PyDomainParticipant::Property key,
+        F getter) 
+{
+    std::lock_guard<std::recursive_mutex> lock(PyDomainParticipant::_property_lock);
+    if (this->_properties.count(key)) {
+        auto& prop = py::cast<T&>(this->_properties[key]);
+        if (!prop->closed()) return prop;
+    }
+    T entity = T(getter(*this));
+    auto obj = py::cast(entity);
+    this->_properties[key] = obj;
+    return py::cast<T&>(obj);
+}
+
 
 template<typename ParticipantFwdIterator>
 uint32_t find_participants(ParticipantFwdIterator begin)
@@ -469,7 +519,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Get a copy of or set the default DomainParticipantQos.")
             .def(
                     "__enter__",
-                    [](PyDomainParticipant& dp) { return dp; },
+                    [](PyDomainParticipant& dp) -> PyDomainParticipant& { return dp; },
                     "Enter a context for this Domain Participant, to be "
                     "cleaned up on exiting context")
             .def(
@@ -546,20 +596,19 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "implicit_publisher",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        auto retval =
-                                PyPublisher(rti::pub::implicit_publisher(dp));
-                        dp.py_add_prop(py::cast(retval));
-                        return retval;
+                        auto pub = PyPublisher(rti::pub::implicit_publisher(dp));
+                        return dp.py_entity_property<PyPublisher>(
+                            PyDomainParticipant::Property::IMPLICIT_PUBLISHER,
+                            rti::pub::implicit_publisher);
                     },
                     "Get the implicit Publisher for the DomainParticipant.")
             .def_property_readonly(
                     "builtin_subscriber",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        auto retval =
-                                PySubscriber(dds::sub::builtin_subscriber(dp));
-                        dp.py_add_prop(py::cast(retval));
-                        return retval;
+                        return dp.py_entity_property<PySubscriber>(
+                            PyDomainParticipant::Property::BUILTIN_SUBSCRIBER,
+                            dds::sub::builtin_subscriber);
                     },
                     "Get the built-in subscriber for the DomainParticipant.")
             .def(
@@ -585,10 +634,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "implicit_subscriber",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        auto retval =
-                                PySubscriber(rti::sub::implicit_subscriber(dp));
-                        dp.py_add_prop(py::cast(retval));
-                        return retval;
+                         return dp.py_entity_property<PySubscriber>(
+                            PyDomainParticipant::Property::IMPLICIT_SUBSCRIBER,
+                            rti::sub::implicit_subscriber);
                     },
                     "Get the implicit Subscriber for the DomainParticipant.")
             .def(
@@ -763,98 +811,45 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "participant_reader",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        std::vector<PyDataReader<
-                                dds::topic::ParticipantBuiltinTopicData>>
-                                v;
-                        dds::sub::find<PyDataReader<
-                                dds::topic::ParticipantBuiltinTopicData>>(
-                                dds::sub::builtin_subscriber(dp),
-                                dds::topic::participant_topic_name(),
-                                std::back_inserter(v));
-                        if (v.size() == 0)
-                            throw dds::core::Error(
-                                    "Unable to retrieve built-in topic "
-                                    "reader.");
-                        dp.py_add_prop(py::cast(v[0]));
-                        return v[0];
+                        return dp.py_builtin_reader<dds::topic::ParticipantBuiltinTopicData>(
+                            PyDomainParticipant::Property::PARTICIPANT_READER,
+                            dds::topic::participant_topic_name);
                     },
                     "Get the DomainParticipant built-in topic reader.")
             .def_property_readonly(
                     "publication_reader",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        std::vector<PyDataReader<
-                                dds::topic::PublicationBuiltinTopicData>>
-                                v;
-                        dds::sub::find<PyDataReader<
-                                dds::topic::PublicationBuiltinTopicData>>(
-                                dds::sub::builtin_subscriber(dp),
-                                dds::topic::publication_topic_name(),
-                                std::back_inserter(v));
-                        if (v.size() == 0)
-                            throw dds::core::Error(
-                                    "Unable to retrieve built-in topic "
-                                    "reader.");
-                        dp.py_add_prop(py::cast(v[0]));
-                        return v[0];
+                        return dp.py_builtin_reader<dds::topic::PublicationBuiltinTopicData>(
+                            PyDomainParticipant::Property::PUBLICATION_READER,
+                            dds::topic::publication_topic_name);
                     },
                     "Get the publication built-in topic reader.")
             .def_property_readonly(
                     "subscription_reader",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        std::vector<PyDataReader<
-                                dds::topic::SubscriptionBuiltinTopicData>>
-                                v;
-                        dds::sub::find<PyDataReader<
-                                dds::topic::SubscriptionBuiltinTopicData>>(
-                                dds::sub::builtin_subscriber(dp),
-                                dds::topic::subscription_topic_name(),
-                                std::back_inserter(v));
-                        if (v.size() == 0)
-                            throw dds::core::Error(
-                                    "Unable to retrieve built-in topic "
-                                    "reader.");
-                        dp.py_add_prop(py::cast(v[0]));
-                        return v[0];
+                        return dp.py_builtin_reader<dds::topic::SubscriptionBuiltinTopicData>(
+                            PyDomainParticipant::Property::SUBSCRIPTION_READER,
+                            dds::topic::subscription_topic_name);
                     },
                     "Get the subscription built-in topic reader.")
             .def_property_readonly(
                     "topic_reader",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        std::vector<
-                                PyDataReader<dds::topic::TopicBuiltinTopicData>>
-                                v;
-                        dds::sub::find<PyDataReader<
-                                dds::topic::TopicBuiltinTopicData>>(
-                                dds::sub::builtin_subscriber(dp),
-                                dds::topic::topic_topic_name(),
-                                std::back_inserter(v));
-                        if (v.size() == 0)
-                            throw dds::core::Error(
-                                    "Unable to retrieve built-in topic "
-                                    "reader.");
-                        dp.py_add_prop(py::cast(v[0]));
-                        return v[0];
+                        return dp.py_builtin_reader<dds::topic::TopicBuiltinTopicData>(
+                            PyDomainParticipant::Property::TOPIC_READER,
+                            dds::topic::topic_topic_name);
                     },
                     "Get the topic built-in topic reader.")
             .def_property_readonly(
                     "service_request_reader",
                     [](PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        std::vector<PyDataReader<rti::topic::ServiceRequest>> v;
-                        dds::sub::find<
-                                PyDataReader<rti::topic::ServiceRequest>>(
-                                dds::sub::builtin_subscriber(dp),
-                                rti::topic::service_request_topic_name(),
-                                std::back_inserter(v));
-                        if (v.size() == 0)
-                            throw dds::core::Error(
-                                    "Unable to retrieve built-in topic "
-                                    "reader.");
-                        dp.py_add_prop(py::cast(v[0]));
-                        return v[0];
+                        return dp.py_builtin_reader<rti::topic::ServiceRequest>(
+                            PyDomainParticipant::Property::SERVICE_REQUEST_READER,
+                            rti::topic::service_request_topic_name);
                     },
                     "Get the ServiceRequest built-in topic reader.")
             .def(

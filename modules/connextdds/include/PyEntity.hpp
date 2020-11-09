@@ -16,6 +16,7 @@
 #include <dds/domain/DomainParticipant.hpp>
 #include <dds/pub/Publisher.hpp>
 #include <dds/sub/Subscriber.hpp>
+#include <mutex>
 
 namespace pyrti {
 
@@ -113,11 +114,28 @@ public:
     }
 };
 
+template<typename T>
+class PyDataReader;
+
 class PYRTI_SYMBOL_PUBLIC PyDomainParticipant
         : public dds::domain::DomainParticipant,
           public PyIEntity {
 public:
     using dds::domain::DomainParticipant::DomainParticipant;
+
+    enum class Property {
+        BUILTIN_SUBSCRIBER,
+        PARTICIPANT_READER,
+        TOPIC_READER,
+        PUBLICATION_READER,
+        SUBSCRIPTION_READER,
+        SERVICE_REQUEST_READER,
+        IMPLICIT_PUBLISHER,
+        IMPLICIT_SUBSCRIBER,
+    };
+
+    PyDomainParticipant(const PyDomainParticipant& dp) : dds::domain::DomainParticipant(dp)
+    {}
 
     PyDomainParticipant& operator=(const dds::domain::DomainParticipant& dp)
     {
@@ -178,22 +196,18 @@ public:
         this->delegate()->unretain();
     }
 
-    void py_add_prop(pybind11::object o) PYRTI_SYMBOL_HIDDEN
-    {
-        this->_properties.insert(o);
-    }
+    template<typename T, typename F>
+    PyDataReader<T>&
+    py_builtin_reader(PyDomainParticipant::Property, F);
+
+    template<typename T, typename F>
+    T& py_entity_property(PyDomainParticipant::Property, F);
 
     virtual ~PyDomainParticipant();
 
 private:
-    struct PYRTI_SYMBOL_HIDDEN PropertyHasher {
-        size_t operator()(const pybind11::object& o) const
-        {
-            return reinterpret_cast<std::uintptr_t>(o.ptr());
-        }
-    };
-
-    std::unordered_set<pybind11::object, PropertyHasher> _properties;
+    std::unordered_map<Property, pybind11::object> _properties;
+    static std::recursive_mutex _property_lock;
 };
 
 class PyPublisher : public dds::pub::Publisher, public PyIEntity {

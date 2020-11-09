@@ -31,11 +31,11 @@ void init_class_defs(py::class_<CoherentSet>& cls)
                  "constructor.")
             .def(
                     "__enter__",
-                    [](CoherentSet* c) { return c; },
+                    [](CoherentSet& c) -> CoherentSet& { return c; },
                     "Context manage the CoherentSet.")
             .def("__exit__",
-                 [](CoherentSet* c, py::object, py::object, py::object) {
-                     c->end();
+                 [](CoherentSet& c, py::object, py::object, py::object) {
+                     c.end();
                  });
 }
 
