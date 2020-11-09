@@ -178,10 +178,9 @@ void init_class_defs(py::class_<QosProvider>& cls)
                     "The default profile associated with this QosProvider "
                     "(None if not set).")
             .def_property_readonly(
-                    "default_library_profile",
+                    "default_profile_library",
                     [](const QosProvider& qp) {
                         return qp->default_profile_library();
-                        ;
                     },
                     "The library of the default profile associated with this "
                     "QosProvider (None if not set).")

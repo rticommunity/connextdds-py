@@ -103,16 +103,18 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                     "This property's getter returns a deep copy.")
             .def(
                     "__lshift__",
-                    [](PyPublisher& pub, const qos::PublisherQos& qos) {
-                        return PyPublisher(pub << qos);
+                    [](PyPublisher& pub, const qos::PublisherQos& qos) -> PyPublisher& {
+                        pub << qos;
+                        return pub;
                     },
                     py::is_operator(),
                     py::call_guard<py::gil_scoped_release>(),
                     "Set the PublisherQos.")
             .def(
                     "__rshift__",
-                    [](PyPublisher& pub, qos::PublisherQos& qos) {
-                        return PyPublisher(pub >> qos);
+                    [](PyPublisher& pub, qos::PublisherQos& qos) -> PyPublisher& {
+                        pub >> qos;
+                        return pub;
                     },
                     py::is_operator(),
                     py::call_guard<py::gil_scoped_release>(),

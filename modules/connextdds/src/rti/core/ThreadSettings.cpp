@@ -115,7 +115,7 @@ void init_class_defs(py::class_<ThreadSettings>& cls)
                         return std::vector<int32_t>(ts.cpu_list());
                     },
                     [](ThreadSettings& ts, std::vector<int32_t> list) {
-                        return ts.cpu_list(list);
+                        ts.cpu_list(list);
                     },
                     "Get/set a copy of the list of CPUs available to the "
                     "thread.")

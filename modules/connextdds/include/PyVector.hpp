@@ -44,7 +44,8 @@ static void init_dds_vector_defs(
                  ("Get the length of the " + name + ".").c_str())
             .def(
                     "__getitem__",
-                    [](dds::core::vector<T>& v, ssize_t i) { return v[i]; },
+                    [](dds::core::vector<T>& v, ssize_t i) -> T& { return v[i]; },
+                    py::return_value_policy::reference_internal,
                     "Get the value at the specified index.")
             .def(
                     "__setitem__",

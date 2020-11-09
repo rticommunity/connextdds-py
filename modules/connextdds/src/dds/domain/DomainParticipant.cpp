@@ -207,8 +207,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(
                     "__lshift__",
                     [](PyDomainParticipant& dp,
-                       const dds::domain::qos::DomainParticipantQos& q) {
-                        return PyDomainParticipant(dp << q);
+                       const dds::domain::qos::DomainParticipantQos& q) -> PyDomainParticipant& {
+                        PyDomainParticipant(dp << q);
+                        return dp;
                     },
                     py::is_operator(),
                     py::call_guard<py::gil_scoped_release>(),
@@ -216,9 +217,9 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(
                     "__rshift__",
                     [](PyDomainParticipant& dp,
-                       dds::domain::qos::DomainParticipantQos& q) {
-                        auto participant = dp >> q;
-                        return PyDomainParticipant(participant);
+                       dds::domain::qos::DomainParticipantQos& q) -> PyDomainParticipant& {
+                        dp >> q;
+                        return dp;
                     },
                     py::is_operator(),
                     py::call_guard<py::gil_scoped_release>(),
@@ -392,7 +393,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(
                     "unregister_type",
                     [](PyDomainParticipant& dp, const std::string& name) {
-                        return dp->unregister_type(name);
+                        dp->unregister_type(name);
                     },
                     py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -594,7 +595,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Find all Publishers within the DomainParticipant.")
             .def_property_readonly(
                     "implicit_publisher",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PyPublisher& {
                         py::gil_scoped_release guard;
                         auto pub = PyPublisher(rti::pub::implicit_publisher(dp));
                         return dp.py_entity_property<PyPublisher>(
@@ -604,7 +605,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Get the implicit Publisher for the DomainParticipant.")
             .def_property_readonly(
                     "builtin_subscriber",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) ->PySubscriber& {
                         py::gil_scoped_release guard;
                         return dp.py_entity_property<PySubscriber>(
                             PyDomainParticipant::Property::BUILTIN_SUBSCRIBER,
@@ -632,7 +633,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Find all subscribers within the DomainParticipant.")
             .def_property_readonly(
                     "implicit_subscriber",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PySubscriber& {
                         py::gil_scoped_release guard;
                          return dp.py_entity_property<PySubscriber>(
                             PyDomainParticipant::Property::IMPLICIT_SUBSCRIBER,
@@ -809,7 +810,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Retrieve a list of all registered content filter names.")
             .def_property_readonly(
                     "participant_reader",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PyDataReader<dds::topic::ParticipantBuiltinTopicData>& {
                         py::gil_scoped_release guard;
                         return dp.py_builtin_reader<dds::topic::ParticipantBuiltinTopicData>(
                             PyDomainParticipant::Property::PARTICIPANT_READER,
@@ -818,7 +819,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Get the DomainParticipant built-in topic reader.")
             .def_property_readonly(
                     "publication_reader",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PyDataReader<dds::topic::PublicationBuiltinTopicData>& {
                         py::gil_scoped_release guard;
                         return dp.py_builtin_reader<dds::topic::PublicationBuiltinTopicData>(
                             PyDomainParticipant::Property::PUBLICATION_READER,
@@ -827,7 +828,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Get the publication built-in topic reader.")
             .def_property_readonly(
                     "subscription_reader",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PyDataReader<dds::topic::SubscriptionBuiltinTopicData>& {
                         py::gil_scoped_release guard;
                         return dp.py_builtin_reader<dds::topic::SubscriptionBuiltinTopicData>(
                             PyDomainParticipant::Property::SUBSCRIPTION_READER,
@@ -836,7 +837,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Get the subscription built-in topic reader.")
             .def_property_readonly(
                     "topic_reader",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PyDataReader<dds::topic::TopicBuiltinTopicData>& {
                         py::gil_scoped_release guard;
                         return dp.py_builtin_reader<dds::topic::TopicBuiltinTopicData>(
                             PyDomainParticipant::Property::TOPIC_READER,
@@ -845,7 +846,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Get the topic built-in topic reader.")
             .def_property_readonly(
                     "service_request_reader",
-                    [](PyDomainParticipant& dp) {
+                    [](PyDomainParticipant& dp) -> PyDataReader<rti::topic::ServiceRequest>& {
                         py::gil_scoped_release guard;
                         return dp.py_builtin_reader<rti::topic::ServiceRequest>(
                             PyDomainParticipant::Property::SERVICE_REQUEST_READER,

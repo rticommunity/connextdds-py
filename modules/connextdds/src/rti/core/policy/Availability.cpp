@@ -72,7 +72,7 @@ void init_class_defs(py::class_<Availability>& cls)
                                 a.required_matched_endpoint_groups());
                     },
                     [](Availability& a, std::vector<EndpointGroup> egv) {
-                        return a.required_matched_endpoint_groups(egv);
+                        a.required_matched_endpoint_groups(egv);
                     },
                     "Get/set a copy of the required endpoint groups.")
             .def(py::self == py::self, "Test for equality.")

@@ -78,7 +78,7 @@ def test_getters():
 
     assert qos_provider.default_library == TEST_LIB
     assert qos_provider.default_profile == DEFAULT_PROFILE
-    assert qos_provider.default_library_profile == TEST_LIB
+    assert qos_provider.default_profile_library == TEST_LIB
 
     domain_participant_qos = qos_provider.participant_qos
     assert domain_participant_qos.participant_name.name == "defaultParticipantName"

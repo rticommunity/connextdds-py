@@ -325,7 +325,7 @@ void init_dds_typed_datawriter_base_template(
                     "and a timestamp.")
             .def(
                     "__lshift__",
-                    [](PyDataWriter<T>& dw, const T& data) {
+                    [](PyDataWriter<T>& dw, const T& data) -> PyDataWriter<T>& {
                         dw << data;
                         return dw;
                     },
@@ -335,7 +335,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "__lshift__",
                     [](PyDataWriter<T>& dw,
-                       const dds::topic::TopicInstance<T>& ti) {
+                       const dds::topic::TopicInstance<T>& ti) -> PyDataWriter<T>& {
                         dw.write(ti);
                         return dw;
                     },
@@ -345,7 +345,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "__lshift__",
                     [](PyDataWriter<T>& dw,
-                       const std::pair<T, dds::core::Time>& data) {
+                       const std::pair<T, dds::core::Time>& data) -> PyDataWriter<T>& {
                         dw << data;
                         return dw;
                     },
@@ -357,7 +357,7 @@ void init_dds_typed_datawriter_base_template(
                     [](PyDataWriter<T>& dw,
                        const std::pair<
                                dds::topic::TopicInstance<T>,
-                               dds::core::Time>& p) {
+                               dds::core::Time>& p) -> PyDataWriter<T>& {
                         dw.write(p.first, p.second);
                         return dw;
                     },
@@ -367,7 +367,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "__lshift__",
                     [](PyDataWriter<T>& dw,
-                       const std::pair<T, dds::core::InstanceHandle>& data) {
+                       const std::pair<T, dds::core::InstanceHandle>& data) -> PyDataWriter<T>& {
                         dw << data;
                         return dw;
                     },
@@ -376,7 +376,7 @@ void init_dds_typed_datawriter_base_template(
                     "Writes a paired sample with an instance handle.")
             .def(
                     "__lshift__",
-                    [](PyDataWriter<T>& writer, const std::vector<T>& data) {
+                    [](PyDataWriter<T>& writer, const std::vector<T>& data) -> PyDataWriter<T>& {
                         writer.write(data.begin(), data.end());
                         return writer;
                     },
@@ -386,7 +386,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "__lshift__",
                     [](PyDataWriter<T>& writer,
-                       const std::vector<dds::topic::TopicInstance<T>>& data) {
+                       const std::vector<dds::topic::TopicInstance<T>>& data) -> PyDataWriter<T>& {
                         for (auto ti : data) {
                             writer.write(ti);
                         }
@@ -398,7 +398,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "__lshift__",
                     [](PyDataWriter<T>& writer,
-                       const std::vector<std::pair<T, dds::core::Time>>& data) {
+                       const std::vector<std::pair<T, dds::core::Time>>& data) -> PyDataWriter<T>& {
                         for (const std::pair<T, dds::core::Time>& d : data) {
                             writer << d;
                         }
@@ -412,7 +412,7 @@ void init_dds_typed_datawriter_base_template(
                     [](PyDataWriter<T>& writer,
                        const std::vector<std::pair<
                                dds::topic::TopicInstance<T>,
-                               dds::core::Time>>& data) {
+                               dds::core::Time>>& data) -> PyDataWriter<T>& {
                         for (const std::pair<
                                      dds::topic::TopicInstance<T>,
                                      dds::core::Time>& d : data) {
@@ -444,7 +444,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "unregister_instance",
                     [](PyDataWriter<T>& dw,
-                       const dds::core::InstanceHandle& h) {
+                       const dds::core::InstanceHandle& h) -> PyDataWriter<T>& {
                         dw.unregister_instance(h);
                         return dw;
                     },
@@ -455,7 +455,7 @@ void init_dds_typed_datawriter_base_template(
                     "unregister_instance",
                     [](PyDataWriter<T>& dw,
                        const dds::core::InstanceHandle& h,
-                       const dds::core::Time& t) {
+                       const dds::core::Time& t) -> PyDataWriter<T>& {
                         dw.unregister_instance(h, t);
                         return dw;
                     },
@@ -466,7 +466,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "unregister_instance",
                     [](PyDataWriter<T>& dw,
-                       const T& key_holder) {
+                       const T& key_holder) -> PyDataWriter<T>& {
                         auto h = dw.lookup_instance(key_holder);
                         dw.unregister_instance(h);
                         return dw;
@@ -478,7 +478,7 @@ void init_dds_typed_datawriter_base_template(
                     "unregister_instance",
                     [](PyDataWriter<T>& dw,
                        const T& key_holder,
-                       const dds::core::Time& t) {
+                       const dds::core::Time& t) -> PyDataWriter<T>& {
                         auto h = dw.lookup_instance(key_holder);
                         dw.unregister_instance(h, t);
                         return dw;
@@ -491,7 +491,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "dispose_instance",
                     [](PyDataWriter<T>& dw,
-                       const dds::core::InstanceHandle& h) {
+                       const dds::core::InstanceHandle& h) -> PyDataWriter<T>& {
                         dw.dispose_instance(h);
                         return dw;
                     },
@@ -502,7 +502,7 @@ void init_dds_typed_datawriter_base_template(
                     "dispose_instance",
                     [](PyDataWriter<T>& dw,
                        const dds::core::InstanceHandle& h,
-                       const dds::core::Time& t) {
+                       const dds::core::Time& t) -> PyDataWriter<T>& {
                         dw.dispose_instance(h, t);
                         return dw;
                     },
@@ -513,7 +513,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "dispose_instance",
                     [](PyDataWriter<T>& dw,
-                       const T& key_holder) {
+                       const T& key_holder) -> PyDataWriter<T>& {
                         auto h = dw.lookup_instance(key_holder);
                         dw.dispose_instance(h);
                         return dw;
@@ -525,7 +525,7 @@ void init_dds_typed_datawriter_base_template(
                     "dispose_instance",
                     [](PyDataWriter<T>& dw,
                        const T& key_holder,
-                       const dds::core::Time& t) {
+                       const dds::core::Time& t) -> PyDataWriter<T>& {
                         auto h = dw.lookup_instance(key_holder);
                         dw.dispose_instance(h, t);
                         return dw;
@@ -576,7 +576,7 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "__lshift__",
                     [](PyDataWriter<T>& dw,
-                       const dds::pub::qos::DataWriterQos& q) {
+                       const dds::pub::qos::DataWriterQos& q) -> PyDataWriter<T>& {
                         dw << q;
                         return dw;
                     },
@@ -585,8 +585,8 @@ void init_dds_typed_datawriter_base_template(
                     "Sets the DataWriterQos.")
             .def(
                     "__rshift__",
-                    [](const PyDataWriter<T>& dw,
-                       dds::pub::qos::DataWriterQos& q) {
+                    [](PyDataWriter<T>& dw,
+                       dds::pub::qos::DataWriterQos& q) -> PyDataWriter<T>& {
                         dw >> q;
                         return dw;
                     },
@@ -839,7 +839,7 @@ void init_dds_typed_datawriter_base_template(
                     "this writer.")
             .def(
                     "flush",
-                    [](PyDataWriter<T>& writer) { return writer->flush(); },
+                    [](PyDataWriter<T>& writer) { writer->flush(); },
                     py::call_guard<py::gil_scoped_release>(),
                     "Flushes the batch in progress in the context of the "
                     "calling thread.")

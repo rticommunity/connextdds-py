@@ -51,7 +51,7 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     [](const ParticipantBuiltinTopicData& p) {
                         return p->property();
                     },
-                    "Get the UserData policy of the corresponding "
+                    "Get the Property policy of the corresponding "
                     "DomainParticipant.")
             .def_property_readonly(
                     "rtps_protocol_version",

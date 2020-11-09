@@ -371,7 +371,7 @@ void init_dds_typed_datareader_base_template(
             .def(
                     "__lshift__",
                     [](PyDataReader<T>& dr,
-                       const dds::sub::qos::DataReaderQos& qos) {
+                       const dds::sub::qos::DataReaderQos& qos) -> PyDataReader<T>& {
                         dr << qos;
                         return dr;
                     },
@@ -380,7 +380,7 @@ void init_dds_typed_datareader_base_template(
                     "Set the DataReaderQos for this DataReader.")
             .def(
                     "__rshift__",
-                    [](PyDataReader<T>& dr, dds::sub::qos::DataReaderQos& qos) {
+                    [](PyDataReader<T>& dr, dds::sub::qos::DataReaderQos& qos) -> PyDataReader<T>& {
                         dr >> qos;
                         return dr;
                     },
