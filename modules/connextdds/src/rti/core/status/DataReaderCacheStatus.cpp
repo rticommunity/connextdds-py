@@ -28,8 +28,9 @@ void init_class_defs(py::class_<DataReaderCacheStatus>& cls)
                     &DataReaderCacheStatus::sample_count_peak,
                     "The highest number of samples in the DataReader's queue "
                     "over the "
-                    "lifetime of the reader.")
-            .def_property_readonly(
+                    "lifetime of the reader.");
+#if rti_connext_version_gte(6, 0, 0)
+        cls.def_property_readonly(
                     "instance_count",
                     [](const DataReaderCacheStatus& cs) {
                         return cs.native().instance_count;
@@ -43,6 +44,7 @@ void init_class_defs(py::class_<DataReaderCacheStatus>& cls)
                     "The highest number of instances for the DataReader "
                     "over the "
                     "lifetime of the reader.");
+#endif
 }
 
 template<>
