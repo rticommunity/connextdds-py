@@ -24,24 +24,24 @@ namespace pyrti {
 
     class PyLogger {
     public:
+        ~PyLogger();
         static PyLogger& instance();
         static bool options(const PyLoggerOptions&);
         static void finalize();
-        ~PyLogger();
-        PyLogger& filter_level(PyLogLevel);
-        PyLogger& print_format(const rti::config::PrintFormat&);
-        PyLogger& verbosity(const rti::config::LogCategory&, const rti::config::Verbosity&);
-        void log(PyLogLevel, const std::string&, const std::string&);
-        void log(const PyMessageParams&);
-        void fatal(const std::string&);
-        void severe(const std::string&);
-        void error(const std::string&);
-        void warning(const std::string&);
-        void notice(const std::string&);
-        void info(const std::string&);
-        void debug(const std::string&);
-        void trace(const std::string&);
-        void log(PyLogLevel, const std::string&);
+        static void filter_level(PyLogLevel);
+        static void print_format(const rti::config::PrintFormat&);
+        static void verbosity(const rti::config::LogCategory&, const rti::config::Verbosity&);
+        static void log(PyLogLevel, const std::string&, const std::string&);
+        static void log(const PyMessageParams&);
+        static void fatal(const std::string&);
+        static void severe(const std::string&);
+        static void error(const std::string&);
+        static void warning(const std::string&);
+        static void notice(const std::string&);
+        static void info(const std::string&);
+        static void debug(const std::string&);
+        static void trace(const std::string&);
+        static void log(PyLogLevel, const std::string&);
 
     private:
         PyLogger();

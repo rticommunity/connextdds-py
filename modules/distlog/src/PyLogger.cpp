@@ -31,6 +31,13 @@ PyLogger& PyLogger::instance() {
             PyLogger::_options_set = true;
         }
         PyLogger::_py_instance.reset(new PyLogger());
+        {
+            py::gil_scoped_acquire acquire;
+            auto atexit = py::module::import("atexit");
+            atexit.attr("register")(py::cpp_function([]() {
+                PyLogger::finalize();
+            }));
+        }
     }
     return *PyLogger::_py_instance;
 }
@@ -75,167 +82,210 @@ PyLogger::~PyLogger() {
     RTI_DL_DistLogger_finalizeInstance();
 }
 
-PyLogger& PyLogger::filter_level(PyLogLevel level) {
-    auto retval = RTI_DL_DistLogger_setFilterLevel(this->_instance, (int)level);
+void PyLogger::filter_level(PyLogLevel level) {
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    auto retval = RTI_DL_DistLogger_setFilterLevel(PyLogger::instance()._instance, (int)level);
     if (retval != DDS_RETCODE_OK) throw dds::core::Error("Could not set Distributed Logger filter level");
-    return *this;
 }
 
-PyLogger& PyLogger::print_format(const rti::config::PrintFormat& level) {
-    auto retval = RTI_DL_DistLogger_setRTILoggerPrintFormat(this->_instance, (NDDS_Config_LogPrintFormat)level.underlying());
-    if (retval != RTI_TRUE) throw dds::core::Error("Could not set Distributed Logger filter level");
-    return *this;
+void PyLogger::print_format(const rti::config::PrintFormat& format) {
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    auto retval = RTI_DL_DistLogger_setRTILoggerPrintFormat(PyLogger::instance()._instance, (NDDS_Config_LogPrintFormat)format.underlying());
+    if (retval != RTI_TRUE) throw dds::core::Error("Could not set Distributed Logger print format");
 }
 
-PyLogger& PyLogger::verbosity(const rti::config::LogCategory& category, const rti::config::Verbosity& level) {
-    RTI_DL_DistLogger_setRTILoggerVerbosityByCategory(this->_instance, (NDDS_Config_LogCategory)category.underlying(), (NDDS_Config_LogVerbosity)level.underlying());
-    return *this;
+void PyLogger::verbosity(const rti::config::LogCategory& category, const rti::config::Verbosity& level) {
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_setRTILoggerVerbosityByCategory(
+        PyLogger::instance()._instance,
+        (NDDS_Config_LogCategory)category.underlying(),
+        (NDDS_Config_LogVerbosity)level.underlying());
 }
 
 void PyLogger::log(PyLogLevel level, const std::string& message, const std::string& category) {
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
     RTI_DL_DistLogger_logMessageWithLevelCategory(
-        this->_instance,
+        PyLogger::instance()._instance,
         (int)level,
         message.c_str(),
         category.c_str());
 }
 
 void PyLogger::log(const PyMessageParams& params) {
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
     RTI_DL_DistLogger_logMessageWithParams(
-        this->_instance,
+        PyLogger::instance()._instance,
         &params._params
     );
 }
 
 void PyLogger::fatal(const std::string& message) {
-    RTI_DL_DistLogger_fatal(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_fatal(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::severe(const std::string& message) {
-    RTI_DL_DistLogger_severe(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_severe(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::error(const std::string& message) {
-    RTI_DL_DistLogger_error(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_error(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::warning(const std::string& message) {
-    RTI_DL_DistLogger_warning(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_warning(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::notice(const std::string& message) {
-    RTI_DL_DistLogger_notice(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_notice(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::info(const std::string& message) {
-    RTI_DL_DistLogger_info(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_info(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::debug(const std::string& message) {
-    RTI_DL_DistLogger_debug(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_debug(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::trace(const std::string& message) {
-    RTI_DL_DistLogger_trace(this->_instance, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_trace(PyLogger::instance()._instance, message.c_str());
 }
 
 void PyLogger::log(PyLogLevel level, const std::string& message) {
-    RTI_DL_DistLogger_log(this->_instance, (int)level, message.c_str());
+    std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
+    RTI_DL_DistLogger_log(PyLogger::instance()._instance, (int)level, message.c_str());
 }
 
 void init_logger(py::module& m) {
-    py::class_<PyLogger>(m, "Logger")
-        .def_property_readonly(
+    py::class_<PyLogger> cls(m, "Logger");
+    cls
+        .def_static(
+            "init",
+            [cls](dds::core::optional<PyLoggerOptions*>& options) {
+                if (has_value(options)) {
+                    if (!PyLogger::options(*get_value(options))) {
+                        throw dds::core::Error("Could not set logging options while initializing logger");
+                    }
+                }
+                PyLogger::instance();
+            },
+            py::arg("options") = py::none(),
+            py::call_guard<py::gil_scoped_release>(),
+            "Initializes the distributed logger"
+        )
+        .def_static(
             "filter_level",
             &PyLogger::filter_level,
+            py::arg("level"),
+            py::call_guard<py::gil_scoped_release>(),
             "The logger filter level."
         )
-        .def_property_readonly(
+        .def_static(
             "print_format",
             &PyLogger::print_format,
+            py::arg("format"),
+            py::call_guard<py::gil_scoped_release>(),
             "The logger print format."
+            "NOTE: This will affect the print format of the associated"
+            "DomainParticipant's logger as well."
         )
-        .def_property_readonly(
+        .def_static(
             "verbosity",
             &PyLogger::verbosity,
+            py::arg("category"),
+            py::arg("level"),
+            py::call_guard<py::gil_scoped_release>(),
             "The logger's verbosity."
+            "NOTE: This will affect the verbosity of the associated"
+            "DomainParticipant's logger as well."
         )
-        .def(
+        .def_static(
             "log",
-            (void (PyLogger::*)(PyLogLevel, const std::string&)) &PyLogger::log,
+            (void (*)(PyLogLevel, const std::string&)) &PyLogger::log,
             py::arg("log_level"),
             py::arg("message"),
-            "Log a message with the given log level"
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a message with the given log level."
         )
-        .def(
+        .def_static(
             "log",
-            (void (PyLogger::*)(PyLogLevel, const std::string&, const std::string&)) &PyLogger::log,
+            (void (*)(PyLogLevel level, const std::string& message, const std::string& category)) &PyLogger::log,
             py::arg("log_level"),
             py::arg("message"),
             py::arg("category"),
-            "Log a message with the given log level and category"
-        )
-        .def(
-            "log",
-            (void (PyLogger::*)(const PyMessageParams&)) &PyLogger::log,
-            py::arg("message_params"),
-            "Log a message with the given log level and category"
-        )
-        .def(
-            "fatal",
-            &PyLogger::fatal,
-            "Log a fatal message."
-        )
-        .def(
-            "severe",
-            &PyLogger::severe,
-            "Log a severe message."
-        )
-        .def(
-            "error",
-            &PyLogger::error,
-            "Log an error message."
-        )
-        .def(
-            "warning",
-            &PyLogger::warning,
-            "Log a warning message."
-        )
-        .def(
-            "notice",
-            &PyLogger::notice,
-            "Log a notice message."
-        )
-        .def(
-            "info",
-            &PyLogger::info,
-            "Log an info message."
-        )
-        .def(
-            "debug",
-            &PyLogger::debug,
-            "Log a debug message."
-        )
-        .def(
-            "trace",
-            &PyLogger::trace,
-            "Log a trace message."
-        )
-        .def_property_readonly_static(
-            "instance",
-            [](py::object&) -> PyLogger& {
-                return PyLogger::instance();
-            },
             py::call_guard<py::gil_scoped_release>(),
-            "Get the Logger instance."
+            "Log a message with the given log level and category."
         )
         .def_static(
-            "options",
-            &PyLogger::options,
-            py::arg("options"),
+            "log",
+            (void (*)(const PyMessageParams& params)) &PyLogger::log,
+            py::arg("message_params"),
             py::call_guard<py::gil_scoped_release>(),
-            "Set the options for the Logger instance (must be set prior to "
-            "accessing the instance."
+            "Log a message with the given message parameters."
+        )
+        .def_static(
+            "fatal",
+            &PyLogger::fatal,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a fatal message."
+        )
+        .def_static(
+            "severe",
+            &PyLogger::severe,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a severe message."
+        )
+        .def_static(
+            "error",
+            &PyLogger::error,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log an error message."
+        )
+        .def_static(
+            "warning",
+            &PyLogger::warning,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a warning message."
+        )
+        .def_static(
+            "notice",
+            &PyLogger::notice,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a notice message."
+        )
+        .def_static(
+            "info",
+            &PyLogger::info,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log an info message."
+        )
+        .def_static(
+            "debug",
+            &PyLogger::debug,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a debug message."
+        )
+        .def_static(
+            "trace",
+            &PyLogger::trace,
+            py::arg("message"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Log a trace message."
         )
         .def_static(
             "finalize",
