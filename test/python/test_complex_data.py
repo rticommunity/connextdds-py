@@ -190,7 +190,7 @@ def test_documentation_examples():
             point.data["y"] = 222
     print(sample["path[2].x"]) # prints 111
 
-    with pytest.raises(dds.PreconditionNotMetError) as excinfo:
+    with pytest.raises(dds.InvalidArgumentError) as excinfo:
         sample["bad_member"] = "bad value"
     with pytest.raises(ValueError) as excinfo:
         sample["location"] = "bad value"

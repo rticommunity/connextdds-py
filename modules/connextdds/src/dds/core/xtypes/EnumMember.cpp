@@ -68,7 +68,12 @@ void init_class_defs(py::class_<EnumMember>& cls)
                         return !(member.ordinal() == other);
                     },
                     py::is_operator(),
-                    "Test for inequality.");
+                    "Test for inequality.")
+            .def(
+                    "__str__",
+                    [](const EnumMember& e) {
+                        return e.name().to_std_string();
+                    });
 }
 
 template<>
