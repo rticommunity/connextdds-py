@@ -35,6 +35,7 @@ COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
 COMPLEX.add_member(dds.Member("myStringSeq", dds.SequenceType(dds.StringType(10), 10)))
 COMPLEX.add_member(dds.Member("myEnum", ENUM_TYPE))
 COMPLEX.add_member(dds.Member("myEnumSeq", dds.SequenceType(ENUM_TYPE, 10)))
+COMPLEX.add_member(dds.Member("myMultiDimArray", dds.ArrayType(dds.Int32Type(), [2, 2, 2])))
 
 SIMPLE = PROVIDER.type("SimpleType")
 
@@ -260,3 +261,24 @@ def test_union():
     test_union.clear_member("blue")
     assert test_union.discriminator_value == ENUM_TYPE["BLUE"]
     assert 0 == test_union.get_value(test_union.discriminator_value)
+
+
+def test_multidim_array():
+    data = dds.DynamicData(COMPLEX)
+
+    for i in range(2):
+        for j in range(2):
+            for k in range(2):
+                data[f"myMultiDimArray[{i}, {j}, {k}]"] = i * j * k
+                assert(data[f"myMultiDimArray[{i},{j},{k}]"] == i * j * k)
+
+    with pytest.raises(dds.InvalidArgumentError):
+        my_val = data[f"myMultiDimArray[0][0][0]"]
+
+    info = data.member_info("myMultiDimArray")
+    assert(info.element_count == 8)
+
+    info = data.member_info("myMultiDimArray[0,0,1]")
+    assert(info.index == 1)
+
+
