@@ -132,7 +132,7 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
         raise ValueError('rti: {} is not currently a supported platform'.format(arch))
     copy_libs = []
 
-    dst_dir = os.path.join(get_script_dir(), 'lib', arch)
+    dst_dir = os.path.join(get_script_dir(), 'platform', arch, 'lib')
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
 
@@ -195,9 +195,17 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
     return required_map, list(set(plugin_list))
 
 
-def update_config(nddshome, platform, jobs, debug, lib_dict, plugins):
+def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain, python_root):
     pyproject_filename = 'pyproject.toml'
     packagecfg_filename = 'package.cfg'
+
+    if toolchain:
+        if not python_root:
+            raise argparse.ArgumentError('Python root directory must be specified for cross compile')
+        toolchain = os.path.abspath(toolchain)
+
+    if python_root:
+        python_root = os.path.abspath(python_root)
 
     lib_dict['rti'].extend(plugins)
 
@@ -223,6 +231,10 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins):
         config.set('package', 'libraries-' + key, ','.join(value))
     config.set('package', 'build-type', 'debug' if debug else 'release')
     config.set('package', 'build-jobs', str(jobs))
+    if toolchain:
+        config.set('package', 'cmake-toolchain', toolchain)
+    if python_root:
+        config.set('package', 'python-root', python_root)
     with open(packagecfg_filename, 'w') as packagecfg_file:
         config.write(packagecfg_file)
 
@@ -303,6 +315,20 @@ def main():
         help='Build a debug wheel.')
 
     parser.add_argument(
+        '-r',
+        '--python-root',
+        type=dir_type,
+        default=None,
+        help='Location of Python root directory')
+
+    parser.add_argument(
+        '-c',
+        '--cmake-toolchain',
+        type=file_type,
+        default=None,
+        help='Location of cmake toolchain file for cross compilation')
+
+    parser.add_argument(
         'platform',
         type=str,
         help='Platform libs to use for the build.')
@@ -316,6 +342,8 @@ def main():
         raise EnvironmentError('configure: NDDSHOME must be in environment or specified as a command option.')
     else:
         nddshome = os.environ['NDDSHOME']
+
+    nddshome = os.path.abspath(nddshome)
 
     debug = args.debug
 
@@ -336,7 +364,15 @@ def main():
                             args.openssl,
                             debug)
 
-    update_config(nddshome, platform, args.jobs, debug, required, plugins)
+    update_config(
+        nddshome,
+        platform,
+        args.jobs,
+        debug,
+        required,
+        plugins,
+        args.cmake_toolchain,
+        args.python_root)
 
     print('Finished! Run "pip wheel ." to create whl file.')
 

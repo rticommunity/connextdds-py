@@ -3,7 +3,25 @@ find_package(
     REQUIRED
     COMPONENTS
         core
-    )
+)
+
+find_package(
+    Python
+    REQUIRED
+    COMPONENTS
+        Interpreter
+        Development
+)
+
+find_package(
+    pybind11
+    REQUIRED
+)
+
+list(
+    APPEND CMAKE_FIND_ROOT_PATH
+    ${RTI_PLATFORM_DIR}
+)
 
 if(UNIX AND NOT APPLE)
     set(CONNEXTDDS_INSTALL_RPATH "$ORIGIN")
@@ -13,10 +31,9 @@ if(APPLE)
     set(CONNEXTDDS_INSTALL_RPATH "@loader_path")
 endif()
 
-pybind11_add_module(
+add_library(
     connextdds 
     SHARED
-    NO_EXTRAS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyAsyncioExecutor.cpp"
@@ -264,14 +281,36 @@ set_target_properties(
     SUFFIX "${PYTHON_MODULE_EXTENSION}"
 )
 
+find_library(
+    nddscpp2_lib
+    nddscpp2${RTI_DEBUG_SUFFIX}
+)
+
+find_library(
+    nddsc_lib
+    nddsc${RTI_DEBUG_SUFFIX}
+)
+
+find_library(
+    nddscore_lib
+    nddscore${RTI_DEBUG_SUFFIX}
+)
+
 target_link_libraries(
     connextdds
     PRIVATE
     ${CONNEXTDDS_EXTERNAL_LIBS}
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscpp2${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddsc${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscore${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${nddscpp2_lib}
+    ${nddsc_lib}
+    ${nddscore_lib}
+    pybind11::module
+    pybind11::thin_lto
+    pybind11::opt_size
+    pybind11::windows_extras
 )
+
+pybind11_extension(connextdds)
+pybind11_strip(connextdds)
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     target_compile_definitions(
@@ -319,31 +358,3 @@ else()
     )
 endif()
 
-if(MSVC)
-    add_definitions(/bigobj /MP${NUM_JOBS})
-    target_compile_options(
-        connextdds
-        PRIVATE
-        "$<$<CONFIG:RELEASE>:-Os>"
-    )
-else()
-    target_compile_options(
-        connextdds
-        PRIVATE
-        "-fPIC"
-        "$<$<CONFIG:RELEASE>:-Os>"
-        "$<$<CONFIG:RELEASE>:-g0>"
-    )
-
-    target_link_options(
-        connextdds
-        PRIVATE
-        "-fPIC"
-    )
-
-    add_custom_command(
-        TARGET connextdds
-        POST_BUILD
-        COMMAND $<$<CONFIG:Release>:strip>$<$<NOT:$<CONFIG:Release>>:echo> $<$<CONFIG:Release>:-x> $<$<CONFIG:Release>:$<TARGET_FILE:connextdds>>
-    )
-endif()

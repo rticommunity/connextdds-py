@@ -4,7 +4,25 @@ find_package(
     COMPONENTS
         core
         distributed_logger
-    )
+)
+
+find_package(
+    Python
+    REQUIRED
+    COMPONENTS
+        Interpreter
+        Development
+)
+
+find_package(
+    pybind11
+    REQUIRED
+)
+
+list(
+    APPEND CMAKE_FIND_ROOT_PATH
+    ${RTI_PLATFORM_DIR}
+)
 
 if(UNIX AND NOT APPLE)
     set(DISTLOG_INSTALL_RPATH "$ORIGIN:$ORIGIN/..")
@@ -17,7 +35,6 @@ endif()
 pybind11_add_module(
     distlog 
     MODULE
-    NO_EXTRAS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/distlog.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PyLogger.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PyLoggerOptions.cpp"
@@ -40,15 +57,37 @@ set_target_properties(
     SUFFIX "${PYTHON_MODULE_EXTENSION}"
 )
 
+find_library(
+    rtidlc_lib
+    rtidlc${RTI_DEBUG_SUFFIX}
+)
+
+find_library(
+    nddscpp2_lib
+    nddscpp2${RTI_DEBUG_SUFFIX}
+)
+
+find_library(
+    nddsc_lib
+    nddsc${RTI_DEBUG_SUFFIX}
+)
+
+find_library(
+    nddscore_lib
+    nddscore${RTI_DEBUG_SUFFIX}
+)
+
 target_link_libraries(
     distlog
     PRIVATE
     ${CONNEXTDDS_EXTERNAL_LIBS}
     connextdds
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}rtidlc${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscpp2${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddsc${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
-    ${RTI_LINK_DIR}/${RTI_ARCH_LINK_PREFIX}nddscore${RTI_DEBUG_SUFFIX}${RTI_ARCH_LINK_SUFFIX}
+    ${rtidlc_lib}
+    ${nddscpp2_lib}
+    ${nddsc_lib}
+    ${nddscore_lib}
+    pybind11::thin_lto
+    pybind11::opt_size
 )
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
@@ -95,34 +134,5 @@ else()
         distlog
         PROPERTIES
             CXX_STANDARD 11
-    )
-endif()
-
-if (MSVC)
-    add_definitions(/bigobj /MP${NUM_JOBS})
-    target_compile_options(
-        distlog
-        PRIVATE
-        "$<$<CONFIG:RELEASE>:-Os>"
-    )
-else()
-    target_compile_options(
-        distlog
-        PRIVATE
-        "-fPIC"
-        "$<$<CONFIG:RELEASE>:-Os>"
-        "$<$<CONFIG:RELEASE>:-g0>"
-    )
-
-    target_link_options(
-        distlog
-        PRIVATE
-        "-fPIC"
-    )
-
-    add_custom_command(
-        TARGET distlog
-        POST_BUILD
-        COMMAND $<$<CONFIG:Release>:strip>$<$<NOT:$<CONFIG:Release>>:echo> $<$<CONFIG:Release>:-x> $<$<CONFIG:Release>:$<TARGET_FILE:distlog>>
     )
 endif()

@@ -14,6 +14,7 @@ import sys
 import subprocess
 import shutil
 import cmake
+import pybind11
 try:
     import configparser
 except:
@@ -60,9 +61,35 @@ def get_debug():
     return False
 
 
+def get_cmake_toolchain():
+    if package_cfg.has_option('package', 'cmake-toolchain'):
+        return package_cfg.get('package', 'cmake-toolchain')
+    return None
+
+
+def get_python_root():
+    if package_cfg.has_option('package', 'python-root'):
+        return package_cfg.get('package', 'python-root')
+    return None
+
+
+def get_cpu(arch):
+    if 'x64' in arch:
+        cpu = 'x64'
+    elif 'i86' in arch:
+        cpu = 'Win32'
+    elif 'armv7' in arch:
+        cpu = 'ARM'
+    elif 'armv8' in arch:
+        cpu = 'ARM64'
+    else:
+        raise RuntimeError('Unsupported CPU in arch')
+    return cpu
+
+
 def find_libs(lib_list, platform):
     lib_locations = []
-    for root, _, filenames in os.walk(os.path.join(get_script_dir(), 'lib', platform)):
+    for root, _, filenames in os.walk(os.path.join(get_script_dir(), 'platform', platform, 'lib')):
         for filename in filenames:
             if filename in lib_list:
                 lib_locations.append(os.path.join(root, filename))
@@ -123,26 +150,22 @@ class CMakeBuild(build_ext):
         nddshome = get_nddshome()
         arch = get_arch()
 
-        if 'Win' in arch:
-            link_lib_prefix = ''
-            link_lib_suffix = '.lib'
-        elif 'Darwin' in arch:
-            link_lib_prefix = 'lib'
-            link_lib_suffix = '.dylib'
-        else:
-            link_lib_prefix = 'lib'
-            link_lib_suffix = '.so'
-
         cfg = 'Debug' if (self.debug or get_debug()) else 'Release'
-        cmake_args = ['-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DBUILD_SHARED_LIBS=ON',
+        cmake_args = ['-DBUILD_SHARED_LIBS=ON',
                       '-DCONNEXTDDS_DIR=' + nddshome,
                       '-DCONNEXTDDS_ARCH=' + arch,
                       '-DCMAKE_BUILD_TYPE=' + cfg,
-                      '-DRTI_LINK_DIR=' + os.path.join(get_script_dir(), 'lib', arch),
-                      '-DRTI_ARCH_LINK_PREFIX=' + link_lib_prefix,
-                      '-DRTI_ARCH_LINK_SUFFIX=' + link_lib_suffix,
-                      '-DNUM_JOBS=' + get_job_count()]
+                      '-Dpybind11_DIR=' + pybind11.get_cmake_dir(),
+                      '-DRTI_PLATFORM_DIR=' + os.path.join(get_script_dir(), 'platform', arch)]
+
+        cmake_toolchain = get_cmake_toolchain()
+        python_root = get_python_root()
+
+        if cmake_toolchain:
+            cmake_args += ['-DCMAKE_TOOLCHAIN_FILE=' + cmake_toolchain]
+
+        if python_root:
+            cmake_args += ['-DPython_ROOT_DIR=' + python_root]
 
         for ext in self.extensions:
             extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
@@ -152,47 +175,47 @@ class CMakeBuild(build_ext):
         build_args = ['--config', cfg]
 
         if 'Win' in arch:
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
+            cmake_args += ['-A', get_cpu()]
             build_args += ['--', '/m']
-        else:
-            build_args += ['--', '-j' + get_job_count()]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
                                                               self.distribution.get_version())
-        env['NDDSHOME'] = get_nddshome()
+
+        env['CMAKE_BUILD_PARALLEL_LEVEL'] = str(get_job_count())
 
         module_build_dir = os.path.join(self.build_temp, 'connext-py')
         if not os.path.exists(module_build_dir):
             os.makedirs(module_build_dir)
         cmake_cmd = os.path.join(cmake.CMAKE_BIN_DIR, 'cmake')
         subprocess.check_call([cmake_cmd, os.path.abspath(os.path.join(get_script_dir(), 'modules'))] + cmake_args, cwd=module_build_dir, env=env)
-        subprocess.check_call([cmake_cmd, '--build', '.'] + build_args, cwd=module_build_dir)
+        subprocess.check_call([cmake_cmd, '--build', '.'] + build_args, cwd=module_build_dir, env=env)
 
         # attempt to create interface files for type hinting; failure is not a fatal error
-        try:
-            python_cmd = sys.executable
-            stubgen = os.path.join(get_script_dir(), 'resources', 'scripts', 'stubgen.py')
-            stubgen_args = ['--split-overload-docs']
-            extdirs = set()
-            for ext in self.extensions:
-                extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-                extdirs.add(extdir)
-                pkg_components = ext.name.split('.')[:-1]
-                builddir = os.path.abspath(os.path.join(extdir, os.sep.join(['..'] * len(pkg_components))))
-                stubs_env = os.environ.copy()
-                stubs_env['PYTHONPATH'] = builddir
-                subprocess.check_call([python_cmd, stubgen] + stubgen_args + ['-o', extdir, ext.name], env=stubs_env)
-            for extdir in extdirs:
-                if os.path.isdir(os.path.join(extdir, '__pycache__')):
-                    shutil.rmtree(os.path.join(extdir, '__pycache__'))
-        except:
-            pass
+        python_cmd = sys.executable
+        stubgen = os.path.join(get_script_dir(), 'resources', 'scripts', 'stubgen.py')
+        stubgen_args = ['--split-overload-docs']
+        extdirs = set()
+        for ext in self.extensions:
+            extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+            extdirs.add(extdir)
+            pkg_components = ext.name.split('.')[:-1]
+            builddir = os.path.abspath(os.path.join(extdir, os.sep.join(['..'] * len(pkg_components))))
+            stubs_env = os.environ.copy()
+            stubs_env['PYTHONPATH'] = builddir
+            try:
+                with open(os.devnull, 'w') as devnull:
+                    subprocess.check_call([python_cmd, stubgen] + stubgen_args + ['-o', extdir, ext.name], env=stubs_env, stderr=devnull)
+            except:
+                print('Could not general stub file for {}'.format(ext.name))
+
+        for extdir in extdirs:
+            if os.path.isdir(os.path.join(extdir, '__pycache__')):
+                shutil.rmtree(os.path.join(extdir, '__pycache__'))
 
     def copy_extension_libs(self, ext, extdir, arch):
         for lib in ext.dependencies:
-            shutil.copyfile(os.path.join(get_script_dir(), 'lib', arch, lib), os.path.join(extdir, lib))
+            shutil.copyfile(os.path.join(get_script_dir(), 'platform', arch, 'lib', lib), os.path.join(extdir, lib))
 
 
 package_cfg = process_config()
