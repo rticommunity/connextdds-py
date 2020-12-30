@@ -15,6 +15,7 @@ import subprocess
 import shutil
 import cmake
 import pybind11
+import platform
 try:
     import configparser
 except:
@@ -78,10 +79,6 @@ def get_cpu(arch):
         cpu = 'x64'
     elif 'i86' in arch:
         cpu = 'Win32'
-    elif 'armv7' in arch:
-        cpu = 'ARM'
-    elif 'armv8' in arch:
-        cpu = 'ARM64'
     else:
         raise RuntimeError('Unsupported CPU in arch')
     return cpu
@@ -175,14 +172,15 @@ class CMakeBuild(build_ext):
         build_args = ['--config', cfg]
 
         if 'Win' in arch:
-            cmake_args += ['-A', get_cpu()]
-            build_args += ['--', '/m']
+            cmake_args += ['-A', get_cpu(arch)]
+            build_args += ['--', '/p:CL_MPcount={}'.format(get_job_count())]
+        else:
+            cmake_args += ['-DRTI_LINK_OPTIMIZATIONS_ON=1']
+            build_args += ['--parallel', str(get_job_count())]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
                                                               self.distribution.get_version())
-
-        env['CMAKE_BUILD_PARALLEL_LEVEL'] = str(get_job_count())
 
         module_build_dir = os.path.join(self.build_temp, 'connext-py')
         if not os.path.exists(module_build_dir):

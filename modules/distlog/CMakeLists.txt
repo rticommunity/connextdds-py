@@ -86,9 +86,16 @@ target_link_libraries(
     ${nddscpp2_lib}
     ${nddsc_lib}
     ${nddscore_lib}
-    pybind11::thin_lto
     pybind11::opt_size
 )
+
+if (RTI_LINK_OPTIMIZATIONS_ON)
+    target_link_libraries(
+        distlog
+        PRIVATE
+        pybind11::thin_lto
+    )
+endif()
 
 if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
     target_compile_definitions(

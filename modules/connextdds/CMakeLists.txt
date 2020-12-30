@@ -304,10 +304,17 @@ target_link_libraries(
     ${nddsc_lib}
     ${nddscore_lib}
     pybind11::module
-    pybind11::thin_lto
     pybind11::opt_size
     pybind11::windows_extras
 )
+
+if (RTI_LINK_OPTIMIZATIONS_ON)
+    target_link_libraries(
+        connextdds
+        PRIVATE
+        pybind11::thin_lto
+    )
+endif()
 
 pybind11_extension(connextdds)
 pybind11_strip(connextdds)
