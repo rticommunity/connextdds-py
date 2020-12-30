@@ -15,7 +15,6 @@ import subprocess
 import shutil
 import cmake
 import pybind11
-import platform
 try:
     import configparser
 except:
