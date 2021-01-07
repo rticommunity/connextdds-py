@@ -97,25 +97,11 @@ if (RTI_LINK_OPTIMIZATIONS_ON)
     )
 endif()
 
-if (RTICONNEXTDDS_VERSION VERSION_GREATER_EQUAL "6.0.0")
-    target_compile_definitions(
-        distlog
-        PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}"
-        PRIVATE "${CONNEXTDDS_COMPILE_DEFINITIONS}")
-else()
-    if(CONNEXTDDS_DEFINITIONS MATCHES "-m64")
-        string(REGEX REPLACE "-m64[ \t\r\n]*" "" CONNEXTDDS_DEFINITIONS "${CONNEXTDDS_DEFINITIONS}")
-        target_compile_options(distlog PRIVATE "-m64")
-    elseif(CONNEXTDDS_DEFINITIONS MATCHES "-m32")
-        string(REGEX REPLACE "-m32[ \t\r\n]*" "" CONNEXTDDS_DEFINITIONS "${CONNEXTDDS_DEFINITIONS}")
-        target_compile_options(distlog PRIVATE "-m32")
-    endif()
-
-    target_compile_definitions(
-        distlog
-        PRIVATE "${CONNEXTDDS_DEFINITIONS}"
-        PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}")
-endif()
+target_compile_definitions(
+    distlog
+    PRIVATE "${CONNEXTDDS_DLL_EXPORT_MACRO}"
+    PRIVATE "${CONNEXTDDS_COMPILE_DEFINITIONS}"
+)
 
 target_include_directories(
     distlog

@@ -177,8 +177,15 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DRTI_LINK_OPTIMIZATIONS_ON=1']
             build_args += ['--parallel', str(get_job_count())]
 
+        # handle possible ABI issues when targeting gcc 4.x platforms
+        if 'Linux' in arch and 'gcc4' in arch:
+            abi_flag = '-D_GLIBCXX_USE_CXX11_ABI=0'
+        else:
+            abi_flag = ''
+
         env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
+        env['CXXFLAGS'] = '{} {} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
+                                                              abi_flag,
                                                               self.distribution.get_version())
 
         module_build_dir = os.path.join(self.build_temp, 'connext-py')
