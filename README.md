@@ -71,7 +71,7 @@ specified in the following table.
 
 ## Installation
 
-Clone repo and submodules and cd to the project root
+Clone repo and cd to the project root
 
 ```shell
 $ git clone https://github.com/rticommunity/connextdds-py.git
