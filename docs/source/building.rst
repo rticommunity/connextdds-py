@@ -77,7 +77,7 @@ Simple Installation
 
 .. code-block:: shell
 
-    $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+    $ git clone https://github.com/rticommunity/connextdds-py.git
     $ cd connextdds-py
 
 2. Run configuration.py script
@@ -99,7 +99,7 @@ Simple Wheel Build
 
 .. code-block:: shell
 
-    $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+    $ git clone https://github.com/rticommunity/connextdds-py.git
     $ cd connextdds-py
 
 2. Run configuration.py script
@@ -123,24 +123,24 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
     :caption: Windows
 
-    $ pip install setuptools wheel cmake
+    $ pip install setuptools wheel cmake pybind11==2.6.1
 
 .. code-block:: shell
     :caption: Linux
 
-    $ pip install setuptools wheel cmake patchelf-wrapper
+    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.6.1
 
 
 .. code-block:: shell
     :caption: macOS
 
-    $ pip install setuptools wheel cmake delocate
+    $ pip install setuptools wheel cmake delocate pybind11==2.6.1
 
 2. Clone the repository and submodules, and enter the directory.
 
 .. code-block:: shell
 
-    $ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+    $ git clone https://github.com/rticommunity/connextdds-py.git
     $ cd connextdds-py
 
 3. Run configuration.py script
@@ -160,6 +160,47 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
 
     $ pip install dist/*
+
+
+Cross Compilation
+=================
+If you want to build for a different architecture, the configuration and build scripts 
+provide some options for doing so. The repository contains an example CMake toolchain
+file at resources/cmake/ExampleToolchain.cmake for use on Linux hosts to build a wheel
+for an armv7l target (such as a 32-bit Raspberry Pi) with Buildroot. The following
+steps assume familiarity with cross-compilation toolchains and that you have a cross
+compiled version of Python for the target.
+
+1. Install the required Python modules:
+
+.. code-block:: shell
+    :caption: Linux
+
+    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.6.1
+
+2. Clone the repository and enter the directory.
+
+.. code-block:: shell
+
+    $ git clone https://github.com/rticommunity/connextdds-py.git
+    $ cd connextdds-py
+
+3. Modify the ExampleToolchain.cmake file with the appriate host and target values
+
+4. Run configuration.py script, making sure to point to the cross-compiled Python root 
+   directory and the CMake toolchain file
+
+.. code-block:: shell
+
+    $ python configure.py --python-root <cross-compiled Python root> --cmake-toolchain <toolchain file> [options...] <target platform>
+
+4. Run the setup script, providing version and architecture information.
+
+.. code-block:: shell
+
+    $ python setup.py bdist_wheel --py-limited-api cp37 --plat-name linux_armv7l
+
+5. Install the wheel package on the target.
 
 
 Uninstalling
