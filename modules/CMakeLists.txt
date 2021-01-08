@@ -2,11 +2,18 @@ cmake_minimum_required(VERSION 3.15)
 project(connext-py)
 include(CheckCXXCompilerFlag)
 
-file(TO_CMAKE_PATH $ENV{NDDSHOME} NDDSHOME)
+file(TO_CMAKE_PATH ${CONNEXTDDS_DIR} CONNEXTDDS_DIR)
+if (Python_ROOT_DIR)
+    file(TO_CMAKE_PATH ${Python_ROOT_DIR} Python_ROOT_DIR)
+endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NDDSHOME}/resource/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
+list(APPEND CMAKE_FIND_ROOT_PATH
+    ${CONNEXTDDS_DIR}
+    ${CONNEXTDDS_DIR}/bin
+    ${CONNEXTDDS_DIR}/lib/$ENV{CONNEXTDDS_ARCH}
+    ${CONNEXTDDS_DIR}/include/ndds)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_SOURCE_DIR}/../pybind11)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../resources/cmake")
 
 if(UNIX AND NOT APPLE)
     set(CMAKE_SKIP_RPATH OFF)

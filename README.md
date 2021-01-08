@@ -55,24 +55,26 @@ $ python configure.py [options...] platform
 Where "platform" specifies the RTI architecture/platform string and the options are
 specified in the following table.
 
-| Short Option | Long Option         | Description                                                                          |
-| ------------ | ------------------- | ------------------------------------------------------------------------------------ |
-| -n NDDSHOME  | --nddshome NDDSHOME | NDDSHOME directory. Defaults to NDDSHOME environment variable                        |
-| -j JOBS      | --jobs JOBS         | Number of concurrent build jobs/processes                                            |
-| -t           | --tcp               | Add the TCP transport plugin                                                         |
-| -m           | --monitoring        | Add the RTI Monitoring plugin                                                        |
-| -s           | --secure            | Add the RTI DDS Secure plugin + openssl libraries                                    |
-| -p PLUGIN    | --plugin PLUGIN     | Add a user-defined plugin. This option can be specified multiple times               |
-| -o OPENSSL   | --openssl OPENSSL   | Location of openssl libraries (defaults to platform library location under NDDSHOME) |
-| -d           | --debug             | Use debug libraries and build debug modules for connext-py                           |
-| -h           | --help              | show help message and exit                                                           |
+| Short Option | Long Option            | Description                                                                          |
+| ------------ | ---------------------- | ------------------------------------------------------------------------------------ |
+| -n NDDSHOME  | --nddshome NDDSHOME    | NDDSHOME directory. Defaults to NDDSHOME environment variable                        |
+| -j JOBS      | --jobs JOBS            | Number of concurrent build jobs/processes                                            |
+| -t           | --tcp                  | Add the TCP transport plugin                                                         |
+| -m           | --monitoring           | Add the RTI Monitoring plugin                                                        |
+| -s           | --secure               | Add the RTI DDS Secure plugin + openssl libraries                                    |
+| -p PLUGIN    | --plugin PLUGIN        | Add a user-defined plugin. This option can be specified multiple times               |
+| -o OPENSSL   | --openssl OPENSSL      | Location of openssl libraries (defaults to platform library location under NDDSHOME) |
+| -r DIR       | --python-root DIR      | Root directory of Python (prefers 3.x over 2.x if both are under root)               |
+| -c OPENSSL   | --cmake-toolchain FILE | CMake toolchain file to use when cross compiling                                     |
+| -d           | --debug                | Use debug libraries and build debug modules for connext-py                           |
+| -h           | --help                 | show help message and exit                                                           |
 
 ## Installation
 
-Clone repo and submodules and cd to the project root
+Clone repo and cd to the project root
 
 ```shell
-$ git clone --recurse-submodules https://github.com/rticommunity/connextdds-py.git
+$ git clone https://github.com/rticommunity/connextdds-py.git
 $ cd connextdds-py
 ```
 
@@ -101,6 +103,7 @@ $ pip3 install cmake
 $ pip3 install patchelf-wrapper # Linux builds only
 $ pip3 install delocate         # macOS builds only
 $ python3 setup.py bdist_wheel
+$ pip3 install pybind11==2.6.1
 $ pip3 install dist/*
 ```
 
