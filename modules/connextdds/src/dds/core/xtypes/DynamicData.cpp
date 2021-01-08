@@ -650,7 +650,7 @@ static bool validate_buffer_type(const py::buffer_info& info) {
     */
     if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T)))
         throw py::type_error("Only valid 1D buffers are allowed");
-    if (info.format != py::format_descriptor<T>::format() || static_cast<ssize_t>(sizeof(T)) != info.itemsize)
+    if (!py::detail::compare_buffer_info<T>::compare(info))
         throw py::type_error("Format mismatch (Python: " + info.format + " C++: " + py::format_descriptor<T>::format() + ")");
     /*
         This optimization only works with contiguous buffer objects; for a "step"
