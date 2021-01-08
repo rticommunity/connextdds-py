@@ -63,6 +63,12 @@ specified in the following table.
     * - -o OPENSSL
       - --openssl OPENSSL
       - Location of openssl libraries (defaults to platform library location under NDDSHOME)
+    * - -r DIR
+      - --python-root DIR
+      - Root directory of Python (prefers 3.x over 2.x if both are under root)
+    * - -c OPENSSL
+      - --cmake-toolchain FILE
+      - CMake toolchain file to use when cross compiling
     * - -d
       - --debug
       - Use debug libraries and build debug modules for connext-py
