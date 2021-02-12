@@ -145,6 +145,7 @@ class CMakeBuild(build_ext):
     def run(self):
         nddshome = get_nddshome()
         arch = get_arch()
+        lib_dir = os.path.join(get_script_dir(), 'platform', arch)
 
         cfg = 'Debug' if (self.debug or get_debug()) else 'Release'
         cmake_args = ['-DBUILD_SHARED_LIBS=ON',
@@ -152,13 +153,15 @@ class CMakeBuild(build_ext):
                       '-DCONNEXTDDS_ARCH=' + arch,
                       '-DCMAKE_BUILD_TYPE=' + cfg,
                       '-Dpybind11_DIR=' + pybind11.get_cmake_dir(),
-                      '-DRTI_PLATFORM_DIR=' + os.path.join(get_script_dir(), 'platform', arch)]
+                      '-DRTI_PLATFORM_DIR=' + lib_dir]
 
         cmake_toolchain = get_cmake_toolchain()
         python_root = get_python_root()
 
         if cmake_toolchain:
             cmake_args += ['-DCMAKE_TOOLCHAIN_FILE=' + cmake_toolchain]
+        else:
+            cmake_args += ['-DCMAKE_PREFIX_PATH=' + lib_dir]
 
         if python_root:
             cmake_args += ['-DPython_ROOT_DIR=' + python_root]
