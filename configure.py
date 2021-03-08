@@ -211,14 +211,14 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain,
 
     # Modify pyproject.toml template
     config = configparser.ConfigParser()
-    config.read(os.path.join('templates',pyproject_filename))
+    config.read(os.path.join(get_script_dir(), 'templates',pyproject_filename))
     requires = ast.literal_eval(config.get('build-system', 'requires'))
     if 'Darwin' in platform:
         requires.append('delocate')
     elif 'Linux' in platform:
         requires.append('patchelf-wrapper')
     config.set('build-system', 'requires', str(requires))
-    with open(pyproject_filename, 'w') as pyproject_file:
+    with open(os.path.join(get_script_dir(), pyproject_filename), 'w') as pyproject_file:
         config.write(pyproject_file)
 
     # Create package.cfg file
@@ -235,14 +235,11 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain,
         config.set('package', 'cmake-toolchain', toolchain)
     if python_root:
         config.set('package', 'python-root', python_root)
-    with open(packagecfg_filename, 'w') as packagecfg_file:
+    with open(os.path.join(get_script_dir(), packagecfg_filename), 'w') as packagecfg_file:
         config.write(packagecfg_file)
 
 
 PlatformLibEnds = collections.namedtuple('PlatformLibEnds', ['prefix', 'suffix'])
-
-SETUPCFG_FILE = os.path.join(get_script_dir(), 'setup.cfg')
-BUILDCFG_FILE = os.path.join(get_script_dir(), 'build.cfg')
 
 rti_platform_ends = {
     'Linux': PlatformLibEnds('lib','.so'),
