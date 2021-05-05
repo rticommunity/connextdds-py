@@ -65,7 +65,7 @@ specified in the following table.
 | -p PLUGIN    | --plugin PLUGIN        | Add a user-defined plugin. This option can be specified multiple times               |
 | -o OPENSSL   | --openssl OPENSSL      | Location of openssl libraries (defaults to platform library location under NDDSHOME) |
 | -r DIR       | --python-root DIR      | Root directory of Python (prefers 3.x over 2.x if both are under root)               |
-| -c OPENSSL   | --cmake-toolchain FILE | CMake toolchain file to use when cross compiling                                     |
+| -c FILE      | --cmake-toolchain FILE | CMake toolchain file to use when cross compiling                                     |
 | -d           | --debug                | Use debug libraries and build debug modules for connext-py                           |
 | -h           | --help                 | show help message and exit                                                           |
 
