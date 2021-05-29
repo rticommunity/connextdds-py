@@ -883,6 +883,16 @@ void init_dds_typed_datawriter_base_template(
                     py::call_guard<py::gil_scoped_release>(),
                     "Get the SubscriptionBuiltinTopicData for a subscription "
                     "matched to this DataWriter.")
+            .def(
+                    "matched_subscription_participant_data",
+                    [](const PyDataWriter<T>& dw,
+                       const dds::core::InstanceHandle& h) {
+                        return rti::pub::matched_subscription_participant_data<T>(dw, h);
+                    },
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Get the ParticipantBuiltinTopicData for a subscription "
+                    "matched to this DataWriter.")
             .def_static(
                     "find_all_by_topic",
                     [](PyPublisher& pub, const std::string& topic_name) {

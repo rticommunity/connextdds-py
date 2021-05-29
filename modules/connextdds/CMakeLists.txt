@@ -61,6 +61,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataMemberInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataTypeSerializationProperty.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicTypePrintFormatProperty.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/UnidimensionalCollectionType.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/XtypesNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/MultiChannel.cpp"

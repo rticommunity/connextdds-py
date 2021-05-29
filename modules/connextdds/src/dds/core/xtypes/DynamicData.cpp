@@ -1343,9 +1343,10 @@ void init_dds_typed_topic_template(py::class_<
                              const ::std::string& name,
                              const dds::core::xtypes::DynamicType& type,
                              const dds::topic::qos::TopicQos& qos,
-                             PyTopicListener<dds::core::xtypes::DynamicData>*
-                                     listener,
+                             dds::core::optional<PyTopicListener<dds::core::xtypes::DynamicData>*>
+                                     l,
                              const dds::core::status::StatusMask& mask) {
+                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      PyTopic<dds::core::xtypes::DynamicData>
                              t(dp, name, type, qos, listener, mask);
                      PyDynamicTypeMap::add(t.type_name(), type);
@@ -1361,7 +1362,27 @@ void init_dds_typed_topic_template(py::class_<
                          dds::core::status::StatusMask::all(),
                          "StatusMask.all()"),
                  py::call_guard<py::gil_scoped_release>(),
-                 "Create a Topic with the given type.");
+                 "Create a Topic with the given type.")
+            .def(py::init([](const PyDomainParticipant& dp,
+                             const std::string& n,
+                             const std::string& t,
+                             const dds::topic::qos::TopicQos& q,
+                             dds::core::optional<PyTopicListener<dds::core::xtypes::DynamicData>*> l,
+                             const dds::core::status::StatusMask& m) {
+                     auto listener = has_value(l) ? get_value(l) : nullptr;
+                     return PyTopic<dds::core::xtypes::DynamicData>(dp, n, t, q, listener, m);
+                 }),
+                 py::arg("participant"),
+                 py::arg("topic_name"),
+                 py::arg("type_name"),
+                 py::arg("qos"),
+                 py::arg("listener") = py::none(),
+                 py::arg_v(
+                         "mask",
+                         dds::core::status::StatusMask::all(),
+                         "StatusMask.all()"),
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Creates a new Topic.");;
 }
 
 template<>

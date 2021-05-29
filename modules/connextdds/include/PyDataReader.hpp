@@ -572,6 +572,34 @@ void init_dds_typed_datareader_base_template(
                     py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for this DataReader, cleaning up "
                     "resources.")
+            .def_property_readonly(
+                    "matched_publications",
+                    [](const PyDataReader<T>& dr) {
+                        py::gil_scoped_release guard;
+                        return dds::sub::matched_publications(dr);
+                    },
+                    "Get a copy of the list of the currently matched "
+                    "publication handles.")
+            .def(
+                    "matched_publication_data",
+                    [](const PyDataReader<T>& dr,
+                       const dds::core::InstanceHandle& h) {
+                        return dds::sub::matched_publication_data<T>(dr, h);
+                    },
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Get the PublicationBuiltinTopicData for a publication "
+                    "matched to this DataReader.")
+            .def(
+                    "matched_publication_participant_data",
+                    [](const PyDataReader<T>& dr,
+                       const dds::core::InstanceHandle& h) {
+                        return rti::pub::matched_publication_participant_data<T>(dw, h);
+                    },
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Get the ParticipantBuiltinTopicData for a publication "
+                    "matched to this DataReader.")
             .def_static(
                     "find_all_by_topic",
                     [](PySubscriber& sub, const std::string& topic_name) {
