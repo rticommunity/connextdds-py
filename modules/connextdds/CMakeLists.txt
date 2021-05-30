@@ -121,6 +121,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/TransportInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/TransportMulticastSettings.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/EndpointGroup.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/CompressionSettings.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/ConfigNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/Logger.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/ContentFilterBase.cpp"

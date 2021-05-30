@@ -38,6 +38,9 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<TransportInfo>(m, l);
     pyrti::process_inits<TransportMulticastSettings>(m, l);
     pyrti::process_inits<VendorId>(m, l);
+#if rti_connext_version_gte(6, 1, 0)
+    pyrti::process_inits<CompressionSettings>(m,l);
+#endif
 
     init_namespace_rti_core_cond(m, l);
     init_namespace_rti_core_policy(m, l);
