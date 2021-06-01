@@ -29,9 +29,5 @@ void init_misc_early(py::module& m, pyrti::ClassInitList& l)
 // Init all bindings that depend on DDS for signatures
 void init_misc_late(py::module& m)
 {
-    m.def("sleep",
-          &rti::util::sleep,
-          py::arg("duration"),
-          py::call_guard<py::gil_scoped_release>(),
-          "Sleep for a specified duration");
+    /* Moved to rti::util namespace */
 }
