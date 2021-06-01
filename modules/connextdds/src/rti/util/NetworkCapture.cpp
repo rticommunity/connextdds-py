@@ -14,7 +14,7 @@
 #if rti_connext_version_gte(6, 1, 0)
 
 #include <rti/util/util.hpp>
-#include <PySafeEnum.hpp>
+#include <PyMaskType.hpp>
 
 using namespace rti::util::network_capture;
 

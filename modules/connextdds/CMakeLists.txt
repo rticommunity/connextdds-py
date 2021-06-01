@@ -39,6 +39,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyAsyncioExecutor.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/InitMisc.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/DDSSTLBinds.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/ActivityContext.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/util/UtilNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/util/HeapMonitoring.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/util/NetworkCapture.cpp"

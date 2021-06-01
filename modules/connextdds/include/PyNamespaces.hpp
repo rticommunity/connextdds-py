@@ -44,6 +44,7 @@ void init_namespace_rti(py::module& m, pyrti::ClassInitList& l);
 void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l);
 #if rti_connext_version_gte(6, 1, 0)
 void init_network_capture(py::module& m, pyrti::ClassInitList& l);
+void init_activity_context(py::module& m, pyrti::ClassInitList& l);
 #endif
 void init_misc_early(py::module& m, pyrti::ClassInitList& l);
 void init_misc_late(py::module& m);
