@@ -139,7 +139,9 @@ void init_class_defs(py::class_<NetworkCaptureParams>& cls)
                         & NetworkCaptureParams::frame_queue_size,
                 (NetworkCaptureParams& (NetworkCaptureParams::*) (int32_t) )
                         & NetworkCaptureParams::frame_queue_size,
-                "Set the size of the frame queue.");
+                "Set the size of the frame queue.")
+            .def(py::self == py::self, "Test for equality.")
+            .def(py::self != py::self, "Test for inequality.");
 }
 
 

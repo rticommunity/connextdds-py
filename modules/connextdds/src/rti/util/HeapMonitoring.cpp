@@ -43,9 +43,9 @@ void init_class_defs(py::class_<HeapMonitoringParams>& cls)
                             & HeapMonitoringParams::snapshot_content_format,
                     (void (HeapMonitoringParams::*) (SnapshotContentFormat) )
                             & HeapMonitoringParams::snapshot_content_format,
-                    "Information included in snapshot output.");
-    
-
+                    "Information included in snapshot output.")
+            .def(py::self == py::self, "Test for equality.")
+            .def(py::self != py::self, "Test for inequality.");
 }
 
 

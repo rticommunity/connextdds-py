@@ -109,7 +109,9 @@ void init_class_defs(py::class_<CompressionSettings>& cls)
                             & CompressionSettings::writer_compression_threshold,
                     (CompressionSettings & (CompressionSettings::*) (int32_t))
                             & CompressionSettings::writer_compression_threshold,
-                    "Writer compression threshold");
+                    "Writer compression threshold")
+            .def(py::self == py::self, "Test for equality.")
+            .def(py::self != py::self, "Test for inequality.");
 }
 
 template<>

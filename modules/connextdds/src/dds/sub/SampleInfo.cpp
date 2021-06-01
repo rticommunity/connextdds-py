@@ -166,6 +166,13 @@ void init_class_defs(py::class_<SampleInfo>& cls)
                     [](const SampleInfo& s) { return s->encapsulation_id(); },
                     "The encapsulation kind.")
 #endif
+#if rti_connext_version_gte(6, 1, 0)
+            .def_property_readonly(
+                    "coherent_set_info",
+                    [](const SampleInfo& s) { return s->coherent_set_info(); },
+                    "TWhen set, this field provides the information about "
+                    "the coherent set associated with the sample.")
+#endif
             ;
 }
 
