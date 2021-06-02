@@ -32,21 +32,26 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_LIMIT");
                 case DDS_REJECTED_BY_SAMPLES_PER_INSTANCE_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_PER_INSTANCE_LIMIT");
+                case DDS_REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
+                case DDS_REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT:
+                    return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT");
+#if rti_connext_version_lt(6, 1, 0)
                 case DDS_REJECTED_BY_REMOTE_WRITERS_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_LIMIT");
                 case DDS_REJECTED_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT");
-                case DDS_REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT:
-                    return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT");
                 case DDS_REJECTED_BY_VIRTUAL_WRITERS_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_VIRTUAL_WRITERS_LIMIT");
                 case DDS_REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT");
-                case DDS_REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT:
-                    return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
 #if rti_connext_version_gte(6, 0, 0)
                 case DDS_REJECTED_BY_UNKNOWN_INSTANCE:
                     return std::string("SampleRejectedState.REJECTED_BY_UNKNOWN_INSTANCE");
+#endif
+#else
+                case DDS_REJECTED_BY_DECODE_FAILURE:
+                    return std::string("SampleRejectedState.REJECTED_BY_DECODE_FAILURE");
 #endif
                 default:
                     return std::string("SampleRejectedState.INVALID_STATE");
@@ -83,6 +88,18 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     "resource "
                     "limit was reached.")
             .def_static(
+                    "rejected_by_samples_per_remote_writer_limit",
+                    &SampleRejectedState::
+                            rejected_by_samples_per_remote_writer_limit,
+                    "Create a SampleRejectedState indicating that the sample "
+                    "was "
+                    "rejected because the resource limit on the number of "
+                    "samples "
+                    "from a given remote writer that a DataReader may store "
+                    "was "
+                    "reached.")
+#if rti_connext_version_lt(6, 1, 0)
+            .def_static(
                     "rejeced_by_remote_writers_limit",
                     &SampleRejectedState::rejected_by_remote_writers_limit,
                     "Create a SampleRejectedState indicating that the sample "
@@ -100,17 +117,6 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     "writers for a single instance from which a DataReader may "
                     "read "
                     "was reached.")
-            .def_static(
-                    "rejected_by_samples_per_remote_writer_limit",
-                    &SampleRejectedState::
-                            rejected_by_samples_per_remote_writer_limit,
-                    "Create a SampleRejectedState indicating that the sample "
-                    "was "
-                    "rejected because the resource limit on the number of "
-                    "samples "
-                    "from a given remote writer that a DataReader may store "
-                    "was "
-                    "reached.")
             .def_static(
                     "rejected_by_virtual_writers_limit",
                     &SampleRejectedState::rejected_by_virtual_writers_limit,
@@ -139,6 +145,14 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     "Create a SampleRejectedState indicating that the sample "
                     "was "
                     "rejected because this instance is unknown.")
+#endif
+#else
+            .def_static(
+                    "rejected_by_decode_failure",
+                    &SampleRejectedState::
+                            rejected_by_decode_failure,
+                    "Create a SampleRejectedState indicating that the sample "
+                    "was rejected due to decode failure.")
 #endif
             .def_static(
                     "rejected_by_remote_writers_per_virtual_queue_limit",

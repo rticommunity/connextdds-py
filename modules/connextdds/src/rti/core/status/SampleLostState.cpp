@@ -52,6 +52,16 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                 case DDS_LOST_BY_UNKNOWN_INSTANCE:
                     return std::string("SampleLostState.LOST_BY_UNKNOWN_INSTANCE");
 #endif
+#if rti_connext_version_gte(6, 1, 0)
+                case DDS_LOST_BY_DESERIALIZATION_FAILURE:
+                    return std::string("SampleLostState.LOST_BY_DESERIALIZATION_FAILURE");
+                case DDS_LOST_BY_SAMPLES_PER_INSTANCE_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_SAMPLES_PER_INSTANCE_LIMIT");
+                case DDS_LOST_BY_SAMPLES_LIMIT:
+                    return std::string("SampleLostState.LOST_BY_SAMPLES_LIMIT");
+                case DDS_LOST_BY_DECODE_FAILURE:
+                    return std::string("SampleLostState.LOST_BY_DECODE_FAILURE");
+#endif
                 default:
                     return std::string("SampleLostState.INVALID");
                 }
@@ -134,6 +144,7 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                     "by a remote writer on behalf of a virtual writer that a "
                     "DataReader may store was reached.")
 #if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_lt(6, 1, 0)
             .def_static(
                     "lost_by_unknown_instance",
                     []() {
@@ -142,7 +153,39 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                         return retval;
                     },
                     "Create a SampleLostState indicating that the sample was "
-                    "lost because the instance is unknown")
+                    "lost because the instance is unknown.")
+#else
+            .def_static(
+                    "lost_by_unknown_instance",
+                    &SampleLostState::lost_by_unknown_instance,
+                    "Create a SampleLostState indicating that the sample was "
+                    "lost because the instance is unknown.")
+#endif
+#endif
+#if rti_connext_version_gte(6, 1, 0)
+            .def_static(
+                    "lost_by_deserialization_failure",
+                    &SampleLostState::lost_by_deserialization_failure,
+                    "Create a SampleLostState indicating that the sample was "
+                    "lost because of a deserialization failure.")
+            .def_static(
+                    "lost_by_decode_failure",
+                    &SampleLostState::lost_by_decode_failure,
+                    "Create a SampleLostState indicating that the best-effort sample was "
+                    "lost due to decode failure. When using reliability, sample "
+                    "sample will be rejected instead.")
+            .def_static(
+                    "lost_by_samples_per_instance_limit",
+                    &SampleLostState::lost_by_samples_per_instance_limit,
+                    "Create a SampleLostState indicating that the best-effort sample was "
+                    "lost because of the samples per instance limit. When using "
+                    "reliability, sample will be rejected instead.")
+            .def_static(
+                    "lost_by_samples_limit",
+                    &SampleLostState::lost_by_samples_limit,
+                    "Create a SampleLostState indicating that the best-effort sample was "
+                    "lost because of the max_samples resource limit. When using "
+                    "reliability, sample will be rejected instead.")
 #endif
             .def_static(
                     "lost_by_out_of_memory",

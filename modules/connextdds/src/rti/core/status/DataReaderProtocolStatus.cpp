@@ -120,6 +120,38 @@ void init_class_defs(py::class_<DataReaderProtocolStatus>& cls)
                     "Number of received samples that are not yet available to "
                     "be read "
                     "or taken, due to being received out of order.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def_property_readonly(
+                    "received_fragment_count",
+                    &DataReaderProtocolStatus::received_fragment_count,
+                    "The number of DATA_FRAG messages that have been received "
+                    "by this DataReader.")
+            .def_property_readonly(
+                    "dropped_fragment_count",
+                    &DataReaderProtocolStatus::received_fragment_count,
+                    "The number of DATA_FRAG messages that have been dropped "
+                    "by a DataReader.")
+            .def_property_readonly(
+                    "reassembled_sample_count",
+                    &DataReaderProtocolStatus::received_fragment_count,
+                    "The number of fragmented samples that have been reassembled "
+                    "by a DataReader.")
+            .def_property_readonly(
+                    "sent_nack_fragment_count",
+                    &DataReaderProtocolStatus::sent_nack_fragment_count,
+                    "The number of NACK fragments that have been sent from a "
+                    "DataReader to a DataWriter.")
+            .def_property_readonly(
+                    "sent_nack_fragment_bytes",
+                    &DataReaderProtocolStatus::sent_nack_fragment_bytes,
+                    "The number of NACK fragment bytes that have been sent "
+                    "from a DataReader to a DataWriter.")
+            .def_property_readonly(
+                    "out_of_range_rejected_sample_count",
+                    &DataReaderProtocolStatus::out_of_range_rejected_sample_count,
+                    "The number of samples dropped by the DataReader due to "
+                    "received window is full and the sample is out-of-order.")
+#endif
             .doc() = "Information about the DataReader's protocol status.";
 }
 
