@@ -54,4 +54,39 @@ void add_qos_property(
                  ("Get the " + property_name + "QoS.").c_str());
 }
 
+#if rti_connext_version_gte(6, 1, 0)
+template<typename T>
+void add_qos_string_conversions(py::class_<T>& cls) {
+    cls.def(
+            "__str__",
+            [](const T& qos) {
+                return dds::sub::qos::to_string(qos);
+            })
+        .def(
+            "to_string",
+            [](const T& qos,
+                    const rti::core::QosPrintFormat& format,
+                    dds::core::optional<T> base,
+                    bool print_all) {
+                if (base.has_value() && print_all) {
+                    throw dds::core::InvalidArgumentError("Cannot print all with base profile.");
+                }
+                if (base.has_value()) {
+                    return dds::sub::qos::to_string(qos, base, format);
+                }
+                else if (print_all) {
+                    return dds::sub::qos::to_string(qos, rti::core::qos_print_all, format);
+                }
+                else {
+                    return dds::sub::qos::to_string(qos, format);
+                }
+            },
+            py::arg("qos"),
+            py::arg_v("format", rti::core::QosPrintFormat(), "QosPrintFormat()"),
+            py::arg("base") = py::none(),
+            py::arg("print_all") = false,
+            "Convert QoS to string based on params.");
+}
+#endif
+
 }  // namespace pyrti

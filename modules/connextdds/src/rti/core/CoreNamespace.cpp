@@ -41,6 +41,7 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l)
 #if rti_connext_version_gte(6, 1, 0)
     pyrti::process_inits<CompressionSettings>(m, l);
     pyrti::process_inits<CoherentSetInfo>(m, l);
+    pyrti::process_inits<QosPrintFormat>(m, l);
 #endif
 
     init_namespace_rti_core_cond(m, l);

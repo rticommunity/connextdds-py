@@ -89,6 +89,9 @@ void init_class_defs(py::class_<DomainParticipantQos>& cls)
             "transport_multicast_mapping",
             "TransportMulticastMapping");
     add_qos_property<DomainParticipantQos, Service>(cls, "service", "Service");
+#if rti_connext_version_gte(6, 1, 0)
+    add_qos_string_conversions(cls);
+#endif
 }
 
 template<>

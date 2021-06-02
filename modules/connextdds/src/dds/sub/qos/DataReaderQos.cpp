@@ -118,6 +118,9 @@ void init_class_defs(py::class_<DataReaderQos>& cls)
             "DataRepresentation");
     add_qos_property<DataReaderQos, DataTag>(cls, "data_tag", "DataTag");
 #endif
+#if rti_connext_version_gte(6, 1, 0)
+    add_qos_string_conversions(cls);
+#endif
 }
 
 template<>

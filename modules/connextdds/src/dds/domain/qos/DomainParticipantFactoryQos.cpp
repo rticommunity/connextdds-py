@@ -36,6 +36,9 @@ void init_class_defs(py::class_<DomainParticipantFactoryQos>& cls)
             cls,
             "system_resource_limits",
             "SystemResourceLimits");
+#if rti_connext_version_gte(6, 1, 0)
+    add_qos_string_conversions(cls);
+#endif
 }
 
 template<>
