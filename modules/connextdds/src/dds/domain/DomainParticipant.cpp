@@ -22,6 +22,36 @@ using namespace dds::domain;
 
 namespace pyrti {
 
+#if rti_connext_version_lt(6, 1, 0)
+using DomainParticipantListenerPtr = dds::domain::DomainParticipantListener*;
+
+using PyDomainParticipantListenerPtr = PyDomainParticipantListener*;
+#else
+using DomainParticipantListenerPtr = std::shared_ptr<dds::domain::DomainParticipantListener>;
+
+using PyDomainParticipantListenerPtr = std::shared_ptr<PyDomainParticipantListener>;
+#endif
+
+inline DomainParticipantListenerPtr get_dp_listener(const dds::domain::DomainParticipant& dp) {
+    return get_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp);
+}
+
+inline DomainParticipantListenerPtr set_dp_listener(
+        dds::domain::DomainParticipant& dp,
+        DomainParticipantListenerPtr l) {
+    return set_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp, l);
+}
+
+inline DomainParticipantListenerPtr set_dp_listener(
+        dds::domain::DomainParticipant& dp,
+        DomainParticipantListenerPtr l,
+        dds::core::status::StatusMask& m) {
+    return set_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp, l, m);
+}
+
+inline PyDomainParticipantListenerPtr downcast_dp_listener_ptr(DomainParticipantListenerPtr l) {
+    return downcast_listener_ptr<PyDomainParticipantListenerPtr, DomainParticipantListenerPtr>(l);
+}
 
 std::recursive_mutex PyDomainParticipant::_property_lock;
 
@@ -29,7 +59,7 @@ std::recursive_mutex PyDomainParticipant::_property_lock;
 PyDomainParticipant::PyDomainParticipant(
         int32_t d,
         const dds::domain::qos::DomainParticipantQos& q,
-        PyDomainParticipantListener* l,
+        PyDomainParticipantListenerPtr l,
         const dds::core::status::StatusMask& m)
         : dds::domain::DomainParticipant(d, q, l, m)
 {
@@ -42,9 +72,9 @@ PyDomainParticipant::~PyDomainParticipant()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-            && nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+            && nullptr != get_dp_listener(*this)) {
+            py::object listener = py::cast(get_dp_listener(*this));
+            set_dp_listener(*this, nullptr, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -53,9 +83,9 @@ PyDomainParticipant::~PyDomainParticipant()
 
 void PyDomainParticipant::py_close()
 {
-    if (nullptr != this->listener()) {
-        py::object listener = py::cast(this->listener());
-        this->listener(nullptr, dds::core::status::StatusMask::none());
+    if (nullptr != get_dp_listener(*this)) {
+        py::object listener = py::cast(get_dp_listener(*this));
+        set_dp_listener(*this, nullptr, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();
@@ -138,7 +168,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(py::init(
                          [](int32_t id,
                             const qos::DomainParticipantQos& q,
-                            dds::core::optional<PyDomainParticipantListener*> l,
+                            dds::core::optional<PyDomainParticipantListenerPtr> l,
                             const dds::core::status::StatusMask& m) {
                              auto listener =
                                      has_value(l) ? get_value(l) : nullptr;
@@ -165,9 +195,8 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "listener",
                     [](const PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyDomainParticipantListener*> l;
-                        auto ptr = dynamic_cast<PyDomainParticipantListener*>(
-                                dp.listener());
+                        dds::core::optional<PyDomainParticipantListenerPtr> l;
+                        auto ptr = downcast_dp_listener_ptr(get_dp_listener(dp));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -176,22 +205,38 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(
                     "bind_listener",
                     [](PyDomainParticipant& dp,
-                       dds::core::optional<PyDomainParticipantListener*> l,
+                       dds::core::optional<PyDomainParticipantListenerPtr> l,
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != dp.listener()) {
-                            py::cast(dp.listener()).dec_ref();
+                        if (nullptr != get_dp_listener(dp)) {
+                            py::cast(get_dp_listener(dp)).dec_ref();
                         }
-                        dp.listener(listener, m);
+                        set_dp_listener(dp, listener, m);
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener and event mask to the "
                     "DomainParticipant.")
+            .def(
+                    "bind_listener",
+                    [](PyDomainParticipant& dp,
+                       dds::core::optional<PyDomainParticipantListenerPtr> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::cast(listener).inc_ref();
+                        }
+                        if (nullptr != get_dp_listener(dp)) {
+                            py::cast(get_dp_listener(dp)).dec_ref();
+                        }
+                        set_dp_listener(dp, listener);
+                    },
+                    py::arg("listener"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Bind the listener to the DomainParticipant.")
             .def_property(
                     "qos",
                     [](const PyDomainParticipant& dp) {

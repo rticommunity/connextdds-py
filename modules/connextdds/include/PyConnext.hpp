@@ -137,6 +137,56 @@ T& get_value(U<T>& opt)
 #endif
 }
 
+#if rti_connext_version_lt(6, 1, 0)
+template<typename TEntity, typename TListenerPtr>
+TListenerPtr get_listener(const TEntity& entity) {
+    return entity.listener();
+}
+
+template<typename TEntity, typename TListenerPtr>
+void set_listener(TEntity& entity, TListenerPtr listener) {
+    if (nullptr == listener) entity.listener(l, dds::core::status::StatusMask::none());
+    else entity.listener(listener, dds::core::status::StatusMask::all());
+}
+
+template<typename TEntity, typename TListenerPtr>
+TListenerPtr set_listener(
+        TEntity& entity,
+        TListenerPtr listener
+        dds::core::status::StatusMask& mask) {
+    entity.listener(listener, mask);
+}
+
+template<typename TPtr, typename TBasePtr>
+TPtr downcast_listner_ptr(TBasePtr p) {
+    return dynamic_cast<TPtr>(p);
+}
+#else
+template<typename TEntity, typename TListenerPtr>
+TListenerPtr get_listener(const TEntity& entity) {
+    return entity.get_listener();
+}
+
+template<typename TEntity, typename TListenerPtr>
+void set_listener(TEntity& entity, TListenerPtr listener) {
+    if (nullptr == listener) entity.set_listener(l, dds::core::status::StatusMask::none());
+    else entity.set_listener(listener, dds::core::status::StatusMask::all());
+}
+
+template<typename TEntity, typename TListenerPtr>
+TListenerPtr set_listener(
+        TEntity& entity,
+        TListenerPtr listener
+        dds::core::status::StatusMask& mask) {
+    entity.set_listener(listener, mask);
+}
+
+template<typename TPtr, typename TBasePtr>
+TPtr downcast_listner_ptr(TBasePtr p) {
+    return dynamic_pointer_cast<TPtr>(p);
+}
+#endif
+
 py::object py_cast_type(dds::core::xtypes::DynamicType&);
 
 // Dummy classes

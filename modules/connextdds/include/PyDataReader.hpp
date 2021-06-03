@@ -35,6 +35,45 @@ namespace pyrti {
 template<typename T>
 class PyDataReaderListener;
 
+#if rti_connext_version_lt(6, 1, 0)
+template<typename T>
+using DataReaderListenerPtr = dds::sub::DataReaderListener<T>*;
+
+template<typename T>
+using PyDataReaderListenerPtr = PyDataReaderListener<T>*;
+#else
+template<typename T>
+using DataReaderListenerPtr = std::shared_ptr<dds::pub::DataReaderListener<T>>;
+
+template<typename T>
+using PyDataReaderListenerPtr = std::shared_ptr<PyDataReaderListener<T>>;
+#endif
+
+template<typename T>
+inline DataReaderListenerPtr get_dr_listener(const dds::sub::DataReader<T>& dr) {
+    return get_listener<dds::sub::DataReader<T>, DataReaderListenerPtr<T>>(dr);
+}
+
+template<typename T>
+inline DataReaderListenerPtr set_dr_listener(
+        dds::sub::DataReader<T>& dr,
+        DataReaderListenerPtr<T> l) {
+    return set_listener<dds::sub::DataReader<T>, DataReaderListenerPtr<T>>(dr, l);
+}
+
+template<typename T>
+inline DataReaderListenerPtr set_dr_listener(
+        dds::sub::DataReader<T>& dr,
+        DataWriterListenerPtr<T> l,
+        dds::core::status::StatusMask& m) {
+    return set_listener<dds::sub::DataReader<T>, DataReaderListenerPtr<T>>(dr, l, m);
+}
+
+template<typename T>
+inline PyDataReaderListenerPtr<T> downcast_dr_listener_ptr(DataReaderListenerPtr<T> l) {
+    return downcast_listener_ptr<PyDataReaderListenerPtr<T>, DataReaderListenerPtr<T>>(l);
+}
+
 class PyIDataReader : public PyIAnyDataReader, public PyIEntity {
 public:
     virtual dds::sub::Query create_query(const std::string&) = 0;
@@ -53,7 +92,7 @@ public:
             const PySubscriber& s,
             const PyTopic<T>& t,
             const dds::sub::qos::DataReaderQos& q,
-            PyDataReaderListener<T>* l,
+            PyDataReaderListenerPtr<T> l,
             const dds::core::status::StatusMask& m)
             : dds::sub::DataReader<T>(s, t, q, l, m)
     {
@@ -65,7 +104,7 @@ public:
             const PySubscriber& s,
             const PyContentFilteredTopic<T>& t,
             const dds::sub::qos::DataReaderQos& q,
-            PyDataReaderListener<T>* l,
+            PyDataReaderListenerPtr<T> l,
             const dds::core::status::StatusMask& m)
             : dds::sub::DataReader<T>(s, t, q, l, m)
     {
@@ -77,9 +116,9 @@ public:
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-                && nullptr != this->listener()) {
-                py::object listener = py::cast(this->listener());
-                this->listener(nullptr, dds::core::status::StatusMask::none());
+                && nullptr != get_dr_listener(*this) {
+                py::object listener = py::cast(get_dr_listener(*this);
+                set_dr_listener(*this, nullptr, dds::core::status::StatusMask::none());
                 listener.dec_ref();
             }
         }
@@ -138,9 +177,9 @@ public:
 
     void py_close() override
     {
-        if (nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+        if (nullptr != get_dr_listener(*this)) {
+            py::object listener = py::cast(get_dr_listener(*this);
+            set_dr_listener(*this, nullptr, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
         this->close();
@@ -198,8 +237,8 @@ void init_dds_typed_datareader_base_template(
             .def(py::init([](const PySubscriber& s,
                              const PyTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
-                             dds::core::optional<PyDataReaderListener<T>*> l,
-                             const dds::core::status::StatusMask& m) {
+                             dds::core::optional<PyDataReaderListenerPtr<T>> l,
+                            const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
                  }),
@@ -223,9 +262,9 @@ void init_dds_typed_datareader_base_template(
             .def(py::init([](const PySubscriber& s,
                              const PyContentFilteredTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
-                             dds::core::optional<PyDataReaderListener<T>*> l,
+                             dds::core::optional<PyDataReaderListenerPtr<T>> l,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = l.is_set() ? l.get() : nullptr;
+                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
                  }),
                  py::arg("sub"),
@@ -328,9 +367,8 @@ void init_dds_typed_datareader_base_template(
                     "listener",
                     [](PyDataReader<T>& dr) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyDataReaderListener<T>*> l;
-                        auto ptr = dynamic_cast<PyDataReaderListener<T>*>(
-                                dr.listener());
+                        dds::core::optional<PyDataReaderListenerPtr<T>> l;
+                        auto ptr = downcast_dr_listener_ptr(get_dr_listener(dr));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -339,22 +377,39 @@ void init_dds_typed_datareader_base_template(
             .def(
                     "bind_listener",
                     [](PyDataReader<T>& dr,
-                       dds::core::optional<PyDataReaderListener<T>*> l,
-                       const dds::core::status::StatusMask& m) {
+                        dds::core::optional<PyDataReaderListenerPtr<T>> l,
+                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::object py_l = py::cast(listener);
                             py_l.inc_ref();
                         }
-                        if (nullptr != dr.listener()) {
-                            py::cast(dr.listener()).dec_ref();
+                        if (nullptr != get_dr_listener(dr)){
+                            py::cast(get_dr_listener(dr)).dec_ref();
                         }
-                        dr.listener(listener, m);
+                        set_dr_listener(dr, listener, m);
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and associated event mask.")
+            .def(
+                    "bind_listener",
+                    [](PyDataReader<T>& dr,
+                        dds::core::optional<PyDataReaderListenerPtr<T>> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::object py_l = py::cast(listener);
+                            py_l.inc_ref();
+                        }
+                        if (nullptr != get_dr_listener(dr)){
+                            py::cast(get_dr_listener(dr)).dec_ref();
+                        }
+                        set_dr_listener(dr, listener);
+                    },
+                    py::arg("listener"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Set the listener.")
             .def_property(
                     "qos",
                     [](const PyDataReader<T>& dr) {
@@ -600,6 +655,15 @@ void init_dds_typed_datareader_base_template(
                     py::call_guard<py::gil_scoped_release>(),
                     "Get the ParticipantBuiltinTopicData for a publication "
                     "matched to this DataReader.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def(
+                    "is_matched_publication_alive",
+                    [](const PyDataReader<T>& dr, const dds::core::InstanceHandle& h) {
+                        return rti::sub::is_matched_publication_alive(dr, h);
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Check if a matched publication is alive.")
+#endif
             .def_static(
                     "find_all_by_topic",
                     [](PySubscriber& sub, const std::string& topic_name) {
