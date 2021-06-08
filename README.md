@@ -4,7 +4,7 @@ A full Python binding for RTI Connext DDS using pybind11
 
 ## Documentation
 
-The [Connext DDS Python API Reference](https://community.rti.com/static/documentation/connext-dds/current/api/connext_dds/api_python/index.html)
+The [Connext DDS Python API Reference](https://community.rti.com/static/documentation/connext-dds/6.0.1/api/connext_dds/api_python/index.html)
 provides getting started instructions, additional examples, an API overview and
 an API reference.
 
