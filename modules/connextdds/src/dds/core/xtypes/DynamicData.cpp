@@ -2096,6 +2096,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     "Clear the contents of a single data member of this "
                     "object.")
 #endif
+#if rti_connext_version_lt(6, 1, 0)
             .def("set_buffer",
                  &DynamicData::set_buffer,
                  py::arg("storage"),
@@ -2106,6 +2107,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     &DynamicData::estimated_max_buffer_size,
                     "Get the estimated maximum buffer size for a DynamicData "
                     "object.")
+#endif
             .def_property_readonly(
                     "type",
                     [](const DynamicData& dd) {
@@ -2223,7 +2225,8 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     "to_cdr_buffer",
                     [](const dds::core::xtypes::DynamicData& sample) {
                         std::vector<char> output;
-                        return rti::core::xtypes::to_cdr_buffer(output, sample);
+                        rti::core::xtypes::to_cdr_buffer(output, sample);
+                        return output;
                     },
                     "Serializes a DynamicData sample to CDR format")
             .def(

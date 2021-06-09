@@ -60,7 +60,7 @@ void add_qos_string_conversions(py::class_<T>& cls) {
     cls.def(
             "__str__",
             [](const T& qos) {
-                return dds::sub::qos::to_string(qos);
+                return to_string(qos);
             })
         .def(
             "to_string",
@@ -72,16 +72,15 @@ void add_qos_string_conversions(py::class_<T>& cls) {
                     throw dds::core::InvalidArgumentError("Cannot print all with base profile.");
                 }
                 if (base.has_value()) {
-                    return dds::sub::qos::to_string(qos, base, format);
+                    return to_string(qos, base.value(), format);
                 }
                 else if (print_all) {
-                    return dds::sub::qos::to_string(qos, rti::core::qos_print_all, format);
+                    return to_string(qos, rti::core::qos_print_all, format);
                 }
                 else {
-                    return dds::sub::qos::to_string(qos, format);
+                    return to_string(qos, format);
                 }
             },
-            py::arg("qos"),
             py::arg_v("format", rti::core::QosPrintFormat(), "QosPrintFormat()"),
             py::arg("base") = py::none(),
             py::arg("print_all") = false,

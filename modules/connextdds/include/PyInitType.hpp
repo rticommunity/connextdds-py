@@ -51,12 +51,16 @@ DefInitFunc init_type_class(
     py::implicitly_convertible<py::iterable, std::vector<T>>();
 
     l.push_back([cls] {
-        py::class_<PyDataReaderListener<T>, PyDataReaderListenerTrampoline<T>>
+        py::class_<
+                PyDataReaderListener<T>,
+                PyDataReaderListenerTrampoline<T>,
+                std::shared_ptr<PyDataReaderListener<T>>>
                 drl(cls, "DataReaderListener");
         py::class_<
                 PyNoOpDataReaderListener<T>,
                 PyDataReaderListener<T>,
-                PyNoOpDataReaderListenerTrampoline<T>>
+                PyNoOpDataReaderListenerTrampoline<T>,
+                std::shared_ptr<PyNoOpDataReaderListener<T>>>
                 nodrl(cls, "NoOpDataReaderListener");
 
         return ([drl, nodrl]() mutable {
@@ -65,12 +69,16 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>>
+        py::class_<
+                PyDataWriterListener<T>,
+                PyDataWriterListenerTrampoline<T>,
+                std::shared_ptr<PyDataWriterListener<T>>>
                 dwl(cls, "DataWriterListener");
         py::class_<
                 PyNoOpDataWriterListener<T>,
                 PyDataWriterListener<T>,
-                PyNoOpDataWriterListenerTrampoline<T>>
+                PyNoOpDataWriterListenerTrampoline<T>,
+                std::shared_ptr<PyNoOpDataWriterListener<T>>>
                 nodwl(cls, "NoOpDataWriterListener");
 
         return ([dwl, nodwl]() mutable {
@@ -79,13 +87,16 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<PyTopicListener<T>, PyTopicListenerTrampoline<T>> tl(
-                cls,
-                "TopicListener");
+        py::class_<
+                PyTopicListener<T>,
+                PyTopicListenerTrampoline<T>,
+                std::shared_ptr<PyTopicListener<T>>>
+                tl(cls, "TopicListener");
         py::class_<
                 PyNoOpTopicListener<T>,
                 PyTopicListener<T>,
-                PyNoOpTopicListenerTrampoline<T>>
+                PyNoOpTopicListenerTrampoline<T>,
+                std::shared_ptr<PyNoOpTopicListener<T>>>
                 notl(cls, "NoOpTopicListener");
 
         return ([tl, notl]() mutable { init_topic_listener<T>(tl, notl); });

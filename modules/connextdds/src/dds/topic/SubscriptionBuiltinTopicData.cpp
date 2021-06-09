@@ -15,6 +15,12 @@
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
+#if rti_connext_version_lt(6, 1, 0)
+#define SBTD_DATA_TAG(s) s->data_tags()
+#else
+#define SBTD_DATA_TAG(s) s.data_tag()
+#endif
+
 using namespace dds::topic;
 
 INIT_OPAQUE_TYPE_CONTAINERS(dds::topic::SubscriptionBuiltinTopicData);
@@ -120,7 +126,7 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls)
             .def_property_readonly(
                     "data_tag",
                     [](const SubscriptionBuiltinTopicData& s) {
-                        return s->data_tags();
+                        return SBTD_DATA_TAG(s);
                     },
                     "The DataTag policy of the corresponding DataWriter.")
 #endif

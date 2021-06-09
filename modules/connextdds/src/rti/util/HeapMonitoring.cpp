@@ -103,15 +103,13 @@ void process_inits<HeapMonitoringParams>(py::module& m, ClassInitList& l)
 
         m.def(
                 "enable",
-                (bool (rti::util::heap_monitoring::*)())
-                    &rti::util::heap_monitoring::enable,
+                (bool (*)()) &rti::util::heap_monitoring::enable,
                 "Start monitoring the heap memory used by RTI Connext. "
                 "Must be called before any using any other int the RTI Connext "
                 "library.")
             .def(
                 "enable",
-                (bool (rti::util::heap_monitoring::*)(const HeapMonitoringParams&))
-                    &rti::util::heap_monitoring::enable,
+                (bool (*)(const HeapMonitoringParams&)) &rti::util::heap_monitoring::enable,
                 py::arg("params"),
                 "Start monitoring the heap memory used by RTI Connext with params. "
                 "Must be called before any using any other in the RTI Connext "
@@ -139,13 +137,13 @@ void process_inits<HeapMonitoringParams>(py::module& m, ClassInitList& l)
     });
 }
 
-void init_heap_monitoring(py::module& m, ClassInitList& l) {
+}  // namespace pyrti
+
+void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l) {
     auto heapmon = m.def_submodule(
         "heap_monitoring",
         "Monitor memory allocations done by the middleware on "
         "the native heap.");
 
-    process_inits<HeapMonitoringParams>(heapmon, l);
+    pyrti::process_inits<HeapMonitoringParams>(heapmon, l);
 }
-
-}  // namespace pyrti

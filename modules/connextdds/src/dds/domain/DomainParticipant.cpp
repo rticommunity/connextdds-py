@@ -22,31 +22,21 @@ using namespace dds::domain;
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
-using DomainParticipantListenerPtr = dds::domain::DomainParticipantListener*;
-
-using PyDomainParticipantListenerPtr = PyDomainParticipantListener*;
-#else
-using DomainParticipantListenerPtr = std::shared_ptr<dds::domain::DomainParticipantListener>;
-
-using PyDomainParticipantListenerPtr = std::shared_ptr<PyDomainParticipantListener>;
-#endif
-
 inline DomainParticipantListenerPtr get_dp_listener(const dds::domain::DomainParticipant& dp) {
     return get_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp);
 }
 
-inline DomainParticipantListenerPtr set_dp_listener(
+inline void set_dp_listener(
         dds::domain::DomainParticipant& dp,
-        DomainParticipantListenerPtr l) {
-    return set_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp, l);
+        PyDomainParticipantListenerPtr l) {
+    return set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l);
 }
 
-inline DomainParticipantListenerPtr set_dp_listener(
+inline void set_dp_listener(
         dds::domain::DomainParticipant& dp,
-        DomainParticipantListenerPtr l,
-        dds::core::status::StatusMask& m) {
-    return set_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp, l, m);
+        PyDomainParticipantListenerPtr l,
+        const dds::core::status::StatusMask& m) {
+    return set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l, m);
 }
 
 inline PyDomainParticipantListenerPtr downcast_dp_listener_ptr(DomainParticipantListenerPtr l) {
@@ -71,10 +61,11 @@ PyDomainParticipant::PyDomainParticipant(
 PyDomainParticipant::~PyDomainParticipant()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
             && nullptr != get_dp_listener(*this)) {
             py::object listener = py::cast(get_dp_listener(*this));
-            set_dp_listener(*this, nullptr, dds::core::status::StatusMask::none());
+            PyDomainParticipantListenerPtr null_listener = nullptr;
+            set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -85,7 +76,8 @@ void PyDomainParticipant::py_close()
 {
     if (nullptr != get_dp_listener(*this)) {
         py::object listener = py::cast(get_dp_listener(*this));
-        set_dp_listener(*this, nullptr, dds::core::status::StatusMask::none());
+        PyDomainParticipantListenerPtr null_listener = nullptr;
+        set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();
@@ -196,7 +188,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     [](const PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
                         dds::core::optional<PyDomainParticipantListenerPtr> l;
-                        auto ptr = downcast_dp_listener_ptr(get_dp_listener(dp));
+                        auto ptr = downcast_dp_listener_ptr(dp.get_listener()); //get_dp_listener(dp));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -943,13 +935,13 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(
                     "find_flow_controller",
                     [](PyDomainParticipant& dp, const std::string& name) {
-                        dds::core::optional<FlowController>& retval;
+                        dds::core::optional<rti::pub::FlowController> retval;
                         auto fc = rti::pub::find_flow_controller(dp, name);
                         if (fc != dds::core::null) {
-                            retval == fc;
+                            retval = fc;
                         }
                         return retval;
-                    }
+                    },
                     py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Find a FlowController configured in this "

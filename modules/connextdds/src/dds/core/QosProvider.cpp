@@ -19,6 +19,12 @@ using namespace dds::topic::qos;
 using namespace dds::pub::qos;
 using namespace dds::sub::qos;
 
+#if rti_connext_version_lt(6, 1, 0)
+#define PYRTI_QOSPROVIDER_CONST
+#else
+#define PYRTI_QOSPROVIDER_CONST const
+#endif
+
 namespace pyrti {
 
 template<>
@@ -35,66 +41,66 @@ void init_class_defs(py::class_<QosProvider>& cls)
                  "specified URI.")
             .def_property_readonly(
                     "participant_qos",
-                    (DomainParticipantQos(QosProvider::*)())
+                    (PYRTI_QOSPROVIDER_CONST DomainParticipantQos (QosProvider::*)())
                             & QosProvider::participant_qos,
                     "Get a copy of the DomainParticipantQos currently "
                     "associated with the QosProvider.")
-            .def("participant_qos_profile",
-                 (DomainParticipantQos(QosProvider::*)(const std::string&))
+            .def("participant_qos_from_profile",
+                 (PYRTI_QOSPROVIDER_CONST DomainParticipantQos (QosProvider::*)(const std::string&))
                          & QosProvider::participant_qos,
                  py::arg("profile_name"),
                  "Get the DomainParticipantQos from a qos profile.")
             .def_property_readonly(
                     "topic_qos",
-                    (TopicQos(QosProvider::*)()) & QosProvider::topic_qos,
+                    (PYRTI_QOSPROVIDER_CONST TopicQos (QosProvider::*)()) & QosProvider::topic_qos,
                     "Get a copy of the TopicQos currently associated with the "
                     "QosProvider.")
-            .def("get_topic_qos_profile",
-                 (TopicQos(QosProvider::*)(const std::string&))
+            .def("topic_qos_from_profile",
+                 (PYRTI_QOSPROVIDER_CONST TopicQos (QosProvider::*)(const std::string&))
                          & QosProvider::topic_qos,
                  py::arg("profile_name"),
                  "Get the TopicQos from a qos profile.")
             .def_property_readonly(
                     "subscriber_qos",
-                    (SubscriberQos(QosProvider::*)())
+                    (PYRTI_QOSPROVIDER_CONST SubscriberQos (QosProvider::*)())
                             & QosProvider::subscriber_qos,
                     "Get a copy of the SubscriberQos currently associated with "
                     "this QosProvider.")
-            .def("get_subscriber_qos_profile",
-                 (SubscriberQos(QosProvider::*)(const std::string&))
+            .def("subscriber_qos_from_profile",
+                 (PYRTI_QOSPROVIDER_CONST SubscriberQos (QosProvider::*)(const std::string&))
                          & QosProvider::subscriber_qos,
                  py::arg("profile"),
                  "Get the SubscriberQos from a qos profile.")
             .def_property_readonly(
                     "datareader_qos",
-                    (DataReaderQos(QosProvider::*)())
+                    (PYRTI_QOSPROVIDER_CONST DataReaderQos (QosProvider::*)())
                             & QosProvider::datareader_qos,
                     "Get a copy of the DataReaderQos currently associated with "
                     "the QosProvider.")
-            .def("get_datareader_qos_profile",
-                 (DataReaderQos(QosProvider::*)(const std::string&))
+            .def("datareader_qos_from_profile",
+                 (PYRTI_QOSPROVIDER_CONST DataReaderQos (QosProvider::*)(const std::string&))
                          & QosProvider::datareader_qos,
                  py::arg("profile"),
                  "Get the DataReaderQos from a qos profile.")
             .def_property_readonly(
                     "publisher_qos",
-                    (PublisherQos(QosProvider::*)())
+                    (PYRTI_QOSPROVIDER_CONST PublisherQos (QosProvider::*)())
                             & QosProvider::publisher_qos,
                     "Get a copy of the PublisherQos currently associated with "
                     "the QosProvider.")
-            .def("get_publisher_qos_profile",
-                 (PublisherQos(QosProvider::*)(const std::string&))
+            .def("publisher_qos_from_profile",
+                 (PublisherQos (QosProvider::*)(const std::string&))
                          & QosProvider::publisher_qos,
                  py::arg("profile"),
                  "Get the PublisherQos from a qos profile.")
             .def_property_readonly(
                     "datawriter_qos",
-                    (DataWriterQos(QosProvider::*)())
+                    (PYRTI_QOSPROVIDER_CONST DataWriterQos (QosProvider::*)())
                             & QosProvider::datawriter_qos,
                     "Get a copy of the DataWriterQos currently associated with "
                     "the QosProvider.")
-            .def("get_datawriter_qos_profile",
-                 (DataWriterQos(QosProvider::*)(const std::string&))
+            .def("datawriter_qos_from_profile",
+                 (PYRTI_QOSPROVIDER_CONST DataWriterQos (QosProvider::*)(const std::string&))
                          & QosProvider::datawriter_qos,
                  py::arg("profile"),
                  "Get the DataWriterQos from a qos profile.")

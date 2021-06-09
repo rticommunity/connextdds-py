@@ -125,10 +125,10 @@ void init_class_defs(py::class_<NetworkCaptureParams>& cls)
                         & NetworkCaptureParams::parse_encrypted_content,
                 (NetworkCaptureParams& (NetworkCaptureParams::*) (bool) )
                         & NetworkCaptureParams::parse_encrypted_content,
-                "Toggle for parsing encrypted contents.");
+                "Toggle for parsing encrypted contents.")
             .def_property(
                 "checkpoint_thread_settings",
-                (rti::core::ThreadSettings& (NetworkCaptureParams::*)() const)
+                (const rti::core::ThreadSettings& (NetworkCaptureParams::*)() const)
                         & NetworkCaptureParams::checkpoint_thread_settings,
                 (NetworkCaptureParams& (NetworkCaptureParams::*) (const rti::core::ThreadSettings&) )
                         & NetworkCaptureParams::checkpoint_thread_settings,
@@ -189,27 +189,27 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Set default network capture parameters.")
             .def(
                 "start",
-                (bool (rti::util::network_capture::*)(const std::string&))
+                (bool (*)(const std::string&))
                     &rti::util::network_capture::start,
                 py::arg("filename"),
                 "Start network capture.")
             .def(
                 "start",
-                (bool (rti::util::network_capture::*)(dds::domain::DomainParticipant, const std::string&))
+                (bool (*)(dds::domain::DomainParticipant, const std::string&))
                     &rti::util::network_capture::start,
                 py::arg("participant"),
                 py::arg("filename"),
                 "Start network capture for a participant.")
             .def(
                 "start",
-                (bool (rti::util::network_capture::*)(const std::string&, const NetworkCaptureParams&))
+                (bool (*)(const std::string&, const NetworkCaptureParams&))
                     &rti::util::network_capture::start,
                 py::arg("filename"),
                 py::arg("params"),
                 "Start network capture with parameters.")
             .def(
                 "start",
-                (bool (rti::util::network_capture::*)(dds::domain::DomainParticipant, const std::string&, const NetworkCaptureParams&))
+                (bool (*)(dds::domain::DomainParticipant, const std::string&, const NetworkCaptureParams&))
                     &rti::util::network_capture::start,
                 py::arg("participant"),
                 py::arg("filename"),
@@ -217,35 +217,29 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Start network capture with parameters for a participant.")
             .def(
                 "stop",
-                (bool (rti::util::network_capture::*)())
-                    &rti::util::network_capture::stop,
+                (bool (*)()) &rti::util::network_capture::stop,
                 "Stop network capture.")
             .def(
                 "stop",
-                (bool (rti::util::network_capture::*)(dds::domain::DomainParticipant))
-                    &rti::util::network_capture::start,
+                (bool (*)(dds::domain::DomainParticipant)) &rti::util::network_capture::stop,
                 py::arg("participant"),
                 "Stop network capture.")
             .def(
                 "pause",
-                (bool (rti::util::network_capture::*)())
-                    &rti::util::network_capture::pause,
+                (bool (*)()) &rti::util::network_capture::pause,
                 "Pause network capture.")
             .def(
                 "pause",
-                (bool (rti::util::network_capture::*)(dds::domain::DomainParticipant))
-                    &rti::util::network_capture::pause,
+                (bool (*)(dds::domain::DomainParticipant)) &rti::util::network_capture::pause,
                 py::arg("participant"),
                 "Pause network capture.")
             .def(
                 "resume",
-                (bool (rti::util::network_capture::*)())
-                    &rti::util::network_capture::resume,
+                (bool (*)()) &rti::util::network_capture::resume,
                 "Resume network capture.")
             .def(
                 "resume",
-                (bool (rti::util::network_capture::*)(dds::domain::DomainParticipant))
-                    &rti::util::network_capture::resume,
+                (bool (*)(dds::domain::DomainParticipant)) &rti::util::network_capture::resume,
                 py::arg("participant"),
                 "Resume network capture.");
 
@@ -253,14 +247,14 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
     });
 }
 
-void init_network_capture(py::module& m, ClassInitList& l) {
+}  // namespace pyrti
+
+void init_network_capture(py::module& m, pyrti::ClassInitList& l) {
     auto netcap = m.def_submodule(
         "network_capture",
         "Save network traffic into a acpture file for further analysis.");
 
-    process_inits<NetworkCaptureParams>(netcap, l);
+    pyrti::process_inits<NetworkCaptureParams>(netcap, l);
 }
-
-}  // namespace pyrti
 
 #endif

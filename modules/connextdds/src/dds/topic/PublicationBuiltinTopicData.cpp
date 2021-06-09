@@ -15,6 +15,12 @@
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
+#if rti_connext_version_lt(6, 1, 0)
+#define PBTD_DATA_TAG(p) p->data_tags()
+#else
+#define PBTD_DATA_TAG(p) p.data_tag()
+#endif
+
 using namespace dds::topic;
 
 INIT_OPAQUE_TYPE_CONTAINERS(dds::topic::PublicationBuiltinTopicData);
@@ -129,7 +135,7 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls)
             .def_property_readonly(
                     "data_tag",
                     [](const PublicationBuiltinTopicData& p) {
-                        return p->data_tags();
+                        return PBTD_DATA_TAG(p);
                     },
                     "The DataTag policy of the corresponding DataWriter.")
 #endif

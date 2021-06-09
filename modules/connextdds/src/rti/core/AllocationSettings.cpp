@@ -10,7 +10,11 @@
  */
 
 #include "PyConnext.hpp"
+#if rti_connext_version_lt(6, 1, 0)
 #include <rti/core/AllocationSettings.hpp>
+#else
+#include <rti/core/PolicySettings.hpp>
+#endif
 
 using namespace rti::core;
 

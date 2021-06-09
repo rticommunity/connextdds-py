@@ -22,9 +22,6 @@
 
 namespace pyrti {
 
-template<typename T>
-class PyTopicListener;
-
 #if rti_connext_version_lt(6, 1, 0)
 template<typename T>
 using TopicListenerPtr = dds::topic::TopicListener<T>*;
@@ -40,23 +37,23 @@ using PyTopicListenerPtr = std::shared_ptr<PyTopicListener<T>>;
 #endif
 
 template<typename T>
-inline TopicListenerPtr get_topic_listener(const dds::topic::Topic<T>& t) {
+inline TopicListenerPtr<T> get_topic_listener(const dds::topic::Topic<T>& t) {
     return get_listener<dds::topic::Topic<T>, TopicListenerPtr<T>>(t);
 }
 
 template<typename T>
-inline TopicListenerPtr set_topic_listener(
+inline void set_topic_listener(
         dds::topic::Topic<T>& t,
-        TopicListenerPtr<T> l) {
-    return set_listener<dds::topic::Topic<T>, TopicListenerPtr<T>>(t, l);
+        PyTopicListenerPtr<T> l) {
+     set_listener<dds::topic::Topic<T>, PyTopicListenerPtr<T>>(t, l);
 }
 
 template<typename T>
-inline TopicListenerPtr set_topic_listener(
+inline void set_topic_listener(
         dds::topic::Topic<T>& t,
-        TopicListenerPtr<T> l,
-        dds::core::status::StatusMask& m) {
-    return set_listener<dds::topic::Topic<T>, TopicListenerPtr<T>>(t, l, m);
+        PyTopicListenerPtr<T> l,
+        const dds::core::status::StatusMask& m) {
+    set_listener<dds::topic::Topic<T>, PyTopicListenerPtr<T>>(t, l, m);
 }
 
 template<typename T>
@@ -187,10 +184,11 @@ public:
     virtual ~PyTopic()
     {
         if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
+            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
                 && nullptr != get_topic_listener(*this)) {
                 py::object listener = py::cast(get_topic_listener(*this));
-                set_topic_listener(*this, nullptr, dds::core::status::StatusMask::none());
+                PyTopicListenerPtr<T> null_listener = nullptr;
+                set_topic_listener(*this, null_listener, dds::core::status::StatusMask::none());
                 listener.dec_ref();
             }
         }
@@ -241,7 +239,8 @@ public:
     {
         if (nullptr != get_topic_listener(*this)) {
             py::object listener = py::cast(get_topic_listener(*this));
-            set_topic_listener(*this, nullptr, dds::core::status::StatusMask::none());
+            PyTopicListenerPtr<T> null_listener = nullptr;
+            set_topic_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
         this->close();

@@ -24,6 +24,36 @@ class PyDomainParticipantListener;
 class PyPublisherListener;
 class PySubscriberListener;
 
+#if rti_connext_version_lt(6, 1, 0)
+using DomainParticipantListenerPtr = dds::domain::DomainParticipantListener*;
+
+using PyDomainParticipantListenerPtr = PyDomainParticipantListener*;
+#else
+using DomainParticipantListenerPtr = std::shared_ptr<dds::domain::DomainParticipantListener>;
+
+using PyDomainParticipantListenerPtr = std::shared_ptr<PyDomainParticipantListener>;
+#endif
+
+#if rti_connext_version_lt(6, 1, 0)
+using PublisherListenerPtr = dds::pub::PublisherListener*;
+
+using PyPublisherListenerPtr = PyPublisherListener*;
+#else
+using PublisherListenerPtr = std::shared_ptr<dds::pub::PublisherListener>;
+
+using PyPublisherListenerPtr = std::shared_ptr<PyPublisherListener>;
+#endif
+
+#if rti_connext_version_lt(6, 1, 0)
+using SubscriberListenerPtr = dds::sub::SubscriberListener*;
+
+using PySubscriberListenerPtr = PySubscriberListener*;
+#else
+using SubscriberListenerPtr = std::shared_ptr<dds::sub::SubscriberListener>;
+
+using PySubscriberListenerPtr = std::shared_ptr<PySubscriberListener>;
+#endif
+
 class PyIEntity {
 public:
     virtual dds::core::Entity get_entity() = 0;
@@ -146,7 +176,7 @@ public:
     PyDomainParticipant(
             int32_t d,
             const dds::domain::qos::DomainParticipantQos& q,
-            PyDomainParticipantListener* l,
+            PyDomainParticipantListenerPtr l,
             const dds::core::status::StatusMask& m);
 
     dds::core::Entity get_entity() override
@@ -221,7 +251,7 @@ public:
     PyPublisher(
             const PyDomainParticipant& p,
             const dds::pub::qos::PublisherQos& q,
-            PyPublisherListener* l,
+            PyPublisherListenerPtr l,
             const dds::core::status::StatusMask& m);
 
     dds::core::Entity get_entity() override
@@ -285,7 +315,7 @@ public:
     PySubscriber(
             const PyDomainParticipant& p,
             const dds::sub::qos::SubscriberQos& q,
-            PySubscriberListener* l,
+            PySubscriberListenerPtr l,
             const dds::core::status::StatusMask& m);
 
     dds::core::Entity get_entity() override

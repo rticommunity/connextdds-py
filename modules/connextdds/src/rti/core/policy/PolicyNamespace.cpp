@@ -41,7 +41,9 @@ void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<Property>(m, l);
     pyrti::process_inits<PublishMode>(m, l);
     pyrti::process_inits<ReceiverPool>(m, l);
+#if rti_connext_version_lt(6, 1, 0)
     pyrti::process_inits<RefilterKind>(m, l);
+#endif
     pyrti::process_inits<RtpsReliableWriterProtocol>(m, l);
     pyrti::process_inits<Service>(m, l);
     pyrti::process_inits<SystemResourceLimits>(m, l);

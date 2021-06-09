@@ -22,31 +22,21 @@ using namespace dds::pub;
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
-using PublisherListenerPtr = dds::pub::PublisherListener*;
-
-using PyPublisherListenerPtr = PyPublisherListener*;
-#else
-using PublisherListenerPtr = std::shared_ptr<dds::pub::PublisherListener>;
-
-using PyPublisherListenerPtr = std::shared_ptr<PyPublisherListener>;
-#endif
-
 inline PublisherListenerPtr get_publisher_listener(const dds::pub::Publisher& p) {
     return get_listener<dds::pub::Publisher, PublisherListenerPtr>(p);
 }
 
-inline PublisherListenerPtr set_publisher_listener(
+inline void set_publisher_listener(
         dds::pub::Publisher& p,
-        PublisherListenerPtr l) {
-    return set_listener<dds::pub::Publisher, PublisherListenerPtr>(p, l);
+        PyPublisherListenerPtr l) {
+    return set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l);
 }
 
-inline PublisherListenerPtr set_publisher_listener(
+inline void set_publisher_listener(
         dds::pub::Publisher& p,
-        PublisherListenerPtr l,
-        dds::core::status::StatusMask& m) {
-    return set_listener<dds::pub::Publisher, PublisherListenerPtr>(p, l, m);
+        PyPublisherListenerPtr l,
+        const dds::core::status::StatusMask& m) {
+    return set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l, m);
 }
 
 inline PyPublisherListenerPtr downcast_publisher_listener_ptr(PublisherListenerPtr l) {
@@ -67,10 +57,11 @@ PyPublisher::PyPublisher(
 PyPublisher::~PyPublisher()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
             && nullptr != get_publisher_listener(*this)) {
             py::object listener = py::cast(get_publisher_listener(*this));
-            set_publisher_listener(*this, nullptr, dds::core::status::StatusMask::none());
+            PyPublisherListenerPtr null_listener = nullptr;
+            set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -80,7 +71,8 @@ void PyPublisher::py_close()
 {
     if (nullptr != get_publisher_listener(*this)) {
         py::object listener = py::cast(get_publisher_listener(*this));
-        set_publisher_listener(*this, nullptr, dds::core::status::StatusMask::none());
+        PyPublisherListenerPtr null_listener = nullptr;
+        set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();

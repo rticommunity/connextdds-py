@@ -17,7 +17,8 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<
                      PyAnyDataWriterListener,
-                     PyAnyDataWriterListenerTrampoline<>>& cls)
+                     PyAnyDataWriterListenerTrampoline<>,
+                     std::shared_ptr<PyAnyDataWriterListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_offered_deadline_missed",
@@ -87,7 +88,8 @@ template<>
 void init_class_defs(py::class_<
                      PyNoOpAnyDataWriterListener,
                      PyAnyDataWriterListener,
-                     PyNoOpAnyDataWriterListenerTrampoline<>>& cls)
+                     PyNoOpAnyDataWriterListenerTrampoline<>,
+                     std::shared_ptr<PyNoOpAnyDataWriterListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_offered_deadline_missed",
@@ -164,7 +166,8 @@ void process_inits<dds::pub::AnyDataWriterListener>(
     l.push_back([m]() mutable {
         return init_class<
                 PyAnyDataWriterListener,
-                PyAnyDataWriterListenerTrampoline<>>(
+                PyAnyDataWriterListenerTrampoline<>,
+                std::shared_ptr<PyAnyDataWriterListener>>(
                 m,
                 "AnyDataWriterListener");
     });
@@ -173,7 +176,8 @@ void process_inits<dds::pub::AnyDataWriterListener>(
         return init_class<
                 PyNoOpAnyDataWriterListener,
                 PyAnyDataWriterListener,
-                PyNoOpAnyDataWriterListenerTrampoline<>>(
+                PyNoOpAnyDataWriterListenerTrampoline<>,
+                std::shared_ptr<PyNoOpAnyDataWriterListener>>(
                 m,
                 "NoOpAnyDataWriterListener");
     });

@@ -11,7 +11,7 @@
 
 #include "PyConnext.hpp"
 #if rti_connext_version_gte(6, 1, 0)
-#include <rti/core/policy/CorePolicy.hpp>
+#include <rti/core/CoherentSetInfo.hpp>
 
 using namespace rti::core;
 
@@ -70,7 +70,7 @@ void init_class_defs(py::class_<CoherentSetInfo>& cls)
             .def(
                     "__str__",
                     [](const CoherentSetInfo& csi) {
-                        ostringstream oss;
+                        std::ostringstream oss;
                         oss << csi;
                         return oss.str();
                     },
@@ -83,7 +83,7 @@ template<>
 void process_inits<CoherentSetInfo>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_seq<CoherentSetInfo>(m, "CoherentSetInfo");
+        return init_class<CoherentSetInfo>(m, "CoherentSetInfo");
     });
 }
 

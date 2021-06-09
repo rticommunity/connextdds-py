@@ -13,7 +13,6 @@
 
 #include "PyConnext.hpp"
 #include <dds/sub/DataReaderListener.hpp>
-#include "PyDataReader.hpp"
 
 namespace pyrti {
 
@@ -337,8 +336,10 @@ public:
 
 template<typename T>
 void init_class_defs(
-        py::class_<PyDataReaderListener<T>, PyDataReaderListenerTrampoline<T>>&
-                cls)
+        py::class_<
+                PyDataReaderListener<T>,
+                PyDataReaderListenerTrampoline<T>, 
+                std::shared_ptr<PyDataReaderListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_requested_deadline_missed",
@@ -391,7 +392,8 @@ template<typename T>
 void init_class_defs(py::class_<
                      PyNoOpDataReaderListener<T>,
                      PyDataReaderListener<T>,
-                     PyNoOpDataReaderListenerTrampoline<T>>& cls)
+                     PyNoOpDataReaderListenerTrampoline<T>,
+                     std::shared_ptr<PyNoOpDataReaderListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_requested_deadline_missed",
@@ -442,12 +444,15 @@ void init_class_defs(py::class_<
 
 template<typename T>
 void init_datareader_listener(
-        py::class_<PyDataReaderListener<T>, PyDataReaderListenerTrampoline<T>>&
-                drl,
+        py::class_<
+                PyDataReaderListener<T>,
+                PyDataReaderListenerTrampoline<T>,
+                std::shared_ptr<PyDataReaderListener<T>>> &drl,
         py::class_<
                 PyNoOpDataReaderListener<T>,
                 PyDataReaderListener<T>,
-                PyNoOpDataReaderListenerTrampoline<T>>& nodrl)
+                PyNoOpDataReaderListenerTrampoline<T>,
+                std::shared_ptr<PyNoOpDataReaderListener<T>>>& nodrl)
 {
     init_class_defs(drl);
     init_class_defs(nodrl);

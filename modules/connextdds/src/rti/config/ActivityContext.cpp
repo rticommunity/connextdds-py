@@ -13,7 +13,7 @@
 
 #if rti_connext_version_gte(6, 1, 0)
 
-#include <rti/util/util.hpp>
+#include <rti/config/ActivityContext.hpp>
 #include <PyMaskType.hpp>
 
 using namespace rti::config::activity_context;
@@ -21,67 +21,67 @@ using namespace rti::config::activity_context;
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<ActivityKindMsk>& cls)
+void init_class_defs(py::class_<AttributeKindMask>& cls)
 {
     cls.def_property_readonly_static(
                 "ALL",
                 [](py::object&) {
-                    return ActivityKindMask::all();
+                    return AttributeKindMask::all();
                 },
                 "Provide all the possible attributes of the resouce "
                 "of the activity context.")
             .def_property_readonly_static(
                 "NONE",
                 [](py::object&) {
-                    return ActivityKindMask::none();
+                    return AttributeKindMask::none();
                 },
                 "No attributes of the resource provided for the "
                 "activity context.")
             .def_property_readonly_static(
                 "DEFAULT",
                 [](py::object&) {
-                    return ActivityKindMask::default_mask();
+                    return AttributeKindMask::default_mask();
                 },
                 "Default mask.")
             .def_property_readonly_static(
                 "ENTITY_NAME",
                 [](py::object&) {
-                    return ActivityKindMask::entity_name();
+                    return AttributeKindMask::entity_name();
                 },
                 "Provide the entity name to the resource of the Activity "
                 "Context. The name attribute is specified by \"N\".")
             .def_property_readonly_static(
                 "DOMAIN_ID",
                 [](py::object&) {
-                    return ActivityKindMask::domain_id();
+                    return AttributeKindMask::domain_id();
                 },
                 "Provide the domain ID to the resource of the Activity "
                 "Context. The name attribute is specified by \"D\".")
             .def_property_readonly_static(
                 "ENTITY_KIND",
                 [](py::object&) {
-                    return ActivityKindMask::entity_kind();
+                    return AttributeKindMask::entity_kind();
                 },
                 "Provide the entity kind to the resource of the Activity "
                 "Context. The name attribute is specified by \"E\".")
             .def_property_readonly_static(
                 "TYPE",
                 [](py::object&) {
-                    return ActivityKindMask::type();
+                    return AttributeKindMask::type();
                 },
                 "Provide the data type to the resource of the Activity "
                 "Context. The name attribute is specified by \"C\".")
             .def_property_readonly_static(
                 "TOPIC",
                 [](py::object&) {
-                    return ActivityKindMask::topic();
+                    return AttributeKindMask::topic();
                 },
                 "Provide the Topicto the resource of the Activity "
                 "Context. The name attribute is specified by \"T\".")
             .def_property_readonly_static(
                 "GUID_PREFIX",
                 [](py::object&) {
-                    return ActivityKindMask::guid_prefix();
+                    return AttributeKindMask::guid_prefix();
                 },
                 "Provide the entity GUID prefix to the resource of the Activity "
                 "Context.");
@@ -102,18 +102,18 @@ void process_inits<AttributeKindMask>(py::module& m, ClassInitList& l)
             &set_attribute_mask,
             py::arg("attribute_mask"),
             "Set the activity context mask."
-        )
+        );
 
         return [cls]() mutable {
-            init_class_defs<ActivityKindMask>(cls);
+            init_class_defs<AttributeKindMask>(cls);
         };
     });
 }
 
-void init_activity_context(py::module& m, ClassInitList& l) {
-    process_inits<AttributeKindMask>(m, l);
-}
-
 }  // namespace pyrti
+
+void init_activity_context(py::module& m, pyrti::ClassInitList& l) {
+    pyrti::process_inits<AttributeKindMask>(m, l);
+}
 
 #endif

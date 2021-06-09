@@ -11,6 +11,7 @@
 
 #include "PyConnext.hpp"
 #include "PyVector.hpp"
+#include "PyNamespaces.hpp"
 
 namespace py = pybind11;
 
@@ -24,7 +25,6 @@ void init_misc_early(py::module& m, pyrti::ClassInitList& l)
     init_dds_stl_bindings(m);
     pyrti::init_dds_vector_buffer_class<uint8_t>(m, "ByteVector", l);
     pyrti::init_dds_vector_buffer_class<int32_t>(m, "Int32Vector", l);
-    pyrti::init_activity_context(m, l);
 }
 
 // Init all bindings that depend on DDS for signatures

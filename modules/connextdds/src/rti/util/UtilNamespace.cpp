@@ -10,6 +10,7 @@
  */
 
 #include "PyConnext.hpp"
+#include "PyNamespaces.hpp"
 #include <rti/rti.hpp>
 
 using namespace rti::util;
@@ -21,14 +22,15 @@ void init_namespace_rti_util(py::module& m, pyrti::ClassInitList& l)
           py::arg("duration"),
           py::call_guard<py::gil_scoped_release>(),
           "Sleep for a specified duration")
-        .def("spin_per_microsecond"
+        .def("spin_per_microsecond",
              &rti::util::spin_per_microsecond,
              "Returns the number of spin operations needed"
-             "to wait 1 microsecond");
-        .def("spin"
+             "to wait 1 microsecond")
+        .def("spin",
              &rti::util::spin,
-             "Returns the number of spin operations needed"
-             "to wait 1 microsecond");
+             py::arg("spin_count"),
+             "Performs a spin operation (active wait) as "
+             "many times as indicated.");
 
     init_heap_monitoring(m, l);
 

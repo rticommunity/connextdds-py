@@ -61,7 +61,7 @@ void init_class_defs(py::class_<CompressionIdMask>& cls)
                     return rti::core::CompressionIdMask::bzip2();
                 },
                 "Selects the built-in BZIP2 compression algorithm.")
-            .value(
+            .def_property_readonly_static(
                 "LZ4",
                 [](py::object&) {
                     return rti::core::CompressionIdMask::lz4();
@@ -90,24 +90,23 @@ void init_class_defs(py::class_<CompressionSettings>& cls)
                     " writer_compression_level and writer_compression_threshold.")
             .def_property(
                     "compression_ids",
-                    (CompressionIdMask(CompressionSettings::*)() const)
+                    (CompressionIdMask (CompressionSettings::*)() const)
                             & CompressionSettings::compression_ids,
-                    (CompressionSettings
-                     & (CompressionSettings::*) (CompressionIdMask))
-                            & ThreadSettings::compression_ids,
+                    (CompressionSettings (CompressionSettings::*) (CompressionIdMask))
+                            & CompressionSettings::compression_ids,
                     "Compression ID settings.")
             .def_property(
                     "writer_compression_level",
-                    (uint32_t(CompressionSettings::*)() const)
+                    (uint32_t (CompressionSettings::*)() const)
                             & CompressionSettings::writer_compression_level,
-                    (CompressionSettings & (CompressionSettings::*) (uint32_t))
+                    (CompressionSettings (CompressionSettings::*) (uint32_t))
                             & CompressionSettings::writer_compression_level,
                     "Writer compression level.")
             .def_property(
                     "writer_compression_threshold",
-                    (int32_t(CompressionSettings::*)() const)
+                    (int32_t (CompressionSettings::*)() const)
                             & CompressionSettings::writer_compression_threshold,
-                    (CompressionSettings & (CompressionSettings::*) (int32_t))
+                    (CompressionSettings (CompressionSettings::*) (int32_t))
                             & CompressionSettings::writer_compression_threshold,
                     "Writer compression threshold")
             .def(py::self == py::self, "Test for equality.")
@@ -128,7 +127,7 @@ void process_inits<CompressionSettings>(py::module& m, ClassInitList& l)
     });
 
     l.push_back([m]() mutable {
-        return init_class<ThreadSettings>(m, "ThreadSettings");
+        return init_class<CompressionSettings>(m, "CompressionSettings");
     });
 }
 

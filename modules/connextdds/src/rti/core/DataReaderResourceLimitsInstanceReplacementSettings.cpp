@@ -34,7 +34,7 @@ void init_class_defs(py::class_<DataReaderResourceLimitsInstanceReplacementSetti
             .def_property(
                     "alive_instance_removal",
                     (policy::DataReaderInstanceRemovalKind (DataReaderResourceLimitsInstanceReplacementSettings::*)() const) &DataReaderResourceLimitsInstanceReplacementSettings::alive_instance_removal,
-                    (DataReaderResourceLimitsInstanceReplacementSettings& (DataReaderResourceLimitsInstanceReplacementSettings::*)(policy::DataReaderInstanceRemovalKind)) &DataReaderResourceLimitsInstanceReplacementSettings::indent,
+                    (DataReaderResourceLimitsInstanceReplacementSettings& (DataReaderResourceLimitsInstanceReplacementSettings::*)(policy::DataReaderInstanceRemovalKind)) &DataReaderResourceLimitsInstanceReplacementSettings::alive_instance_removal,
                     "The instance replacment policy for alive instances.")
             .def_property(
                     "disposed_instance_removal",

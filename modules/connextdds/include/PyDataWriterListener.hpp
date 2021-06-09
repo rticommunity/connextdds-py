@@ -13,7 +13,6 @@
 
 #include "PyConnext.hpp"
 #include <dds/pub/DataWriterListener.hpp>
-#include "PyDataWriter.hpp"
 
 namespace pyrti {
 
@@ -503,7 +502,7 @@ public:
 
 template<typename T>
 void init_class_defs(
-        py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>>&
+        py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>, std::shared_ptr<PyDataWriterListener<T>>>&
                 cls)
 {
     cls.def(py::init<>())
@@ -595,7 +594,8 @@ template<typename T>
 void init_class_defs(py::class_<
                      PyNoOpDataWriterListener<T>,
                      PyDataWriterListener<T>,
-                     PyNoOpDataWriterListenerTrampoline<T>>& cls)
+                     PyNoOpDataWriterListenerTrampoline<T>,
+                     std::shared_ptr<PyNoOpDataWriterListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_offered_deadline_missed",
@@ -686,12 +686,15 @@ void init_class_defs(py::class_<
 
 template<typename T>
 void init_datawriter_listener(
-        py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>>&
-                dwl,
+        py::class_<
+                PyDataWriterListener<T>,
+                PyDataWriterListenerTrampoline<T>,
+                std::shared_ptr<PyDataWriterListener<T>>>& dwl,
         py::class_<
                 PyNoOpDataWriterListener<T>,
                 PyDataWriterListener<T>,
-                PyNoOpDataWriterListenerTrampoline<T>>& nodwl)
+                PyNoOpDataWriterListenerTrampoline<T>,
+                std::shared_ptr<PyNoOpDataWriterListener<T>>>& nodwl)
 {
     init_class_defs(dwl);
     init_class_defs(nodwl);

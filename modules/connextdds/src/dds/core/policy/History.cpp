@@ -37,6 +37,7 @@ void init_class_defs(py::class_<History>& cls)
                     (int32_t(History::*)() const) & History::depth,
                     (History & (History::*) (int32_t)) & History::depth,
                     "The history kind.")
+#if rti_connext_version_lt(6, 1, 0)
             .def_property(
                     "refilter",
                     [](const History& h) { return h->refilter(); },
@@ -44,6 +45,7 @@ void init_class_defs(py::class_<History>& cls)
                         return h->refilter(rk);
                     },
                     "The history kind.")
+#endif
             .def_static(
                     "keep_all",
                     &History::KeepAll,
@@ -53,8 +55,7 @@ void init_class_defs(py::class_<History>& cls)
                     &History::KeepLast,
                     py::arg("depth"),
                     "Creates a History with HistoryKind.KEEP_LAST and the "
-                    "specified "
-                    "depth.")
+                    "specified depth.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

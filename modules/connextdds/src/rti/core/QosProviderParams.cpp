@@ -16,13 +16,19 @@ using namespace rti::core;
 
 namespace pyrti {
 
+#if rti_connext_version_lt(6, 1, 0)
+using RetStringSeq = std::vector<std::string>;
+#else
+using RetStringSeq = const std::vector<std::string>;
+#endif
+
 template<>
 void init_class_defs(py::class_<QosProviderParams>& cls)
 {
     cls.def(py::init<>(), "Create a QosProviderParams with default settings.")
             .def_property(
                     "string_profile",
-                    (std::vector<std::string>(QosProviderParams::*)() const)
+                    (pyrti::RetStringSeq (QosProviderParams::*)() const)
                             & QosProviderParams::string_profile,
                     (QosProviderParams
                      & (QosProviderParams::*) (const std::vector<
@@ -32,7 +38,7 @@ void init_class_defs(py::class_<QosProviderParams>& cls)
                     "QosProviderParams.")
             .def_property(
                     "url_profile",
-                    (std::vector<std::string>(QosProviderParams::*)() const)
+                    (pyrti::RetStringSeq (QosProviderParams::*)() const)
                             & QosProviderParams::url_profile,
                     (QosProviderParams
                      & (QosProviderParams::*) (const std::vector<

@@ -10,6 +10,9 @@
  */
 
 #include "PyConnext.hpp"
+
+#if rti_connext_version_lt(6, 1, 0)
+
 #include <rti/core/policy/CorePolicy.hpp>
 #include "PySafeEnum.hpp"
 
@@ -70,3 +73,5 @@ void process_inits<RefilterKind>(py::module& m, ClassInitList& l)
 }
 
 }  // namespace pyrti
+
+#endif

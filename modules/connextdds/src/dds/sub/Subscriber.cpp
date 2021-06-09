@@ -21,31 +21,21 @@ using namespace dds::sub;
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
-using SubscriberListenerPtr = dds::sub::SubscriberListener*;
-
-using PySubscriberListenerPtr = PySubscriberListener*;
-#else
-using SubsciberListenerPtr = std::shared_ptr<dds::sub::SubscriberListener>;
-
-using PySubscriberListenerPtr = std::shared_ptr<PySubscriberListener>;
-#endif
-
 inline SubscriberListenerPtr get_subscriber_listener(const dds::sub::Subscriber& s) {
     return get_listener<dds::sub::Subscriber, SubscriberListenerPtr>(s);
 }
 
-inline SubscriberListenerPtr set_subscriber_listener(
+inline void set_subscriber_listener(
         dds::sub::Subscriber& s,
-        SubscriberListenerPtr l) {
-    return set_listener<dds::sub::Subscriber, SubscriberListenerPtr>(s, l);
+        PySubscriberListenerPtr l) {
+    return set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l);
 }
 
-inline SubscriberListenerPtr set_subscriber_listener(
+inline void set_subscriber_listener(
         dds::sub::Subscriber& s,
-        SubscriberListenerPtr l,
-        dds::core::status::StatusMask& m) {
-    return set_listener<dds::sub::Subscriber, SubscriberListenerPtr>(s, l, m);
+        PySubscriberListenerPtr l,
+        const dds::core::status::StatusMask& m) {
+    return set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l, m);
 }
 
 inline PySubscriberListenerPtr downcast_subscriber_listener_ptr(SubscriberListenerPtr l) {
@@ -66,10 +56,11 @@ PySubscriber::PySubscriber(
 PySubscriber::~PySubscriber()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
             && nullptr != get_subscriber_listener(*this)) {
             py::object listener = py::cast(get_subscriber_listener(*this));
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+            PySubscriberListenerPtr null_listener = nullptr;
+            set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -78,8 +69,9 @@ PySubscriber::~PySubscriber()
 void PySubscriber::py_close()
 {
     if (nullptr != this->listener()) {
-        py::object listener = py::cast(get_subscription_listener(*this));
-        set_subscriber_listener(*this, nullptr, dds::core::status::StatusMask::none());
+        py::object listener = py::cast(get_subscriber_listener(*this));
+        PySubscriberListenerPtr null_listener = nullptr;
+        set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();

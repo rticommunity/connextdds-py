@@ -11,6 +11,7 @@
 
 #pragma once
 #include <ndds_version.h>
+#include <dds/dds.hpp>
 
 #ifdef _MSC_VER
     #define PYRTI_SYMBOL_HIDDEN
@@ -138,6 +139,8 @@ T& get_value(U<T>& opt)
 }
 
 #if rti_connext_version_lt(6, 1, 0)
+static const int LISTENER_USE_COUNT_MIN = 2;
+
 template<typename TEntity, typename TListenerPtr>
 TListenerPtr get_listener(const TEntity& entity) {
     return entity.listener();
@@ -153,15 +156,17 @@ template<typename TEntity, typename TListenerPtr>
 TListenerPtr set_listener(
         TEntity& entity,
         TListenerPtr listener
-        dds::core::status::StatusMask& mask) {
+        const dds::core::status::StatusMask& mask) {
     entity.listener(listener, mask);
 }
 
 template<typename TPtr, typename TBasePtr>
 TPtr downcast_listner_ptr(TBasePtr p) {
-    return dynamic_cast<TPtr>(p);
+    return static_cast<TPtr>(p);
 }
 #else
+static const int LISTENER_USE_COUNT_MIN = 1;
+
 template<typename TEntity, typename TListenerPtr>
 TListenerPtr get_listener(const TEntity& entity) {
     return entity.get_listener();
@@ -169,21 +174,21 @@ TListenerPtr get_listener(const TEntity& entity) {
 
 template<typename TEntity, typename TListenerPtr>
 void set_listener(TEntity& entity, TListenerPtr listener) {
-    if (nullptr == listener) entity.set_listener(l, dds::core::status::StatusMask::none());
+    if (nullptr == listener) entity.set_listener(listener, dds::core::status::StatusMask::none());
     else entity.set_listener(listener, dds::core::status::StatusMask::all());
 }
 
 template<typename TEntity, typename TListenerPtr>
-TListenerPtr set_listener(
+void set_listener(
         TEntity& entity,
-        TListenerPtr listener
-        dds::core::status::StatusMask& mask) {
+        TListenerPtr listener,
+        const dds::core::status::StatusMask& mask) {
     entity.set_listener(listener, mask);
 }
 
 template<typename TPtr, typename TBasePtr>
-TPtr downcast_listner_ptr(TBasePtr p) {
-    return dynamic_pointer_cast<TPtr>(p);
+TPtr downcast_listener_ptr(TBasePtr p) {
+    return std::static_pointer_cast<typename TPtr::element_type>(p);
 }
 #endif
 

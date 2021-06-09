@@ -32,9 +32,6 @@
 
 namespace pyrti {
 
-template<typename T>
-class PyDataReaderListener;
-
 #if rti_connext_version_lt(6, 1, 0)
 template<typename T>
 using DataReaderListenerPtr = dds::sub::DataReaderListener<T>*;
@@ -43,30 +40,30 @@ template<typename T>
 using PyDataReaderListenerPtr = PyDataReaderListener<T>*;
 #else
 template<typename T>
-using DataReaderListenerPtr = std::shared_ptr<dds::pub::DataReaderListener<T>>;
+using DataReaderListenerPtr = std::shared_ptr<dds::sub::DataReaderListener<T>>;
 
 template<typename T>
 using PyDataReaderListenerPtr = std::shared_ptr<PyDataReaderListener<T>>;
 #endif
 
 template<typename T>
-inline DataReaderListenerPtr get_dr_listener(const dds::sub::DataReader<T>& dr) {
+inline DataReaderListenerPtr<T> get_dr_listener(const dds::sub::DataReader<T>& dr) {
     return get_listener<dds::sub::DataReader<T>, DataReaderListenerPtr<T>>(dr);
 }
 
 template<typename T>
-inline DataReaderListenerPtr set_dr_listener(
+inline void set_dr_listener(
         dds::sub::DataReader<T>& dr,
-        DataReaderListenerPtr<T> l) {
-    return set_listener<dds::sub::DataReader<T>, DataReaderListenerPtr<T>>(dr, l);
+        PyDataReaderListenerPtr<T> l) {
+    set_listener<dds::sub::DataReader<T>, PyDataReaderListenerPtr<T>>(dr, l);
 }
 
 template<typename T>
-inline DataReaderListenerPtr set_dr_listener(
+inline void set_dr_listener(
         dds::sub::DataReader<T>& dr,
-        DataWriterListenerPtr<T> l,
-        dds::core::status::StatusMask& m) {
-    return set_listener<dds::sub::DataReader<T>, DataReaderListenerPtr<T>>(dr, l, m);
+        PyDataReaderListenerPtr<T> l,
+        const dds::core::status::StatusMask& m) {
+    set_listener<dds::sub::DataReader<T>, PyDataReaderListenerPtr<T>>(dr, l, m);
 }
 
 template<typename T>
@@ -104,7 +101,7 @@ public:
             const PySubscriber& s,
             const PyContentFilteredTopic<T>& t,
             const dds::sub::qos::DataReaderQos& q,
-            PyDataReaderListenerPtr<T> l,
+            PyDataReaderListener<T>* l,
             const dds::core::status::StatusMask& m)
             : dds::sub::DataReader<T>(s, t, q, l, m)
     {
@@ -115,10 +112,11 @@ public:
     virtual ~PyDataReader()
     {
         if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-                && nullptr != get_dr_listener(*this) {
-                py::object listener = py::cast(get_dr_listener(*this);
-                set_dr_listener(*this, nullptr, dds::core::status::StatusMask::none());
+            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
+                && nullptr != get_dr_listener(*this)) {
+                py::object listener = py::cast(get_dr_listener(*this));
+                PyDataReaderListenerPtr<T> null_listener = nullptr;
+                set_dr_listener(*this, null_listener, dds::core::status::StatusMask::none());
                 listener.dec_ref();
             }
         }
@@ -178,8 +176,9 @@ public:
     void py_close() override
     {
         if (nullptr != get_dr_listener(*this)) {
-            py::object listener = py::cast(get_dr_listener(*this);
-            set_dr_listener(*this, nullptr, dds::core::status::StatusMask::none());
+            py::object listener = py::cast(get_dr_listener(*this));
+            PyDataReaderListenerPtr<T> null_listener = nullptr;
+            set_dr_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
         this->close();
@@ -262,7 +261,7 @@ void init_dds_typed_datareader_base_template(
             .def(py::init([](const PySubscriber& s,
                              const PyContentFilteredTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
-                             dds::core::optional<PyDataReaderListenerPtr<T>> l,
+                             dds::core::optional<PyDataReaderListener<T>*> l,
                              const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
@@ -649,7 +648,7 @@ void init_dds_typed_datareader_base_template(
                     "matched_publication_participant_data",
                     [](const PyDataReader<T>& dr,
                        const dds::core::InstanceHandle& h) {
-                        return rti::pub::matched_publication_participant_data<T>(dw, h);
+                        return rti::sub::matched_publication_participant_data<T>(dr, h);
                     },
                     py::arg("handle"),
                     py::call_guard<py::gil_scoped_release>(),
