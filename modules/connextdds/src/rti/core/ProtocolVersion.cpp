@@ -34,9 +34,11 @@ void init_class_defs(py::class_<ProtocolVersion>& cls)
                     "The minor version number.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.")
-            .def_static(
+            .def_property_readonly_static(
                     "current",
-                    &ProtocolVersion::current,
+                    [](py::object&) {
+                        return ProtocolVersion::current();
+                    },
                     "The most recent protocol version.");
 }
 

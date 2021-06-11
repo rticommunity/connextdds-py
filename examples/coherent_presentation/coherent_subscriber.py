@@ -28,7 +28,7 @@ def subscriber_main(domain_id, sample_count):
     topic = dds.DynamicData.Topic(participant, "Example coherent", coherent_type)
     datareader_qos = dds.QosProvider.default.datareader_qos
     reader = dds.DynamicData.DataReader(subscriber, topic, datareader_qos)
-    reader.bind_listener(CoherentListener(), dds.StatusMask.data_available())
+    reader.bind_listener(CoherentListener(), dds.StatusMask.DATA_AVAILABLE)
 
     count = 0
     while (sample_count == 0) or (count < sample_count):

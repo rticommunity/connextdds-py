@@ -20,19 +20,35 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<TransportBuiltinMask>& cls)
 {
-    cls.def_static("all", &TransportBuiltinMask::all, "All bits are set.")
-            .def_static("none", &TransportBuiltinMask::none, "No bits are set.")
-            .def_static(
-                    "shmem",
-                    &TransportBuiltinMask::shmem,
+    cls.def_property_readonly_static(
+                "ALL",
+                [](py::object&) {
+                    return TransportBuiltinMask::all();
+                },
+                "All bits are set.")
+            .def_property_readonly_static(
+                    "NONE",
+                    [](py::object&) {
+                        return TransportBuiltinMask::none();
+                    },
+                    "No bits are set.")
+            .def_property_readonly_static(
+                    "SHMEM",
+                    [](py::object&) {
+                        return TransportBuiltinMask::shmem();
+                    },
                     "Selects the built-in shared-memory transport.")
-            .def_static(
-                    "udpv4",
-                    &TransportBuiltinMask::udpv4,
+            .def_property_readonly_static(
+                    "UDPv4",
+                    [](py::object&) {
+                        return TransportBuiltinMask::udpv4();
+                    },
                     "Selects the built-in UDPv4 transport.")
-            .def_static(
-                    "udpv6",
-                    &TransportBuiltinMask::udpv6,
+            .def_property_readonly_static(
+                    "UDPv6",
+                    [](py::object&) {
+                        return TransportBuiltinMask::udpv6();
+                    },
                     "Selects the built-in UDPv6 transport.");
 }
 
@@ -55,27 +71,37 @@ void init_class_defs(py::class_<TransportBuiltin>& cls)
                     "The selected transports through a mask.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.")
-            .def_static(
+            .def_property_readonly_static(
                     "all",
-                    TransportBuiltin::All,
+                    [](py::object&) {
+                        return TransportBuiltin::All();
+                    },
                     "Creates a policy that selects TransportBuiltinMask.all()")
-            .def_static(
+            .def_property_readonly_static(
                     "none",
-                    TransportBuiltin::None,
+                    [](py::object&) {
+                        return TransportBuiltin::None();
+                    },
                     "Creates a policy that selects TransportBuiltinMask.none()")
-            .def_static(
+            .def_property_readonly_static(
                     "shmem",
-                    TransportBuiltin::Shmem,
+                    [](py::object&) {
+                        return TransportBuiltin::Shmem();
+                    },
                     "Creates a policy that selects "
                     "TransportBuiltinMask.shmem()")
-            .def_static(
+            .def_property_readonly_static(
                     "udpv4",
-                    TransportBuiltin::UDPv4,
+                    [](py::object&) {
+                        return TransportBuiltin::UDPv4();
+                    },
                     "Creates a policy that selects "
                     "TransportBuiltinMask.udpv4()")
-            .def_static(
+            .def_property_readonly_static(
                     "udpv6",
-                    TransportBuiltin::UDPv6,
+                    [](py::object&) {
+                        return TransportBuiltin::UDPv6();
+                    },
                     "Creates a policy that selects "
                     "TransportBuiltinMask.udpv6()");
 }

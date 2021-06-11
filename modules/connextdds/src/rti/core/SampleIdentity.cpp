@@ -43,15 +43,19 @@ void init_class_defs(py::class_<SampleIdentity>& cls)
                      oss << sn;
                      return oss.str();
                  })
-            .def_static(
+            .def_property_readonly_static(
                     "automatic",
-                    &SampleIdentity::automatic,
+                    [](py::object&) {
+                        return SampleIdentity::automatic();
+                    },
                     "Special value to indicate that RTI Connext will "
                     "automatically "
                     "assign the identity of a sample.")
-            .def_static(
+            .def_property_readonly_static(
                     "unknown",
-                    &SampleIdentity::unknown,
+                    [](py::object&) {
+                        return SampleIdentity::unknown();
+                    },
                     "An invalid or unknown sample identity.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

@@ -73,9 +73,11 @@ void init_class_defs(py::class_<Liveliness>& cls)
                     "The number of assertions to send during the lease "
                     "duration.")
 #endif
-            .def_static(
+            .def_property_readonly_static(
                     "automatic",
-                    &Liveliness::Automatic,
+                    [](py::object&) {
+                        return Liveliness::Automatic();
+                    },
                     "Creates a Liveliness instance with "
                     "LivelinessKind.AUTOMATIC.")
             .def_static(

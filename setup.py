@@ -214,7 +214,7 @@ class CMakeBuild(build_ext):
                 with open(os.devnull, 'w') as devnull:
                     subprocess.check_call([python_cmd, stubgen] + stubgen_args + ['-o', extdir, ext.name], env=stubs_env, stderr=devnull)
             except:
-                print('Could not general stub file for {}'.format(ext.name))
+                print('Could not generate stub file for {}'.format(ext.name))
 
         for extdir in extdirs:
             if os.path.isdir(os.path.join(extdir, '__pycache__')):

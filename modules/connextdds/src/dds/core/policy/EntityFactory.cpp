@@ -34,13 +34,17 @@ void init_class_defs(py::class_<EntityFactory>& cls)
                     "Whether the entity acting as a factory automatically "
                     "enables the "
                     "instances it creates.")
-            .def_static(
+            .def_property_readonly_static(
                     "auto_enable",
-                    &EntityFactory::AutoEnable,
+                    [](py::object&) {
+                        return EntityFactory::AutoEnable();
+                    },
                     "Creates EntityFactory(true)")
-            .def_static(
+            .def_property_readonly_static(
                     "manually_enable",
-                    &EntityFactory::ManuallyEnable,
+                    [](py::object&) {
+                        return EntityFactory::ManuallyEnable();
+                    },
                     "Creates EntityFactory(false)")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

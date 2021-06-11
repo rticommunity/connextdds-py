@@ -35,17 +35,23 @@ void init_class_defs(py::class_<SampleState>& cls)
                     return std::string("SampleState.INVALID");
                 }
             })
-            .def_static(
-                    "read",
-                    &SampleState::read,
+            .def_property_readonly_static(
+                    "READ",
+                    [](py::object&) {
+                        return SampleState::read();
+                    },
                     "Creates a read SampleState.")
-            .def_static(
-                    "not_read",
-                    &SampleState::not_read,
+            .def_property_readonly_static(
+                    "NOT_READ",
+                    [](py::object&) {
+                        return SampleState::not_read();
+                    },
                     "Creates a not_read SampleState object.")
-            .def_static(
-                    "any",
-                    &SampleState::any,
+            .def_property_readonly_static(
+                    "ANY",
+                    [](py::object&) {
+                        return SampleState::any();
+                    },
                     "Creates a SampleState object representing any sample "
                     "state.");
 }
@@ -68,17 +74,23 @@ void init_class_defs(py::class_<ViewState>& cls)
                     return std::string("ViewState.INVALID");
                 }
             })
-            .def_static(
-                    "new_view",
-                    &ViewState::new_view,
+            .def_property_readonly_static(
+                    "NEW_VIEW",
+                    [](py::object&) {
+                        return ViewState::new_view();
+                    },
                     "Creates a new_view ViewState object.")
-            .def_static(
-                    "not_new_view",
-                    &ViewState::not_new_view,
+            .def_property_readonly_static(
+                    "NOT_NEW_VIEW",
+                    [](py::object&) {
+                        return ViewState::not_new_view();
+                    },
                     "Creates a not_new_view ViewState object.")
-            .def_static(
-                    "any",
-                    &ViewState::any,
+            .def_property_readonly_static(
+                    "ANY",
+                    [](py::object&) {
+                        return ViewState::any();
+                    },
                     "Creates an any ViewState object.");
 }
 
@@ -104,27 +116,37 @@ void init_class_defs(py::class_<InstanceState>& cls)
                     return std::string("InstanceState.INVALID");
                 }
             })
-            .def_static(
-                    "alive",
-                    &InstanceState::alive,
+            .def_property_readonly_static(
+                    "ALIVE",
+                    [](py::object&) {
+                        return InstanceState::alive();
+                    },
                     "Creates a alive InstanceState object.")
-            .def_static(
-                    "not_alive_disposed",
-                    &InstanceState::not_alive_disposed,
+            .def_property_readonly_static(
+                    "NOT_ALIVE_DISPOSED",
+                    [](py::object&) {
+                        return InstanceState::not_alive_disposed();
+                    },
                     "Creates a not_alive_disposed InstanceState object.")
-            .def_static(
-                    "not_alive_no_writers",
-                    &InstanceState::not_alive_no_writers,
+            .def_property_readonly_static(
+                    "NOT_ALIVE_NO_WRITERS",
+                    [](py::object&) {
+                        return InstanceState::not_alive_no_writers();
+                    },
                     "Creates a not_alive_no_writers InstanceState object.")
-            .def_static(
-                    "not_alive_mask",
-                    &InstanceState::not_alive_mask,
+            .def_property_readonly_static(
+                    "NOT_ALIVE_MASK",
+                    [](py::object&) {
+                        return InstanceState::not_alive_mask();
+                    },
                     "Creates an InstanceState object representing any not "
                     "alive "
                     "states (not_alive_disposed | not_alive_no_writers")
-            .def_static(
-                    "any",
-                    &InstanceState::any,
+            .def_property_readonly_static(
+                    "ANY",
+                    [](py::object&) {
+                        return InstanceState::any();
+                    },
                     "Creates an InstanceState object representing any instance "
                     "states "
                     "(not_alive_disposed | not_alive_no_writers | alive");
@@ -200,27 +222,35 @@ void init_class_defs(py::class_<DataState>& cls)
                     (void (DataState::*)(const ViewState&))
                             & DataState::view_state,
                     "The ViewState of the DataState.")
-            .def_static(
+            .def_property_readonly_static(
                     "any",
-                    &DataState::any,
+                    [](py::object&) {
+                        return DataState::any();
+                    },
                     "Create a DataState with InstanceState.any(), "
                     "ViewState.any(), "
                     "and SampleState.any()")
-            .def_static(
+            .def_property_readonly_static(
                     "new_data",
-                    &DataState::new_data,
+                    [](py::object&) {
+                        return DataState::new_data();
+                    },
                     "Create a DataState with InstanceState.alive(), "
                     "ViewState.any(), "
                     "and SampleState.not_read()")
-            .def_static(
+            .def_property_readonly_static(
                     "any_data",
-                    &DataState::any_data,
+                    [](py::object&) {
+                        return DataState::any_data();
+                    },
                     "Create a DataState with InstanceState.alive(), "
                     "ViewState.any(), "
                     "and SampleState.any()")
-            .def_static(
+            .def_property_readonly_static(
                     "new_instance",
-                    &DataState::new_instance,
+                    [](py::object&) {
+                        return DataState::new_instance();
+                    },
                     "Create a DataState with InstanceState.alive(), "
                     "ViewState.new_view(), and SampleState.any()");
 }

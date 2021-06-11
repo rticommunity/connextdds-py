@@ -39,10 +39,17 @@ void init_class_defs(py::class_<Guid>& cls)
                      oss << g;
                      return oss.str();
                  })
-            .def_static("unknown", &Guid::unknown, "Create an unknown Guid.")
-            .def_static(
+            .def_property_readonly_static(
+                    "unknown",
+                    [](py::object&) {
+                        return Guid::unknown();
+                    },
+                    "Create an unknown Guid.")
+            .def_property_readonly_static(
                     "automatic",
-                    &Guid::automatic,
+                    [](py::object&) {
+                        return Guid::automatic();
+                    },
                     "Construct a Guid indicating that RTI Connext should "
                     "choose an "
                     "appropriate virtual GUID.");

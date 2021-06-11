@@ -35,7 +35,7 @@ def subscriber_main(domain_id, sample_count):
     # Query against even samples at the start
     query_parameters = ["'EVEN'"]
     query = dds.Query(reader, "name MATCH %0", query_parameters)
-    query_condition = dds.QueryCondition(query, dds.DataState.any_data())
+    query_condition = dds.QueryCondition(query, dds.DataState.any_data)
 
     # Create a WaitSet and attach the QueryCondition
     waitset = dds.WaitSet()

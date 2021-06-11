@@ -69,20 +69,24 @@ void init_class_defs(py::class_<ReaderDataLifecycle>& cls)
                     "InstanceStateKind.NOT_ALIVE_DISPOSED."
                     "\n\n"
                     "This property's getter returns a deep copy.")
-            .def_static(
+            .def_property_readonly_static(
                     "no_auto_purge",
-                    &ReaderDataLifecycle::NoAutoPurge,
+                    [](py::object&) {
+                        return ReaderDataLifecycle::NoAutoPurge();
+                    },
                     "Returns a policy where all purge delays are disabled (the "
                     "default)")
             .def_static(
                     "auto_purge_disposed_samples",
                     &ReaderDataLifecycle::AutoPurgeDisposedSamples,
+                    py::arg("delay"),
                     "Returns a policy where only the disposed-samples purge "
                     "delay is "
                     "enabled with a specified duration.")
             .def_static(
                     "auto_purge_no_writer_samples",
                     &ReaderDataLifecycle::AutoPurgeNoWriterSamples,
+                    py::arg("delay"),
                     "Returns a policy where only the no-writer purge delay is "
                     "enabled "
                     "with a specified duration.")

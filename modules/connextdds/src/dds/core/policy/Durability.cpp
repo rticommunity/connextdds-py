@@ -55,23 +55,31 @@ void init_class_defs(py::class_<Durability>& cls)
                     },
                     "The default value for Durability.writer_depth.")
 #endif
-            .def_static(
+            .def_property_readonly_static(
                     "volatile",
-                    &Durability::Volatile,
+                    [](py::object&) {
+                        return Durability::Volatile();
+                    },
                     "Create a Durability QoS policy with kind set to VOLATILE.")
-            .def_static(
+            .def_property_readonly_static(
                     "transient_local",
-                    &Durability::TransientLocal,
+                    [](py::object&) {
+                        return Durability::TransientLocal();
+                    },
                     "Create a Durability QoS policy with kind set to "
                     "TRANSIENT_LOCAL.")
-            .def_static(
+            .def_property_readonly_static(
                     "transient",
-                    &Durability::Transient,
+                    [](py::object&) {
+                        return Durability::Transient();
+                    },
                     "Create a Durability QoS policy with kind set to "
                     "TRANSIENT.")
-            .def_static(
+            .def_property_readonly_static(
                     "persistent",
-                    &Durability::Persistent,
+                    [](py::object&) {
+                        return Durability::Persistent();
+                    },
                     "Create a Durability QoS policy with kind set to "
                     "PERSISTENT.")
             .def(py::self == py::self, "Test for equality.")

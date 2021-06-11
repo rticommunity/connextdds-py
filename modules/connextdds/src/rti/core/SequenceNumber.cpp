@@ -58,25 +58,33 @@ void init_class_defs(py::class_<SequenceNumber>& cls)
                  (long long (SequenceNumber::*)() const)
                          & SequenceNumber::value,
                  "Convert SequenceNumber to integer.")
-            .def_static(
+            .def_property_readonly_static(
                     "zero",
-                    &SequenceNumber::zero,
+                    [](py::object&) {
+                        return SequenceNumber::zero();
+                    },
                     "Create a SequenceNumber representing 0.")
-            .def_static(
+            .def_property_readonly_static(
                     "unknown",
-                    &SequenceNumber::unknown,
+                    [](py::object&) {
+                        return SequenceNumber::unknown();
+                    },
                     "Create a SequenceNumber representing the unknown "
                     "SequenceNumber "
                     "value.")
-            .def_static(
+            .def_property_readonly_static(
                     "maximum",
-                    &SequenceNumber::maximum,
+                    [](py::object&) {
+                        return SequenceNumber::maximum();
+                    },
                     "Create a SequenceNumber representing the highest, most "
                     "positive "
                     "value for the sequence number.")
-            .def_static(
+            .def_property_readonly_static(
                     "automatic",
-                    &SequenceNumber::automatic,
+                    [](py::object&) {
+                        return SequenceNumber::automatic();
+                    },
                     "Create a SequenceNumber that will cause the value to be "
                     "internally determined by RTI Connext.");
     py::implicitly_convertible<int64_t, SequenceNumber>();

@@ -21,9 +21,11 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<ThreadSettingsKindMask>& cls)
 {
-    cls.def_static(
-               "floating_point",
-               &ThreadSettingsKindMask::floating_point,
+    cls.def_property_readonly_static(
+               "FLOATING_POINT",
+               [](py::object&) {
+                    return ThreadSettingsKindMask::floating_point();
+               },
                "Create a mask with the floating point option set."
                "\n\n"
                "With this option enabled, code in the thread may perform "
@@ -31,9 +33,11 @@ void init_class_defs(py::class_<ThreadSettingsKindMask>& cls)
                "\n\n"
                "This options is only relevant for VxWorks platforms where user"
                "callbacks use floating point operations.")
-            .def_static(
-                    "stdio",
-                    &ThreadSettingsKindMask::stdio,
+            .def_property_readonly_static(
+                    "STDIO",
+                    [](py::object&) {
+                        return ThreadSettingsKindMask::stdio();
+                    },
                     "Create a mask with the standard I/O option set."
                     "\n\n"
                     "With this option enabled, code in the thread may perform "
@@ -42,25 +46,31 @@ void init_class_defs(py::class_<ThreadSettingsKindMask>& cls)
                     "This options is only relevant for VxWorks platforms where "
                     "user"
                     "callbacks use standard I/O operations.")
-            .def_static(
-                    "realtime_priority",
-                    &ThreadSettingsKindMask::realtime_priority,
+            .def_property_readonly_static(
+                    "REALTIME_PRIORITY",
+                    [](py::object&) {
+                        return ThreadSettingsKindMask::realtime_priority();
+                    },
                     "Create a mask with the realtime priority option set."
                     "\n\n"
                     "With this option enabled, the thread will be scheduled on "
                     "a FIFO"
                     "basis.")
-            .def_static(
-                    "priority_enforce",
-                    &ThreadSettingsKindMask::priority_enforce,
+            .def_property_readonly_static(
+                    "PRIORITY_ENFORCE",
+                    [](py::object&) {
+                        return ThreadSettingsKindMask::priority_enforce();
+                    },
                     "Create a mask with the priority enforcement option set."
                     "\n\n"
                     "With this option enabled, the thread's priority will be "
                     "strictly "
                     "enforced.")
-            .def_static(
-                    "cancel_asynchronous",
-                    &ThreadSettingsKindMask::cancel_asynchronous,
+            .def_property_readonly_static(
+                    "CANCEL_ASYNCHRONOUS",
+                    [](py::object&) {
+                        return ThreadSettingsKindMask::cancel_asynchronous();
+                    },
                     "Create a mask with the asynchronous cancellation option "
                     "set."
                     "\n\n"

@@ -66,13 +66,17 @@ void init_class_defs(py::class_<Batch>& cls)
                     "Get/set boolean that specifies whether batch writes must "
                     "be "
                     "thread safe.")
-            .def_static(
+            .def_property_readonly_static(
                     "enabled",
-                    &Batch::Enabled,
+                    [](py::object&) {
+                        return Batch::Enabled();
+                    },
                     "Create a Batch policy with batching enabled.")
-            .def_static(
+            .def_property_readonly_static(
                     "disabled",
-                    &Batch::Disabled,
+                    [](py::object&) {
+                        return Batch::Disabled();
+                    },
                     "Create a Batch policy with batching disabled.")
             .def_static(
                     "enabled_with_max_data_bytes",

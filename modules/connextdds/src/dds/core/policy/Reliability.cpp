@@ -67,9 +67,11 @@ void init_class_defs(py::class_<Reliability>& cls)
                     "Creates a policy with ReliabilityKind.RELIABLE and "
                     "optionally a "
                     "max blocking time.")
-            .def_static(
+            .def_property_readonly_static(
                     "best_effort",
-                    &Reliability::BestEffort,
+                    [](py::object&) {
+                        return Reliability::BestEffort();
+                    },
                     "Creates a policy with ReliabilityKind.BEST_EFFORT.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

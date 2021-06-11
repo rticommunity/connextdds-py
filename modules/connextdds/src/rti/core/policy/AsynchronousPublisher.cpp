@@ -88,9 +88,11 @@ void init_class_defs(py::class_<AsynchronousPublisher>& cls)
                     "asynchronous "
                     "write (and optionally asynchronous batch flushing) "
                     "enabled.")
-            .def_static(
+            .def_property_readonly_static(
                     "disabled",
-                    &AsynchronousPublisher::Disabled,
+                    [](py::object&) {
+                        return AsynchronousPublisher::Disabled();
+                    },
                     "Create an AsynchronousPublisher QoS policy with "
                     "asynchronous "
                     "publication completely disabled.")

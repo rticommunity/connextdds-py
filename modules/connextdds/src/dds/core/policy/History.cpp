@@ -46,9 +46,11 @@ void init_class_defs(py::class_<History>& cls)
                     },
                     "The history kind.")
 #endif
-            .def_static(
+            .def_property_readonly_static(
                     "keep_all",
-                    &History::KeepAll,
+                    [](py::object&) {
+                        return History::KeepAll();
+                    },
                     "Creates a History with HistoryKind.KEEP_ALL.")
             .def_static(
                     "keep_last",
