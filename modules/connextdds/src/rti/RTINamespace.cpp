@@ -21,4 +21,5 @@ void init_namespace_rti(py::module& m, pyrti::ClassInitList& l)
     init_namespace_rti_pub(m, l);
     init_namespace_rti_sub(m, l);
     init_namespace_rti_topic(m, l);
+    init_namespace_rti_util(m, l);
 }

@@ -40,6 +40,7 @@ void init_namespace_rti_pub(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti_sub_status(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti_sub(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti_topic(py::module& m, pyrti::ClassInitList& l);
+void init_namespace_rti_util(py::module& m, pyrti::ClassInitList& l);
 void init_namespace_rti(py::module& m, pyrti::ClassInitList& l);
 void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l);
 #if rti_connext_version_gte(6, 1, 0)

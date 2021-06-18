@@ -252,7 +252,7 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
 void init_network_capture(py::module& m, pyrti::ClassInitList& l) {
     auto netcap = m.def_submodule(
         "network_capture",
-        "Save network traffic into a acpture file for further analysis.");
+        "Save network traffic into a capture file for further analysis.");
 
     pyrti::process_inits<NetworkCaptureParams>(netcap, l);
 }
