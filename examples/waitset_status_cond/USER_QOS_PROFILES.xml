@@ -54,7 +54,7 @@
                     Analyzer tool, making it easier for you to tell one application from another
                     when you're debugging. -->
                 <participant_name>
-                    <name>RTI Waitsets C++11 Example</name>
+                    <name>RTI Waitsets Python Example</name>
                 </participant_name>
 
             </participant_qos>

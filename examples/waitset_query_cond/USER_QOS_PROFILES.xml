@@ -50,7 +50,7 @@
                 application from another when you're debugging.
                 -->
                 <participant_name>
-                    <name>WaitSet using query condition C++11 Example</name>
+                    <name>WaitSet using query condition Python Example</name>
                     <role_name>waitset_query_condParticipantRole</role_name>
                 </participant_name>
 

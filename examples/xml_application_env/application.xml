@@ -36,7 +36,7 @@ RTI Connext DDS Core Libraries XML-Based Application Creation Getting Started Gu
                     Analyzer tool, making it easier for you to tell one application
                     from another when you're debugging. -->
         <participant_name>
-          <name>XML Application Creation C++11 Example</name>
+          <name>XML Application Creation Python Example</name>
         </participant_name>
       </participant_qos>
     </qos_profile>
@@ -84,4 +84,3 @@ RTI Connext DDS Core Libraries XML-Based Application Creation Getting Started Gu
   </domain_participant_library>
 
 </dds>
-
