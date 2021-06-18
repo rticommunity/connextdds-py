@@ -29,14 +29,14 @@ inline PublisherListenerPtr get_publisher_listener(const dds::pub::Publisher& p)
 inline void set_publisher_listener(
         dds::pub::Publisher& p,
         PyPublisherListenerPtr l) {
-    return set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l);
+    set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l);
 }
 
 inline void set_publisher_listener(
         dds::pub::Publisher& p,
         PyPublisherListenerPtr l,
         const dds::core::status::StatusMask& m) {
-    return set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l, m);
+    set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l, m);
 }
 
 inline PyPublisherListenerPtr downcast_publisher_listener_ptr(PublisherListenerPtr l) {

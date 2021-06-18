@@ -18,5 +18,7 @@ using namespace rti::config;
 void init_namespace_rti_config(py::module& m, pyrti::ClassInitList& l)
 {
     pyrti::process_inits<Logger>(m, l);
+#if rti_connext_version_gte(6, 1, 0)
     init_activity_context(m, l);
+#endif
 }

@@ -127,6 +127,7 @@ void init_class_defs(py::class_<DynamicType>& cls)
                     return rti::core::xtypes::to_string(t);
                 },
                 "DynamicData value to string.")
+#if rti_connext_version_gte(6, 0, 1)
             .def(
                 "to_string",
                 [](const DynamicType& t, const rti::core::xtypes::DynamicTypePrintFormatProperty& prop) {
@@ -134,9 +135,10 @@ void init_class_defs(py::class_<DynamicType>& cls)
                 },
                 py::arg_v(
                     "format",
-                    rti::topic::PrintFormatProperty::Default(),
-                    "PrintFormatProperty.default()"),
-                "Convert DynamicData object to string with print format.")
+                    rti::core::xtypes::DynamicTypePrintFormatProperty(),
+                    "DynamicTypePrintFormatProperty()"),
+                "Convert DynamicType to string with print format.")
+#endif
             .def(py::self == py::self,
                  "Compare DynamicType objects for equality.")
             .def(py::self != py::self,

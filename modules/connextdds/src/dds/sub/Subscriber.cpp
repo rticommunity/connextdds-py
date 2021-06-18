@@ -28,14 +28,14 @@ inline SubscriberListenerPtr get_subscriber_listener(const dds::sub::Subscriber&
 inline void set_subscriber_listener(
         dds::sub::Subscriber& s,
         PySubscriberListenerPtr l) {
-    return set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l);
+    set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l);
 }
 
 inline void set_subscriber_listener(
         dds::sub::Subscriber& s,
         PySubscriberListenerPtr l,
         const dds::core::status::StatusMask& m) {
-    return set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l, m);
+    set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l, m);
 }
 
 inline PySubscriberListenerPtr downcast_subscriber_listener_ptr(SubscriberListenerPtr l) {

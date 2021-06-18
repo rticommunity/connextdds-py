@@ -29,14 +29,14 @@ inline DomainParticipantListenerPtr get_dp_listener(const dds::domain::DomainPar
 inline void set_dp_listener(
         dds::domain::DomainParticipant& dp,
         PyDomainParticipantListenerPtr l) {
-    return set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l);
+    set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l);
 }
 
 inline void set_dp_listener(
         dds::domain::DomainParticipant& dp,
         PyDomainParticipantListenerPtr l,
         const dds::core::status::StatusMask& m) {
-    return set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l, m);
+    set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l, m);
 }
 
 inline PyDomainParticipantListenerPtr downcast_dp_listener_ptr(DomainParticipantListenerPtr l) {
@@ -188,7 +188,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     [](const PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
                         dds::core::optional<PyDomainParticipantListenerPtr> l;
-                        auto ptr = downcast_dp_listener_ptr(dp.get_listener()); //get_dp_listener(dp));
+                        auto ptr = downcast_dp_listener_ptr(get_dp_listener(dp));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;

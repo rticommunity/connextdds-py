@@ -148,20 +148,20 @@ TListenerPtr get_listener(const TEntity& entity) {
 
 template<typename TEntity, typename TListenerPtr>
 void set_listener(TEntity& entity, TListenerPtr listener) {
-    if (nullptr == listener) entity.listener(l, dds::core::status::StatusMask::none());
+    if (nullptr == listener) entity.listener(listener, dds::core::status::StatusMask::none());
     else entity.listener(listener, dds::core::status::StatusMask::all());
 }
 
 template<typename TEntity, typename TListenerPtr>
-TListenerPtr set_listener(
+void set_listener(
         TEntity& entity,
-        TListenerPtr listener
+        TListenerPtr listener,
         const dds::core::status::StatusMask& mask) {
     entity.listener(listener, mask);
 }
 
 template<typename TPtr, typename TBasePtr>
-TPtr downcast_listner_ptr(TBasePtr p) {
+TPtr downcast_listener_ptr(TBasePtr p) {
     return static_cast<TPtr>(p);
 }
 #else

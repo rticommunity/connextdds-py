@@ -24,7 +24,9 @@ void init_namespace_rti_core_xtypes(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<DynamicDataMemberInfo>(m, l);
     pyrti::process_inits<DynamicDataProperty>(m, l);
     pyrti::process_inits<DynamicDataTypeSerializationProperty>(m, l);
-    pyrti::process_inits<DynamicTypePrintFormatProperty>(m, l);
     pyrti::process_inits<LoanedDynamicData>(m, l);
     pyrti::process_inits<UnidimensionalCollectionTypeImpl>(m, l);
+#if rti_connext_version_gte(6, 0, 1)
+    pyrti::process_inits<DynamicTypePrintFormatProperty>(m, l);
+#endif
 }

@@ -10,6 +10,9 @@
  */
 
 #include "PyConnext.hpp"
+
+#if rti_connext_version_gte(6, 0, 1)
+
 #include <rti/core/xtypes/DynamicTypePrintFormat.hpp>
 
 using namespace rti::core::xtypes;
@@ -59,3 +62,5 @@ void process_inits<DynamicTypePrintFormatProperty>(
 }
 
 }  // namespace pyrti
+
+#endif
