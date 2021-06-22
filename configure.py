@@ -158,16 +158,17 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
     if 'Win' in arch:
         import glob
         msvc_lib = glob.glob(os.path.join(platform_lib_dir, 'msvc*.dll'))
-        assert len(msvc_lib) == 1
-        basename = os.path.basename(msvc_lib[0])
-        plugin_list.append(basename)
-        copy_libs.append(
-            check_lib(os.path.splitext(basename)[0],
-            arch,
-            lib_ends,
-            platform_lib_dir,
-            dst_dir,
-            False))
+        if msvc_lib:
+            assert len(msvc_lib) == 1
+            basename = os.path.basename(msvc_lib[0])
+            plugin_list.append(basename)
+            copy_libs.append(
+                check_lib(os.path.splitext(basename)[0],
+                arch,
+                lib_ends,
+                platform_lib_dir,
+                dst_dir,
+                False))
     for plugin in plugins:
         plugin_list.append(lib_ends.prefix + plugin + get_debug_suffix(is_debug) + lib_ends.suffix)
         if plugin == 'nddssecurity':

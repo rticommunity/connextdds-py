@@ -13,6 +13,8 @@
 
 #if rti_connext_version_gte(6, 1, 0)
 
+#ifndef _MSC_VER
+
 #include <rti/core/PolicySettings.hpp>
 
 using namespace rti::core;
@@ -59,5 +61,7 @@ void process_inits<DataReaderResourceLimitsInstanceReplacementSettings>(py::modu
 }
 
 }  // namespace pyrti
+
+#endif
 
 #endif

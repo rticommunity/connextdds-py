@@ -339,6 +339,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     "DataReader.")
 #endif
 #if rti_connext_version_gte(6, 1, 0)
+#ifndef _MSC_VER
             .def_property(
                     "instance_replacement",
                     (DataReaderResourceLimitsInstanceReplacementSettings& (DataReaderResourceLimits::*) ())
@@ -348,6 +349,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                         drrl.instance_replacement() = ir;
                     },
                     "The instance replacement policy.")
+#endif
 #endif
             .def(py::self == py::self)
             .def(py::self != py::self);
