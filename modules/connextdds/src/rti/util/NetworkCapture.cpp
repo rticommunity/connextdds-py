@@ -15,6 +15,7 @@
 
 #include <rti/util/util.hpp>
 #include <PyMaskType.hpp>
+#include <PyEntity.hpp>
 
 using namespace rti::util::network_capture;
 
@@ -169,9 +170,22 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
     });
 
     l.push_back([m]() mutable {
-        auto retval = init_class<NetworkCaptureParams>(m, "NetworkCaptureParams");
+        return init_class<NetworkCaptureParams>(m, "NetworkCaptureParams");
+    });
+}
 
-        m.def(
+}  // namespace pyrti
+
+void init_network_capture(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v) {
+    auto netcap = m.def_submodule(
+        "network_capture",
+        "Save network traffic into a capture file for further analysis.");
+
+    pyrti::process_inits<NetworkCaptureParams>(netcap, l);
+
+    v.push_back(
+        [netcap]() mutable {
+            netcap.def(
                 "enable",
                 &rti::util::network_capture::enable,
                 "Enable network capture.\n\n"
@@ -195,8 +209,9 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Start network capture.")
             .def(
                 "start",
-                (bool (*)(dds::domain::DomainParticipant, const std::string&))
-                    &rti::util::network_capture::start,
+                [](pyrti::PyDomainParticipant& dp, const std::string& filename) {
+                    return rti::util::network_capture::start(dp, filename);
+                },
                 py::arg("participant"),
                 py::arg("filename"),
                 "Start network capture for a participant.")
@@ -209,8 +224,9 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Start network capture with parameters.")
             .def(
                 "start",
-                (bool (*)(dds::domain::DomainParticipant, const std::string&, const NetworkCaptureParams&))
-                    &rti::util::network_capture::start,
+                [](pyrti::PyDomainParticipant& dp, const std::string& filename, const NetworkCaptureParams& params) {
+                    return rti::util::network_capture::start(dp, filename, params);
+                },
                 py::arg("participant"),
                 py::arg("filename"),
                 py::arg("params"),
@@ -221,7 +237,9 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Stop network capture.")
             .def(
                 "stop",
-                (bool (*)(dds::domain::DomainParticipant)) &rti::util::network_capture::stop,
+                [](pyrti::PyDomainParticipant& dp) {
+                    return rti::util::network_capture::stop(dp);
+                },
                 py::arg("participant"),
                 "Stop network capture.")
             .def(
@@ -230,7 +248,9 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Pause network capture.")
             .def(
                 "pause",
-                (bool (*)(dds::domain::DomainParticipant)) &rti::util::network_capture::pause,
+                [](pyrti::PyDomainParticipant& dp) {
+                    return rti::util::network_capture::pause(dp);
+                },
                 py::arg("participant"),
                 "Pause network capture.")
             .def(
@@ -239,22 +259,13 @@ void process_inits<NetworkCaptureParams>(py::module& m, ClassInitList& l)
                 "Resume network capture.")
             .def(
                 "resume",
-                (bool (*)(dds::domain::DomainParticipant)) &rti::util::network_capture::resume,
+                [](pyrti::PyDomainParticipant& dp) {
+                    return rti::util::network_capture::resume(dp);
+                },
                 py::arg("participant"),
                 "Resume network capture.");
-
-        return retval;
-    });
-}
-
-}  // namespace pyrti
-
-void init_network_capture(py::module& m, pyrti::ClassInitList& l) {
-    auto netcap = m.def_submodule(
-        "network_capture",
-        "Save network traffic into a capture file for further analysis.");
-
-    pyrti::process_inits<NetworkCaptureParams>(netcap, l);
+        }
+    );
 }
 
 #endif

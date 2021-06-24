@@ -15,7 +15,7 @@
 
 using namespace dds::core;
 
-void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l)
+void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
     pyrti::process_inits<InstanceHandle>(m, l);
     pyrti::process_inits<BytesTopicType>(m, l);
@@ -28,8 +28,8 @@ void init_namespace_dds_core(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<QosProvider>(m, l);
     pyrti::process_inits<Time>(m, l);
 
-    init_namespace_dds_core_cond(m, l);
-    init_namespace_dds_core_policy(m, l);
-    init_namespace_dds_core_status(m, l);
-    init_namespace_dds_core_xtypes(m, l);
+    init_namespace_dds_core_cond(m, l, v);
+    init_namespace_dds_core_policy(m, l, v);
+    init_namespace_dds_core_status(m, l, v);
+    init_namespace_dds_core_xtypes(m, l, v);
 }

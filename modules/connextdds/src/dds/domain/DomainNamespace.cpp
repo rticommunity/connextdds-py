@@ -15,10 +15,10 @@
 
 using namespace dds::domain;
 
-void init_namespace_dds_domain(py::module& m, pyrti::ClassInitList& l)
+void init_namespace_dds_domain(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
     pyrti::process_inits<DomainParticipant>(m, l);
     pyrti::process_inits<DomainParticipantListener>(m, l);
 
-    init_namespace_dds_domain_qos(m, l);
+    init_namespace_dds_domain_qos(m, l, v);
 }

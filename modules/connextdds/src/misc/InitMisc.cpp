@@ -30,5 +30,4 @@ void init_misc_early(py::module& m, pyrti::ClassInitList& l)
 // Init all bindings that depend on DDS for signatures
 void init_misc_late(py::module& m)
 {
-    /* Moved to rti::util namespace */
 }

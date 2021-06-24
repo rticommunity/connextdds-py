@@ -16,7 +16,7 @@
 
 using namespace dds::pub;
 
-void init_namespace_dds_pub(py::module& m, pyrti::ClassInitList& l)
+void init_namespace_dds_pub(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
     pyrti::process_inits<AnyDataWriter>(m, l);
     pyrti::process_inits<AnyDataWriterListener>(m, l);
@@ -25,5 +25,5 @@ void init_namespace_dds_pub(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<PublisherListener>(m, l);
     pyrti::process_inits<SuspendedPublication>(m, l);
 
-    init_namespace_dds_pub_qos(m, l);
+    init_namespace_dds_pub_qos(m, l, v);
 }

@@ -100,24 +100,14 @@ void process_inits<HeapMonitoringParams>(py::module& m, ClassInitList& l)
             });
 
     l.push_back([m]() mutable {
-        auto retval = init_class<HeapMonitoringParams>(m, "HeapMonitoringParams");
-
-        m.def(
-                "enable",
-                (bool (*)(const HeapMonitoringParams&)) &rti::util::heap_monitoring::enable,
-                py::arg("params"),
-                "Start monitoring the heap memory used by RTI Connext with params. "
-                "Must be called before any using any other in the RTI Connext "
-                "library.");
-
-        return retval;
+        return init_class<HeapMonitoringParams>(m, "HeapMonitoringParams");
     });
 }
 #endif
 
 }  // namespace pyrti
 
-void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l) {
+void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v) {
     auto heapmon = m.def_submodule(
         "heap_monitoring",
         "Monitor memory allocations done by the middleware on "
@@ -127,28 +117,41 @@ void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l) {
     pyrti::process_inits<HeapMonitoringParams>(heapmon, l);
 #endif
 
-    heapmon.def(
-            "enable",
-            (bool (*)()) &rti::util::heap_monitoring::enable,
-            "Start monitoring the heap memory used by RTI Connext. "
-            "Must be called before any using any other int the RTI Connext "
-            "library.")
-        .def(
-            "disable",
-            &rti::util::heap_monitoring::disable,
-            "Stop monitoring the heap memory used by RTI Connext.")
-        .def(
-            "pause",
-            &rti::util::heap_monitoring::pause,
-            "Pauses heap monitoring.")
-        .def(
-            "resume",
-            &rti::util::heap_monitoring::resume,
-            "Resumes heap monitoring.")
-        .def(
-            "take_snapshot",
-            &rti::util::heap_monitoring::take_snapshot,
-            py::arg("filename"),
-            py::arg("print_details") = false,
-            "Saves the current heap memory usage in a file.");
+    v.push_back(
+        [heapmon]() mutable {
+            heapmon.def(
+                "enable",
+                (bool (*)()) &rti::util::heap_monitoring::enable,
+                "Start monitoring the heap memory used by RTI Connext. "
+                "Must be called before any using any other int the RTI Connext "
+                "library.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def(
+                "enable",
+                (bool (*)(const HeapMonitoringParams&)) &rti::util::heap_monitoring::enable,
+                py::arg("params"),
+                "Start monitoring the heap memory used by RTI Connext with params. "
+                "Must be called before any using any other in the RTI Connext "
+                "library.")
+#endif
+            .def(
+                "disable",
+                &rti::util::heap_monitoring::disable,
+                "Stop monitoring the heap memory used by RTI Connext.")
+            .def(
+                "pause",
+                &rti::util::heap_monitoring::pause,
+                "Pauses heap monitoring.")
+            .def(
+                "resume",
+                &rti::util::heap_monitoring::resume,
+                "Resumes heap monitoring.")
+            .def(
+                "take_snapshot",
+                &rti::util::heap_monitoring::take_snapshot,
+                py::arg("filename"),
+                py::arg("print_details") = false,
+                "Saves the current heap memory usage in a file.");
+        }
+    );
 }

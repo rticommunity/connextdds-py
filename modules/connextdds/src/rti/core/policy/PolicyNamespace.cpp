@@ -14,7 +14,7 @@
 
 using namespace rti::core::policy;
 
-void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l)
+void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
     pyrti::process_inits<AcknowledgmentKind>(m, l);
     pyrti::process_inits<AsynchronousPublisher>(m, l);
@@ -22,6 +22,9 @@ void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<Batch>(m, l);
     pyrti::process_inits<BuiltinTopicReaderResourceLimits>(m, l);
     pyrti::process_inits<Database>(m, l);
+#if rti_connext_version_gte(6, 1, 0)
+    pyrti::process_inits<DataReaderInstanceRemovalKind>(m, l);
+#endif
     pyrti::process_inits<DataReaderProtocol>(m, l);
     pyrti::process_inits<DataWriterProtocol>(m, l);
     pyrti::process_inits<DataReaderResourceLimits>(m, l);
