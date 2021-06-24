@@ -198,6 +198,7 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
 
 def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain, python_root):
     pyproject_filename = 'pyproject.toml'
+    manifest_filename = "MANIFEST.in"
     packagecfg_filename = 'package.cfg'
 
     if toolchain:
@@ -221,6 +222,13 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain,
     config.set('build-system', 'requires', str(requires))
     with open(os.path.join(get_script_dir(), pyproject_filename), 'w') as pyproject_file:
         config.write(pyproject_file)
+
+    # Modify MANIFEST.in template
+    manifest_template = os.path.join(get_script_dir(), 'templates', manifest_filename)
+    manifest_configured = os.path.join(get_script_dir(), manifest_filename)
+    shutil.copyfile(manifest_template, manifest_configured)
+    with open(manifest_configured, 'a') as manifest:
+        manifest.write('recursive-include platform {}\n'.format(platform))
 
     # Create package.cfg file
     config = configparser.ConfigParser()

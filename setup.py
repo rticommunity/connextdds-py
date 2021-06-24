@@ -22,6 +22,7 @@ except:
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.bdist_rpm import bdist_rpm
 
 
 PACKAGE_CONFIG_FILENAME = 'package.cfg'
@@ -135,6 +136,21 @@ def process_config():
     return config
 
 
+class ConnextPyRpm(bdist_rpm):
+    def _make_spec_file(self):
+        import site
+        spec = super()._make_spec_file()
+        defines = [r'%define debug_package %{nil}',
+                   r'%define __requires_exclude ^lib(ndds|rti).*.so']
+        sitelib = site.getsitepackages()[0]
+        files = [
+            sitelib + '/rti/*',
+            sitelib + '/rti/logging/*',
+        ]
+        retval = defines + spec + files
+        return retval
+
+
 class CMakeExtension(Extension):
     def __init__(self, name, dependencies):
         Extension.__init__(self, name, sources=[])
@@ -229,5 +245,5 @@ package_cfg = process_config()
 
 setup(
     ext_modules=[CMakeExtension('rti.connextdds', get_package_libs('rti')), CMakeExtension('rti.logging.distlog', get_package_libs('rti.logging'))],
-    cmdclass=dict(build_ext=CMakeBuild)
+    cmdclass=dict(build_ext=CMakeBuild, bdist_rpm=ConnextPyRpm)
 )
