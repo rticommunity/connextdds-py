@@ -228,7 +228,7 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain,
     manifest_configured = os.path.join(get_script_dir(), manifest_filename)
     shutil.copyfile(manifest_template, manifest_configured)
     with open(manifest_configured, 'a') as manifest:
-        manifest.write('recursive-include platform {}\n'.format(platform))
+        manifest.write('graft {}\n'.format(os.path.join('platform', platform)))
 
     # Create package.cfg file
     config = configparser.ConfigParser()
