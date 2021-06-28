@@ -40,7 +40,7 @@ while True:
 
 - Windows (requires Visual Studio 2015 or newer), macOS, and Linux
 - Python 2.7, Python 3.x with pip
-- RTI Connext DDS 5.3.1, 6.0.0, 6.0.1
+- RTI Connext DDS 5.3.1, 6.0.0, 6.0.1, 6.1.0
 - [patchelf](https://github.com/NixOS/patchelf) (Python 2.7.x on Linux)
 
 ## Configuration
@@ -103,7 +103,7 @@ $ pip3 install cmake
 $ pip3 install patchelf-wrapper # Linux builds only
 $ pip3 install delocate         # macOS builds only
 $ python3 setup.py bdist_wheel
-$ pip3 install pybind11==2.6.1
+$ pip3 install pybind11==2.6.2
 $ pip3 install dist/*
 ```
 
