@@ -27,7 +27,7 @@ void process_inits<DataReaderInstanceRemovalKind>(py::module& m, ClassInitList& 
             DataReaderInstanceRemovalKind_def>(m, "DataReaderInstanceRemovalKind ", [](py::object& o) {
         py::enum_<DataReaderInstanceRemovalKind::type>(o, "DataReaderInstanceRemovalKind ")
                 .value("NO_INSTANCE",
-                       DataReaderInstanceRemovalKind ::type::NO_INSTANCE,
+                       DataReaderInstanceRemovalKind::type::NO_INSTANCE,
                        "No instance can be removed.")
                 .value("EMPTY_INSTANCES",
                        DataReaderInstanceRemovalKind::type::EMPTY_INSTANCES,
