@@ -68,10 +68,10 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, dds::core::external<T>);
 
 namespace pyrti {
 
-typedef std::function<void()> DefInitFunc;
-typedef std::function<DefInitFunc()> ClassInitFunc;
-typedef std::list<ClassInitFunc> ClassInitList;
-typedef std::vector<DefInitFunc> DefInitVector;
+using DefInitFunc = std::function<void()>;
+using ClassInitFunc = std::function<DefInitFunc()>;
+using ClassInitList = std::list<ClassInitFunc>;
+using DefInitVector = std::vector<DefInitFunc>;
 
 template<typename T>
 void process_inits(py::module&, ClassInitList&);
