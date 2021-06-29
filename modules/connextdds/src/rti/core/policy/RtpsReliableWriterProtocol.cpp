@@ -343,6 +343,19 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls)
                     "The minimum number of requesting readers needed to "
                     "trigger a "
                     "multicast resend.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def_property(
+                    "disable_repair_piggyback_heartbeat",
+                    (bool(RtpsReliableWriterProtocol::*)() const)
+                            & RtpsReliableWriterProtocol::
+                                    disable_repair_piggyback_heartbeat,
+                    (RtpsReliableWriterProtocol
+                     & (RtpsReliableWriterProtocol::*) (bool))
+                            & RtpsReliableWriterProtocol::
+                                    disable_repair_piggyback_heartbeat,
+                    "Prevents piggyback heartbeats from being sent with "
+                    "repair samples.")
+#endif
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }
