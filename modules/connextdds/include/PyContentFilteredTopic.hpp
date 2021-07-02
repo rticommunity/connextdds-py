@@ -207,6 +207,22 @@ void init_content_filtered_topics_defs(py::class_<
                     py::arg("remove_term"),
                     "Removes the specified term from the parameter at the "
                     "provided index.")
+            .def_static(
+                    "find",
+                    [](PyDomainParticipant& dp, const std::string& name) {
+                        dds::core::optional<PyContentFilteredTopic<T>> retval;
+                        auto t = dds::topic::find<dds::topic::ContentFilteredTopic<T>>(
+                                dp,
+                                name);
+                        if (t != dds::core::null)
+                            retval = PyContentFilteredTopic<T>(t);
+                        return retval;
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    py::arg("participant"),
+                    py::arg("name"),
+                    "Look up a ContentFilteredTopic by its name in the "
+                    "DomainParticipant.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 
