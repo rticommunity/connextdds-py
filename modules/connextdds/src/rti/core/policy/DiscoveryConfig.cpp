@@ -22,21 +22,35 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cls)
 {
-    cls.def_static(
-               "all",
-               &DiscoveryConfigBuiltinPluginKindMask::all,
+    cls.def_property_readonly_static(
+               "ALL",
+               [](py::object&) {
+                    return DiscoveryConfigBuiltinPluginKindMask::all();
+               },
                "Create a mask with all bits set.")
-            .def_static(
-                    "none",
-                    &DiscoveryConfigBuiltinPluginKindMask::none,
+            .def_property_readonly_static(
+                    "NONE",
+                    [](py::object&) {
+                        return DiscoveryConfigBuiltinPluginKindMask::none();
+                    },
                     "Create a mask with no bits set.")
-            .def_static(
-                    "sdp",
-                    &DiscoveryConfigBuiltinPluginKindMask::SDP,
+            .def_property_readonly_static(
+                    "SDP",
+                    [](py::object&) {
+                        return DiscoveryConfigBuiltinPluginKindMask::SDP();
+                    },
                     "Create a mask that selects the Simple Discovery Protocol "
                     "(SDP).")
-            .def_static("spdp", &DiscoveryConfigBuiltinPluginKindMask::SPDP)
-            .def_static("sedp", &DiscoveryConfigBuiltinPluginKindMask::SEDP);
+            .def_property_readonly_static(
+                    "SPDP", 
+                    [](py::object&) {
+                        return DiscoveryConfigBuiltinPluginKindMask::SPDP();
+                    })
+            .def_property_readonly_static(
+                    "SEDP",
+                    [](py::object&) {
+                        return DiscoveryConfigBuiltinPluginKindMask::SEDP();
+                    });
 }
 
 template<>

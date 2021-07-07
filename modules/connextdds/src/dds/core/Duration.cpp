@@ -95,14 +95,23 @@ void init_class_defs(py::class_<Duration>& cls)
                     "__int__",
                     [](const Duration& d) { return d.to_microsecs(); },
                     "Integer value of Duration in microseconds.")
-            .def_static("zero", &Duration::zero, "Create a Duration of zero.")
-            .def_static(
+            .def_property_readonly_static(
+                    "zero",
+                    [](py::object&) {
+                         return Duration::zero();
+                    },
+                    "Create a Duration of zero.")
+            .def_property_readonly_static(
                     "infinite",
-                    &Duration::infinite,
+                    [](py::object&) {
+                         return Duration::infinite();
+                    },
                     "Create an infinite Duration")
-            .def_static(
+            .def_property_readonly_static(
                     "automatic",
-                    &Duration::automatic,
+                    [](py::object&) {
+                         return Duration::automatic();
+                    },
                     "Create a special Duration value to indicate a value "
                     "should be selected automatically.")
             .def_static(

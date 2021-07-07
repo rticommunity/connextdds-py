@@ -21,10 +21,31 @@ using namespace dds::sub;
 
 namespace pyrti {
 
+inline SubscriberListenerPtr get_subscriber_listener(const dds::sub::Subscriber& s) {
+    return get_listener<dds::sub::Subscriber, SubscriberListenerPtr>(s);
+}
+
+inline void set_subscriber_listener(
+        dds::sub::Subscriber& s,
+        PySubscriberListenerPtr l) {
+    set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l);
+}
+
+inline void set_subscriber_listener(
+        dds::sub::Subscriber& s,
+        PySubscriberListenerPtr l,
+        const dds::core::status::StatusMask& m) {
+    set_listener<dds::sub::Subscriber, PySubscriberListenerPtr>(s, l, m);
+}
+
+inline PySubscriberListenerPtr downcast_subscriber_listener_ptr(SubscriberListenerPtr l) {
+    return downcast_listener_ptr<PySubscriberListenerPtr, SubscriberListenerPtr>(l);
+}
+
 PySubscriber::PySubscriber(
         const PyDomainParticipant& p,
         const dds::sub::qos::SubscriberQos& q,
-        PySubscriberListener* l,
+        PySubscriberListenerPtr l,
         const dds::core::status::StatusMask& m)
         : dds::sub::Subscriber(p, q, l, m)
 {
@@ -35,10 +56,11 @@ PySubscriber::PySubscriber(
 PySubscriber::~PySubscriber()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-            && nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
+            && nullptr != get_subscriber_listener(*this)) {
+            py::object listener = py::cast(get_subscriber_listener(*this));
+            PySubscriberListenerPtr null_listener = nullptr;
+            set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -47,8 +69,9 @@ PySubscriber::~PySubscriber()
 void PySubscriber::py_close()
 {
     if (nullptr != this->listener()) {
-        py::object listener = py::cast(this->listener());
-        this->listener(nullptr, dds::core::status::StatusMask::none());
+        py::object listener = py::cast(get_subscriber_listener(*this));
+        PySubscriberListenerPtr null_listener = nullptr;
+        set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();
@@ -63,7 +86,7 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
             "Create a subscriber under a DomainParticipant.")
             .def(py::init([](const PyDomainParticipant& dp,
                              const qos::SubscriberQos& q,
-                             dds::core::optional<PySubscriberListener*> l,
+                             dds::core::optional<PySubscriberListenerPtr> l,
                              const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PySubscriber(dp, q, listener, m);
@@ -96,9 +119,8 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                     "listener",
                     [](const PySubscriber& sub) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PySubscriberListener*> l;
-                        auto ptr = dynamic_cast<PySubscriberListener*>(
-                                sub.listener());
+                        dds::core::optional<PySubscriberListenerPtr> l;
+                        auto ptr = downcast_subscriber_listener_ptr(get_subscriber_listener(sub));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -107,20 +129,35 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
             .def(
                     "bind_listener",
                     [](PySubscriber& sub,
-                       dds::core::optional<PySubscriberListener*> l,
+                       dds::core::optional<PySubscriberListenerPtr> l,
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != sub.listener()) {
-                            py::cast(sub.listener()).dec_ref();
+                        if (nullptr != get_subscriber_listener(sub)) {
+                            py::cast(get_subscriber_listener(sub)).dec_ref();
                         }
-                        sub.listener(listener, m);
+                        set_subscriber_listener(sub, listener, m);
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
                     "Bind the listener and event mask to the Subscriber.")
+            .def(
+                    "bind_listener",
+                    [](PySubscriber& sub,
+                       dds::core::optional<PySubscriberListenerPtr> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::cast(listener).inc_ref();
+                        }
+                        if (nullptr != get_subscriber_listener(sub)) {
+                            py::cast(get_subscriber_listener(sub)).dec_ref();
+                        }
+                        set_subscriber_listener(sub, listener);
+                    },
+                    py::arg("listener"),
+                    "Bind the listener to the Subscriber.")
             .def_property(
                     "qos",
                     [](const PySubscriber& sub) {

@@ -17,7 +17,8 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<
                      PyAnyDataReaderListener,
-                     PyAnyDataReaderListenerTrampoline<>>& cls)
+                     PyAnyDataReaderListenerTrampoline<>,
+                     std::shared_ptr<PyAnyDataReaderListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_requested_deadline_missed",
@@ -70,7 +71,8 @@ template<>
 void init_class_defs(py::class_<
                      PyNoOpAnyDataReaderListener,
                      PyAnyDataReaderListener,
-                     PyNoOpAnyDataReaderListenerTrampoline<>>& cls)
+                     PyNoOpAnyDataReaderListenerTrampoline<>,
+                     std::shared_ptr<PyNoOpAnyDataReaderListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_requested_deadline_missed",
@@ -127,18 +129,20 @@ void process_inits<dds::sub::AnyDataReaderListener>(
     l.push_back([m]() mutable {
         return init_class<
                 PyAnyDataReaderListener,
-                PyAnyDataReaderListenerTrampoline<>>(
-                m,
-                "AnyDataReaderListener");
+                PyAnyDataReaderListenerTrampoline<>,
+                std::shared_ptr<PyAnyDataReaderListener>>(
+                        m,
+                        "AnyDataReaderListener");
     });
 
     l.push_back([m]() mutable {
         return init_class<
                 PyNoOpAnyDataReaderListener,
                 PyAnyDataReaderListener,
-                PyNoOpAnyDataReaderListenerTrampoline<>>(
-                m,
-                "NoOpAnyDataReaderListener");
+                PyNoOpAnyDataReaderListenerTrampoline<>,
+                std::shared_ptr<PyNoOpAnyDataReaderListener>>(
+                        m,
+                        "NoOpAnyDataReaderListener");
     });
 }
 

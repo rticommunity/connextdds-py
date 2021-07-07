@@ -35,18 +35,24 @@ void init_class_defs(py::class_<StreamKind>& cls)
                     return std::string("StreamKind.INVALID");
                 }
             })
-            .def_static(
-                    "live",
-                    &rti::sub::status::StreamKind::live,
+            .def_property_readonly_static(
+                    "LIVE",
+                    [](py::object&) {
+                        return rti::sub::status::StreamKind::live();
+                    },
                     "Returns the StreamKind that selects the live stream.")
-            .def_static(
-                    "topic_query",
-                    &rti::sub::status::StreamKind::topic_query,
+            .def_property_readonly_static(
+                    "TOPIC_QUERY",
+                    [](py::object&) {
+                        return rti::sub::status::StreamKind::topic_query();
+                    },
                     "Returns the StreamKind that selects the topic-query "
                     "stream.")
-            .def_static(
-                    "any",
-                    &rti::sub::status::StreamKind::any,
+            .def_property_readonly_static(
+                    "ANY",
+                    [](py::object&) {
+                        return rti::sub::status::StreamKind::any();
+                    },
                     "Returns the StreamKind that selects either stream.");
 }
 
@@ -107,27 +113,35 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                         ds.view_state(vs);
                     },
                     "The ViewState of the DataStateEx.")
-            .def_static(
+            .def_property_readonly_static(
                     "any",
-                    &DataStateEx::any,
+                    [](py::object&) {
+                        return DataStateEx::any();
+                    },
                     "Create a DataStateEx with InstanceState.any(), "
                     "ViewState.any(), "
                     "SampleState.any(), and StreamKind.any()")
-            .def_static(
+            .def_property_readonly_static(
                     "new_data",
-                    &DataStateEx::new_data,
+                    [](py::object&) {
+                        return DataStateEx::new_data();
+                    },
                     "Create a DataStateEx with InstanceState.alive(), "
                     "ViewState.any(), "
                     "SampleState.not_read()")
-            .def_static(
+            .def_property_readonly_static(
                     "any_data",
-                    &DataStateEx::any_data,
+                    [](py::object&) {
+                        return DataStateEx::any_data();
+                    },
                     "Create a DataStateEx with InstanceState.alive(), "
                     "ViewState.any(), "
                     "SampleState.any(), and StreamKind.any()")
-            .def_static(
+            .def_property_readonly_static(
                     "new_instance",
-                    &DataStateEx::new_instance,
+                    [](py::object&) {
+                        return DataStateEx::new_instance();
+                    },
                     "Create a DataStateEx with InstanceState.alive(), "
                     "ViewState.new_view(), SampleState.any() and "
                     "StreamKind.any()")

@@ -16,7 +16,7 @@
 
 using namespace dds::sub;
 
-void init_namespace_dds_sub(py::module& m, pyrti::ClassInitList& l)
+void init_namespace_dds_sub(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
     pyrti::process_inits<AnyDataReader>(m, l);
     pyrti::process_inits<AnyDataReaderListener>(m, l);
@@ -29,7 +29,7 @@ void init_namespace_dds_sub(py::module& m, pyrti::ClassInitList& l)
     pyrti::process_inits<Subscriber>(m, l);
     pyrti::process_inits<SubscriberListener>(m, l);
 
-    init_namespace_dds_sub_cond(m, l);
-    init_namespace_dds_sub_qos(m, l);
-    init_namespace_dds_sub_status(m, l);
+    init_namespace_dds_sub_cond(m, l, v);
+    init_namespace_dds_sub_qos(m, l, v);
+    init_namespace_dds_sub_status(m, l, v);
 }

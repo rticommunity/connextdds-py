@@ -43,7 +43,7 @@ def subscriber_main(domain_id, sample_count):
     print("Filter: 2 divides x")
 
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic)
-    reader.bind_listener(CcfListener(), dds.StatusMask.data_available())
+    reader.bind_listener(CcfListener(), dds.StatusMask.DATA_AVAILABLE)
 
     count = 0
     while (sample_count == 0) or (count < sample_count):

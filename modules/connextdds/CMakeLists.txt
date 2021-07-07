@@ -6,7 +6,7 @@ find_package(
 )
 
 find_package(
-    Python
+    Python${RTI_PYTHON_MAJOR_VERSION}
     REQUIRED
     COMPONENTS
         Interpreter
@@ -39,6 +39,9 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyAsyncioExecutor.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/InitMisc.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/DDSSTLBinds.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/util/UtilNamespace.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/util/HeapMonitoring.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/util/NetworkCapture.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/status/StatusNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/status/EventCount64.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/status/DataWriterCacheStatus.cpp"
@@ -61,6 +64,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataMemberInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicDataTypeSerializationProperty.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/DynamicTypePrintFormatProperty.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/UnidimensionalCollectionType.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/xtypes/XtypesNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/MultiChannel.cpp"
@@ -98,6 +102,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/Batch.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/AsynchronousPublisher.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/ExclusiveArea.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/policy/DataReaderInstanceRemovalKind.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/BuiltinProfiles.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/QosProviderParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/LocatorFilterElement.cpp"
@@ -120,8 +125,13 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/TransportInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/TransportMulticastSettings.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/EndpointGroup.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/CompressionSettings.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/CoherentSetInfo.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/QosPrintFormat.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/DataReaderResourceLimitsInstanceReplacementSettings.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/ConfigNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/Logger.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/ActivityContext.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/ContentFilterBase.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/FilterSampleInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/ExpressionProperty.cpp"

@@ -45,9 +45,11 @@ void init_class_defs(py::class_<PublishMode>& cls)
                     "The priority of all samples written by a DataWriter.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.")
-            .def_static(
+            .def_property_readonly_static(
                     "synchronous",
-                    &PublishMode::Synchronous,
+                    [](py::object&) {
+                        return PublishMode::Synchronous();
+                    },
                     "Creates a PublishMode qos policy of synchronous kind.")
             .def_static(
                     "asynchronous",

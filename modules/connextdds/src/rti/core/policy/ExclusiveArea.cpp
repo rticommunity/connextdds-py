@@ -34,13 +34,17 @@ void init_class_defs(py::class_<ExclusiveArea>& cls)
                     "Whether the Entity is protected by its own exclusive area "
                     "or the "
                     "shared one.")
-            .def_static(
+            .def_property_readonly_static(
                     "shared_ea",
-                    &ExclusiveArea::SharedEA,
+                    [](py::object&) {
+                        return ExclusiveArea::SharedEA();
+                    },
                     "Returns ExclusiveArea(true)")
-            .def_static(
+            .def_property_readonly_static(
                     "exclusive_ea",
-                    &ExclusiveArea::ExclusiveEA,
+                    [](py::object&) {
+                        return ExclusiveArea::ExclusiveEA();
+                    },
                     "Returns ExclusiveArea(false)")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

@@ -13,7 +13,6 @@
 
 #include "PyConnext.hpp"
 #include <dds/topic/TopicListener.hpp>
-#include "PyTopic.hpp"
 
 namespace py = pybind11;
 
@@ -92,7 +91,7 @@ public:
 
 template<typename T>
 void init_topic_listener_defs(
-        py::class_<PyTopicListener<T>, PyTopicListenerTrampoline<T>>& cls)
+        py::class_<PyTopicListener<T>, PyTopicListenerTrampoline<T>, std::shared_ptr<PyTopicListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_inconsistent_topic",
@@ -107,7 +106,8 @@ template<typename T>
 void init_noop_topic_listener_defs(py::class_<
                                    PyNoOpTopicListener<T>,
                                    PyTopicListener<T>,
-                                   PyNoOpTopicListenerTrampoline<T>>& cls)
+                                   PyNoOpTopicListenerTrampoline<T>,
+                                   std::shared_ptr<PyNoOpTopicListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_inconsistent_topic",
@@ -120,11 +120,15 @@ void init_noop_topic_listener_defs(py::class_<
 
 template<typename T>
 void init_topic_listener(
-        py::class_<PyTopicListener<T>, PyTopicListenerTrampoline<T>>& tl,
+        py::class_<
+                PyTopicListener<T>,
+                PyTopicListenerTrampoline<T>,
+                std::shared_ptr<PyTopicListener<T>>>& tl,
         py::class_<
                 PyNoOpTopicListener<T>,
                 PyTopicListener<T>,
-                PyNoOpTopicListenerTrampoline<T>>& notl)
+                PyNoOpTopicListenerTrampoline<T>,
+                std::shared_ptr<PyNoOpTopicListener<T>>>& notl)
 {
     init_topic_listener_defs(tl);
     init_noop_topic_listener_defs(notl);

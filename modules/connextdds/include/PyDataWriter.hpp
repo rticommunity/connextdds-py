@@ -28,8 +28,44 @@
 
 namespace pyrti {
 
+#if rti_connext_version_lt(6, 1, 0)
 template<typename T>
-class PyDataWriterListener;
+using DataWriterListenerPtr = dds::pub::DataWriterListener<T>*;
+
+template<typename T>
+using PyDataWriterListenerPtr = PyDataWriterListener<T>*;
+#else
+template<typename T>
+using DataWriterListenerPtr = std::shared_ptr<dds::pub::DataWriterListener<T>>;
+
+template<typename T>
+using PyDataWriterListenerPtr = std::shared_ptr<PyDataWriterListener<T>>;
+#endif
+
+template<typename T>
+inline DataWriterListenerPtr<T> get_dw_listener(const dds::pub::DataWriter<T>& dw) {
+    return get_listener<dds::pub::DataWriter<T>, DataWriterListenerPtr<T>>(dw);
+}
+
+template<typename T>
+inline void set_dw_listener(
+        dds::pub::DataWriter<T>& dw,
+        PyDataWriterListenerPtr<T> l) {
+    set_listener<dds::pub::DataWriter<T>, PyDataWriterListenerPtr<T>>(dw, l);
+}
+
+template<typename T>
+inline void set_dw_listener(
+        dds::pub::DataWriter<T>& dw,
+        PyDataWriterListenerPtr<T> l,
+        const dds::core::status::StatusMask& m) {
+    set_listener<dds::pub::DataWriter<T>, PyDataWriterListenerPtr<T>>(dw, l, m);
+}
+
+template<typename T>
+inline PyDataWriterListenerPtr<T> downcast_dw_listener_ptr(DataWriterListenerPtr<T> l) {
+    return downcast_listener_ptr<PyDataWriterListenerPtr<T>, DataWriterListenerPtr<T>>(l);
+}
 
 template<typename T>
 class PyDataWriter : public dds::pub::DataWriter<T>,
@@ -42,7 +78,7 @@ public:
             const PyPublisher& p,
             const PyTopic<T>& t,
             const dds::pub::qos::DataWriterQos& q,
-            PyDataWriterListener<T>* l,
+            PyDataWriterListenerPtr<T> l,
             const dds::core::status::StatusMask& m)
             : dds::pub::DataWriter<T>(p, t, q, l, m)
     {
@@ -53,10 +89,11 @@ public:
     virtual ~PyDataWriter()
     {
         if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-                && nullptr != this->listener()) {
-                py::object listener = py::cast(this->listener());
-                this->listener(nullptr, dds::core::status::StatusMask::none());
+            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
+                && nullptr != get_dw_listener(*this)) {
+                py::object listener = py::cast(get_dw_listener(*this));
+                PyDataWriterListenerPtr<T> null_listener = nullptr;
+                set_dw_listener(*this, null_listener, dds::core::status::StatusMask::none());
                 listener.dec_ref();
             }
         }
@@ -120,9 +157,10 @@ public:
 
     void py_close() override
     {
-        if (nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+        if (nullptr != get_dw_listener(*this)) {
+            py::object listener = py::cast(get_dw_listener(*this));
+            PyDataWriterListenerPtr<T> null_listener = nullptr;
+            set_dw_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
         this->close();
@@ -166,7 +204,7 @@ void init_dds_typed_datawriter_base_template(
             .def(py::init([](const PyPublisher& p,
                              const PyTopic<T>& t,
                              const dds::pub::qos::DataWriterQos& q,
-                             dds::core::optional<PyDataWriterListener<T>*> l,
+                             dds::core::optional<PyDataWriterListenerPtr<T>> l,
                              const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataWriter<T>(p, t, q, listener, m);
@@ -634,9 +672,8 @@ void init_dds_typed_datawriter_base_template(
                     "listener",
                     [](PyDataWriter<T>& dw) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyDataWriterListener<T>*> l;
-                        auto ptr = dynamic_cast<PyDataWriterListener<T>*>(
-                                dw.listener());
+                        dds::core::optional<PyDataWriterListenerPtr<T>> l;
+                        auto ptr = downcast_dw_listener_ptr(get_dw_listener(dw));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -646,21 +683,37 @@ void init_dds_typed_datawriter_base_template(
             .def(
                     "bind_listener",
                     [](PyDataWriter<T>& dw,
-                       dds::core::optional<PyDataWriterListener<T>*> l,
+                       dds::core::optional<PyDataWriterListenerPtr<T>> l,
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != dw.listener()) {
-                            py::cast(dw.listener()).dec_ref();
+                        if (nullptr != get_dw_listener(dw)) {
+                            py::cast(get_dw_listener(dw)).dec_ref();
                         }
-                        dw.listener(listener, m);
+                        set_dw_listener(dw, listener, m);
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and event mask for the DataWriter.")
+            .def(
+                    "bind_listener",
+                    [](PyDataWriter<T>& dw,
+                       dds::core::optional<PyDataWriterListenerPtr<T>> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::cast(listener).inc_ref();
+                        }
+                        if (nullptr != get_dw_listener(dw)) {
+                            py::cast(get_dw_listener(dw)).dec_ref();
+                        }
+                        set_dw_listener(dw, listener);
+                    },
+                    py::arg("listener"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Set the listener for the DataWriter.")
             .def_property_readonly(
                     "liveliness_lost_status",
                     [](PyDataWriter<T>& dw) {
@@ -882,6 +935,16 @@ void init_dds_typed_datawriter_base_template(
                     py::arg("handle"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Get the SubscriptionBuiltinTopicData for a subscription "
+                    "matched to this DataWriter.")
+            .def(
+                    "matched_subscription_participant_data",
+                    [](const PyDataWriter<T>& dw,
+                       const dds::core::InstanceHandle& h) {
+                        return rti::pub::matched_subscription_participant_data<T>(dw, h);
+                    },
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Get the ParticipantBuiltinTopicData for a subscription "
                     "matched to this DataWriter.")
             .def_static(
                     "find_all_by_topic",
@@ -1187,6 +1250,22 @@ void init_dds_typed_datawriter_base_template(
                     "and a "
                     "timestamp. This method is awaitable and only for use with "
                     "asyncio.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def(
+                    "is_matched_subscription_active",
+                    [](const PyDataWriter<T>& dw, const dds::core::InstanceHandle& h) { 
+                        return rti::pub::is_matched_subscription_active(dw, h); 
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "A boolean indicating whether or not the matched subscription is active.")
+            .def_property_readonly(
+                    "matched_subscriptions_locators",
+                    [](const PyDataWriter<T>& dw) { 
+                        return rti::pub::matched_subscriptions_locators(dw); 
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "The locators used to communicate with matched DataReaders.")
+#endif
             .def(
                     "close",
                     [](PyDataWriter<T>& dw) { dw->close(); },

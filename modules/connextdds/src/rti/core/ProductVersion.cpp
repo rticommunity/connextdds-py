@@ -37,15 +37,19 @@ void init_class_defs(py::class_<ProductVersion>& cls)
                     &ProductVersion::revision_version,
                     "The revision number of product.")
             .def("__str__", &ProductVersion::to_string)
-            .def_static(
+            .def_property_readonly_static(
                     "current",
-                    &ProductVersion::current,
+                    [](py::object&) {
+                        return ProductVersion::current();
+                    },
                     "Create an instance representing the current version of "
                     "RTI "
                     "Connext.")
-            .def_static(
+            .def_property_readonly_static(
                     "unknown",
-                    &ProductVersion::unknown,
+                    [](py::object&) {
+                        return ProductVersion::unknown();
+                    },
                     "Create an instance representing an unknown version.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

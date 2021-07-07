@@ -158,16 +158,17 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
     if 'Win' in arch:
         import glob
         msvc_lib = glob.glob(os.path.join(platform_lib_dir, 'msvc*.dll'))
-        assert len(msvc_lib) == 1
-        basename = os.path.basename(msvc_lib[0])
-        plugin_list.append(basename)
-        copy_libs.append(
-            check_lib(os.path.splitext(basename)[0],
-            arch,
-            lib_ends,
-            platform_lib_dir,
-            dst_dir,
-            False))
+        if msvc_lib:
+            assert len(msvc_lib) == 1
+            basename = os.path.basename(msvc_lib[0])
+            plugin_list.append(basename)
+            copy_libs.append(
+                check_lib(os.path.splitext(basename)[0],
+                arch,
+                lib_ends,
+                platform_lib_dir,
+                dst_dir,
+                False))
     for plugin in plugins:
         plugin_list.append(lib_ends.prefix + plugin + get_debug_suffix(is_debug) + lib_ends.suffix)
         if plugin == 'nddssecurity':
@@ -197,6 +198,7 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
 
 def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain, python_root):
     pyproject_filename = 'pyproject.toml'
+    manifest_filename = "MANIFEST.in"
     packagecfg_filename = 'package.cfg'
 
     if toolchain:
@@ -211,15 +213,22 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain,
 
     # Modify pyproject.toml template
     config = configparser.ConfigParser()
-    config.read(os.path.join('templates',pyproject_filename))
+    config.read(os.path.join(get_script_dir(), 'templates',pyproject_filename))
     requires = ast.literal_eval(config.get('build-system', 'requires'))
     if 'Darwin' in platform:
         requires.append('delocate')
     elif 'Linux' in platform:
         requires.append('patchelf-wrapper')
     config.set('build-system', 'requires', str(requires))
-    with open(pyproject_filename, 'w') as pyproject_file:
+    with open(os.path.join(get_script_dir(), pyproject_filename), 'w') as pyproject_file:
         config.write(pyproject_file)
+
+    # Modify MANIFEST.in template
+    manifest_template = os.path.join(get_script_dir(), 'templates', manifest_filename)
+    manifest_configured = os.path.join(get_script_dir(), manifest_filename)
+    shutil.copyfile(manifest_template, manifest_configured)
+    with open(manifest_configured, 'a') as manifest:
+        manifest.write('graft {}\n'.format(os.path.join('platform', platform)))
 
     # Create package.cfg file
     config = configparser.ConfigParser()
@@ -235,14 +244,11 @@ def update_config(nddshome, platform, jobs, debug, lib_dict, plugins, toolchain,
         config.set('package', 'cmake-toolchain', toolchain)
     if python_root:
         config.set('package', 'python-root', python_root)
-    with open(packagecfg_filename, 'w') as packagecfg_file:
+    with open(os.path.join(get_script_dir(), packagecfg_filename), 'w') as packagecfg_file:
         config.write(packagecfg_file)
 
 
 PlatformLibEnds = collections.namedtuple('PlatformLibEnds', ['prefix', 'suffix'])
-
-SETUPCFG_FILE = os.path.join(get_script_dir(), 'setup.cfg')
-BUILDCFG_FILE = os.path.join(get_script_dir(), 'build.cfg')
 
 rti_platform_ends = {
     'Linux': PlatformLibEnds('lib','.so'),

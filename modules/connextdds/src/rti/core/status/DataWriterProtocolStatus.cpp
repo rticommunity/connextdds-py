@@ -154,6 +154,44 @@ void init_class_defs(py::class_<DataWriterProtocolStatus>& cls)
                     "The sequence number of the first sample whose keep "
                     "duration has "
                     "not yet elapsed.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def_property_readonly(
+                    "pushed_fragment_count",
+                    &DataWriterProtocolStatus::
+                            pushed_fragment_count,
+                    "The number of DATA_FRAG messages that have been "
+                    "pushed by this DataWriter.")
+            .def_property_readonly(
+                    "pushed_fragment_bytes",
+                    &DataWriterProtocolStatus::
+                            pushed_fragment_bytes,
+                    "The number of bytes of DATA_FRAG messages that have been "
+                    "pushed by this DataWriter.")
+            .def_property_readonly(
+                    "pulled_fragment_count",
+                    &DataWriterProtocolStatus::
+                            pulled_fragment_count,
+                    "The number of DATA_FRAG messages that have been pulled "
+                    "from this DataWriter.")
+            .def_property_readonly(
+                    "pulled_fragment_bytes",
+                    &DataWriterProtocolStatus::
+                            pulled_fragment_bytes,
+                    "The number of bytes of DATA_FRAG messages that have been pulled "
+                    "from this DataWriter.")
+            .def_property_readonly(
+                    "received_nack_fragment_count",
+                    &DataWriterProtocolStatus::
+                            received_nack_fragment_count,
+                    "The number of NACK_FRAG messages that have been "
+                    "received by this DataWriter.")
+            .def_property_readonly(
+                    "received_nack_fragment_bytes",
+                    &DataWriterProtocolStatus::
+                            received_nack_fragment_bytes,
+                    "The number of bytes of NACK_FRAG messages that have been "
+                    "received by this DataWriter.")
+#endif
             .doc() = "Information about the DataWriter protocol status";
 }
 

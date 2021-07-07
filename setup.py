@@ -22,6 +22,8 @@ except:
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.bdist_rpm import bdist_rpm
+from distutils import sysconfig
 
 
 PACKAGE_CONFIG_FILENAME = 'package.cfg'
@@ -135,6 +137,22 @@ def process_config():
     return config
 
 
+class ConnextPyRpm(bdist_rpm, object):
+    def _make_spec_file(self):
+        import site
+        spec = super(ConnextPyRpm, self)._make_spec_file()
+        defines = [r'%define debug_package %{nil}',
+                   r'%define __requires_exclude ^lib(ndds|rti).*.so']
+        idx = [idx for idx, line in enumerate(spec) if '%files' in line][0]
+        spec[idx] = '%files'
+        sitelib = sysconfig.get_python_lib(plat_specific=1)
+        files = [
+            sitelib
+        ]
+        retval = defines + spec[:idx + 2] + files + spec[idx + 2:]
+        return retval
+
+
 class CMakeExtension(Extension):
     def __init__(self, name, dependencies):
         Extension.__init__(self, name, sources=[])
@@ -146,6 +164,9 @@ class CMakeBuild(build_ext):
         nddshome = get_nddshome()
         arch = get_arch()
         lib_dir = os.path.join(get_script_dir(), 'platform', arch)
+        
+        # CMake will find same Python major version as the one used for setup
+        major_version = sys.version_info.major
 
         cfg = 'Debug' if (self.debug or get_debug()) else 'Release'
         cmake_args = ['-DBUILD_SHARED_LIBS=ON',
@@ -153,6 +174,7 @@ class CMakeBuild(build_ext):
                       '-DCONNEXTDDS_ARCH=' + arch,
                       '-DCMAKE_BUILD_TYPE=' + cfg,
                       '-Dpybind11_DIR=' + pybind11.get_cmake_dir(),
+                      '-DRTI_PYTHON_MAJOR_VERSION=' + str(major_version),
                       '-DRTI_PLATFORM_DIR=' + lib_dir]
 
         cmake_toolchain = get_cmake_toolchain()
@@ -214,7 +236,7 @@ class CMakeBuild(build_ext):
                 with open(os.devnull, 'w') as devnull:
                     subprocess.check_call([python_cmd, stubgen] + stubgen_args + ['-o', extdir, ext.name], env=stubs_env, stderr=devnull)
             except:
-                print('Could not general stub file for {}'.format(ext.name))
+                print('Could not generate stub file for {}'.format(ext.name))
 
         for extdir in extdirs:
             if os.path.isdir(os.path.join(extdir, '__pycache__')):
@@ -229,5 +251,5 @@ package_cfg = process_config()
 
 setup(
     ext_modules=[CMakeExtension('rti.connextdds', get_package_libs('rti')), CMakeExtension('rti.logging.distlog', get_package_libs('rti.logging'))],
-    cmdclass=dict(build_ext=CMakeBuild)
+    cmdclass=dict(build_ext=CMakeBuild, bdist_rpm=ConnextPyRpm)
 )

@@ -30,13 +30,17 @@ void init_class_defs(py::class_<Ownership>& cls)
                     (Ownership & (Ownership::*) (OwnershipKind))
                             & Ownership::kind,
                     "The ownership kind.")
-            .def_static(
+            .def_property_readonly_static(
                     "shared",
-                    &Ownership::Shared,
+                    [](py::object&) {
+                        return Ownership::Shared();
+                    },
                     "Creates a Ownership instance with shared kind.")
-            .def_static(
+            .def_property_readonly_static(
                     "exclusive",
-                    &Ownership::Exclusive,
+                    [](py::object&) {
+                        return Ownership::Exclusive();
+                    },
                     "Creates a Ownership instance with exclusive kind.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

@@ -67,7 +67,7 @@
                 application from another when you're debugging.
                 -->
                 <participant_name>
-                    <name>Coherent Presentation C++03 example</name>
+                    <name>Coherent Presentation Python example</name>
                     <role_name>coherentParticipantRole</role_name>
                 </participant_name>
 

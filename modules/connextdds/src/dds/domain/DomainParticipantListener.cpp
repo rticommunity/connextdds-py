@@ -20,7 +20,8 @@ void init_class_defs(py::class_<
                      PyPublisherListener,
                      PySubscriberListener,
                      PyAnyTopicListener,
-                     PyDomainParticipantListenerTrampoline<>>& cls)
+                     PyDomainParticipantListenerTrampoline<>,
+                     std::shared_ptr<PyDomainParticipantListener>>& cls)
 {
     cls.def(py::init<>());
 }
@@ -29,7 +30,8 @@ template<>
 void init_class_defs(py::class_<
                      PyNoOpDomainParticipantListener,
                      PyDomainParticipantListener,
-                     PyNoOpDomainParticipantListenerTrampoline<>>& cls)
+                     PyNoOpDomainParticipantListenerTrampoline<>,
+                     std::shared_ptr<PyNoOpDomainParticipantListener>>& cls)
 {
     cls.def(py::init<>());
 }
@@ -45,18 +47,20 @@ void process_inits<dds::domain::DomainParticipantListener>(
                 PyPublisherListener,
                 PySubscriberListener,
                 PyAnyTopicListener,
-                PyDomainParticipantListenerTrampoline<>>(
-                m,
-                "DomainParticipantListener");
+                PyDomainParticipantListenerTrampoline<>,
+                std::shared_ptr<PyDomainParticipantListener>>(
+                    m,
+                    "DomainParticipantListener");
     });
 
     l.push_back([m]() mutable {
         return init_class<
                 PyNoOpDomainParticipantListener,
                 PyDomainParticipantListener,
-                PyNoOpDomainParticipantListenerTrampoline<>>(
-                m,
-                "NoOpDomainParticipantListener");
+                PyNoOpDomainParticipantListenerTrampoline<>,
+                std::shared_ptr<PyNoOpDomainParticipantListener>>(
+                    m,
+                    "NoOpDomainParticipantListener");
     });
 }
 

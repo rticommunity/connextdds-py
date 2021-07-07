@@ -58,17 +58,23 @@ void init_class_defs(py::class_<PrintFormatProperty>& cls)
                     (PrintFormatProperty & (PrintFormatProperty::*) (bool) )
                             & PrintFormatProperty::include_root_elements,
                     "Get/set the value of include_root_elements.")
-            .def_static(
+            .def_property_readonly_static(
                     "default",
-                    &PrintFormatProperty::Default,
+                    [](py::object&) {
+                        return PrintFormatProperty::Default();
+                    },
                     "Create a new property with PrintFormatKind.DEFAULT.")
-            .def_static(
+            .def_property_readonly_static(
                     "xml",
-                    &PrintFormatProperty::Xml,
+                    [](py::object&) {
+                        return PrintFormatProperty::Xml();
+                    },
                     "Create a new property with PrintFormatKind.XML.")
-            .def_static(
+            .def_property_readonly_static(
                     "json",
-                    &PrintFormatProperty::Json,
+                    [](py::object&) {
+                        return PrintFormatProperty::Json();
+                    },
                     "Create a new property with PrintFormatKind.JSON.");
 }
 

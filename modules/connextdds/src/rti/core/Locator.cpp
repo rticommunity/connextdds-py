@@ -48,9 +48,11 @@ void init_class_defs(py::class_<Locator>& cls)
                     "Get/set the address for this Locator.")
             .def(py::self == py::self, "Compare Locators for equality.")
             .def(py::self != py::self, "Compare Locators for inequality.")
-            .def_static(
+            .def_property_readonly_static(
                     "invalid",
-                    &Locator::Invalid,
+                    [](py::object&) {
+                        return Locator::Invalid();
+                    },
                     "Create an invalid Locator.")
             .doc() =
             "Type used to represent the addressing information needed to send "

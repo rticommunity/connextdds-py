@@ -19,14 +19,14 @@ class TestSystem:
         self.participant = create_participant(domain_id)
 
         reader_qos = self.participant.implicit_subscriber.default_datareader_qos
-        reader_qos << dds.Durability.transient_local()
+        reader_qos << dds.Durability.transient_local
         reader_qos << dds.Reliability.reliable()
-        reader_qos << dds.History.keep_all()
+        reader_qos << dds.History.keep_all
 
         writer_qos = self.participant.implicit_publisher.default_datawriter_qos
-        writer_qos << dds.Durability.transient_local()
+        writer_qos << dds.Durability.transient_local
         writer_qos << dds.Reliability.reliable()
-        writer_qos << dds.History.keep_all()
+        writer_qos << dds.History.keep_all
         if sample_type == "StringTopicType":
             self.topic = dds.StringTopicType.Topic(self.participant, "StringTopicType")
             self.reader = dds.StringTopicType.DataReader(

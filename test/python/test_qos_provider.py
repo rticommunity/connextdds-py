@@ -118,13 +118,13 @@ def test_getters():
 
     # Start using my_other_profile_name
 
-    domain_participant_qos = qos_provider.participant_qos_profile(my_other_profile_name)
+    domain_participant_qos = qos_provider.participant_qos_from_profile(my_other_profile_name)
     assert domain_participant_qos.participant_name.name == "otherParticipantName"
 
-    pub_qos = qos_provider.get_publisher_qos_profile(my_other_profile_name)
+    pub_qos = qos_provider.publisher_qos_from_profile(my_other_profile_name)
     assert pub_qos.entity_name.name == "otherPublisherName"
 
-    dw_qos = qos_provider.get_datawriter_qos_profile(my_other_profile_name)
+    dw_qos = qos_provider.datawriter_qos_from_profile(my_other_profile_name)
     assert dw_qos.entity_name.name == "otherPublicationName"
 
     dw_qos = qos_provider.set_topic_datawriter_qos(my_other_profile_name, topic_a)
@@ -133,10 +133,10 @@ def test_getters():
     dw_qos = qos_provider.set_topic_datawriter_qos(my_other_profile_name, topic_b)
     assert dw_qos.entity_name.name == "otherPublicationNameB"
 
-    sub_qos = qos_provider.get_subscriber_qos_profile(my_other_profile_name)
+    sub_qos = qos_provider.subscriber_qos_from_profile(my_other_profile_name)
     assert sub_qos.entity_name.name == "otherSubscriberName"
 
-    dr_qos = qos_provider.get_datareader_qos_profile(my_other_profile_name)
+    dr_qos = qos_provider.datareader_qos_from_profile(my_other_profile_name)
     assert dr_qos.entity_name.name == "otherSubscriptionName"
 
     dr_qos = qos_provider.set_topic_datareader_qos(my_other_profile_name, topic_a)
@@ -145,7 +145,7 @@ def test_getters():
     dr_qos = qos_provider.set_topic_datareader_qos(my_other_profile_name, topic_b)
     assert dr_qos.entity_name.name == "otherSubscriptionNameB"
 
-    topic_qos = qos_provider.get_topic_qos_profile(my_other_profile_name)
+    topic_qos = qos_provider.topic_qos_from_profile(my_other_profile_name)
     assert topic_qos.resource_limits.max_samples == 200
 
     topic_qos = qos_provider.set_topic_name_qos(my_other_profile_name, topic_a)

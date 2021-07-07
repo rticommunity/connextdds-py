@@ -22,31 +22,48 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<RtpsReservedPortKindMask>& cls)
 {
-    cls.def_static("all", &RtpsReservedPortKindMask::all, "All bits are set.")
-            .def_static(
-                    "none",
-                    &RtpsReservedPortKindMask::none,
+    cls.def_property_readonly_static(
+                "ALL",
+                [](py::object&) {
+                    return RtpsReservedPortKindMask::all();
+                },
+                "All bits are set.")
+            .def_property_readonly_static(
+                    "NONE",
+                    [](py::object&) {
+                        return RtpsReservedPortKindMask::none();
+                    },
                     "No bits are set.")
-            .def_static(
-                    "default_mask",
-                    &RtpsReservedPortKindMask::default_mask,
+            .def_property_readonly_static(
+                    "DEFAULT_MASK",
+                    [](py::object&) {
+                        return RtpsReservedPortKindMask::default_mask();
+                    },
                     "The default value of "
                     "WireProtocol.rtps_reserved_port_mask.")
-            .def_static(
-                    "builtin_unicast",
-                    &RtpsReservedPortKindMask::builtin_unicast,
+            .def_property_readonly_static(
+                    "BUILTIN_UNICAST",
+                    [](py::object&) {
+                        return RtpsReservedPortKindMask::builtin_unicast();
+                    },
                     "Select the metatraffic unicast port.")
-            .def_static(
-                    "builtin_multicast",
-                    &RtpsReservedPortKindMask::builtin_multicast,
+            .def_property_readonly_static(
+                    "BUILTIN_MULTICAST",
+                    [](py::object&) {
+                        return RtpsReservedPortKindMask::builtin_multicast();
+                    },
                     "Select the metatraffic multicast port.")
-            .def_static(
-                    "user_unicast",
-                    &RtpsReservedPortKindMask::user_unicast,
+            .def_property_readonly_static(
+                    "USER_UNICAST",
+                    [](py::object&) {
+                        return RtpsReservedPortKindMask::user_unicast();
+                    },
                     "Select the usertraffic unicast port.")
-            .def_static(
-                    "user_multicast",
-                    &RtpsReservedPortKindMask::user_multicast,
+            .def_property_readonly_static(
+                    "USER_MULTICAST",
+                    [](py::object&) {
+                        return RtpsReservedPortKindMask::user_multicast();
+                    },
                     "Select the usertraffic multicast port.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
@@ -123,15 +140,19 @@ void init_class_defs(py::class_<RtpsWellKnownPorts>& cls)
                     (RtpsWellKnownPorts & (RtpsWellKnownPorts::*) (int32_t))
                             & RtpsWellKnownPorts::user_unicast_port_offset,
                     "Additional offset for usertraffic unicast port.")
-            .def_static(
+            .def_property_readonly_static(
                     "interoperable",
-                    &RtpsWellKnownPorts::Interoperable,
+                    [](py::object&) {
+                        return RtpsWellKnownPorts::Interoperable();
+                    },
                     "Returns an instance containing the port mapping compliant "
                     "with "
                     "the OMG DDS Interoperability wire protocol.")
-            .def_static(
+            .def_property_readonly_static(
                     "backwards_compatible",
-                    &RtpsWellKnownPorts::BackwardsCompatible,
+                    [](py::object&) {
+                        return RtpsWellKnownPorts::BackwardsCompatible();
+                    },
                     "Returns an instance containing the port mapping "
                     "compatible with "
                     "previous versions of RTI Connext.")

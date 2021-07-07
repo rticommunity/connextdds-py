@@ -16,7 +16,7 @@ namespace pyrti {
 
 template<>
 void init_class_defs(
-        py::class_<PyAnyTopicListener, PyAnyTopicListenerTrampoline<>>& cls)
+        py::class_<PyAnyTopicListener, PyAnyTopicListenerTrampoline<>, std::shared_ptr<PyAnyTopicListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_inconsistent_topic",
@@ -31,7 +31,8 @@ template<>
 void init_class_defs(py::class_<
                      PyNoOpAnyTopicListener,
                      PyAnyTopicListener,
-                     PyNoOpAnyTopicListenerTrampoline<>>& cls)
+                     PyNoOpAnyTopicListenerTrampoline<>,
+                     std::shared_ptr<PyNoOpAnyTopicListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_inconsistent_topic",
@@ -48,16 +49,20 @@ void process_inits<dds::topic::AnyTopicListener>(
         ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class<PyAnyTopicListener, PyAnyTopicListenerTrampoline<>>(
-                m,
-                "AnyTopicListener");
+        return init_class<
+                PyAnyTopicListener,
+                PyAnyTopicListenerTrampoline<>,
+                std::shared_ptr<PyAnyTopicListener>>(
+                    m,"AnyTopicListener");
     });
 
     l.push_back([m]() mutable {
         return init_class<
                 PyNoOpAnyTopicListener,
                 PyAnyTopicListener,
-                PyNoOpAnyTopicListenerTrampoline<>>(m, "NoOpAnyTopicListener");
+                PyNoOpAnyTopicListenerTrampoline<>,
+                std::shared_ptr<PyNoOpAnyTopicListener>>(
+                    m, "NoOpAnyTopicListener");
     });
 }
 

@@ -22,6 +22,26 @@ using namespace dds::domain;
 
 namespace pyrti {
 
+inline DomainParticipantListenerPtr get_dp_listener(const dds::domain::DomainParticipant& dp) {
+    return get_listener<dds::domain::DomainParticipant, DomainParticipantListenerPtr>(dp);
+}
+
+inline void set_dp_listener(
+        dds::domain::DomainParticipant& dp,
+        PyDomainParticipantListenerPtr l) {
+    set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l);
+}
+
+inline void set_dp_listener(
+        dds::domain::DomainParticipant& dp,
+        PyDomainParticipantListenerPtr l,
+        const dds::core::status::StatusMask& m) {
+    set_listener<dds::domain::DomainParticipant, PyDomainParticipantListenerPtr>(dp, l, m);
+}
+
+inline PyDomainParticipantListenerPtr downcast_dp_listener_ptr(DomainParticipantListenerPtr l) {
+    return downcast_listener_ptr<PyDomainParticipantListenerPtr, DomainParticipantListenerPtr>(l);
+}
 
 std::recursive_mutex PyDomainParticipant::_property_lock;
 
@@ -29,7 +49,7 @@ std::recursive_mutex PyDomainParticipant::_property_lock;
 PyDomainParticipant::PyDomainParticipant(
         int32_t d,
         const dds::domain::qos::DomainParticipantQos& q,
-        PyDomainParticipantListener* l,
+        PyDomainParticipantListenerPtr l,
         const dds::core::status::StatusMask& m)
         : dds::domain::DomainParticipant(d, q, l, m)
 {
@@ -41,10 +61,11 @@ PyDomainParticipant::PyDomainParticipant(
 PyDomainParticipant::~PyDomainParticipant()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-            && nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
+            && nullptr != get_dp_listener(*this)) {
+            py::object listener = py::cast(get_dp_listener(*this));
+            PyDomainParticipantListenerPtr null_listener = nullptr;
+            set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -53,9 +74,10 @@ PyDomainParticipant::~PyDomainParticipant()
 
 void PyDomainParticipant::py_close()
 {
-    if (nullptr != this->listener()) {
-        py::object listener = py::cast(this->listener());
-        this->listener(nullptr, dds::core::status::StatusMask::none());
+    if (nullptr != get_dp_listener(*this)) {
+        py::object listener = py::cast(get_dp_listener(*this));
+        PyDomainParticipantListenerPtr null_listener = nullptr;
+        set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();
@@ -106,6 +128,7 @@ T& PyDomainParticipant::py_entity_property(
 
 
 template<typename ParticipantFwdIterator>
+static
 uint32_t find_participants(ParticipantFwdIterator begin)
 {
     DDS_DomainParticipantSeq native_participants = DDS_SEQUENCE_INITIALIZER;
@@ -137,7 +160,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(py::init(
                          [](int32_t id,
                             const qos::DomainParticipantQos& q,
-                            dds::core::optional<PyDomainParticipantListener*> l,
+                            dds::core::optional<PyDomainParticipantListenerPtr> l,
                             const dds::core::status::StatusMask& m) {
                              auto listener =
                                      has_value(l) ? get_value(l) : nullptr;
@@ -164,9 +187,8 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "listener",
                     [](const PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyDomainParticipantListener*> l;
-                        auto ptr = dynamic_cast<PyDomainParticipantListener*>(
-                                dp.listener());
+                        dds::core::optional<PyDomainParticipantListenerPtr> l;
+                        auto ptr = downcast_dp_listener_ptr(get_dp_listener(dp));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -175,22 +197,38 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
             .def(
                     "bind_listener",
                     [](PyDomainParticipant& dp,
-                       dds::core::optional<PyDomainParticipantListener*> l,
+                       dds::core::optional<PyDomainParticipantListenerPtr> l,
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != dp.listener()) {
-                            py::cast(dp.listener()).dec_ref();
+                        if (nullptr != get_dp_listener(dp)) {
+                            py::cast(get_dp_listener(dp)).dec_ref();
                         }
-                        dp.listener(listener, m);
+                        set_dp_listener(dp, listener, m);
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener and event mask to the "
                     "DomainParticipant.")
+            .def(
+                    "bind_listener",
+                    [](PyDomainParticipant& dp,
+                       dds::core::optional<PyDomainParticipantListenerPtr> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::cast(listener).inc_ref();
+                        }
+                        if (nullptr != get_dp_listener(dp)) {
+                            py::cast(get_dp_listener(dp)).dec_ref();
+                        }
+                        set_dp_listener(dp, listener);
+                    },
+                    py::arg("listener"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Bind the listener to the DomainParticipant.")
             .def_property(
                     "qos",
                     [](const PyDomainParticipant& dp) {
@@ -553,7 +591,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "find",
                     []() {
                         std::vector<PyDomainParticipant> v;
-                        find_participants(std::back_inserter(v));
+                        pyrti::find_participants(std::back_inserter(v));
                         return v;
                     },
                     py::call_guard<py::gil_scoped_release>(),
@@ -765,7 +803,8 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     },
                     py::arg("handles"),
                     py::call_guard<py::gil_scoped_release>(),
-                    "Get information about a discovered topic.")
+                    "Get information about a discovered topics "
+                    "with their handles.")
             .def(
                     "discovered_topic_data",
                     [](const PyDomainParticipant& dp) {
@@ -835,6 +874,8 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                             dds::topic::subscription_topic_name);
                     },
                     "Get the subscription built-in topic reader.")
+            /*
+            !!!NOT USED BY RTI CONNEXT DDS!!!
             .def_property_readonly(
                     "topic_reader",
                     [](PyDomainParticipant& dp) -> PyDataReader<dds::topic::TopicBuiltinTopicData>& {
@@ -844,6 +885,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                             dds::topic::topic_topic_name);
                     },
                     "Get the topic built-in topic reader.")
+            */
             .def_property_readonly(
                     "service_request_reader",
                     [](PyDomainParticipant& dp) -> PyDataReader<rti::topic::ServiceRequest>& {
@@ -891,89 +933,20 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                     "Retrieve DomainParticipant information with a sequence of "
                     "handles.")
             .def(
-                    "publication_data",
-                    [](PyDomainParticipant& dp,
-                       const dds::core::InstanceHandle& handle) {
-                        DDS_PublicationBuiltinTopicData pbitd;
-                        DDS_DomainParticipant_get_publication_data(
-                                dp.delegate()->native_participant(),
-                                &pbitd,
-                                &handle.delegate().native());
-                        dds::topic::PublicationBuiltinTopicData* ptr =
-                                reinterpret_cast<
-                                        dds::topic::
-                                                PublicationBuiltinTopicData*>(
-                                        &pbitd);
-                        return *ptr;
-                    },
-                    py::arg("handle"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Retrieve publication data by handle.")
-            .def(
-                    "publication_data",
-                    [](PyDomainParticipant& dp,
-                       const std::vector<dds::core::InstanceHandle>& handles) {
-                        std::vector<dds::topic::PublicationBuiltinTopicData> v;
-                        for (auto& handle : handles) {
-                            DDS_PublicationBuiltinTopicData pbitd;
-                            DDS_DomainParticipant_get_publication_data(
-                                    dp.delegate()->native_participant(),
-                                    &pbitd,
-                                    &handle.delegate().native());
-                            dds::topic::PublicationBuiltinTopicData* ptr =
-                                    reinterpret_cast<
-                                            dds::topic::
-                                                    PublicationBuiltinTopicData*>(
-                                            &pbitd);
-                            v.push_back(*ptr);
+                    "find_flow_controller",
+                    [](PyDomainParticipant& dp, const std::string& name) {
+                        dds::core::optional<rti::pub::FlowController> retval;
+                        auto fc = rti::pub::find_flow_controller(dp, name);
+                        if (fc != dds::core::null) {
+                            retval = fc;
                         }
-                        return v;
+                        return retval;
                     },
-                    py::arg("handles"),
+                    py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
-                    "Retrieve publication data for a sequence of handles.")
-            .def(
-                    "subscription_data",
-                    [](PyDomainParticipant& dp,
-                       const dds::core::InstanceHandle& handle) {
-                        DDS_SubscriptionBuiltinTopicData sbitd;
-                        DDS_DomainParticipant_get_subscription_data(
-                                dp.delegate()->native_participant(),
-                                &sbitd,
-                                &handle.delegate().native());
-                        dds::topic::SubscriptionBuiltinTopicData* ptr =
-                                reinterpret_cast<
-                                        dds::topic::
-                                                SubscriptionBuiltinTopicData*>(
-                                        &sbitd);
-                        return *ptr;
-                    },
-                    py::arg("handle"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Retrieve subscription data by handle.")
-            .def(
-                    "subscription_data",
-                    [](PyDomainParticipant& dp,
-                       const std::vector<dds::core::InstanceHandle>& handles) {
-                        std::vector<dds::topic::SubscriptionBuiltinTopicData> v;
-                        for (auto& handle : handles) {
-                            DDS_SubscriptionBuiltinTopicData sbitd;
-                            DDS_DomainParticipant_get_subscription_data(
-                                    dp.delegate()->native_participant(),
-                                    &sbitd,
-                                    &handle.delegate().native());
-                            dds::topic::SubscriptionBuiltinTopicData* ptr =
-                                    reinterpret_cast<
-                                            dds::topic::
-                                                    SubscriptionBuiltinTopicData*>(
-                                            &sbitd);
-                            v.push_back(*ptr);
-                        }
-                        return v;
-                    },
-                    py::arg("handles"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Retrieve subscription data for a sequence of handles.")
+                    "Find a FlowController configured in this "
+                    "DomainParticipant."
+            )
             .def(
                     py::self == py::self,
                     py::call_guard<py::gil_scoped_release>(),

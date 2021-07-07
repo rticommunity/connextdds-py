@@ -20,9 +20,11 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<Logger>& cls)
 {
-    cls.def_static(
-               "get_instance",
-               &Logger::instance,
+    cls.def_property_readonly_static(
+               "instance",
+               [](py::object&) -> Logger& {
+                   return Logger::instance();
+               },
                "Get the singleton instance of this type.")
             .def_property(
                     "verbosity",

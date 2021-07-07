@@ -84,17 +84,23 @@ void init_class_defs(py::class_<Time>& cls)
                  &Time::to_microsecs,
                  "Convert this Time to microseconds.")
             .def("to_secs", &Time::to_secs, "Convert this Time to seconds.")
-            .def_static(
+            .def_property_readonly_static(
                     "invalid",
-                    &Time::invalid,
+                    [](py::object&) {
+                        return Time::invalid();
+                    },
                     "Get a Time object representing an invalid amount of time.")
-            .def_static(
+            .def_property_readonly_static(
                     "zero",
-                    &Time::zero,
+                    [](py::object&) {
+                        return Time::zero();
+                    },
                     "Get a Time object representing zero time.")
-            .def_static(
+            .def_property_readonly_static(
                     "maximum",
-                    &Time::maximum,
+                    [](py::object&) {
+                        return Time::maximum();
+                    },
                     "Get a Time object representing the maximum amount of "
                     "time.")
             .def_static(

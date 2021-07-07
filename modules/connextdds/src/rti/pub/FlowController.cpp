@@ -49,14 +49,14 @@ void init_class_defs(py::class_<FlowController>& cls)
                             & FlowController::property,
                     "The configuration of this FlowController.")
             .def("trigger_flow",
-                 &FlowController::trigger_flow,
-                 "Provides an external way to trigger a FlowController.")
+                    &FlowController::trigger_flow,
+                    "Provides an external way to trigger a FlowController.")
             .def("retain",
-                 &FlowController::retain,
-                 "Disables the automatic destruction of this object.")
+                    &FlowController::retain,
+                    "Disables the automatic destruction of this object.")
             .def("close",
-                 &FlowController::close,
-                 "Manually destroys this object.")
+                    &FlowController::close,
+                    "Manually destroys this object.")
             .def_property_readonly(
                     "closed",
                     &FlowController::closed,

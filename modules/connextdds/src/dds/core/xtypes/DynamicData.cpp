@@ -1343,9 +1343,10 @@ void init_dds_typed_topic_template(py::class_<
                              const ::std::string& name,
                              const dds::core::xtypes::DynamicType& type,
                              const dds::topic::qos::TopicQos& qos,
-                             PyTopicListener<dds::core::xtypes::DynamicData>*
-                                     listener,
+                             dds::core::optional<PyTopicListener<dds::core::xtypes::DynamicData>*>
+                                     l,
                              const dds::core::status::StatusMask& mask) {
+                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      PyTopic<dds::core::xtypes::DynamicData>
                              t(dp, name, type, qos, listener, mask);
                      PyDynamicTypeMap::add(t.type_name(), type);
@@ -1361,7 +1362,27 @@ void init_dds_typed_topic_template(py::class_<
                          dds::core::status::StatusMask::all(),
                          "StatusMask.all()"),
                  py::call_guard<py::gil_scoped_release>(),
-                 "Create a Topic with the given type.");
+                 "Create a Topic with the given type.")
+            .def(py::init([](const PyDomainParticipant& dp,
+                             const std::string& n,
+                             const std::string& t,
+                             const dds::topic::qos::TopicQos& q,
+                             dds::core::optional<PyTopicListener<dds::core::xtypes::DynamicData>*> l,
+                             const dds::core::status::StatusMask& m) {
+                     auto listener = has_value(l) ? get_value(l) : nullptr;
+                     return PyTopic<dds::core::xtypes::DynamicData>(dp, n, t, q, listener, m);
+                 }),
+                 py::arg("participant"),
+                 py::arg("topic_name"),
+                 py::arg("type_name"),
+                 py::arg("qos"),
+                 py::arg("listener") = py::none(),
+                 py::arg_v(
+                         "mask",
+                         dds::core::status::StatusMask::all(),
+                         "StatusMask.all()"),
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Creates a new Topic.");;
 }
 
 template<>
@@ -2075,6 +2096,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     "Clear the contents of a single data member of this "
                     "object.")
 #endif
+#if rti_connext_version_lt(6, 1, 0)
             .def("set_buffer",
                  &DynamicData::set_buffer,
                  py::arg("storage"),
@@ -2085,6 +2107,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     &DynamicData::estimated_max_buffer_size,
                     "Get the estimated maximum buffer size for a DynamicData "
                     "object.")
+#endif
             .def_property_readonly(
                     "type",
                     [](const DynamicData& dd) {
@@ -2202,7 +2225,8 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     "to_cdr_buffer",
                     [](const dds::core::xtypes::DynamicData& sample) {
                         std::vector<char> output;
-                        return rti::core::xtypes::to_cdr_buffer(output, sample);
+                        rti::core::xtypes::to_cdr_buffer(output, sample);
+                        return output;
                     },
                     "Serializes a DynamicData sample to CDR format")
             .def(

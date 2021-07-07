@@ -121,6 +121,24 @@ void init_class_defs(py::class_<DynamicType>& cls)
                  py::arg("index") = 0,
                  "Prints the IDL representation of this type to the standard "
                  "output.")
+            .def(
+                "__str__",
+                [](const DynamicType& t) {
+                    return rti::core::xtypes::to_string(t);
+                },
+                "DynamicData value to string.")
+#if rti_connext_version_gte(6, 0, 1)
+            .def(
+                "to_string",
+                [](const DynamicType& t, const rti::core::xtypes::DynamicTypePrintFormatProperty& prop) {
+                    return rti::core::xtypes::to_string(t, prop);
+                },
+                py::arg_v(
+                    "format",
+                    rti::core::xtypes::DynamicTypePrintFormatProperty(),
+                    "DynamicTypePrintFormatProperty()"),
+                "Convert DynamicType to string with print format.")
+#endif
             .def(py::self == py::self,
                  "Compare DynamicType objects for equality.")
             .def(py::self != py::self,

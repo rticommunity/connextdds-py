@@ -51,7 +51,7 @@ my_type = qos_provider.type(qos_provider.type_libraries[0], KVP_TYPE_NAME)
 writer = dds.DynamicData.DataWriter.find_by_name(participant, WRITER_NAME)
 
 reader = dds.DynamicData.DataReader.find_by_name(participant, READER_NAME)
-reader.bind_listener(MyDataReaderListener(), dds.StatusMask.data_available())
+reader.bind_listener(MyDataReaderListener(), dds.StatusMask.DATA_AVAILABLE)
 
 participant.ignore_participant(participant.instance_handle)
 

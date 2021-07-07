@@ -13,12 +13,13 @@
 #include "PyNamespaces.hpp"
 #include <rti/rti.hpp>
 
-void init_namespace_rti(py::module& m, pyrti::ClassInitList& l)
+void init_namespace_rti(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
-    init_namespace_rti_config(m, l);
-    init_namespace_rti_core(m, l);
-    init_namespace_rti_domain(m, l);
-    init_namespace_rti_pub(m, l);
-    init_namespace_rti_sub(m, l);
-    init_namespace_rti_topic(m, l);
+    init_namespace_rti_config(m, l, v);
+    init_namespace_rti_core(m, l, v);
+    init_namespace_rti_domain(m, l, v);
+    init_namespace_rti_pub(m, l, v);
+    init_namespace_rti_sub(m, l, v);
+    init_namespace_rti_topic(m, l, v);
+    init_namespace_rti_util(m, l, v);
 }

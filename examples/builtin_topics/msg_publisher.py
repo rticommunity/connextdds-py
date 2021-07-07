@@ -29,7 +29,7 @@ class BuiltinParticipantListener(
 
     def on_data_available(self, reader):
         # only process previously unseen Participants
-        with reader.select().state(dds.DataState.new_instance()).take() as samples:
+        with reader.select().state(dds.DataState.new_instance).take() as samples:
             for sample in filter(lambda s: s.info.valid, samples):
                 # Convert Participant user data to a string
                 user_data = sample.data.user_data.value
@@ -57,7 +57,7 @@ class BuiltinSubscriptionListener(
 
     def on_data_available(self, reader):
         # only process previously unseen DataReaders
-        with reader.select().state(dds.DataState.new_instance()).take() as samples:
+        with reader.select().state(dds.DataState.new_instance).take() as samples:
             for sample in filter(lambda s: s.info.valid, samples):
                 participant_key = sample.data.participant_key
                 key = sample.data.key
@@ -77,11 +77,11 @@ def publisher_main(domain_id, sample_count):
 
     # Participant properties give access to the builtin readers
     participant.participant_reader.bind_listener(
-        BuiltinParticipantListener(), dds.StatusMask.data_available()
+        BuiltinParticipantListener(), dds.StatusMask.DATA_AVAILABLE
     )
 
     participant.subscription_reader.bind_listener(
-        BuiltinSubscriptionListener(), dds.StatusMask.data_available()
+        BuiltinSubscriptionListener(), dds.StatusMask.DATA_AVAILABLE
     )
 
     participant.enable()

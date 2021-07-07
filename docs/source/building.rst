@@ -66,7 +66,7 @@ specified in the following table.
     * - -r DIR
       - --python-root DIR
       - Root directory of Python (prefers 3.x over 2.x if both are under root)
-    * - -c OPENSSL
+    * - -c FILE
       - --cmake-toolchain FILE
       - CMake toolchain file to use when cross compiling
     * - -d

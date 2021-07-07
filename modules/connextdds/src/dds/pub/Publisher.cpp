@@ -22,10 +22,31 @@ using namespace dds::pub;
 
 namespace pyrti {
 
+inline PublisherListenerPtr get_publisher_listener(const dds::pub::Publisher& p) {
+    return get_listener<dds::pub::Publisher, PublisherListenerPtr>(p);
+}
+
+inline void set_publisher_listener(
+        dds::pub::Publisher& p,
+        PyPublisherListenerPtr l) {
+    set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l);
+}
+
+inline void set_publisher_listener(
+        dds::pub::Publisher& p,
+        PyPublisherListenerPtr l,
+        const dds::core::status::StatusMask& m) {
+    set_listener<dds::pub::Publisher, PyPublisherListenerPtr>(p, l, m);
+}
+
+inline PyPublisherListenerPtr downcast_publisher_listener_ptr(PublisherListenerPtr l) {
+    return downcast_listener_ptr<PyPublisherListenerPtr, PublisherListenerPtr>(l);
+}
+
 PyPublisher::PyPublisher(
         const PyDomainParticipant& p,
         const dds::pub::qos::PublisherQos& q,
-        PyPublisherListener* l,
+        PyPublisherListenerPtr l,
         const dds::core::status::StatusMask& m)
         : dds::pub::Publisher(p, q, l, m)
 {
@@ -36,10 +57,11 @@ PyPublisher::PyPublisher(
 PyPublisher::~PyPublisher()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= 2 && !this->delegate()->closed()
-            && nullptr != this->listener()) {
-            py::object listener = py::cast(this->listener());
-            this->listener(nullptr, dds::core::status::StatusMask::none());
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
+            && nullptr != get_publisher_listener(*this)) {
+            py::object listener = py::cast(get_publisher_listener(*this));
+            PyPublisherListenerPtr null_listener = nullptr;
+            set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
             listener.dec_ref();
         }
     }
@@ -47,9 +69,10 @@ PyPublisher::~PyPublisher()
 
 void PyPublisher::py_close()
 {
-    if (nullptr != this->listener()) {
-        py::object listener = py::cast(this->listener());
-        this->listener(nullptr, dds::core::status::StatusMask::none());
+    if (nullptr != get_publisher_listener(*this)) {
+        py::object listener = py::cast(get_publisher_listener(*this));
+        PyPublisherListenerPtr null_listener = nullptr;
+        set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
         listener.dec_ref();
     }
     this->close();
@@ -66,7 +89,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                  "Create a publisher.")
             .def(py::init([](const PyDomainParticipant& dp,
                              const qos::PublisherQos& q,
-                             dds::core::optional<PyPublisherListener*> l,
+                             dds::core::optional<PyPublisherListenerPtr> l,
                              const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyPublisher(dp, q, listener, m);
@@ -136,9 +159,8 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                     "listener",
                     [](const PyPublisher& pub) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyPublisherListener*> l;
-                        auto ptr = dynamic_cast<PyPublisherListener*>(
-                                pub.listener());
+                        dds::core::optional<PyPublisherListenerPtr> l;
+                        auto ptr = downcast_publisher_listener_ptr(get_publisher_listener(pub));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
@@ -147,21 +169,37 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
             .def(
                     "bind_listener",
                     [](PyPublisher& pub,
-                       dds::core::optional<PyPublisherListener*> l,
+                       dds::core::optional<PyPublisherListenerPtr> l,
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != pub.listener()) {
+                        if (nullptr != get_publisher_listener(pub)) {
                             py::cast(pub.listener()).dec_ref();
                         }
-                        pub.listener(listener, m);
+                        set_publisher_listener(pub, listener, m);
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     py::arg("listener"),
                     py::arg("event_mask"),
                     "Bind the listener and event mask to the Publisher.")
+            .def(
+                    "bind_listener",
+                    [](PyPublisher& pub,
+                       dds::core::optional<PyPublisherListenerPtr> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::cast(listener).inc_ref();
+                        }
+                        if (nullptr != get_publisher_listener(pub)) {
+                            py::cast(pub.listener()).dec_ref();
+                        }
+                        set_publisher_listener(pub, listener);
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    py::arg("listener"),
+                    "Bind the listener to the Publisher.")
             .def("wait_for_acknowledgments",
                  &PyPublisher::wait_for_acknowledgments,
                  py::arg("max_wait"),

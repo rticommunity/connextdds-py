@@ -41,6 +41,17 @@ void init_class_defs(py::class_<DataRepresentation>& cls)
                     "not reflected in the policy unless the sequence is "
                     "commited back "
                     "to the policy object via the property's setter.")
+#if rti_connext_version_gte(6, 1, 0)
+            .def_property(
+                    "compression_settings",
+                    [](DataRepresentation& dr) {
+                        return dr->compression_settings();
+                    },
+                    [](DataRepresentation& dr, const rti::core::CompressionSettings& cs) {
+                        return dr->compression_settings(cs);
+                    },
+                    "The compression settings.")
+#endif
             .def_property_readonly_static(
                     "XCDR",
                     [](py::object&) { return DataRepresentation::xcdr(); },

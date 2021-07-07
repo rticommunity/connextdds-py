@@ -1,0 +1,3 @@
+include package.cfg
+graft modules
+graft resources

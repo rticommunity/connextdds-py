@@ -17,9 +17,10 @@ PYBIND11_MODULE(connextdds, m)
 {
     pyrti::ClassInitList cls_init_funcs;
     pyrti::DefInitVector def_init_funcs;
+    pyrti::DefInitVector late_init_funcs;
     init_misc_early(m, cls_init_funcs);
-    init_namespace_dds(m, cls_init_funcs);
-    init_namespace_rti(m, cls_init_funcs);
+    init_namespace_dds(m, cls_init_funcs, late_init_funcs);
+    init_namespace_rti(m, cls_init_funcs, late_init_funcs);
 
     bool stuck = false;
     while (!cls_init_funcs.empty()) {
@@ -45,6 +46,10 @@ PYBIND11_MODULE(connextdds, m)
     init_misc_late(m);
 
     for (auto func : def_init_funcs) {
+        func();
+    }
+
+    for (auto func : late_init_funcs) {
         func();
     }
 }

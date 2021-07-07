@@ -19,7 +19,8 @@ void init_class_defs(
         py::class_<
                 PyPublisherListener,
                 PyAnyDataWriterListener,
-                PyAnyDataWriterListenerTrampoline<PyPublisherListener>>& cls)
+                PyAnyDataWriterListenerTrampoline<PyPublisherListener>,
+                std::shared_ptr<PyPublisherListener>>& cls)
 {
     cls.def(py::init<>());
 }
@@ -29,7 +30,8 @@ void init_class_defs(
         py::class_<
                 PyNoOpPublisherListener,
                 PyPublisherListener,
-                PyNoOpAnyDataWriterListenerTrampoline<PyNoOpPublisherListener>>&
+                PyNoOpAnyDataWriterListenerTrampoline<PyNoOpPublisherListener>,
+                std::shared_ptr<PyNoOpPublisherListener>>&
                 cls)
 {
     cls.def(py::init<>());
@@ -42,18 +44,20 @@ void process_inits<dds::pub::PublisherListener>(py::module& m, ClassInitList& l)
         return init_class<
                 PyPublisherListener,
                 PyAnyDataWriterListener,
-                PyAnyDataWriterListenerTrampoline<PyPublisherListener>>(
-                m,
-                "PublisherListener");
+                PyAnyDataWriterListenerTrampoline<PyPublisherListener>,
+                std::shared_ptr<PyPublisherListener>>(
+                    m,
+                    "PublisherListener");
     });
 
     l.push_back([m]() mutable {
         return init_class<
                 PyNoOpPublisherListener,
                 PyPublisherListener,
-                PyNoOpAnyDataWriterListenerTrampoline<PyNoOpPublisherListener>>(
-                m,
-                "NoOpPublisherListener");
+                PyNoOpAnyDataWriterListenerTrampoline<PyNoOpPublisherListener>,
+                std::shared_ptr<PyNoOpPublisherListener>>(
+                    m,
+                    "NoOpPublisherListener");
     });
 }
 

@@ -338,6 +338,19 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     "The initial number of TopicQueries allocated by a "
                     "DataReader.")
 #endif
+#if rti_connext_version_gte(6, 1, 0)
+#ifndef _MSC_VER
+            .def_property(
+                    "instance_replacement",
+                    (DataReaderResourceLimitsInstanceReplacementSettings& (DataReaderResourceLimits::*) ())
+                            & DataReaderResourceLimits::
+                                    instance_replacement,
+                    [](DataReaderResourceLimits& drrl, DataReaderResourceLimitsInstanceReplacementSettings& ir) {
+                        drrl.instance_replacement() = ir;
+                    },
+                    "The instance replacement policy.")
+#endif
+#endif
             .def(py::self == py::self)
             .def(py::self != py::self);
 }

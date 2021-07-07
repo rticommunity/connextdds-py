@@ -18,7 +18,8 @@ template<>
 void init_class_defs(py::class_<
                      PySubscriberListener,
                      PyAnyDataReaderListener,
-                     PySubscriberListenerTrampoline<>>& cls)
+                     PySubscriberListenerTrampoline<>,
+                     std::shared_ptr<PySubscriberListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_data_on_readers",
@@ -31,7 +32,8 @@ template<>
 void init_class_defs(py::class_<
                      PyNoOpSubscriberListener,
                      PySubscriberListener,
-                     PyNoOpSubscriberListenerTrampoline<>>& cls)
+                     PyNoOpSubscriberListenerTrampoline<>,
+                     std::shared_ptr<PyNoOpSubscriberListener>>& cls)
 {
     cls.def(py::init<>())
             .def("on_data_on_readers",
@@ -49,16 +51,20 @@ void process_inits<dds::sub::SubscriberListener>(
         return init_class<
                 PySubscriberListener,
                 PyAnyDataReaderListener,
-                PySubscriberListenerTrampoline<>>(m, "SubscriberListener");
+                PySubscriberListenerTrampoline<>,
+                std::shared_ptr<PySubscriberListener>>(
+                        m,
+                        "SubscriberListener");
     });
 
     l.push_back([m]() mutable {
         return init_class<
                 PyNoOpSubscriberListener,
                 PySubscriberListener,
-                PyNoOpSubscriberListenerTrampoline<>>(
-                m,
-                "NoOpSubscriberListener");
+                PyNoOpSubscriberListenerTrampoline<>,
+                std::shared_ptr<PyNoOpSubscriberListener>>(
+                        m,
+                        "NoOpSubscriberListener");
     });
 }
 

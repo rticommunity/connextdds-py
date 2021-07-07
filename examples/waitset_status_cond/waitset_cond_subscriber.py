@@ -23,7 +23,7 @@ class Counter(object):
 # Handler function for liveliness events
 def status_handler(reader):
     status_mask = reader.status_changes
-    if dds.StatusMask.liveliness_changed() in status_mask:
+    if dds.StatusMask.LIVELINESS_CHANGED in status_mask:
         liveliness_status = reader.liveliness_changed_status
         print(
             "Liveliness changed => active writers = {}".format(
@@ -49,10 +49,10 @@ def subscriber_main(domain_id, sample_count):
 
     # Get the StatusCondition associated with the reader and set the mask to get liveliness updates
     status_condition = dds.StatusCondition(reader)
-    status_condition.enabled_statuses = dds.StatusMask.liveliness_changed()
+    status_condition.enabled_statuses = dds.StatusMask.LIVELINESS_CHANGED
 
     # Create a ReadCondition to get any data
-    read_condition = dds.ReadCondition(reader, dds.DataState.any_data())
+    read_condition = dds.ReadCondition(reader, dds.DataState.any_data)
 
     # Create WaitSet and attach conditions
     waitset = dds.WaitSet()

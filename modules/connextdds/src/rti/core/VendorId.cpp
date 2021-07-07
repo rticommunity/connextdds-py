@@ -27,9 +27,11 @@ void init_class_defs(py::class_<VendorId>& cls)
                     "id.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.")
-            .def_static(
+            .def_property_readonly_static(
                     "unknown",
-                    &VendorId::unknown,
+                    [](py::object&) {
+                        return VendorId::unknown();
+                    },
                     "Create an unknown vendor ID.");
 }
 

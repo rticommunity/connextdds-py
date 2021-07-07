@@ -86,20 +86,26 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls)
                             & TypeConsistencyEnforcement::
                                     ignore_enum_literal_names,
                     "Controls whether enumeration literal names are ignored.")
-            .def_static(
+            .def_property_readonly_static(
                     "auto_type_coercion",
-                    &TypeConsistencyEnforcement::AutoTypeCoercion,
+                    [](py::object&) {
+                        return TypeConsistencyEnforcement::AutoTypeCoercion();
+                    },
                     "Creates an instance with "
                     "TypeConsistencyEnforcementKind.AUTO_TYPE_COERCION.")
 #endif
-            .def_static(
+            .def_property_readonly_static(
                     "allow_type_coercion",
-                    &TypeConsistencyEnforcement::AllowTypeCoercion,
+                    [](py::object&) {
+                        return TypeConsistencyEnforcement::AllowTypeCoercion();
+                    },
                     "Creates an instance with "
                     "TypeConsistencyEnforcementKind.ALLOW_TYPE_COERCION.")
-            .def_static(
+            .def_property_readonly_static(
                     "disallow_type_coercion",
-                    &TypeConsistencyEnforcement::DisallowTypeCoercion,
+                    [](py::object&) {
+                        return TypeConsistencyEnforcement::DisallowTypeCoercion();
+                    },
                     "Creates an instance with "
                     "TypeConsistencyEnforcementKind.DISALLOW_TYPE_COERCION.")
             .def(py::self == py::self, "Test for equality.")

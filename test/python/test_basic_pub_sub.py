@@ -19,14 +19,14 @@ def test_data_reader_writer():
         # Create qos for both, add reliable and keep all
         writer_qos = participant.implicit_publisher.default_datawriter_qos
         writer_qos << dds.Reliability.reliable()
-        writer_qos << dds.History.keep_all()
-        writer_qos << dds.Durability.transient_local()
+        writer_qos << dds.History.keep_all
+        writer_qos << dds.Durability.transient_local
 
         # Create the reader qos
         reader_qos = participant.implicit_subscriber.default_datareader_qos
         reader_qos << dds.Reliability.reliable()
-        reader_qos << dds.History.keep_all()
-        reader_qos << dds.Durability.transient_local()
+        reader_qos << dds.History.keep_all
+        reader_qos << dds.Durability.transient_local
         writer = dds.StringTopicType.DataWriter(
             participant.implicit_publisher, topic, writer_qos
         )
