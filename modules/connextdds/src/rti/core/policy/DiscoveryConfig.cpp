@@ -530,7 +530,7 @@ void process_inits<DiscoveryConfig>(py::module& m, ClassInitList& l)
                 m,
                 "DiscoveryConfigBuiltinPluginKindMask",
                 "Create a DiscoveryConfigBuiltinPluginKindMask equivalent to "
-                "DiscoveryConfigBuiltinPluginKindMask.none()");
+                "DiscoveryConfigBuiltinPluginKindMask.NONE");
         return [cls]() mutable {
             init_class_defs<DiscoveryConfigBuiltinPluginKindMask>(cls);
         };

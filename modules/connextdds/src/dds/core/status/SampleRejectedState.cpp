@@ -190,7 +190,7 @@ void process_inits<SampleRejectedState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type_no_int_constructor<SampleRejectedState>(
                 m,
                 "SampleRejectedState",
-                "Creates SampleRejectedState.not_rejected()",
+                "Creates SampleRejectedState.NOT_REJECTED",
                 false);
         return [cls]() mutable { init_class_defs<SampleRejectedState>(cls); };
     });

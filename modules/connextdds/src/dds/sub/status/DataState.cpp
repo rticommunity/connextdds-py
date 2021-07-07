@@ -157,7 +157,7 @@ void init_class_defs(py::class_<DataState>& cls)
 {
     cls.def(py::init<>(),
             "Create a DataState with InstanceState.any(), ViewState.any(), "
-            "and SampleState.any()")
+            "and SampleState.ANY")
             .def(py::init<const SampleState&>(),
                  py::arg("sample_state"),
                  "Create a DataState with InstanceState.any(), "
@@ -227,32 +227,32 @@ void init_class_defs(py::class_<DataState>& cls)
                     [](py::object&) {
                         return DataState::any();
                     },
-                    "Create a DataState with InstanceState.any(), "
-                    "ViewState.any(), "
-                    "and SampleState.any()")
+                    "Create a DataState with InstanceState.ANY, "
+                    "ViewState.ANY, "
+                    "and SampleState.ANY")
             .def_property_readonly_static(
                     "new_data",
                     [](py::object&) {
                         return DataState::new_data();
                     },
-                    "Create a DataState with InstanceState.alive(), "
-                    "ViewState.any(), "
-                    "and SampleState.not_read()")
+                    "Create a DataState with InstanceState.ALIVE, "
+                    "ViewState.ANY, "
+                    "and SampleState.NOT_READ")
             .def_property_readonly_static(
                     "any_data",
                     [](py::object&) {
                         return DataState::any_data();
                     },
-                    "Create a DataState with InstanceState.alive(), "
-                    "ViewState.any(), "
-                    "and SampleState.any()")
+                    "Create a DataState with InstanceState.ALIVE, "
+                    "ViewState.ANY, "
+                    "and SampleState.ANY")
             .def_property_readonly_static(
                     "new_instance",
                     [](py::object&) {
                         return DataState::new_instance();
                     },
-                    "Create a DataState with InstanceState.alive(), "
-                    "ViewState.new_view(), and SampleState.any()");
+                    "Create a DataState with InstanceState.ALIVE, "
+                    "ViewState.NEW_VIEW, and SampleState.ANY");
 }
 
 

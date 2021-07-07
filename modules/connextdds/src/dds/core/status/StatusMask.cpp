@@ -226,7 +226,7 @@ void process_inits<StatusMask>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type<StatusMask, uint64_t>(
                 m,
                 "StatusMask",
-                "Create a StatusMask equivalent to StatusMask.none()");
+                "Create a StatusMask equivalent to StatusMask.NONE");
         return [cls]() mutable { init_class_defs<StatusMask>(cls); };
     });
 }

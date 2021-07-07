@@ -76,34 +76,34 @@ void init_class_defs(py::class_<TransportBuiltin>& cls)
                     [](py::object&) {
                         return TransportBuiltin::All();
                     },
-                    "Creates a policy that selects TransportBuiltinMask.all()")
+                    "Creates a policy that selects TransportBuiltinMask.ALL")
             .def_property_readonly_static(
                     "none",
                     [](py::object&) {
                         return TransportBuiltin::None();
                     },
-                    "Creates a policy that selects TransportBuiltinMask.none()")
+                    "Creates a policy that selects TransportBuiltinMask.NONE")
             .def_property_readonly_static(
                     "shmem",
                     [](py::object&) {
                         return TransportBuiltin::Shmem();
                     },
                     "Creates a policy that selects "
-                    "TransportBuiltinMask.shmem()")
+                    "TransportBuiltinMask.SHMEM")
             .def_property_readonly_static(
                     "udpv4",
                     [](py::object&) {
                         return TransportBuiltin::UDPv4();
                     },
                     "Creates a policy that selects "
-                    "TransportBuiltinMask.udpv4()")
+                    "TransportBuiltinMask.UDPv4")
             .def_property_readonly_static(
                     "udpv6",
                     [](py::object&) {
                         return TransportBuiltin::UDPv6();
                     },
                     "Creates a policy that selects "
-                    "TransportBuiltinMask.udpv6()");
+                    "TransportBuiltinMask.UDPv6");
 }
 
 template<>
@@ -114,7 +114,7 @@ void process_inits<TransportBuiltin>(py::module& m, ClassInitList& l)
                 m,
                 "TransportBuiltinMask",
                 "Create a TransportBuiltinMask equivalent to "
-                "TransportBuiltinMask.none()");
+                "TransportBuiltinMask.NONE");
         return [cls]() mutable { init_class_defs<TransportBuiltinMask>(cls); };
     });
 

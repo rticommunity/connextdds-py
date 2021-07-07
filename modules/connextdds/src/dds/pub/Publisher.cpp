@@ -100,7 +100,7 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                  py::arg_v(
                          "mask",
                          dds::core::status::StatusMask::all(),
-                         "StatusMask.all()"),
+                         "StatusMask.ALL"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Create a Publisher with the desired QoS policies and "
                  "specified listener")

@@ -227,7 +227,7 @@ void process_inits<SampleLostState>(py::module& m, ClassInitList& l)
         auto cls = init_mask_type_no_int_constructor<SampleLostState>(
                 m,
                 "SampleLostState",
-                "Creates SampleLostState.not_lost()",
+                "Creates SampleLostState.NOT_LOST",
                 false);
         return [cls]() mutable { init_class_defs<SampleLostState>(cls); };
     });

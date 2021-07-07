@@ -21,7 +21,7 @@ void init_class_defs(py::class_<SequenceNumber>& cls)
 {
     cls.def(py::init<>(),
             "Create a default SequenceNumber, equal to "
-            "SequenceNumber.unknown()")
+            "SequenceNumber.unknown")
             .def(py::init<int64_t>(),
                  py::arg("value"),
                  "Creates a SequenceNumber from an integer.")

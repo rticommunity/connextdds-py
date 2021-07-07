@@ -216,7 +216,7 @@ void init_dds_typed_datawriter_base_template(
                  py::arg_v(
                          "mask",
                          dds::core::status::StatusMask::all(),
-                         "StatusMask.all()"),
+                         "StatusMask.ALL"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Creates a DataWriter with QoS and a listener.")
             .def(py::init([](PyIAnyDataWriter& adw) {

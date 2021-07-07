@@ -1360,7 +1360,7 @@ void init_dds_typed_topic_template(py::class_<
                  py::arg_v(
                          "mask",
                          dds::core::status::StatusMask::all(),
-                         "StatusMask.all()"),
+                         "StatusMask.ALL"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Create a Topic with the given type.")
             .def(py::init([](const PyDomainParticipant& dp,
@@ -1380,7 +1380,7 @@ void init_dds_typed_topic_template(py::class_<
                  py::arg_v(
                          "mask",
                          dds::core::status::StatusMask::all(),
-                         "StatusMask.all()"),
+                         "StatusMask.ALL"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Creates a new Topic.");;
 }
@@ -2219,7 +2219,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     py::arg_v(
                         "format",
                         rti::topic::PrintFormatProperty::Default(),
-                        "PrintFormatProperty.default()"),
+                        "PrintFormatProperty.default"),
                     "Convert DynamicData object to string with print format.")
             .def(
                     "to_cdr_buffer",

@@ -278,7 +278,7 @@ void process_inits<WireProtocol>(py::module& m, ClassInitList& l)
                 m,
                 "RtpsReservedPortKindMask",
                 "Create a RtpsReservedPortKindMask equivalent to "
-                "RtpsReservedPortKindMask.none()");
+                "RtpsReservedPortKindMask.NONE");
         return [cls]() mutable {
             init_class_defs<RtpsReservedPortKindMask>(cls);
         };
