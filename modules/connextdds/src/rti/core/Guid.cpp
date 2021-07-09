@@ -9,6 +9,8 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <sstream>
+
 #include "PyConnext.hpp"
 #include <rti/core/Guid.hpp>
 

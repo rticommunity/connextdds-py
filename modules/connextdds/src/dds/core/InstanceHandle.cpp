@@ -9,6 +9,7 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <sstream>
 #include "PyConnext.hpp"
 #include "PySeq.hpp"
 #include "PyEntity.hpp"
