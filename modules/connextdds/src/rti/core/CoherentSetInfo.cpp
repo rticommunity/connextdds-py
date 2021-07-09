@@ -9,6 +9,7 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <sstream>
 #include "PyConnext.hpp"
 #if rti_connext_version_gte(6, 1, 0)
 #include <rti/core/CoherentSetInfo.hpp>

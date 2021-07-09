@@ -1586,7 +1586,7 @@ endif()
 
 # In the header files, there is a variable that contains the BUILD ID of the
 # release. From the BUILD ID, we can get the version.
-set(regex_for_build "NDDSCORE_BUILD_.*_RTI_REL")
+set(regex_for_build "NDDSCORE_BUILD_.*_RTI_.*")
 file(STRINGS
     "${CONNEXTDDS_DIR}/include/ndds/core_version/core_version_buildid.h"
     build_id_line
