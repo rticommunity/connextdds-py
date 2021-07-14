@@ -142,7 +142,44 @@ void init_class_defs(py::class_<DynamicType>& cls)
             .def(py::self == py::self,
                  "Compare DynamicType objects for equality.")
             .def(py::self != py::self,
-                 "Compare DynamicType objects for inequality.");
+                 "Compare DynamicType objects for inequality.")
+            .def_static(
+                "from_xml",
+                [](
+                const std::string& file_name,
+                const std::string& type_name,
+                dds::core::optional<std::vector<std::string>>& include_paths,
+                uint32_t unbounded_str_max,
+                uint32_t unbounded_seq_max) {
+                    DDS_TypeCodeFactory* factory = DDS_TypeCodeFactory_get_instance();
+                    DDS_ExceptionCode_t ex;
+                    DDS_StringSeq native_paths = DDS_SEQUENCE_INITIALIZER;
+                    rti::core::detail::NativeSequenceAdapter<char*>
+                        paths_adapter(native_paths);
+                    if (has_value(include_paths)) {
+                        rti::core::native_conversions::to_native(native_paths, get_value(include_paths));
+                    }
+                    DDS_TypeCode* tc = DDS_TypeCodeFactory_create_tc_from_xml_file(
+                            factory,
+                            file_name.c_str(),
+                            type_name.c_str(),
+                            &native_paths,
+                            unbounded_str_max,
+                            unbounded_seq_max,
+                            &ex
+                        );
+                    rti::core::check_tc_ex_code(ex, "DynamicType.from_xml error");
+                    return py_cast_type(
+                        rti::core::native_conversions::cast_from_native<DynamicType>(*tc));
+                },
+                py::arg("filename"),
+                py::arg("typename"),
+                py::arg("include_paths") = py::none(),
+                py::arg("unbounded_string_max_len") = 255,
+                py::arg("unbounded_seq_max_len") = 100,
+                py::return_value_policy::reference,
+                "Load a DynamicType from an XML file."
+            );
 }
 
 template<>
