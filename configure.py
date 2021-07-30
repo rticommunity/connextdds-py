@@ -259,7 +259,8 @@ rti_platform_ends = {
 
 rti_required_libs = {
     'rti': ['nddsc', 'nddscore', 'nddscpp2'],
-    'rti.logging': ['rtidlc']
+    'rti.logging': ['rtidlc'],
+    'rti.request': ['rticonnextmsgcpp2']
 }
 
 

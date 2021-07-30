@@ -223,7 +223,7 @@ class CMakeBuild(build_ext):
         # attempt to create interface files for type hinting; failure is not a fatal error
         python_cmd = sys.executable
         stubgen = os.path.join(get_script_dir(), 'resources', 'scripts', 'stubgen.py')
-        stubgen_args = ['--split-overload-docs']
+        stubgen_args = ['--split-overload-docs', '--no-setup-py', '--root-module-suffix', '']
         extdirs = set()
         for ext in self.extensions:
             extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
@@ -250,6 +250,10 @@ class CMakeBuild(build_ext):
 package_cfg = process_config()
 
 setup(
-    ext_modules=[CMakeExtension('rti.connextdds', get_package_libs('rti')), CMakeExtension('rti.logging.distlog', get_package_libs('rti.logging'))],
+    ext_modules=[
+            CMakeExtension('rti.connextdds', get_package_libs('rti')),
+            CMakeExtension('rti.logging.distlog', get_package_libs('rti.logging')),
+            CMakeExtension('rti.request._util_native', get_package_libs('rti.request'))
+        ],
     cmdclass=dict(build_ext=CMakeBuild, bdist_rpm=ConnextPyRpm)
 )
