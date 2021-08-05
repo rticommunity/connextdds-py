@@ -122,22 +122,17 @@ class Replier(_basic.Replier):
     ):
         # type: (...) -> None
         super(Replier, self).__init__(
-            'Replier',
-            reply_type,
             request_type,
+            reply_type,
             participant,
-            'Reply',
-            'Request',
             service_name,
-            reply_topic,
             request_topic,
+            reply_topic,
             datawriter_qos,
             datareader_qos,
             publisher,
             subscriber,
-            on_request_available,
-            True,
-            False
+            on_request_available
         )
 
 
