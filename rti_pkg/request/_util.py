@@ -280,7 +280,9 @@ def match_count(
     return min(pub_count, sub_count)
 
 
-class RequestReplyBase(metaclass=MetaRequestReply):
+RRMETA = MetaRequestReply('RRMETA', (object,), {'__slots__': ()})
+
+class RequestReplyBase(RRMETA):
     def __init__(
         self,
         role_name,                      # type: str

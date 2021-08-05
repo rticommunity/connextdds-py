@@ -20,7 +20,7 @@ try:
 except:
     xrange = range
 
-requester_serviced = True
+request_serviced = True
 
 def is_prime(val):
     if val <= 1:
@@ -90,6 +90,8 @@ def replier_main(domain_id):
     while request_serviced:
         request_serviced = False
         time.sleep(20)
+
+    print("Timed out waiting for requests")
     
 
 
