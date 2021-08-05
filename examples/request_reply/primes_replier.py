@@ -50,10 +50,8 @@ def replier_main(domain_id):
             service_name="PrimeCalculator",
             datawriter_qos=qos_provider.datawriter_qos_from_profile("RequestReplyExampleProfiles::RequesterExampleProfile"),
             datareader_qos=qos_provider.datareader_qos_from_profile("RequestReplyExampleProfiles::RequesterExampleProfile"))
-    
-    while replier.matched_requester_count == 0:
-        time.sleep(0.1)
 
+    print("Prime calculation replier started on domain {}...".format(domain_id))
     max_wait = dds.Duration.from_seconds(20)
     requests = replier.receive_requests(max_wait)
 

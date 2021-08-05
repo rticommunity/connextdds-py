@@ -30,6 +30,8 @@ def requester_main(domain_id, n, primes_per_reply):
             service_name="PrimeCalculator",
             datawriter_qos=qos_provider.datawriter_qos_from_profile("RequestReplyExampleProfiles::RequesterExampleProfile"),
             datareader_qos=qos_provider.datareader_qos_from_profile("RequestReplyExampleProfiles::RequesterExampleProfile"))
+
+    print("Waiting to discover replier on domain {}...".format(domain_id))
     
     while requester.matched_replier_count == 0:
         time.sleep(0.1)
@@ -37,6 +39,13 @@ def requester_main(domain_id, n, primes_per_reply):
     prime_number_request = dds.DynamicData(request_type)
     prime_number_request["n"] = n
     prime_number_request["primes_per_reply"] = primes_per_reply
+
+    print(
+        "Sending a request to calculate the prime numbers <= {} in sequences of {} or fewer elements".format(
+            n,
+            primes_per_reply
+        )
+    )
 
     request_id = requester.send_request(prime_number_request)
 

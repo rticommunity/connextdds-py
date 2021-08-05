@@ -73,6 +73,7 @@ def replier_main(domain_id):
 
             reply["primes"] = primes
             reply["status"] = status_type["REPLY_COMPLETED"]
+            print("DONE")
             return reply
 
     replier = rti.request.SimpleReplier(
@@ -83,9 +84,8 @@ def replier_main(domain_id):
             service_name="PrimeCalculator",
             datawriter_qos=qos_provider.datawriter_qos_from_profile("RequestReplyExampleProfiles::RequesterExampleProfile"),
             datareader_qos=qos_provider.datareader_qos_from_profile("RequestReplyExampleProfiles::RequesterExampleProfile"))
-    
-    while replier.matched_requester_count == 0:
-        time.sleep(0.1)
+
+    print("Prime calculation replier started on domain {}...".format(domain_id))
 
     while request_serviced:
         request_serviced = False
