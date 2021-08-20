@@ -273,6 +273,20 @@ void init_class_defs(py::class_<QosProvider>& cls)
             .def(
                     "create_participant_from_config",
                     [](QosProvider& qp,
+                       const std::string& config) {
+                        return PyDomainParticipant(
+                                qp->create_participant_from_config(
+                                        config));
+                    },
+                    py::arg("config"),
+                    "Create a DomainParticipant given a configuration name "
+                    "from a "
+                    "description provided in an XML configuration file that "
+                    "has been "
+                    "loaded by this QosProvider with default parameters.")
+            .def(
+                    "create_participant_from_config",
+                    [](QosProvider& qp,
                        const std::string& config,
                        const rti::domain::DomainParticipantConfigParams&
                                params) {
@@ -282,10 +296,7 @@ void init_class_defs(py::class_<QosProvider>& cls)
                                         params));
                     },
                     py::arg("config"),
-                    py::arg_v(
-                            "params",
-                            rti::domain::DomainParticipantConfigParams(),
-                            "DomainParticipantConfigParams()"),
+                    py::arg("params"),
                     "Create a DomainParticipant given a configuration name "
                     "from a "
                     "description provided in an XML configuration file that "
