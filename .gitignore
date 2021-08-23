@@ -9,3 +9,8 @@ docs/build/
 build/
 dist/
 rti.egg-info
+
+platform/
+package.cfg
+pyproject.toml
+MANIFEST.in
