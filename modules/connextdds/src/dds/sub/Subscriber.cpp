@@ -219,6 +219,15 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                     py::call_guard<py::gil_scoped_release>(),
                     "Find all DataReaders in the Subscriber.")
             .def(
+                    "find_datareaders",
+                    [](const PySubscriber& sub, const dds::sub::status::DataState& ds) {
+                        std::vector<PyAnyDataReader> v;
+                        dds::sub::find(sub, ds, std::back_inserter(v));
+                        return v;
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find all DataReaders that contain samples of the given DataState in the Subscriber.")
+            .def(
                 py::self == py::self,
                 py::call_guard<py::gil_scoped_release>(),
                 "Test for equality.")

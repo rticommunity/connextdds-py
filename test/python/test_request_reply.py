@@ -302,9 +302,15 @@ def test_request_single_reply(
     test_object.replier.send_reply(test_object.create_data(reply_key, reply_val + ' reply'), requests[0].info)
     replies = test_object.wait_for_replies(id, 1, 1.0)
     assert len(replies) == 1
+    assert request.Requester.is_final_reply(replies[0])
+    assert request.Requester.is_final_reply(replies[0].info)
     reply_key, reply_val = test_object.parse_data(replies[0].data)
     assert reply_key == key
     assert reply_val == val + ' reply'
+    test_object.requester.request_datawriter.dispose_instance(req)
+    test_object.requester.request_datawriter.unregister_instance(req)
+    test_object.replier.reply_datawriter.dispose_instance(req)
+    test_object.replier.reply_datawriter.unregister_instance(req)
     test_object.close()
 
 
@@ -415,6 +421,8 @@ async def request_reply_async(
     test_object.replier.send_reply(test_object.create_data(reply_key, reply_val + ' reply'), requests[0].info)
     replies = await test_object.wait_for_replies_async(id, 1, 1.0)
     assert len(replies) == 1
+    assert request.Requester.is_final_reply(replies[0])
+    assert request.Requester.is_final_reply(replies[0].info)
     reply_key, reply_val = test_object.parse_data(replies[0].data)
     assert reply_key == key
     assert reply_val == val + ' reply'

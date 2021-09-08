@@ -24,6 +24,32 @@ else:
 
 
 class SimpleReplier(_util.RequestReplyBase):
+    """A requester object that requires a callback to process a request and
+    provide a single reply.
+
+    :param request_type: The type of the request data.
+    :type request_type: Union[rti.connextdds.DynamicType, type]
+    :param reply_type: The type of the reply data.
+    :type reply_type: Union[rti.connextdds.DynamicType, type]
+    :param participant: The DomainParticipant that will hold the request reader and reply writer.
+    :type participant: rti.connextdds.DomainParticipant
+    :param handler: The callback that handles incoming requests and returns a reply.
+    :type handler: Callable[[object], object]
+    :param service_name: Name that will be used to derive the topic name, defaults to None (rely only on custom topics).
+    :type service_name: Optional[str]
+    :param request_topic: Topic object or name that will be used for the request data, must be set if service_name is None, otherwise overrides service_name, defaults to None (use service_name).
+    :type request_topic: Optional[Union[rti.connextdds.DynamicData.Topic, rti.connextdds.DynamicData.ContentFilteredTopic, str, object]]
+    :param reply_topic: Topic object or name that will be used for the reply data, must be set if service_name is None, otherwise overrides service_name, defaults to None (use service_name).
+    :type reply_topic: Optional[Union[rti.connextdds.DynamicData.Topic, str, object]]
+    :param datawriter_qos: QoS object to use for reply writer, defaults to None (use default RequestReply QoS).
+    :type datawriter_qos: Optional[rti.connextdds.DataWriterQos]
+    :param datareader_qos: QoS object to use for request reader, defaults to None (use default RequestReply QoS).
+    :type datareader_qos: Optional[rti.connextdds.DataReaderQos]
+    :param publisher: Publisher used to hold reply writer, defaults to None (use participant builtin publisher).
+    :type publisher: Optional[rti.connextdds.Publisher]
+    :param subscriber: Subscriber used to hold request reader, defaults to None (use participant builtin subscriber).
+    :type subscriber: Optional[rti.connextdds.Subscriber]
+    """
     @classmethod
     def _create_data_available_callback(cls, handler):
         # type: (Callable[[object], object]) -> Callable[[SimpleReplier]]
@@ -55,6 +81,9 @@ class SimpleReplier(_util.RequestReplyBase):
         subscriber=None,        # type: Optional[rti.connextdds.Subscriber]
     ):
         # type: (...) -> None
+        """
+        
+        """
         callback = SimpleReplier._create_data_available_callback(handler)
 
         super(SimpleReplier, self).__init__(
@@ -80,4 +109,9 @@ class SimpleReplier(_util.RequestReplyBase):
     @property
     def matched_requester_count(self):
         # type: () -> int
+        """The number of discovered matched requesters.
+
+        :getter: Returns the number of matched requesters.
+        :type: int
+        """
         return _util.match_count(self._reader, self._writer, 'Requester')

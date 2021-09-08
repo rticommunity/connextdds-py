@@ -284,6 +284,41 @@ def match_count(
 RRMETA = MetaRequestReply('RRMETA', (object,), {'__slots__': ()})
 
 class RequestReplyBase(RRMETA):
+    """Base class used for request-reply objects.
+
+    :param role_name: The role name that will be used for the readers and writers created.
+    :type role_name: str
+    :param writer_type: The type of the writer data.
+    :type writer_type: Union[rti.connextdds.DynamicType, type]
+    :param reader_type: The type of the reader data.
+    :type reader_type: Union[rti.connextdds.DynamicType, type]
+    :param participant: The DomainParticipant that will hold the reader and writer.
+    :type participant: rti.connextdds.DomainParticipant
+    :param default_writer_topic_suffix: Suffix to use for writer topic name if Topic needs to be created.
+    :type default_writer_topic_suffix: str
+    :param default_reader_topic_suffix: Suffix to use for reader topic name if Topic needs to be created.
+    :type default_reader_topic_suffix: str
+    :param service_name: Name that will be used to derive the topic name, defaults to None (rely only on custom topics).
+    :type service_name: Optional[str]
+    :param writer_topic: Topic object or name that will be used for the writer data, must be set if service_name is None, otherwise overrides service_name, defaults to None (use service_name).
+    :type writer_topic: Optional[Union[rti.connextdds.DynamicData.Topic, rti.connextdds.DynamicData.ContentFilteredTopic, str, object]]
+    :param reader_topic: Topic object or name that will be used for the reader data, must be set if service_name is None, otherwise overrides service_name, defaults to None (use service_name).
+    :type reader_topic: Optional[Union[rti.connextdds.DynamicData.Topic, str, object]]
+    :param datawriter_qos: QoS object to use for the writer, defaults to None (use default RequestReply QoS).
+    :type datawriter_qos: Optional[rti.connextdds.DataWriterQos]
+    :param datareader_qos: QoS object to use for the reader, defaults to None (use default RequestReply QoS).
+    :type datareader_qos: Optional[rti.connextdds.DataReaderQos]
+    :param publisher: Publisher used to hold the writer, defaults to None (use participant builtin publisher).
+    :type publisher: Optional[rti.connextdds.Publisher]
+    :param subscriber: Subscriber used to hold the reader, defaults to None (use participant builtin subscriber).
+    :type subscriber: Optional[rti.connextdds.Subscriber]
+    :param on_data_available: Callback function used to process data received by the reader, defaults to None (no callback).
+    :type on_data_available: Optional[Callable[[object]]]
+    :param use_waitset: Create a waitset for processing received data.
+    :type use_waitset: bool
+    :param use_cft: Create a CFT on the writer GUID for the reader.
+    :type use_cft: bool
+    """
     def __init__(
         self,
         role_name,                      # type: str
@@ -299,7 +334,7 @@ class RequestReplyBase(RRMETA):
         datareader_qos=None,            # type: Optional[rti.connextdds.DataReaderQos]
         publisher=None,                 # type: Optional[rti.connextdds.Publisher]
         subscriber=None,                # type: Optional[rti.connextdds.Subscriber]
-        on_data_available=None,         # type: Callable[[object]]
+        on_data_available=None,         # type: Optional[Callable[[object]]]
         use_waitset=True,               # type: bool
         use_cft=False                   # type: bool
     ):
@@ -357,8 +392,10 @@ class RequestReplyBase(RRMETA):
 
     def close(self):
         # type() -> None
+        """Close the resources for this request-reply object.
+        """
         if self._closed:
-            return
+            raise rti.connextdds.AlreadyClosedError('This request-reply object has already been closed')
         if self._waitset is not None:
             self._waitset.detach_all()
             self._waitset = None
@@ -375,4 +412,9 @@ class RequestReplyBase(RRMETA):
     @property
     def closed(self):
         # type() -> bool
+        """Returns true if this request-reply object has been closed.
+
+        :getter: Returns the number of matched requesters.
+        :type: bool
+        """
         return self._closed
