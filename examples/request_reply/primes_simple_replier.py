@@ -17,7 +17,7 @@ import math
 
 try:
     xrange
-except:
+except NameError:
     xrange = range
 
 request_serviced = True

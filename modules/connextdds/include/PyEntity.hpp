@@ -24,7 +24,7 @@ class PyDomainParticipantListener;
 class PyPublisherListener;
 class PySubscriberListener;
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using DomainParticipantListenerPtr = dds::domain::DomainParticipantListener*;
 
 using PyDomainParticipantListenerPtr = PyDomainParticipantListener*;
@@ -34,7 +34,7 @@ using DomainParticipantListenerPtr = std::shared_ptr<dds::domain::DomainParticip
 using PyDomainParticipantListenerPtr = std::shared_ptr<PyDomainParticipantListener>;
 #endif
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using PublisherListenerPtr = dds::pub::PublisherListener*;
 
 using PyPublisherListenerPtr = PyPublisherListener*;
@@ -44,7 +44,7 @@ using PublisherListenerPtr = std::shared_ptr<dds::pub::PublisherListener>;
 using PyPublisherListenerPtr = std::shared_ptr<PyPublisherListener>;
 #endif
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using SubscriberListenerPtr = dds::sub::SubscriberListener*;
 
 using PySubscriberListenerPtr = PySubscriberListener*;

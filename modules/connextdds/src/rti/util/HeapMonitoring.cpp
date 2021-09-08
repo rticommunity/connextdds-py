@@ -17,7 +17,7 @@ using namespace rti::util::heap_monitoring;
 
 namespace pyrti {
 
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 template<>
 void init_class_defs(py::class_<HeapMonitoringParams>& cls)
 {
@@ -113,7 +113,7 @@ void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l, pyrti::DefInit
         "Monitor memory allocations done by the middleware on "
         "the native heap.");
 
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
     pyrti::process_inits<HeapMonitoringParams>(heapmon, l);
 #endif
 
@@ -125,7 +125,7 @@ void init_heap_monitoring(py::module& m, pyrti::ClassInitList& l, pyrti::DefInit
                 "Start monitoring the heap memory used by RTI Connext. "
                 "Must be called before any using any other int the RTI Connext "
                 "library.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def(
                 "enable",
                 (bool (*)(const HeapMonitoringParams&)) &rti::util::heap_monitoring::enable,

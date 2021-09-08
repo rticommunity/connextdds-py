@@ -77,7 +77,7 @@ py::object py_cast_type(dds::core::xtypes::DynamicType& dt)
     case dds::core::xtypes::TypeKind::CHAR_8_TYPE:
         return py::cast(
                 static_cast<dds::core::xtypes::PrimitiveType<char>&>(dt));
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     case dds::core::xtypes::TypeKind::CHAR_16_TYPE:
         return py::cast(
                 static_cast<dds::core::xtypes::PrimitiveType<DDS_Wchar>&>(dt));
@@ -127,7 +127,7 @@ void init_class_defs(py::class_<DynamicType>& cls)
                     return rti::core::xtypes::to_string(t);
                 },
                 "DynamicData value to string.")
-#if rti_connext_version_gte(6, 0, 1)
+#if rti_connext_version_gte(6, 0, 1, 0)
             .def(
                 "to_string",
                 [](const DynamicType& t, const rti::core::xtypes::DynamicTypePrintFormatProperty& prop) {

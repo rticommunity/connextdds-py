@@ -17,7 +17,7 @@ import math
 
 try:
     xrange
-except:
+except NameError:
     xrange = range
 
 def is_prime(val):

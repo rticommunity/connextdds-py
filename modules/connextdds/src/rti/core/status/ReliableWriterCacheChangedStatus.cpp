@@ -57,7 +57,7 @@ void init_class_defs(py::class_<ReliableWriterCacheChangedStatus>& cls)
                     "The highest value that unacknowledged_sample_count has "
                     "reached "
                     "until now.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property_readonly(
                     "replaced_unacknowledged_sample_count",
                     &ReliableWriterCacheChangedStatus::

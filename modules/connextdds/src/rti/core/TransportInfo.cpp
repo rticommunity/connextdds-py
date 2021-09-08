@@ -58,7 +58,7 @@ void process_inits<TransportInfo>(py::module& m, ClassInitList& l)
                 .value("INVALID", TransportClassId::type::INVALID, "Invalid.")
                 .value("ANY", TransportClassId::type::ANY, "Any.")
                 .value("UDPv4", TransportClassId::type::UDPv4, "UDPv4.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
                 .value("UDPv4_WAN", TransportClassId::type::UDPv4_WAN, "UDPv4 WAN.")
 #endif 
                 .value("SHMEM", TransportClassId::type::SHMEM, "Shared memory.")

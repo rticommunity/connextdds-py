@@ -17,7 +17,7 @@ import cmake
 import pybind11
 try:
     import configparser
-except:
+except ImportError:
     import ConfigParser as configparser
 
 from setuptools import setup, Extension
@@ -235,7 +235,7 @@ class CMakeBuild(build_ext):
             try:
                 with open(os.devnull, 'w') as devnull:
                     subprocess.check_call([python_cmd, stubgen] + stubgen_args + ['-o', extdir, ext.name], env=stubs_env, stderr=devnull)
-            except:
+            except Exception:
                 print('Could not generate stub file for {}'.format(ext.name))
 
         for extdir in extdirs:

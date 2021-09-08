@@ -171,6 +171,14 @@ class Requester(_util.RequestReplyBase):
             self._reader.bind_listener(listener, rti.connextdds.StatusMask.DATA_AVAILABLE)
 
 
+    @classmethod
+    def is_related_reply(cls, request_id, reply_info):
+        # type (rti.connextdds.SampleIdentity, Union[rti.connextdds.SampleInfo, object]) -> bool
+        if isinstance(reply_info, rti.connextdds.SampleInfo):
+            return reply_info.related_original_publication_virtual_sample_identity == request_id
+        return reply_info.info.related_original_publication_virtual_sample_identity == request_id
+
+
 class Replier(_util.RequestReplyBase):
     def __init__(
         self,

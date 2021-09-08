@@ -24,7 +24,7 @@ public:
         auto instance = PyAsyncioExecutor::get_instance();
         py::object loop = instance.get_running_loop();
         py::object run_in_executor = loop.attr("run_in_executor");
-        return run_in_executor(nullptr, std::function<T()>([func]() {
+        return run_in_executor(nullptr, std::function<T()>([func]() -> T {
                                    py::gil_scoped_release release;
                                    return func();
                                }));

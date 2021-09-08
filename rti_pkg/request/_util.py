@@ -55,6 +55,19 @@ class MetaRequestReply(type):
         return qos
 
 
+def get_or_create_topic_from_name(type_class, data_type, participant, topic_name):
+    try:
+        topic = type_class.Topic.find(participant, topic_name)
+    except rti.connextdds.InvalidDowncastError:
+        topic = type_class.ContentFilteredTopic.find(participant, topic_name)
+    if topic is None:
+        if isinstance(data_type, rti.connextdds.DynamicType):
+            topic = type_class.Topic(participant, topic_name, data_type)
+        else:
+            topic = type_class.Topic(participant, topic_name)
+    return topic
+
+
 def get_topic(
     data_type,          # type: Union[rti.connextdds.DynamicType, type]
     participant,        # type: rti.connextdds.DomainParticipant
@@ -69,18 +82,9 @@ def get_topic(
     else:
         type_class = data_type
     if custom_topic is not None:
-        if service_name is not None:
-            raise rti.connextdds.InvalidArgumentError("Cannot provide both topic and service name")
+        # custom topic overrides service name
         if isinstance(custom_topic, str):
-            try:
-                topic = type_class.Topic.find(participant, custom_topic)
-            except rti.connextdds.InvalidDowncastError:
-                topic = type_class.ContentFilteredTopic.find(participant, custom_topic)
-            if topic is None:
-                if isinstance(data_type, rti.connextdds.DynamicType):
-                    topic = type_class.Topic(participant, custom_topic, data_type)
-                else:
-                    topic = type_class.Topic(participant, custom_topic)
+            topic = get_or_create_topic_from_name(type_class, data_type, participant, custom_topic)
         else:
             topic = custom_topic
             if not (isinstance(topic, type_class.Topic) or isinstance(topic, type_class.ContentFilteredTopic)):
@@ -88,10 +92,7 @@ def get_topic(
     else:
         assert service_name, "Must provide service name or topic"
         topic_name = service_name + service_suffix
-        if isinstance(data_type,rti.connextdds.DynamicType):
-            topic = type_class.Topic(participant, topic_name, data_type)
-        else:
-            topic = type_class.Topic(participant, topic_name)
+        topic = get_or_create_topic_from_name(type_class, data_type, participant, topic_name)
     if not cft_allowed and isinstance(topic, type_class.ContentFilteredTopic):
         raise rti.connextdds.InvalidArgumentError("ContentFilteredTopic cannot be used for this endpoint")
     return topic
@@ -358,12 +359,14 @@ class RequestReplyBase(RRMETA):
         # type() -> None
         if self._closed:
             return
-        self._writer.close()
-        self._reader.close()
         if self._waitset is not None:
+            self._waitset.detach_all()
             self._waitset = None
             self._any_sample_condition.close()
             self._notread_sample_condition.close()
+        self._callback = None
+        self._writer.close()
+        self._reader.close()
         self._reply_type = None
         self._request_type = None
         self._closed = True

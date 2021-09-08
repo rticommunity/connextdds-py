@@ -72,7 +72,7 @@ public:
             PyDataWriter<T>& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status) = 0;
 
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     void on_destination_unreachable(
             dds::pub::DataWriter<T>& writer,
             const dds::core::InstanceHandle& handle,

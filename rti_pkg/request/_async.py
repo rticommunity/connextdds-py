@@ -164,7 +164,7 @@ class Replier(_basic.Replier):
 
     async def receive_requests_async(self, max_wait, min_count=1):
         # type: (rti.connextdds.Duration, int) -> Union[rti.connextdds.DynamicData.LoanedSamples, object]
-        if not await _util.wait_for_samples(
+        if not await _util_async.wait_for_samples_async(
                 self._reader,
                 min_count, max_wait,
                 self._waitset,
@@ -177,7 +177,7 @@ class Replier(_basic.Replier):
 
     async def wait_for_requests_async(self, max_wait, min_count=1):
         # type: (rti.connextdds.Duration, int) -> bool
-        return await _util.wait_for_samples(
+        return await _util_async.wait_for_samples_async(
                 self._reader,
                 min_count,
                 max_wait,

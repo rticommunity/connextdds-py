@@ -325,7 +325,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::max_topic_queries,
                     "The maximum number of TopicQueries allocated by a "
                     "DataReader.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "shmem_ref_transfer_mode_attached_segment_allocation",
                     (AllocationSettings & (DataReaderResourceLimits::*) ())
@@ -338,7 +338,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     "The initial number of TopicQueries allocated by a "
                     "DataReader.")
 #endif
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 #ifndef _MSC_VER
             .def_property(
                     "instance_replacement",

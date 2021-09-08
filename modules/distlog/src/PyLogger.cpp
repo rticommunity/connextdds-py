@@ -18,7 +18,7 @@ namespace pyrti {
 bool PyLogger::_options_set = false;
 std::recursive_mutex PyLogger::_lock;
 std::unique_ptr<PyLogger> PyLogger::_py_instance;
-#if rti_connext_version_lt(6, 0, 0)
+#if rti_connext_version_lt(6, 0, 0, 0)
 std::unique_ptr<PyLoggerOptions> PyLogger::_options;
 #endif
 
@@ -45,7 +45,7 @@ PyLogger& PyLogger::instance() {
 bool PyLogger::options(const PyLoggerOptions& options) {
     std::lock_guard<std::recursive_mutex> lock(PyLogger::_lock);
 
-#if rti_connext_version_lt(6, 0, 0)
+#if rti_connext_version_lt(6, 0, 0, 0)
     if (PyLogger::_options_set) return false;
     PyLogger::_options.reset(new PyLoggerOptions(options));
     bool retval = (bool)RTI_DL_DistLogger_setOptions(PyLogger::_options->_options);
@@ -68,7 +68,7 @@ void PyLogger::finalize() {
 
     auto ptr = PyLogger::_py_instance.release();
     delete ptr;
-#if rti_connext_version_lt(6, 0, 0)
+#if rti_connext_version_lt(6, 0, 0, 0)
     auto opt_ptr = PyLogger::_options.release();
     delete opt_ptr;
 #endif

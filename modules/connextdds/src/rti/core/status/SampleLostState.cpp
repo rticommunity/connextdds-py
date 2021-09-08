@@ -48,11 +48,11 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                     return std::string("SampleLostState.LOST_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
                 case DDS_LOST_BY_OUT_OF_MEMORY:
                     return std::string("SampleLostState.LOST_BY_OUT_OF_MEMORY");
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
                 case DDS_LOST_BY_UNKNOWN_INSTANCE:
                     return std::string("SampleLostState.LOST_BY_UNKNOWN_INSTANCE");
 #endif
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
                 case DDS_LOST_BY_DESERIALIZATION_FAILURE:
                     return std::string("SampleLostState.LOST_BY_DESERIALIZATION_FAILURE");
                 case DDS_LOST_BY_SAMPLES_PER_INSTANCE_LIMIT:
@@ -164,7 +164,7 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                     "published "
                     "by a remote writer on behalf of a virtual writer that a "
                     "DataReader may store was reached.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly_static(
                     "LOST_BY_UNKNOWN_INSTANCE",
                     [](py::object&) {
@@ -175,7 +175,7 @@ void init_class_defs(py::class_<SampleLostState>& cls)
                     "Create a SampleLostState indicating that the sample was "
                     "lost because the instance is unknown.")
 #endif
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property_readonly_static(
                     "LOST_BY_DESERIALIZATION_FAILURE",
                     [](py::object&) {

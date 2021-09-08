@@ -109,9 +109,12 @@ void init_class_defs(py::class_<PyTriggeredConditions>& cls)
 template<>
 void init_class_defs(py::class_<WaitSet>& cls)
 {
-    cls.def(py::init<>(), "Create a WaitSet with no conditions attached.")
+    cls.def(py::init<>(),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a WaitSet with no conditions attached.")
             .def(py::init<const rti::core::cond::WaitSetProperty&>(),
                  py::arg("property"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a WaitSet with no conditions attached with the "
                  "specified "
                  "WaitSetProperty settings.")
@@ -210,6 +213,7 @@ void init_class_defs(py::class_<WaitSet>& cls)
                         return ws += c.get_condition();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Attach a condition to a WaitSet.")
             .def(
                     "__isub__",
@@ -217,6 +221,7 @@ void init_class_defs(py::class_<WaitSet>& cls)
                         return ws -= c.get_condition();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Detach a condition from a WaitSet.")
             .def(
                     "attach_condition",
@@ -224,6 +229,7 @@ void init_class_defs(py::class_<WaitSet>& cls)
                         ws.attach_condition(c.get_condition());
                     },
                     py::arg("condition"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Attach a condition to the WaitSet.")
             .def(
                     "detach_condition",
@@ -231,10 +237,12 @@ void init_class_defs(py::class_<WaitSet>& cls)
                         return ws.detach_condition(c.get_condition());
                     },
                     py::arg("condition"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Detach a condition from the WaitSet.")
             .def_property(
                     "conditions",
                     [](WaitSet& ws) {
+                        py::gil_scoped_release release;
                         std::vector<PyCondition> conditions;
                         for (auto& c : ws.conditions()) {
                             conditions.push_back(PyCondition(c));
@@ -242,6 +250,7 @@ void init_class_defs(py::class_<WaitSet>& cls)
                         return conditions;
                     },
                     [](WaitSet& ws, std::vector<PyICondition*> conditions) {
+                        py::gil_scoped_release release;
                         for (auto& c : conditions) {
                             ws += c->get_condition();
                         }
@@ -250,11 +259,16 @@ void init_class_defs(py::class_<WaitSet>& cls)
             .def(
                     "detach_all",
                     [](WaitSet& ws) { ws->detach_all(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Detach all conditions from the WaitSet.")
             .def_property(
                     "property",
-                    [](WaitSet& ws) { return ws->property(); },
+                    [](WaitSet& ws) {
+                        py::gil_scoped_release release;
+                        return ws->property(); 
+                    },
                     [](WaitSet& ws, rti::core::cond::WaitSetProperty& p) {
+                        py::gil_scoped_release release;
                         ws->property(p);
                     },
                     "Get/set the WaitSetProperty settings for the WaitSet.");

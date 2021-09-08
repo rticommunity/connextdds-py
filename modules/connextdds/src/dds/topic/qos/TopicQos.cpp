@@ -60,13 +60,13 @@ void init_class_defs(py::class_<TopicQos>& cls)
             "TransportPriority");
     add_qos_property<TopicQos, Lifespan>(cls, "lifespan", "Lifespan");
     add_qos_property<TopicQos, Ownership>(cls, "ownership", "Ownership");
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     add_qos_property<TopicQos, DataRepresentation>(
             cls,
             "data_representation",
             "DataRepresentation");
 #endif
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
     add_qos_string_conversions(cls);
 #endif
 }

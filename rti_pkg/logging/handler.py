@@ -1,6 +1,10 @@
 from . import distlog as distlog
 import logging
 import threading
+try:
+    from typing import Optional
+except ImportError:
+    pass
 
 
 class DistlogHandler(logging.Handler):
@@ -20,7 +24,7 @@ class DistlogHandler(logging.Handler):
         DistlogHandler._lock.acquire()
         DistlogHandler._count += 1
         distlog.Logger.init(options)
-        self._closed = False;
+        self._closed = False
         DistlogHandler._lock.release()
 
     def close(self):
@@ -38,9 +42,9 @@ class DistlogHandler(logging.Handler):
     def emit(self, record):
         # type: (logging.LogRecord) -> None
         level = DistlogHandler._levelMap[record.levelno]
-        try:
+        if hasattr(record, 'category'):
             distlog.Logger.log(level, record.getMessage(), record.category)
-        except:
+        else:
             distlog.Logger.log(level, record.getMessage())
 
 

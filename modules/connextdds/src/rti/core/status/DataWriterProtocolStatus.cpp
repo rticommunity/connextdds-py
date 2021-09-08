@@ -154,7 +154,7 @@ void init_class_defs(py::class_<DataWriterProtocolStatus>& cls)
                     "The sequence number of the first sample whose keep "
                     "duration has "
                     "not yet elapsed.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property_readonly(
                     "pushed_fragment_count",
                     &DataWriterProtocolStatus::

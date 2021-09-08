@@ -24,7 +24,7 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls)
     cls.def(py::init<const dds::topic::Filter&>(),
             py::arg("filter"),
             "Creates a TopicQuerySelection.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init<const dds::topic::Filter&, TopicQuerySelectionKind>(),
                  py::arg("filter"),
                  py::arg("kind"),
@@ -42,7 +42,7 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls)
                         tqs.filter() = f;
                     },
                     "The filter.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "kind",
                     (TopicQuerySelectionKind(TopicQuerySelection::*)() const)
@@ -96,6 +96,7 @@ void init_class_defs(py::class_<TopicQuery>& cls)
             "Creates a TopicQuery for a given DataReader.")
             .def("close",
                  &TopicQuery::close,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Deletes and cancels this TopicQuery.")
             .def_property_readonly(
                     "guid",
@@ -126,6 +127,7 @@ void init_class_defs(py::class_<TopicQuery>& cls)
                     [](TopicQuery& tq, py::object, py::object, py::object) {
                         tq.close();
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Exit a context managed block for a TopicQuery.")
             .def(py::self == py::self,
                  "Compare DataStateEx objects for equality.")
@@ -163,7 +165,7 @@ void init_class_defs(py::class_<TopicQuery>& cls)
 template<>
 void process_inits<TopicQuery>(py::module& m, ClassInitList& l)
 {
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     init_dds_safe_enum<TopicQuerySelectionKind_def>(
             m,
             "TopicQuerySelectionKind",

@@ -20,7 +20,7 @@ template<typename T>
 void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls)
 {
     cls.def(py::init<>(), "Basic constructor")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init<
                          const typename rti::sub::LoanedSample<T>::DataType&,
                          const typename rti::sub::LoanedSample<T>::InfoType&>(),

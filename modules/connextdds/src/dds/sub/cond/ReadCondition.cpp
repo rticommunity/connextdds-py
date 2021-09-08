@@ -30,7 +30,7 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
             py::arg("reader"),
             py::arg("status"),
             "Create a ReadCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](PyIAnyDataReader& dr,
                              const dds::sub::status::DataState& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -61,7 +61,7 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
                  py::arg("reader"),
                  py::arg("status"),
                  "Create a ReadCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](PyIAnyDataReader& dr,
                              const rti::sub::status::DataStateEx& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -116,6 +116,7 @@ void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls)
                     "Returns the DataReader associated to this condition.")
             .def("close",
                  &PyIReadCondition::py_close,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Returns the DataReader associated to this condition.")
             .def_property_readonly(
                     "closed",
@@ -126,7 +127,8 @@ void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls)
             .def("__exit__",
                  [](PyIReadCondition& rc, py::object, py::object, py::object) {
                      rc.py_close();
-                 })
+                 },
+                 py::call_guard<py::gil_scoped_release>())
             .def(
                     "__eq__",
                     [](PyIReadCondition& rc, PyIReadCondition& other) {
