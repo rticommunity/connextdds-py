@@ -100,7 +100,7 @@ public:
     }
 
 
-#if rti_connext_version_eq(6, 1, 0, 0)
+#if rti_connext_version_gte(6, 1, 0, 0) && rti_connext_version_lte(6, 1, 0, 3)
     PyDataReader(
             const PySubscriber& s,
             const PyContentFilteredTopic<T>& t,

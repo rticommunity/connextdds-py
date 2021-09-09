@@ -19,8 +19,8 @@ TEST_DOMAIN_ID = 100
 
 def get_keyed_string_dynamic_type():
     keyed_string_struct = dds.StructType('DynamicKeyedString')
-    keyed_string_struct.add_member(dds.Member('key', dds.StringType(), is_key=True))
-    keyed_string_struct.add_member(dds.Member('value', dds.StringType()))
+    keyed_string_struct.add_member(dds.Member('key', dds.StringType(100), is_key=True))
+    keyed_string_struct.add_member(dds.Member('value', dds.StringType(100)))
     return keyed_string_struct
 
 
