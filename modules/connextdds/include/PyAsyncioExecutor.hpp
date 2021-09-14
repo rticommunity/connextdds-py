@@ -13,6 +13,7 @@
 
 #include "PyConnext.hpp"
 #include <functional>
+#include <mutex>
 
 namespace pyrti {
 
@@ -32,6 +33,7 @@ public:
 
 private:
     static std::unique_ptr<PyAsyncioExecutor> instance;
+    static std::recursive_mutex lock;
     py::object asyncio;
     py::object get_running_loop;
 

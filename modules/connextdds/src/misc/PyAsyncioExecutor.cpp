@@ -14,6 +14,7 @@
 namespace pyrti {
 
 std::unique_ptr<PyAsyncioExecutor> PyAsyncioExecutor::instance(nullptr);
+std::recursive_mutex PyAsyncioExecutor::lock;
 
 PyAsyncioExecutor::PyAsyncioExecutor()
 {
@@ -21,12 +22,14 @@ PyAsyncioExecutor::PyAsyncioExecutor()
 
 PyAsyncioExecutor& PyAsyncioExecutor::get_instance()
 {
+    std::lock_guard<std::recursive_mutex> lock(PyAsyncioExecutor::lock);
     if (!PyAsyncioExecutor::instance) {
-        PyAsyncioExecutor::instance.reset(new PyAsyncioExecutor());
-        PyAsyncioExecutor::instance->asyncio = py::module::import("asyncio");
-        PyAsyncioExecutor::instance->get_running_loop =
-                PyAsyncioExecutor::instance->asyncio.attr("get_running_loop");
+        auto asyncio_module = py::module::import("asyncio");
+        auto get_running_loop_func =  asyncio_module.attr("get_running_loop");
         auto atexit = py::module::import("atexit");
+        PyAsyncioExecutor::instance.reset(new PyAsyncioExecutor());
+        PyAsyncioExecutor::instance->asyncio = asyncio_module;
+        PyAsyncioExecutor::instance->get_running_loop = get_running_loop_func;
         atexit.attr("register")(py::cpp_function([]() {
             auto ptr = PyAsyncioExecutor::instance.release();
             delete ptr;

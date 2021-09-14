@@ -164,6 +164,13 @@ public:
         IMPLICIT_SUBSCRIBER,
     };
 
+    struct PropertyHash {
+        std::size_t operator()(Property p) const
+        {
+            return static_cast<std::size_t>(p);
+        }
+    };
+
     PyDomainParticipant(const PyDomainParticipant& dp) : dds::domain::DomainParticipant(dp)
     {}
 
@@ -236,7 +243,7 @@ public:
     virtual ~PyDomainParticipant();
 
 private:
-    std::unordered_map<Property, pybind11::object> _properties;
+    std::unordered_map<Property, pybind11::object, PropertyHash> _properties;
     static std::recursive_mutex _property_lock;
 };
 

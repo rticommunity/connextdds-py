@@ -440,6 +440,7 @@ def event_loop():
     loop.close()
 
 
+@pytest.mark.skipif(not hasattr(asyncio, 'get_running_loop'))
 @pytest.mark.parametrize('use_dynamic_data', (True, False))
 @pytest.mark.parametrize('use_qos_object', (True, False))
 @pytest.mark.parametrize('use_custom_topic', (True, False))

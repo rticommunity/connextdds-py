@@ -100,6 +100,7 @@ PyDataReader<T>& PyDomainParticipant::py_builtin_reader(
 {
     std::lock_guard<std::recursive_mutex> lock(PyDomainParticipant::_property_lock);
     if (this->_properties.count(key)) {
+        py::gil_scoped_acquire acquire;
         auto& dr = py::cast<PyDataReader<T>&>(this->_properties[key]);
         if (!dr->closed()) return dr;
     }
@@ -113,9 +114,12 @@ PyDataReader<T>& PyDomainParticipant::py_builtin_reader(
                 "Unable to retrieve built-in topic "
                 "reader.");
     auto dr = v[0];
-    auto obj = py::cast(dr);
-    this->_properties[key] = obj;
-    return py::cast<PyDataReader<T>&>(obj);
+    {
+        py::gil_scoped_acquire acquire;
+        auto obj = py::cast(dr);
+        this->_properties[key] = obj;
+        return py::cast<PyDataReader<T>&>(obj);
+    }
 }
 
 
@@ -126,13 +130,17 @@ T& PyDomainParticipant::py_entity_property(
 {
     std::lock_guard<std::recursive_mutex> lock(PyDomainParticipant::_property_lock);
     if (this->_properties.count(key)) {
+        py::gil_scoped_acquire acquire;
         auto& prop = py::cast<T&>(this->_properties[key]);
         if (!prop->closed()) return prop;
     }
     T entity = T(getter(*this));
-    auto obj = py::cast(entity);
-    this->_properties[key] = obj;
-    return py::cast<T&>(obj);
+    {
+        py::gil_scoped_acquire acquire;
+        auto obj = py::cast(entity);
+        this->_properties[key] = obj;
+        return py::cast<T&>(obj);
+    }
 }
 
 
@@ -381,7 +389,10 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         rti::topic::CustomFilter<rti::topic::ContentFilterBase>
                                 custom(ptr);
                         dp->register_contentfilter(custom, fn);
-                        py::cast(cf).inc_ref();
+                        {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(cf).inc_ref();
+                        }
                     },
                     py::arg("filter"),
                     py::arg("name"),
