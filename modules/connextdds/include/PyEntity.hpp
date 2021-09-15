@@ -311,7 +311,7 @@ public:
     virtual ~PyPublisher();
 };
 
-class PySubscriber : public dds::sub::Subscriber, public PyIEntity {
+class PYRTI_SYMBOL_PUBLIC PySubscriber : public dds::sub::Subscriber, public PyIEntity {
 public:
     using dds::sub::Subscriber::Subscriber;
 
