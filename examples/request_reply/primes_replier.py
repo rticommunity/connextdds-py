@@ -28,7 +28,7 @@ def is_prime(val):
     if val > 2 and val % 2 == 0:
         return False
 
-    max_div = math.floor(math.sqrt(val))
+    max_div = int(math.floor(math.sqrt(val)))
     for i in xrange(3, 1 + max_div, 2):
         if val % i == 0:
             return False

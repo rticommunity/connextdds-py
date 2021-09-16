@@ -42,6 +42,9 @@ void init_class_defs(py::class_<EnumMember>& cls)
                     "__int__",
                     (int32_t(EnumMember::*)() const) & EnumMember::ordinal)
             .def(
+                    "__long__",
+                    (int32_t(EnumMember::*)() const) & EnumMember::ordinal)
+            .def(
                     "__eq__",
                     [](const EnumMember& member, const EnumMember& other) {
                         return (member == other);
