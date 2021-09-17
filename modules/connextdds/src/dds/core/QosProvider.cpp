@@ -179,7 +179,7 @@ void init_class_defs(py::class_<QosProvider>& cls)
                     "default_profile",
                     [](QosProvider& qp) { return qp->default_profile(); },
                     [](QosProvider& qp, const std::string& profile) {
-                        qp->default_library(profile);
+                        qp->default_profile(profile);
                     },
                     "The default profile associated with this QosProvider "
                     "(None if not set).")
