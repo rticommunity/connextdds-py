@@ -129,7 +129,7 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
     :caption: Windows
 
-    $ pip install setuptools wheel cmake pybind11==2.6.1
+    $ pip install setuptools wheel cmake pybind11==2.7.1
 
 .. code-block:: shell
     :caption: Linux
