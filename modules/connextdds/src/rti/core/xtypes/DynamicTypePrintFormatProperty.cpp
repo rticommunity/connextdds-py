@@ -11,7 +11,7 @@
 
 #include "PyConnext.hpp"
 
-#if rti_connext_version_gte(6, 0, 1)
+#if rti_connext_version_gte(6, 0, 1, 0)
 
 #include <rti/core/xtypes/DynamicTypePrintFormat.hpp>
 

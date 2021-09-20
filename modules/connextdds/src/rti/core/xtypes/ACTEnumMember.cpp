@@ -52,7 +52,7 @@ void init_class_defs(
             .def("members",
                  &AbstractConstructedType<EnumMember>::members,
                  "Gets a copy of all the members")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def("cdr_serialized_sample_max_size",
                  &AbstractConstructedType<
                          EnumMember>::cdr_serialized_sample_max_size,

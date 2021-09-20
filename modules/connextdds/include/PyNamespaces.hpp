@@ -43,7 +43,7 @@ void init_namespace_rti_topic(py::module&, pyrti::ClassInitList&, pyrti::DefInit
 void init_namespace_rti_util(py::module&, pyrti::ClassInitList&, pyrti::DefInitVector&);
 void init_namespace_rti(py::module&, pyrti::ClassInitList&, pyrti::DefInitVector&);
 void init_heap_monitoring(py::module&, pyrti::ClassInitList&, pyrti::DefInitVector&);
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 void init_network_capture(py::module&, pyrti::ClassInitList&, pyrti::DefInitVector&);
 void init_activity_context(py::module&, pyrti::ClassInitList&, pyrti::DefInitVector&);
 #endif

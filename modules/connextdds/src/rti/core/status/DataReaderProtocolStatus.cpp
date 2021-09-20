@@ -120,7 +120,7 @@ void init_class_defs(py::class_<DataReaderProtocolStatus>& cls)
                     "Number of received samples that are not yet available to "
                     "be read "
                     "or taken, due to being received out of order.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property_readonly(
                     "received_fragment_count",
                     &DataReaderProtocolStatus::received_fragment_count,

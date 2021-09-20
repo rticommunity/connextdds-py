@@ -199,7 +199,7 @@ void init_class_defs(py::class_<StatusMask>& cls)
                     },
                     "Create a StatusMask for a service request that has been "
                     "received for a DataWriter")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly_static(
                     "SAMPLE_REMOVED",
                     [](py::object&) {

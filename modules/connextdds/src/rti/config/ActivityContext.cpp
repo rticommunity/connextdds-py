@@ -11,7 +11,7 @@
 
 #include "PyConnext.hpp"
 
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 
 #include <rti/config/ActivityContext.hpp>
 #include <PyMaskType.hpp>

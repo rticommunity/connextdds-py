@@ -19,7 +19,7 @@ using namespace dds::topic::qos;
 using namespace dds::pub::qos;
 using namespace dds::sub::qos;
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 #define PYRTI_QOSPROVIDER_CONST
 #else
 #define PYRTI_QOSPROVIDER_CONST const
@@ -179,7 +179,7 @@ void init_class_defs(py::class_<QosProvider>& cls)
                     "default_profile",
                     [](QosProvider& qp) { return qp->default_profile(); },
                     [](QosProvider& qp, const std::string& profile) {
-                        qp->default_library(profile);
+                        qp->default_profile(profile);
                     },
                     "The default profile associated with this QosProvider "
                     "(None if not set).")
@@ -223,7 +223,7 @@ void init_class_defs(py::class_<QosProvider>& cls)
                     py::arg("library"),
                     py::arg("name"),
                     "Get a DynamicType from a type library in the QosProvider.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "type",
                     [](const QosProvider& qp, const std::string& type_name) {
@@ -273,6 +273,20 @@ void init_class_defs(py::class_<QosProvider>& cls)
             .def(
                     "create_participant_from_config",
                     [](QosProvider& qp,
+                       const std::string& config) {
+                        return PyDomainParticipant(
+                                qp->create_participant_from_config(
+                                        config));
+                    },
+                    py::arg("config"),
+                    "Create a DomainParticipant given a configuration name "
+                    "from a "
+                    "description provided in an XML configuration file that "
+                    "has been "
+                    "loaded by this QosProvider with default parameters.")
+            .def(
+                    "create_participant_from_config",
+                    [](QosProvider& qp,
                        const std::string& config,
                        const rti::domain::DomainParticipantConfigParams&
                                params) {
@@ -282,10 +296,7 @@ void init_class_defs(py::class_<QosProvider>& cls)
                                         params));
                     },
                     py::arg("config"),
-                    py::arg_v(
-                            "params",
-                            rti::domain::DomainParticipantConfigParams(),
-                            "DomainParticipantConfigParams()"),
+                    py::arg("params"),
                     "Create a DomainParticipant given a configuration name "
                     "from a "
                     "description provided in an XML configuration file that "

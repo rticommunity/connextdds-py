@@ -14,7 +14,7 @@
 
 using namespace dds::core::policy;
 
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
 
 namespace pyrti {
 
@@ -41,7 +41,7 @@ void init_class_defs(py::class_<DataRepresentation>& cls)
                     "not reflected in the policy unless the sequence is "
                     "commited back "
                     "to the policy object via the property's setter.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property(
                     "compression_settings",
                     [](DataRepresentation& dr) {

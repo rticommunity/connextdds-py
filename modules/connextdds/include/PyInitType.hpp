@@ -34,7 +34,7 @@
 #include "PyWriterContentFilterHelper.hpp"
 #include "PyBindVector.hpp"
 
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     #include "PyValidLoanedSamples.hpp"
 #endif
 
@@ -159,7 +159,7 @@ DefInitFunc init_type_class(
         return ([ls]() mutable { init_loaned_samples<T>(ls); });
     });
 
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     l.push_back([cls] {
         py::class_<rti::sub::ValidLoanedSamples<T>> vls(
                 cls,

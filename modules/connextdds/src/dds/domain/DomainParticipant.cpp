@@ -53,20 +53,26 @@ PyDomainParticipant::PyDomainParticipant(
         const dds::core::status::StatusMask& m)
         : dds::domain::DomainParticipant(d, q, l, m)
 {
-    if (nullptr != l)
+    if (nullptr != l) {
+        py::gil_scoped_acquire acquire;
         py::cast(l).inc_ref();
+    }
 }
 
 
 PyDomainParticipant::~PyDomainParticipant()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
-            && nullptr != get_dp_listener(*this)) {
-            py::object listener = py::cast(get_dp_listener(*this));
-            PyDomainParticipantListenerPtr null_listener = nullptr;
-            set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
+            auto listener_ptr = get_dp_listener(*this);
+            if (nullptr != listener_ptr) {
+                PyDomainParticipantListenerPtr null_listener = nullptr;
+                set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
+                {
+                    py::gil_scoped_acquire acquire;
+                    py::cast(listener_ptr).dec_ref();
+                }
+            }
         }
     }
 }
@@ -74,11 +80,14 @@ PyDomainParticipant::~PyDomainParticipant()
 
 void PyDomainParticipant::py_close()
 {
-    if (nullptr != get_dp_listener(*this)) {
-        py::object listener = py::cast(get_dp_listener(*this));
+    auto listener_ptr = get_dp_listener(*this);
+    if (nullptr != listener_ptr) {
         PyDomainParticipantListenerPtr null_listener = nullptr;
         set_dp_listener(*this, null_listener, dds::core::status::StatusMask::none());
-        listener.dec_ref();
+        {
+            py::gil_scoped_acquire acquire;
+            py::cast(listener_ptr).dec_ref();
+        }
     }
     this->close();
 }
@@ -91,6 +100,7 @@ PyDataReader<T>& PyDomainParticipant::py_builtin_reader(
 {
     std::lock_guard<std::recursive_mutex> lock(PyDomainParticipant::_property_lock);
     if (this->_properties.count(key)) {
+        py::gil_scoped_acquire acquire;
         auto& dr = py::cast<PyDataReader<T>&>(this->_properties[key]);
         if (!dr->closed()) return dr;
     }
@@ -104,9 +114,12 @@ PyDataReader<T>& PyDomainParticipant::py_builtin_reader(
                 "Unable to retrieve built-in topic "
                 "reader.");
     auto dr = v[0];
-    auto obj = py::cast(dr);
-    this->_properties[key] = obj;
-    return py::cast<PyDataReader<T>&>(obj);
+    {
+        py::gil_scoped_acquire acquire;
+        auto obj = py::cast(dr);
+        this->_properties[key] = obj;
+        return py::cast<PyDataReader<T>&>(obj);
+    }
 }
 
 
@@ -117,13 +130,17 @@ T& PyDomainParticipant::py_entity_property(
 {
     std::lock_guard<std::recursive_mutex> lock(PyDomainParticipant::_property_lock);
     if (this->_properties.count(key)) {
+        py::gil_scoped_acquire acquire;
         auto& prop = py::cast<T&>(this->_properties[key]);
         if (!prop->closed()) return prop;
     }
     T entity = T(getter(*this));
-    auto obj = py::cast(entity);
-    this->_properties[key] = obj;
-    return py::cast<T&>(obj);
+    {
+        py::gil_scoped_acquire acquire;
+        auto obj = py::cast(entity);
+        this->_properties[key] = obj;
+        return py::cast<T&>(obj);
+    }
 }
 
 
@@ -201,9 +218,11 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
                         if (nullptr != get_dp_listener(dp)) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(get_dp_listener(dp)).dec_ref();
                         }
                         set_dp_listener(dp, listener, m);
@@ -219,9 +238,11 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        dds::core::optional<PyDomainParticipantListenerPtr> l) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
                         if (nullptr != get_dp_listener(dp)) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(get_dp_listener(dp)).dec_ref();
                         }
                         set_dp_listener(dp, listener);
@@ -368,7 +389,10 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                         rti::topic::CustomFilter<rti::topic::ContentFilterBase>
                                 custom(ptr);
                         dp->register_contentfilter(custom, fn);
-                        py::cast(cf).inc_ref();
+                        {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(cf).inc_ref();
+                        }
                     },
                     py::arg("filter"),
                     py::arg("name"),
@@ -382,7 +406,10 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                                 rti::topic::ContentFilterBase>(dp, fn);
                         if (dds::core::null != filter) {
                             dp->unregister_contentfilter(fn);
-                            py::cast(filter.get()).dec_ref();
+                            {
+                                py::gil_scoped_acquire acquire;
+                                py::cast(filter.get()).dec_ref();
+                            }
                         }
                     },
                     py::arg("name"),
@@ -568,7 +595,7 @@ void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
                        py::object,
                        py::object) {
                         if (!dp->closed())
-                            dp.close();
+                            dp.py_close();
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for this Domain Participant, cleaning up "

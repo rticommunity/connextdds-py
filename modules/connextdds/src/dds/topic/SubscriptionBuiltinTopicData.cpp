@@ -15,7 +15,7 @@
 #include "PyInitType.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 #define SBTD_DATA_TAG(s) s->data_tags()
 #else
 #define SBTD_DATA_TAG(s) s.data_tag()
@@ -116,7 +116,7 @@ void init_class_defs(py::class_<SubscriptionBuiltinTopicData>& cls)
                     "group_data",
                     &SubscriptionBuiltinTopicData::group_data,
                     "The GroupData policy of the corresponding DataWriter.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly(
                     "representation",
                     &SubscriptionBuiltinTopicData::representation,

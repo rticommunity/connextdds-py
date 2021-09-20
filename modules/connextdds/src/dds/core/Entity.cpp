@@ -33,17 +33,21 @@ void init_class_defs(py::class_<PyIEntity>& cls)
             .def_property_readonly(
                     "status_changes",
                     &PyIEntity::py_status_changes,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The list of communication statuses that are triggered.")
             .def_property_readonly(
                     "instance_handle",
                     &PyIEntity::py_instance_handle,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The instance handle that represents this entity.")
             .def("close",
-                 &PyIEntity::py_close,
-                 "Forces the destruction of this entity.")
+                    &PyIEntity::py_close,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Forces the destruction of this entity.")
             .def("retain",
-                 &PyIEntity::py_retain,
-                 "Disables the automatic destruction of this entity.")
+                    &PyIEntity::py_retain,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Disables the automatic destruction of this entity.")
             .def_property_readonly(
                     "closed",
                     &PyIEntity::py_closed,
@@ -51,14 +55,17 @@ void init_class_defs(py::class_<PyIEntity>& cls)
             .def_property_readonly(
                     "enabled",
                     &PyIEntity::py_enabled,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Returns a boolean indicating if this Entity is enabled.")
             .def_property_readonly(
                     "use_count",
                     &PyIEntity::py_use_count,
+                    py::call_guard<py::gil_scoped_release>(),
                     "Returns the internal use count value for this Entity.")
             .def("unretain",
-                 &PyIEntity::py_unretain,
-                 "Decrement the retention count.")
+                    &PyIEntity::py_unretain,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Decrement the retention count.")
             .def(
                     "__eq__",
                     [](PyIEntity& e, PyIEntity& other) {

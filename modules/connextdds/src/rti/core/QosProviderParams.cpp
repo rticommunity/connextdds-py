@@ -16,7 +16,7 @@ using namespace rti::core;
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using RetStringSeq = std::vector<std::string>;
 #else
 using RetStringSeq = const std::vector<std::string>;

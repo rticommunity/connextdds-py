@@ -21,33 +21,41 @@
     #define PYRTI_SYMBOL_PUBLIC __attribute__((visibility("default")))
 #endif
 
-#define rti_connext_version_gt(rti_major, rti_minor, rti_release) \
-    ((rti_major < RTI_DDS_VERSION_MAJOR)                          \
-     || (rti_major == RTI_DDS_VERSION_MAJOR                       \
-         && rti_minor < RTI_DDS_VERSION_MINOR)                    \
-     || (rti_major == RTI_DDS_VERSION_MAJOR                       \
-         && rti_minor == RTI_DDS_VERSION_MINOR                    \
-         && rti_release < RTI_DDS_VERSION_RELEASE))
+#define rti_connext_version_gt(rti_major, rti_minor, rti_release, rti_revision) \
+    ((rti_major < RTI_DDS_VERSION_MAJOR)                                        \
+     || (rti_major == RTI_DDS_VERSION_MAJOR                                     \
+         && rti_minor < RTI_DDS_VERSION_MINOR)                                  \
+     || (rti_major == RTI_DDS_VERSION_MAJOR                                     \
+         && rti_minor == RTI_DDS_VERSION_MINOR                                  \
+         && rti_release < RTI_DDS_VERSION_RELEASE)                              \
+     || (rti_major == RTI_DDS_VERSION_MAJOR                                     \
+         && rti_minor == RTI_DDS_VERSION_MINOR                                  \
+         && rti_release == RTI_DDS_VERSION_RELEASE                              \
+         && rti_revision < RTI_DDS_VERSION_REVISION))
 
-#define rti_connext_version_lt(rti_major, rti_minor, rti_release) \
-    ((rti_major > RTI_DDS_VERSION_MAJOR)                          \
-     || (rti_major == RTI_DDS_VERSION_MAJOR                       \
-         && rti_minor > RTI_DDS_VERSION_MINOR)                    \
-     || (rti_major == RTI_DDS_VERSION_MAJOR                       \
-         && rti_minor == RTI_DDS_VERSION_MINOR                    \
-         && rti_release > RTI_DDS_VERSION_RELEASE))
+#define rti_connext_version_lt(rti_major, rti_minor, rti_release, rti_revision) \
+    ((rti_major > RTI_DDS_VERSION_MAJOR)                                        \
+     || (rti_major == RTI_DDS_VERSION_MAJOR                                     \
+         && rti_minor > RTI_DDS_VERSION_MINOR)                                  \
+     || (rti_major == RTI_DDS_VERSION_MAJOR                                     \
+         && rti_minor == RTI_DDS_VERSION_MINOR                                  \
+         && rti_release > RTI_DDS_VERSION_RELEASE)                              \
+     || (rti_major == RTI_DDS_VERSION_MAJOR                                     \
+         && rti_minor == RTI_DDS_VERSION_MINOR                                  \
+         && rti_release == RTI_DDS_VERSION_RELEASE                              \
+         && rti_revision > RTI_DDS_VERSION_REVISION))
 
-#define rti_connext_version_eq(rti_major, rti_minor, rti_release)             \
-    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR \
-     && rti_release == RTI_DDS_VERSION_RELEASE)
+#define rti_connext_version_eq(rti_major, rti_minor, rti_release, rti_revision) \
+    (rti_major == RTI_DDS_VERSION_MAJOR && rti_minor == RTI_DDS_VERSION_MINOR   \
+     && rti_release == RTI_DDS_VERSION_RELEASE && rti_revision == RTI_DDS_VERSION_REVISION)
 
-#define rti_connext_version_gte(rti_major, rti_minor, rti_release) \
-    ((rti_connext_version_gt(rti_major, rti_minor, rti_release))   \
-     || (rti_connext_version_eq(rti_major, rti_minor, rti_release)))
+#define rti_connext_version_gte(rti_major, rti_minor, rti_release, rti_revision) \
+    ((rti_connext_version_gt(rti_major, rti_minor, rti_release, rti_revision))   \
+     || (rti_connext_version_eq(rti_major, rti_minor, rti_release, rti_revision)))
 
-#define rti_connext_version_lte(rti_major, rti_minor, rti_release) \
-    ((rti_connext_version_lt(rti_major, rti_minor, rti_release))   \
-     || (rti_connext_version_eq(rti_major, rti_minor, rti_release)))
+#define rti_connext_version_lte(rti_major, rti_minor, rti_release, rti_revision) \
+    ((rti_connext_version_lt(rti_major, rti_minor, rti_release, rti_revision))   \
+     || (rti_connext_version_eq(rti_major, rti_minor, rti_release, rti_revision)))
 
 #include <pybind11/pybind11.h>
 #include "PyOpaqueTypes.hpp"
@@ -111,7 +119,7 @@ void add_conversion(
 template<typename T>
 bool has_value(const T& opt)
 {
-#if rti_connext_version_gte(6, 0, 1)
+#if rti_connext_version_gte(6, 0, 1, 0)
     return opt.has_value();
 #else
     return opt.is_set();
@@ -121,7 +129,7 @@ bool has_value(const T& opt)
 template<template<class> class U, class T>
 const T& get_value(const U<T>& opt)
 {
-#if rti_connext_version_gte(6, 0, 1)
+#if rti_connext_version_gte(6, 0, 1, 0)
     return opt.value();
 #else
     return opt.get();
@@ -131,14 +139,14 @@ const T& get_value(const U<T>& opt)
 template<template<typename> class U, typename T>
 T& get_value(U<T>& opt)
 {
-#if rti_connext_version_gte(6, 0, 1)
+#if rti_connext_version_gte(6, 0, 1, 0)
     return opt.value();
 #else
     return opt.get();
 #endif
 }
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 static const int LISTENER_USE_COUNT_MIN = 2;
 
 template<typename TEntity, typename TListenerPtr>

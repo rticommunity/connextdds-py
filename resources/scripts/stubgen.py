@@ -607,7 +607,7 @@ class PropertyStubsGenerator(StubsGenerator):
         docstring = self.sanitize_docstring(self.prop.__doc__)
         docstring_prop = "\n\n".join([docstring, ":type: {rtype}".format(rtype=self.signature.rtype)])
 
-        result = ["@property",
+        result = ["@builtins.property",
                   "def {field_name}(self) -> {rtype}:".format(field_name=self.name, rtype=self.signature.rtype),
                   self.format_docstring(docstring_prop)]
 
@@ -632,6 +632,7 @@ class ClassStubsGenerator(StubsGenerator):
 
     def __init__(self,
                  klass,
+                 alt_name,
                  attributes_blacklist=ATTRIBUTES_BLACKLIST,
                  pybind11_attributes_blacklist=PYBIND11_ATTRIBUTES_BLACKLIST,
                  base_class_blacklist=BASE_CLASS_BLACKLIST,
@@ -656,6 +657,7 @@ class ClassStubsGenerator(StubsGenerator):
         self.base_class_blacklist = base_class_blacklist
         self.methods_blacklist = methods_blacklist
         self.class_name_blacklist = class_name_blacklist
+        self.alt_name = alt_name
 
     def get_involved_modules_names(self):
         return self.involved_modules_names
@@ -685,7 +687,7 @@ class ClassStubsGenerator(StubsGenerator):
                 self.methods.append(ClassMemberStubsGenerator(name, member, self.klass.__module__))
             elif name != '__class__' and inspect.isclass(member):
                 if member.__name__ not in self.class_name_blacklist:
-                    self.classes.append(ClassStubsGenerator(member))
+                    self.classes.append(ClassStubsGenerator(member, name))
             elif isinstance(member, property):
                 self.properties.append(PropertyStubsGenerator(name, member, self.klass.__module__))
             elif name == "__doc__":
@@ -713,6 +715,8 @@ class ClassStubsGenerator(StubsGenerator):
             self.involved_modules_names |= attr.get_involved_modules_names()
 
     def to_lines(self):  # type: () -> List[str]
+        if self.alt_name != self.klass.__name__:
+            return ["{} = {}".format(self.alt_name, self.klass.__name__)]
 
         def strip_current_module_name(obj, module_name):
             regex = r"{}\.(\w+)".format(module_name.replace(".", r"\."))
@@ -793,7 +797,7 @@ class ModuleStubsGenerator(StubsGenerator):
             elif inspect.isclass(member):
                 if member.__module__ == self.module.__name__:
                     if member.__name__ not in self.class_name_blacklist:
-                        self.classes.append(ClassStubsGenerator(member))
+                        self.classes.append(ClassStubsGenerator(member, name))
                 else:
                     self.imported_classes[name] = member
             elif name == "__doc__":
@@ -854,6 +858,11 @@ class ModuleStubsGenerator(StubsGenerator):
         # import everything from typing
         result += [
             "import typing"
+        ]
+
+        # import builtins
+        result += [
+            "import builtins"
         ]
 
         for name, class_ in self.imported_classes.items():
@@ -1019,26 +1028,27 @@ def main(args=None):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
-    _module_name = sys_args.module_name
-    _module = ModuleStubsGenerator(_module_name)
-    _module.parse()
-    if FunctionSignature.n_fatal_errors() == 0:
-        _module.stub_suffix = sys_args.root_module_suffix
-        _module.write_setup_py = not sys_args.no_setup_py
-        _module.write_file(output_path)
+    with DirectoryWalkerGuard(output_path):
+        _module_name = sys_args.module_name
+        _module = ModuleStubsGenerator(_module_name)
+        _module.parse()
+        if FunctionSignature.n_fatal_errors() == 0:
+            _module.stub_suffix = sys_args.root_module_suffix
+            _module.write_setup_py = not sys_args.no_setup_py
+            _module.write()
 
-    if FunctionSignature.n_invalid_signatures > 0:
-        logger.info("Useful link: Avoiding C++ types in docstrings:")
-        logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/misc.html"
-                    "#avoiding-cpp-types-in-docstrings")
+        if FunctionSignature.n_invalid_signatures > 0:
+            logger.info("Useful link: Avoiding C++ types in docstrings:")
+            logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/misc.html"
+                        "#avoiding-cpp-types-in-docstrings")
 
-    if FunctionSignature.n_invalid_default_values > 0:
-        logger.info("Useful link: Default argument representation:")
-        logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/functions.html"
-                    "#default-arguments-revisited")
+        if FunctionSignature.n_invalid_default_values > 0:
+            logger.info("Useful link: Default argument representation:")
+            logger.info("      https://pybind11.readthedocs.io/en/latest/advanced/functions.html"
+                        "#default-arguments-revisited")
 
-    if FunctionSignature.n_fatal_errors() > 0:
-        exit(1)
+        if FunctionSignature.n_fatal_errors() > 0:
+            exit(1)
 
 
 if __name__ == "__main__":

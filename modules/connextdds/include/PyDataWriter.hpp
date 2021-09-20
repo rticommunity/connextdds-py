@@ -28,7 +28,7 @@
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 template<typename T>
 using DataWriterListenerPtr = dds::pub::DataWriterListener<T>*;
 
@@ -82,19 +82,25 @@ public:
             const dds::core::status::StatusMask& m)
             : dds::pub::DataWriter<T>(p, t, q, l, m)
     {
-        if (nullptr != l)
+        if (nullptr != l) {
+            py::gil_scoped_acquire acquire;
             py::cast(l).inc_ref();
+        }
     }
 
     virtual ~PyDataWriter()
     {
         if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
-                && nullptr != get_dw_listener(*this)) {
-                py::object listener = py::cast(get_dw_listener(*this));
-                PyDataWriterListenerPtr<T> null_listener = nullptr;
-                set_dw_listener(*this, null_listener, dds::core::status::StatusMask::none());
-                listener.dec_ref();
+            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
+                auto listener_ptr = get_dw_listener(*this);
+                if (nullptr != listener_ptr) {
+                    PyDataWriterListenerPtr<T> null_listener = nullptr;
+                    set_dw_listener(*this, null_listener, dds::core::status::StatusMask::none());
+                    {
+                        py::gil_scoped_acquire acquire;
+                        py::cast(listener_ptr).dec_ref();
+                    }
+                }
             }
         }
     }
@@ -157,11 +163,14 @@ public:
 
     void py_close() override
     {
-        if (nullptr != get_dw_listener(*this)) {
-            py::object listener = py::cast(get_dw_listener(*this));
+        auto listener_ptr = get_dw_listener(*this);
+        if (nullptr != listener_ptr) {
             PyDataWriterListenerPtr<T> null_listener = nullptr;
             set_dw_listener(*this, null_listener, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+            {
+                py::gil_scoped_acquire acquire;
+                py::cast(listener_ptr).dec_ref();
+            }
         }
         this->close();
     }
@@ -687,12 +696,15 @@ void init_dds_typed_datawriter_base_template(
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_dw_listener(dw)) {
-                            py::cast(get_dw_listener(dw)).dec_ref();
-                        }
+                        auto old_listener = get_dw_listener(dw);
                         set_dw_listener(dw, listener, m);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
@@ -704,12 +716,15 @@ void init_dds_typed_datawriter_base_template(
                        dds::core::optional<PyDataWriterListenerPtr<T>> l) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_dw_listener(dw)) {
-                            py::cast(get_dw_listener(dw)).dec_ref();
-                        }
+                        auto old_listener = get_dw_listener(dw);
                         set_dw_listener(dw, listener);
+                        if (nullptr != get_dw_listener(dw)) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -1250,7 +1265,187 @@ void init_dds_typed_datawriter_base_template(
                     "and a "
                     "timestamp. This method is awaitable and only for use with "
                     "asyncio.")
-#if rti_connext_version_gte(6, 1, 0)
+            .def(
+                    "write_async",
+                    [](PyDataWriter<T>& writer,
+                       const T& instance_data,
+                       rti::pub::WriteParams& params) {
+                        return PyAsyncioExecutor::run<void>(
+                                std::function<void()>([&writer, &instance_data, &params]() {
+                                    writer->write(instance_data, params);
+                                }));
+                    },
+                    py::arg("sample"),
+                    py::arg("params"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    py::keep_alive<0, 3>(),
+                    "Write with advanced parameters.")
+            .def(
+                    "unregister_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const dds::core::InstanceHandle& h) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &h]() -> PyDataWriter<T>& {
+                                            dw.unregister_instance(h);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("handle"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    "Unregister an instance.")
+            .def(
+                    "unregister_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const dds::core::InstanceHandle& h,
+                       const dds::core::Time& t) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &h, &t]() -> PyDataWriter<T>& {
+                                            dw.unregister_instance(h, t);
+                                            return dw;
+                                        }));   
+                    },
+                    py::arg("handle"),
+                    py::arg("timestamp"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    py::keep_alive<0, 3>(),
+                    "Unregister an instance with timestamp.")
+            .def(
+                    "unregister_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &key_holder]() -> PyDataWriter<T>& {
+                                            auto h = dw.lookup_instance(key_holder);
+                                            dw.unregister_instance(h);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("key_holder"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    "Unregister the instance associated with key_holder.")
+            .def(
+                    "unregister_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder,
+                       const dds::core::Time& t) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &key_holder, &t]() -> PyDataWriter<T>& {
+                                            auto h = dw.lookup_instance(key_holder);
+                                            dw.unregister_instance(h, t);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("key_holder"),
+                    py::arg("timestamp"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    py::keep_alive<0, 3>(),
+                    "Unregister the instance associate with key_holder using a "
+                    "timestamp.")
+            .def(
+                    "unregister_instance_async",
+                    [](PyDataWriter<T>& writer, rti::pub::WriteParams& params) {
+                        return PyAsyncioExecutor::run<void>(
+                                std::function<void()>(
+                                        [&writer, &params]() {
+                                            writer->unregister_instance(params);
+                                        }));
+                    },
+                    py::arg("params"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    "Unregister an instance with parameters.")
+            .def(
+                    "dispose_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const dds::core::InstanceHandle& h) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &h]() -> PyDataWriter<T>& {
+                                            dw.dispose_instance(h);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("handle"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    "Dispose an instance.")
+            .def(
+                    "dispose_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const dds::core::InstanceHandle& h,
+                       const dds::core::Time& t) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &h, &t]() -> PyDataWriter<T>& {
+                                            dw.dispose_instance(h, t);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("handle"),
+                    py::arg("timestamp"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    py::keep_alive<0, 3>(),
+                    "Dispose an instance with a timestamp.")
+            .def(
+                    "dispose_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &key_holder]() -> PyDataWriter<T>& {
+                                            auto h = dw.lookup_instance(key_holder);
+                                            dw.dispose_instance(h);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("key_holder"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    "Dispose the instance associated with key_holder.")
+            .def(
+                    "dispose_instance_async",
+                    [](PyDataWriter<T>& dw,
+                       const T& key_holder,
+                       const dds::core::Time& t) {
+                        return PyAsyncioExecutor::run<PyDataWriter<T>&>(
+                                std::function<PyDataWriter<T>&()>(
+                                        [&dw, &key_holder, &t]() -> PyDataWriter<T>& {
+                                            auto h = dw.lookup_instance(key_holder);
+                                            dw.dispose_instance(h, t);
+                                            return dw;
+                                        }));
+                    },
+                    py::arg("key_holder"),
+                    py::arg("timestamp"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    py::keep_alive<0, 3>(),
+                    "Dispose the instance associated with key_holder using a "
+                    "timestamp")
+            .def(
+                    "dispose_instance_async",
+                    [](PyDataWriter<T>& writer, rti::pub::WriteParams& params) {
+                        return PyAsyncioExecutor::run<void>(
+                                std::function<void()>(
+                                        [&writer, &params]() {
+                                            writer->dispose_instance(params);
+                                        }));
+                    },
+                    py::arg("params"),
+                    py::keep_alive<0, 1>(),
+                    py::keep_alive<0, 2>(),
+                    "Dispose an instance with params.")
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def(
                     "is_matched_subscription_active",
                     [](const PyDataWriter<T>& dw, const dds::core::InstanceHandle& h) { 
@@ -1296,7 +1491,7 @@ void init_dds_typed_datawriter_template(
 {
     init_dds_typed_datawriter_base_template<T>(cls);
     cls
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "create_data",
                     [](PyDataWriter<T>& dw) { return dw->create_data(); },

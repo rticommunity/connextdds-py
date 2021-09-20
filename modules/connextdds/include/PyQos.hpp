@@ -54,7 +54,7 @@ void add_qos_property(
                  ("Get the " + property_name + "QoS.").c_str());
 }
 
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 template<typename T>
 void add_qos_string_conversions(py::class_<T>& cls) {
     cls.def(

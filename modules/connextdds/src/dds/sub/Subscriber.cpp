@@ -49,30 +49,39 @@ PySubscriber::PySubscriber(
         const dds::core::status::StatusMask& m)
         : dds::sub::Subscriber(p, q, l, m)
 {
-    if (nullptr != l)
+    if (nullptr != l) {
+        py::gil_scoped_acquire acquire;
         py::cast(l).inc_ref();
+    }
 }
 
 PySubscriber::~PySubscriber()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
-            && nullptr != get_subscriber_listener(*this)) {
-            py::object listener = py::cast(get_subscriber_listener(*this));
-            PySubscriberListenerPtr null_listener = nullptr;
-            set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
+            auto listener_ptr = get_subscriber_listener(*this);
+            if (nullptr != listener_ptr) {
+                PySubscriberListenerPtr null_listener = nullptr;
+                set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
+                {
+                    py::gil_scoped_acquire acquire;
+                    py::cast(listener_ptr).dec_ref();
+                }
+            }
         }
     }
 }
 
 void PySubscriber::py_close()
 {
-    if (nullptr != this->listener()) {
-        py::object listener = py::cast(get_subscriber_listener(*this));
+    auto listener_ptr = get_subscriber_listener(*this);
+    if (nullptr != listener_ptr) {
         PySubscriberListenerPtr null_listener = nullptr;
         set_subscriber_listener(*this, null_listener, dds::core::status::StatusMask::none());
-        listener.dec_ref();
+        {
+            py::gil_scoped_acquire acquire;
+            py::cast(listener_ptr).dec_ref();
+        }
     }
     this->close();
 }
@@ -133,15 +142,19 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_subscriber_listener(sub)) {
-                            py::cast(get_subscriber_listener(sub)).dec_ref();
-                        }
+                        auto old_listener = get_subscriber_listener(sub);
                         set_subscriber_listener(sub, listener, m);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener and event mask to the Subscriber.")
             .def(
                     "bind_listener",
@@ -149,14 +162,18 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                        dds::core::optional<PySubscriberListenerPtr> l) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_subscriber_listener(sub)) {
-                            py::cast(get_subscriber_listener(sub)).dec_ref();
-                        }
+                        auto old_listener = get_subscriber_listener(sub);
                         set_subscriber_listener(sub, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener to the Subscriber.")
             .def_property(
                     "qos",
@@ -201,6 +218,15 @@ void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Find all DataReaders in the Subscriber.")
+            .def(
+                    "find_datareaders",
+                    [](const PySubscriber& sub, const dds::sub::status::DataState& ds) {
+                        std::vector<PyAnyDataReader> v;
+                        dds::sub::find(sub, ds, std::back_inserter(v));
+                        return v;
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find all DataReaders that contain samples of the given DataState in the Subscriber.")
             .def(
                 py::self == py::self,
                 py::call_guard<py::gil_scoped_release>(),

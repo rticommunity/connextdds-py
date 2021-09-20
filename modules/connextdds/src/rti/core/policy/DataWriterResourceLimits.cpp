@@ -173,7 +173,7 @@ void init_class_defs(py::class_<DataWriterResourceLimits>& cls)
                                     max_active_topic_queries,
                     "Represents the maximum number of active topic queries a "
                     "DataWriter will manage.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "writer_loaned_sample_allocation",
                     (rti::core::AllocationSettings

@@ -14,7 +14,7 @@
 
 using namespace rti::core::builtin_profiles::qos_lib;
 
-#if rti_connext_version_lt(6, 0, 1)
+#if rti_connext_version_lt(6, 0, 1, 0)
 using namespace rti::core::builtin_profiles::qos_lib_exp;
 #endif
 
@@ -49,7 +49,7 @@ void init_class_defs(py::class_<PyBuiltinProfiles>& cls)
                     "baseline_5_3_0",
                     [](py::object&) { return baseline_5_3_0(); },
                     "The builtin QoS baseline version 5.3.0 profile name.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly_static(
                     "baseline_6_0_0",
                     [](py::object&) { return baseline_6_0_0(); },

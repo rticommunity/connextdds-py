@@ -22,14 +22,14 @@ void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l, pyrt
     pyrti::process_inits<Batch>(m, l);
     pyrti::process_inits<BuiltinTopicReaderResourceLimits>(m, l);
     pyrti::process_inits<Database>(m, l);
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
     pyrti::process_inits<DataReaderInstanceRemovalKind>(m, l);
 #endif
     pyrti::process_inits<DataReaderProtocol>(m, l);
     pyrti::process_inits<DataWriterProtocol>(m, l);
     pyrti::process_inits<DataReaderResourceLimits>(m, l);
     pyrti::process_inits<DataWriterResourceLimits>(m, l);
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     pyrti::process_inits<DataWriterTransferMode>(m, l);
 #endif
     pyrti::process_inits<DestinationOrderScopeKind>(m, l);
@@ -44,7 +44,7 @@ void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l, pyrt
     pyrti::process_inits<Property>(m, l);
     pyrti::process_inits<PublishMode>(m, l);
     pyrti::process_inits<ReceiverPool>(m, l);
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
     pyrti::process_inits<RefilterKind>(m, l);
 #endif
     pyrti::process_inits<RtpsReliableWriterProtocol>(m, l);

@@ -25,7 +25,7 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
             py::arg("query"),
             py::arg("status"),
             "Create a QueryCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](const dds::sub::Query& q,
                              const dds::sub::status::DataState& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -52,7 +52,7 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
                  py::arg("query"),
                  py::arg("status_ex"),
                  "Create a QueryCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](const dds::sub::Query& q,
                              const rti::sub::status::DataStateEx& ds,
                              std::function<void(PyICondition*)>& func) {

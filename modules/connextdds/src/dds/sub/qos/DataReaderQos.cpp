@@ -111,14 +111,14 @@ void init_class_defs(py::class_<DataReaderQos>& cls)
             cls,
             "type_support",
             "TypeSupport");
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     add_qos_property<DataReaderQos, DataRepresentation>(
             cls,
             "data_representation",
             "DataRepresentation");
     add_qos_property<DataReaderQos, DataTag>(cls, "data_tag", "DataTag");
 #endif
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
     add_qos_string_conversions(cls);
 #endif
 }
