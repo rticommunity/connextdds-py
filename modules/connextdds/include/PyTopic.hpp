@@ -149,6 +149,8 @@ public:
     {
         this->delegate()->unretain();
     }
+
+    void py_destroy_managed_resources() override {}
 };
 
 template<typename T>
@@ -185,7 +187,9 @@ public:
         }
     }
 
-    virtual ~PyTopic()
+    virtual ~PyTopic() {}
+
+    void py_destroy_managed_resources() override
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -309,9 +313,19 @@ public:
     }
 };
 
+
+template<typename T>
+void py_destroy(PyTopic<T>* ptr) {
+    ptr->py_destroy_managed_resources();
+}
+
+
 template<typename T>
 void init_itopic_description_defs(
-        py::class_<PyITopicDescription<T>, PyIEntity>& cls)
+        py::class_<
+            PyITopicDescription<T>,
+            PyIEntity,
+            std::unique_ptr<PyITopicDescription<T>, no_gil_delete<PyITopicDescription<T>>>>& cls)
 {
     cls.def_property_readonly(
                "name",
@@ -339,7 +353,10 @@ void init_itopic_description_defs(
 
 template<typename T>
 void init_topic_description_defs(
-        py::class_<PyTopicDescription<T>, PyITopicDescription<T>>& cls)
+        py::class_<
+            PyTopicDescription<T>,
+            PyITopicDescription<T>,
+            std::unique_ptr<PyTopicDescription<T>, no_gil_delete<PyTopicDescription<T>>>>& cls)
 {
     cls.def(py::init([](PyITopicDescription<T>& t) {
                 return PyTopicDescription<T>(t.get_topic_description());
@@ -363,7 +380,11 @@ void init_topic_description_defs(
 
 template<typename T>
 void init_dds_typed_topic_base_template(
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& cls)
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>>& cls)
 {
     cls.def(py::init([](PyIEntity& e) {
                 auto entity = e.get_entity();
@@ -483,7 +504,11 @@ void init_dds_typed_topic_base_template(
 
 template<typename T>
 void init_dds_typed_topic_template(
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& cls)
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>>& cls)
 {
     init_dds_typed_topic_base_template<T>(cls);
 
@@ -543,9 +568,19 @@ void init_dds_typed_topic_template(
 
 template<typename T>
 void init_topic(
-        py::class_<PyITopicDescription<T>, PyIEntity>& itd,
-        py::class_<PyTopicDescription<T>, PyITopicDescription<T>>& td,
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& t)
+        py::class_<
+            PyITopicDescription<T>,
+            PyIEntity,
+            std::unique_ptr<PyITopicDescription<T>, no_gil_delete<PyITopicDescription<T>>>>& itd,
+        py::class_<
+            PyTopicDescription<T>,
+            PyITopicDescription<T>,
+            std::unique_ptr<PyTopicDescription<T>, no_gil_delete<PyTopicDescription<T>>>>& td,
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>>& t)
 {
     init_itopic_description_defs(itd);
     init_topic_description_defs(td);

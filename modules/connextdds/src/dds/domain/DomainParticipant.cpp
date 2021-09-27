@@ -60,7 +60,10 @@ PyDomainParticipant::PyDomainParticipant(
 }
 
 
-PyDomainParticipant::~PyDomainParticipant()
+PyDomainParticipant::~PyDomainParticipant() {}
+
+
+void PyDomainParticipant::py_destroy_managed_resources()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -74,6 +77,10 @@ PyDomainParticipant::~PyDomainParticipant()
                 }
             }
         }
+    }
+    {
+        py::gil_scoped_acquire acquire;
+        this->_properties.clear();
     }
 }
 
@@ -168,7 +175,17 @@ uint32_t find_participants(ParticipantFwdIterator begin)
 
 
 template<>
-void init_class_defs(py::class_<PyDomainParticipant, PyIEntity>& cls)
+void py_destroy(PyDomainParticipant* ptr) {
+    ptr->py_destroy_managed_resources();
+}
+
+
+template<>
+void init_class_defs(
+        py::class_<
+            PyDomainParticipant,
+            PyIEntity,
+            std::unique_ptr<PyDomainParticipant, no_gil_delete<PyDomainParticipant>>>& cls)
 {
     cls.def(py::init<int32_t>(),
             py::arg("domain_id"),
@@ -1006,7 +1023,10 @@ template<>
 void process_inits<DomainParticipant>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyDomainParticipant, PyIEntity>(
+        return init_class_with_seq<
+            PyDomainParticipant,
+            PyIEntity,
+            std::unique_ptr<PyDomainParticipant, no_gil_delete<PyDomainParticipant>>>(
                 m,
                 "DomainParticipant");
     });

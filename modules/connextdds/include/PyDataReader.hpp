@@ -135,8 +135,9 @@ public:
     }
 #endif
 
+    virtual ~PyDataReader() {}
 
-    virtual ~PyDataReader()
+    void py_destroy_managed_resources() override
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -256,9 +257,19 @@ public:
     }
 };
 
+
+template<typename T>
+void py_destroy(PyDataReader<T>* ptr) {
+    ptr->py_destroy_managed_resources();
+}
+
+
 template<typename T>
 void init_dds_typed_datareader_base_template(
-        py::class_<PyDataReader<T>, PyIDataReader>& cls)
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
 {
     py::class_<typename PyDataReader<T>::Selector> selector(cls, "Selector");
 
@@ -840,7 +851,10 @@ void init_dds_typed_datareader_base_template(
 
 template<typename T>
 void init_dds_typed_datareader_template(
-        py::class_<PyDataReader<T>, PyIDataReader>& cls)
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
 {
     init_dds_typed_datareader_base_template<T>(cls);
 
@@ -900,7 +914,12 @@ void init_dds_typed_datareader_template(
 }
 
 template<typename T>
-void init_datareader(py::class_<PyDataReader<T>, PyIDataReader>& dr)
+void init_datareader(
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>,
+            no_gil_delete<PyDataReader<T>>>>& dr)
 {
     init_dds_typed_datareader_template(dr);
 }

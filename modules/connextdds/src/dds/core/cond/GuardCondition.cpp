@@ -16,7 +16,11 @@
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls)
+void init_class_defs(
+        py::class_<
+            PyGuardCondition,
+            PyICondition,
+            std::unique_ptr<PyGuardCondition, no_gil_delete<PyGuardCondition>>>& cls)
 {
     cls.def(py::init<>(), "Create a GuardCondition in an untriggered state.")
             .def(py::init([](PyICondition& c) {
@@ -24,6 +28,7 @@ void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls)
                      return dds::core::polymorphic_cast<PyGuardCondition>(gc);
                  }),
                  py::arg("condition"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a GuardCondition from a Condition.")
             .def(
                     "set_handler",
@@ -37,20 +42,28 @@ void init_class_defs(py::class_<PyGuardCondition, PyICondition>& cls)
                         });
                     },
                     py::arg("func"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set a handler function for this GuardCondition.")
             .def("reset_handler",
                  &PyGuardCondition::reset_handler,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Resets the handler for this GuardCondition.")
             .def_property(
                     "trigger_value",
-                    (bool (PyGuardCondition::*)() const)
-                            & PyGuardCondition::trigger_value,
-                    (void (PyGuardCondition::*)(bool))
-                            & PyGuardCondition::trigger_value,
+                    [](PyGuardCondition& gc) {
+                        py::gil_scoped_release release;
+                        return gc.trigger_value();
+                    },
+                    [](PyGuardCondition& gc, bool trigger_value) {
+                        py::gil_scoped_release release;
+                        gc.trigger_value(trigger_value);
+                    },
                     "Get/set the trigger value for this GuardCondition")
             .def(py::self == py::self,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Compare DataStateEx objects for equality.")
             .def(py::self != py::self,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Compare DataStateEx objects for inequality.");
 }
 
@@ -60,7 +73,10 @@ void process_inits<dds::core::cond::GuardCondition>(
         ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class<PyGuardCondition, PyICondition>(m, "GuardCondition");
+        return init_class<
+            PyGuardCondition,
+            PyICondition,
+            std::unique_ptr<PyGuardCondition, no_gil_delete<PyGuardCondition>>>(m, "GuardCondition");
     });
 }
 

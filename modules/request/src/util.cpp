@@ -44,13 +44,15 @@ PYBIND11_MODULE(_util_native, m) {
         &pyrti::create_correlation_condition,
         py::arg("reader"),
         py::arg("sample_state"),
-        py::arg("related_sample_sn")
+        py::arg("related_sample_sn"),
+        py::call_guard<py::gil_scoped_release>()
     );
 
     m.def(
         "create_correlation_index",
         &pyrti::create_correlation_index,
-        py::arg("reader")
+        py::arg("reader"),
+        py::call_guard<py::gil_scoped_release>()
     );
 
 }

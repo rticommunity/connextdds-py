@@ -102,6 +102,8 @@ public:
         this->delegate()->unretain();
     }
 
+    void py_destroy_managed_resources() override {}
+
     dds::topic::AnyTopic get_any_topic() const override
     {
         return dds::topic::AnyTopic(this->topic());
@@ -131,15 +133,18 @@ public:
 };
 
 template<typename T>
-void init_content_filtered_topics_defs(py::class_<
-                                       PyContentFilteredTopic<T>,
-                                       PyITopicDescription<T>,
-                                       PyIAnyTopic>& cls)
+void init_content_filtered_topics_defs(
+        py::class_<
+            PyContentFilteredTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyContentFilteredTopic<T>, no_gil_delete<PyContentFilteredTopic<T>>>>& cls)
 {
     cls.def(py::init<PyTopic<T>&, std::string&, dds::topic::Filter&>(),
             py::arg("topic"),
             py::arg("name"),
             py::arg("contentfilter"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a ContentFilteredTopic with a name and Filter.")
             .def(py::init([](PyITopicDescription<T>& td) {
                      auto desc = td.get_topic_description();
@@ -147,6 +152,7 @@ void init_content_filtered_topics_defs(py::class_<
                              PyContentFilteredTopic<T>>(desc);
                  }),
                  py::arg("topic_description"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Cast a TopicDescription to a ContentFilteredTopic.")
             .def(py::init([](PyIEntity& e) {
                      auto entity = e.get_entity();
@@ -154,25 +160,32 @@ void init_content_filtered_topics_defs(py::class_<
                              PyContentFilteredTopic<T>>(entity);
                  }),
                  py::arg("entity"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Cast an Entity to a ContentFilteredTopic.")
             .def_property_readonly(
                     "topic",
                     [](PyContentFilteredTopic<T>& cft) {
+                        py::gil_scoped_release release;
                         auto t = cft.topic();
                         return PyTopic<T>(t);
                     },
                     "Get the underlying Topic.")
             .def_property_readonly(
                     "filter_expression",
-                    &PyContentFilteredTopic<T>::filter_expression,
+                    [](PyContentFilteredTopic<T>& cft) {
+                        py::gil_scoped_release release;
+                        return cft.filter_expression();
+                    },
                     "Get the filter expression")
             .def_property(
                     "filter_parameters",
-                    (const std::vector<std::string> (
-                            PyContentFilteredTopic<T>::*)() const)
-                            & PyContentFilteredTopic<T>::filter_parameters,
+                    [](PyContentFilteredTopic<T>& cft) {
+                        py::gil_scoped_release release;
+                        return cft.filter_parameters();
+                    },
                     [](PyContentFilteredTopic<T>& cft,
                        std::vector<std::string>& params) {
+                        py::gil_scoped_release release;
                         cft.filter_parameters(params.begin(), params.end());
                     },
                     "Get/set the filter parameters.")
@@ -182,6 +195,7 @@ void init_content_filtered_topics_defs(py::class_<
                        const dds::topic::Filter& filter) {
                         cft->filter(filter);
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set the filter.")
             .def(
                     "append_to_expression_parameter",
@@ -192,6 +206,7 @@ void init_content_filtered_topics_defs(py::class_<
                     },
                     py::arg("index"),
                     py::arg("extension"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Append the extension to the end of parameter at the "
                     "provided index, separated by a comma.")
             .def(
@@ -205,6 +220,7 @@ void init_content_filtered_topics_defs(py::class_<
                     },
                     py::arg("index"),
                     py::arg("remove_term"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Removes the specified term from the parameter at the "
                     "provided index.")
             .def_static(
@@ -236,7 +252,8 @@ template<typename T>
 void init_content_filtered_topic(py::class_<
                                  PyContentFilteredTopic<T>,
                                  PyITopicDescription<T>,
-                                 PyIAnyTopic>& cft)
+                                 PyIAnyTopic,
+                                 std::unique_ptr<PyContentFilteredTopic<T>, no_gil_delete<PyContentFilteredTopic<T>>>>& cft)
 {
     init_content_filtered_topics_defs(cft);
 }

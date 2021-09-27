@@ -107,7 +107,7 @@ void init_class_defs(py::class_<PyTriggeredConditions>& cls)
 
 
 template<>
-void init_class_defs(py::class_<WaitSet>& cls)
+void init_class_defs(py::class_<WaitSet, std::unique_ptr<WaitSet, no_gil_delete<WaitSet>>>& cls)
 {
     cls.def(py::init<>(),
             py::call_guard<py::gil_scoped_release>(),
@@ -277,7 +277,11 @@ void init_class_defs(py::class_<WaitSet>& cls)
 template<>
 void process_inits<WaitSet>(py::module& m, ClassInitList& l)
 {
-    l.push_back([m]() mutable { return init_class<WaitSet>(m, "WaitSet"); });
+    l.push_back([m]() mutable { 
+        return init_class<
+            WaitSet,
+            std::unique_ptr<WaitSet, no_gil_delete<WaitSet>>>(m, "WaitSet"); 
+    });
 
     l.push_back([m]() mutable {
         return init_class<PyTriggeredConditions>(m, "TriggeredConditions");

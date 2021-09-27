@@ -88,7 +88,9 @@ public:
         }
     }
 
-    virtual ~PyDataWriter()
+    virtual ~PyDataWriter() {}
+
+    void py_destroy_managed_resources() override
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -201,9 +203,20 @@ public:
     }
 };
 
+
+template<typename T>
+void py_destroy(PyDataWriter<T>* ptr) {
+    ptr->py_destroy_managed_resources();
+}
+
+
 template<typename T>
 void init_dds_typed_datawriter_base_template(
-        py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& cls)
+        py::class_<
+            PyDataWriter<T>,
+            PyIEntity,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyDataWriter<T>, no_gil_delete<PyDataWriter<T>>>>& cls)
 {
     cls.def(py::init<const PyPublisher&, const PyTopic<T>&>(),
             py::arg("pub"),
@@ -1487,7 +1500,11 @@ void init_dds_typed_datawriter_base_template(
 
 template<typename T>
 void init_dds_typed_datawriter_template(
-        py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& cls)
+        py::class_<
+            PyDataWriter<T>,
+            PyIEntity,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyDataWriter<T>, no_gil_delete<PyDataWriter<T>>>>& cls)
 {
     init_dds_typed_datawriter_base_template<T>(cls);
     cls
@@ -1528,7 +1545,11 @@ void init_dds_typed_datawriter_template(
 
 template<typename T>
 void init_datawriter(
-        py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter>& dw)
+        py::class_<
+            PyDataWriter<T>,
+            PyIEntity,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyDataWriter<T>, no_gil_delete<PyDataWriter<T>>>>& dw)
 {
     init_dds_typed_datawriter_template(dw);
 }

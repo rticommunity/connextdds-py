@@ -55,7 +55,9 @@ PySubscriber::PySubscriber(
     }
 }
 
-PySubscriber::~PySubscriber()
+PySubscriber::~PySubscriber() {}
+
+void PySubscriber::py_destroy_managed_resources()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -86,8 +88,19 @@ void PySubscriber::py_close()
     this->close();
 }
 
+
 template<>
-void init_class_defs(py::class_<PySubscriber, PyIEntity>& cls)
+void py_destroy(PySubscriber* ptr) {
+    ptr->py_destroy_managed_resources();
+}
+
+
+template<>
+void init_class_defs(
+        py::class_<
+            PySubscriber,
+            PyIEntity,
+            std::unique_ptr<PySubscriber, no_gil_delete<PySubscriber>>>& cls)
 {
     cls.def(py::init<const PyDomainParticipant&>(),
             py::arg("participant"),
@@ -243,7 +256,12 @@ template<>
 void process_inits<Subscriber>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_seq<PySubscriber, PyIEntity>(m, "Subscriber");
+        return init_class_with_seq<
+            PySubscriber,
+            PyIEntity,
+            std::unique_ptr<PySubscriber, no_gil_delete<PySubscriber>>>(
+                m,
+                "Subscriber");
     });
 }
 

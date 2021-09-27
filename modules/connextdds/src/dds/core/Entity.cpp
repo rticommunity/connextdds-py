@@ -19,12 +19,19 @@ using namespace dds::core;
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyEntity, PyIEntity>& cls)
+void init_class_defs(
+        py::class_<
+            PyEntity,
+            PyIEntity,
+            std::unique_ptr<PyEntity, no_gil_delete<PyEntity>>>& cls)
 {
 }
 
 template<>
-void init_class_defs(py::class_<PyIEntity>& cls)
+void init_class_defs(
+        py::class_<
+            PyIEntity,
+            std::unique_ptr<PyIEntity, no_gil_delete<PyIEntity>>>& cls)
 {
     cls.def("enable",
             &PyIEntity::py_enable,
@@ -72,6 +79,7 @@ void init_class_defs(py::class_<PyIEntity>& cls)
                         return e.get_entity() == other.get_entity();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for equality.")
             .def(
                     "__ne__",
@@ -79,6 +87,7 @@ void init_class_defs(py::class_<PyIEntity>& cls)
                         return e.get_entity() != other.get_entity();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for inequality.")
             .doc() =
             "This is the abstract base class for all the DDS objects that "
@@ -90,10 +99,19 @@ template<>
 void process_inits<Entity>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_ptr_seq<PyIEntity>(m, "IEntity");
+        return init_class_with_ptr_seq<
+            PyIEntity,
+            std::unique_ptr<PyIEntity, no_gil_delete<PyIEntity>>>(
+                m,
+                "IEntity");
     });
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyEntity, PyIEntity>(m, "Entity");
+        return init_class_with_seq<
+            PyEntity,
+            PyIEntity,
+            std::unique_ptr<PyEntity, no_gil_delete<PyEntity>>>(
+                m,
+                "Entity");
     });
 }
 

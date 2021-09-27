@@ -56,7 +56,9 @@ PyPublisher::PyPublisher(
     }
 }
 
-PyPublisher::~PyPublisher()
+PyPublisher::~PyPublisher() {}
+
+void PyPublisher::py_destroy_managed_resources()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -87,8 +89,19 @@ void PyPublisher::py_close()
     this->close();
 }
 
+
 template<>
-void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
+void py_destroy(PyPublisher* ptr) {
+    ptr->py_destroy_managed_resources();
+}
+
+
+template<>
+void init_class_defs(
+        py::class_<
+            PyPublisher,
+            PyIEntity,
+            std::unique_ptr<PyPublisher, no_gil_delete<PyPublisher>>>& cls)
 {
     cls
 
@@ -285,7 +298,12 @@ template<>
 void process_inits<Publisher>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyPublisher, PyIEntity>(m, "Publisher");
+        return init_class_with_seq<
+            PyPublisher,
+            PyIEntity,
+            std::unique_ptr<PyPublisher, no_gil_delete<PyPublisher>>>(
+                m,
+                "Publisher");
     });
 }
 

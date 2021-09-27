@@ -26,7 +26,8 @@ void init_dds_typed_topic_template(
         py::class_<
                 PyTopic<dds::topic::TopicBuiltinTopicData>,
                 PyITopicDescription<dds::topic::TopicBuiltinTopicData>,
-                PyIAnyTopic>& cls)
+                PyIAnyTopic,
+                std::unique_ptr<PyTopic<dds::topic::TopicBuiltinTopicData>, no_gil_delete<PyTopic<dds::topic::TopicBuiltinTopicData>>>>& cls)
 {
     init_dds_typed_topic_base_template(cls);
 }

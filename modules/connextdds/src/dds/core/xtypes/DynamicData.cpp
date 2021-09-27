@@ -1321,10 +1321,12 @@ private:
 
 
 template<>
-void init_dds_typed_topic_template(py::class_<
-                                   PyTopic<DynamicData>,
-                                   PyITopicDescription<DynamicData>,
-                                   PyIAnyTopic>& cls)
+void init_dds_typed_topic_template(
+        py::class_<
+            PyTopic<DynamicData>,
+            PyITopicDescription<DynamicData>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<DynamicData>, no_gil_delete<PyTopic<DynamicData>>>>& cls)
 {
     init_dds_typed_topic_base_template(cls);
     cls.def(py::init([](PyDomainParticipant& dp,
@@ -1387,7 +1389,11 @@ void init_dds_typed_topic_template(py::class_<
 
 template<>
 void init_dds_typed_datawriter_template(
-        py::class_<PyDataWriter<DynamicData>, PyIEntity, PyIAnyDataWriter>& cls)
+        py::class_<
+            PyDataWriter<DynamicData>,
+            PyIEntity,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyDataWriter<DynamicData>, no_gil_delete<PyDataWriter<DynamicData>>>>& cls)
 {
     init_dds_typed_datawriter_base_template(cls);
     cls.def(
@@ -1470,7 +1476,10 @@ void init_dds_typed_datawriter_template(
 
 template<>
 void init_dds_typed_datareader_template(
-        py::class_<PyDataReader<DynamicData>, PyIDataReader>& cls)
+        py::class_<
+            PyDataReader<DynamicData>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<DynamicData>, no_gil_delete<PyDataReader<DynamicData>>>>& cls)
 {
     init_dds_typed_datareader_base_template(cls);
     cls.def(
