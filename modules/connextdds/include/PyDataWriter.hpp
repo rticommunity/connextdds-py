@@ -595,31 +595,34 @@ void init_dds_typed_datawriter_base_template(
                     py::call_guard<py::gil_scoped_release>(),
                     "Dispose the instance associated with key_holder using a "
                     "timestamp")
-            .def("key_value",
-                 (T
-                  & (PyDataWriter<
-                          T>::*) (T&, const dds::core::InstanceHandle&) )
-                         & PyDataWriter<T>::key_value,
-                 py::arg("key_holder"),
-                 py::arg("handle"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Retrieve the instance key that corresponds to an instance "
-                 "handle.")
-            .def("key_value",
-                 (dds::topic::TopicInstance<
-                          T> & (PyDataWriter<T>::*) (dds::topic::TopicInstance<T>&, const dds::core::InstanceHandle&) )
-                         & PyDataWriter<T>::key_value,
-                 py::arg("topic_instance"),
-                 py::arg("handle"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Retrieve the instance key that corresponds to an instance "
-                 "handle.")
-            .def("lookup_instance",
-                 &PyDataWriter<T>::lookup_instance,
-                 py::arg("key_holder"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Retrieve the instance handle that corresponds to an instance "
-                 "key_holder")
+            .def(
+                    "key_value",
+                    (T
+                    & (PyDataWriter<
+                            T>::*) (T&, const dds::core::InstanceHandle&) )
+                            & PyDataWriter<T>::key_value,
+                    py::arg("key_holder"),
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Retrieve the instance key that corresponds to an instance "
+                    "handle.")
+            .def(
+                    "key_value",
+                    (dds::topic::TopicInstance<
+                            T> & (PyDataWriter<T>::*) (dds::topic::TopicInstance<T>&, const dds::core::InstanceHandle&) )
+                            & PyDataWriter<T>::key_value,
+                    py::arg("topic_instance"),
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Retrieve the instance key that corresponds to an instance "
+                    "handle.")
+            .def(
+                    "lookup_instance",
+                    &PyDataWriter<T>::lookup_instance,
+                    py::arg("key_holder"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Retrieve the instance handle that corresponds to an instance "
+                    "key_holder")
             .def_property(
                     "qos",
                     [](const PyDataWriter<T>& dw) {

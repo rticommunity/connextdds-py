@@ -89,7 +89,7 @@ void init_class_defs(
                     "The topic name of the DataReader.")
             .def_property_readonly(
                     "original_related_reader_guid",
-                    [](TopicQueryData& tqd) {
+                    [](TopicQueryData& tqd) -> const rti::core::Guid& {
                         py::gil_scoped_release release;
                         return tqd.original_related_reader_guid();
                     },

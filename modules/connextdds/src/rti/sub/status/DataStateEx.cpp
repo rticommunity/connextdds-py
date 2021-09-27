@@ -93,7 +93,9 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                     "The StreamKind.")
             .def_property(
                     "sample_state",
-                    [](const DataStateEx& ds) { return ds.sample_state(); },
+                    [](const DataStateEx& ds) -> const dds::sub::status::SampleState& { 
+                        return ds.sample_state();
+                    },
                     [](DataStateEx& ds,
                        const dds::sub::status::SampleState& ss) {
                         ds.sample_state(ss);
@@ -101,14 +103,18 @@ void init_class_defs(py::class_<DataStateEx>& cls)
                     "The SampleState of the DataStateEx.")
             .def_property(
                     "instance_state",
-                    [](const DataStateEx& ds) { return ds.instance_state(); },
+                    [](const DataStateEx& ds) -> const dds::sub::status::InstanceState& { 
+                        return ds.instance_state();
+                    },
                     [](DataStateEx& ds, dds::sub::status::InstanceState& is) {
                         ds.instance_state(is);
                     },
                     "The InstanceState of the DataStateEx.")
             .def_property(
                     "view_state",
-                    [](const DataStateEx& ds) { return ds.view_state(); },
+                    [](const DataStateEx& ds) -> const dds::sub::status::ViewState& {
+                        return ds.view_state();
+                    },
                     [](DataStateEx& ds, dds::sub::status::ViewState& vs) {
                         ds.view_state(vs);
                     },

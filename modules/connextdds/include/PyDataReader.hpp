@@ -338,7 +338,7 @@ void init_dds_typed_datareader_base_template(
                  "Create a typed DataReader from an Entity.")
             .def_property(
                     "default_filter_state",
-                    [](PyDataReader<T>& dr) {
+                    [](PyDataReader<T>& dr) -> const dds::sub::status::DataState& {
                         py::gil_scoped_release guard;
                         return dr.default_filter_state();
                     },

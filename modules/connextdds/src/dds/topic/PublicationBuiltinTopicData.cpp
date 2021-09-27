@@ -135,7 +135,7 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls)
             // BUG: data_tag() is not compatible with default delegate
             .def_property_readonly(
                     "data_tag",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const dds::core::policy::DataTag& {
                         return PBTD_DATA_TAG(p);
                     },
                     "The DataTag policy of the corresponding DataWriter.")
@@ -154,52 +154,52 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls)
                     "The type.")
             .def_property_readonly(
                     "publisher_key",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const dds::topic::BuiltinTopicKey& {
                         return p->publisher_key();
                     },
                     "The DCPS key of the Publisher to which the DataWriter "
                     "belongs.")
             .def_property_readonly(
                     "property",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::policy::Property& {
                         return p->property();
                     },
                     "The propagated name-value properties of the corresponding "
                     "DataWriter.")
             .def_property_readonly(
                     "unicast_locators",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const dds::core::vector<rti::core::Locator>& {
                         return p->unicast_locators();
                     },
                     "The custom unicast locators that the endpoint can "
                     "specify.")
             .def_property_readonly(
                     "virtual_guid",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::Guid& {
                         return p->virtual_guid();
                     },
                     "The virtual Guid associated to the DataWriter.")
             .def_property_readonly(
                     "rtps_protocol_version",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::ProtocolVersion& {
                         return p->rtps_protocol_version();
                     },
                     "The version number of the RTPS wire protocol used.")
             .def_property_readonly(
                     "rtps_vendor_id",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::VendorId& {
                         return p->rtps_vendor_id();
                     },
                     "The ID of the vendor implementing the RTPS wire protocol.")
             .def_property_readonly(
                     "product_version",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::ProductVersion& {
                         return p->product_version();
                     },
                     "The current version for RTI Connext.")
             .def_property_readonly(
                     "locator_filter",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::policy::LocatorFilter& {
                         return p->locator_filter();
                     },
                     "The locator filters of the corresponding DataWriter.")
@@ -213,13 +213,13 @@ void init_class_defs(py::class_<PublicationBuiltinTopicData>& cls)
                     "acknowledgments for reliability.")
             .def_property_readonly(
                     "publication_name",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::policy::EntityName& {
                         return p->publication_name();
                     },
                     "The publication name and role name.")
             .def_property_readonly(
                     "service",
-                    [](const PublicationBuiltinTopicData& p) {
+                    [](const PublicationBuiltinTopicData& p) -> const rti::core::policy::Service& {
                         return p->service();
                     },
                     "The Service policy")

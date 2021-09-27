@@ -44,7 +44,7 @@ void init_class_defs(py::class_<DataRepresentation>& cls)
 #if rti_connext_version_gte(6, 1, 0, 0)
             .def_property(
                     "compression_settings",
-                    [](DataRepresentation& dr) {
+                    [](DataRepresentation& dr) -> rti::core::CompressionSettings& {
                         return dr->compression_settings();
                     },
                     [](DataRepresentation& dr, const rti::core::CompressionSettings& cs) {
