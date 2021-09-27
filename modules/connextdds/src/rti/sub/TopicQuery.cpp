@@ -62,37 +62,52 @@ void init_class_defs(py::class_<TopicQuerySelection>& cls)
 }
 
 template<>
-void init_class_defs(py::class_<TopicQueryData>& cls)
+void init_class_defs(
+    py::class_<
+        TopicQueryData,
+        std::unique_ptr<TopicQueryData, no_gil_delete<TopicQueryData>>>& cls)
 {
     cls.def_static(
                "create_from_service_request",
                &rti::sub::create_topic_query_data_from_service_request,
                py::arg("service_request"),
+               py::call_guard<py::gil_scoped_release>(),
                "Creates a TopicQueryData from a ServiceRequest.")
             .def_property_readonly(
                     "selection",
-                    &TopicQueryData::selection,
+                    [](TopicQueryData& tqd) {
+                        py::gil_scoped_release release;
+                        return tqd.selection();
+                    },
                     "The data selection.")
             .def_property_readonly(
                     "topic_name",
                     [](const TopicQueryData& tqd) {
+                        py::gil_scoped_release release;
                         return tqd.topic_name().to_std_string();
                     },
                     "The topic name of the DataReader.")
             .def_property_readonly(
                     "original_related_reader_guid",
-                    &TopicQueryData::original_related_reader_guid,
+                    [](TopicQueryData& tqd) {
+                        py::gil_scoped_release release;
+                        return tqd.original_related_reader_guid();
+                    },
                     "Identifies the DataReader that created the TopicQuery.");
 }
 
 template<>
-void init_class_defs(py::class_<TopicQuery>& cls)
+void init_class_defs(
+    py::class_<
+        TopicQuery,
+        std::unique_ptr<TopicQuery, no_gil_delete<TopicQuery>>>& cls)
 {
     cls.def(py::init([](PyIAnyDataReader& dr, const TopicQuerySelection& tqs) {
                 return TopicQuery(dr.get_any_datareader(), tqs);
             }),
             py::arg("reader"),
             py::arg("selection"),
+            py::call_guard<py::gil_scoped_release>(),
             "Creates a TopicQuery for a given DataReader.")
             .def("close",
                  &TopicQuery::close,
@@ -100,22 +115,30 @@ void init_class_defs(py::class_<TopicQuery>& cls)
                  "Deletes and cancels this TopicQuery.")
             .def_property_readonly(
                     "guid",
-                    &TopicQuery::guid,
+                    [](TopicQuery& tq) {
+                        py::gil_scoped_release release;
+                        return tq.guid();
+                    },
                     "The TopicQuery GUID.")
             .def_property_readonly(
                     "closed",
-                    &TopicQuery::closed,
+                    [](TopicQuery& tq) {
+                        py::gil_scoped_release release;
+                        return tq.closed();
+                    },
                     "Indicates whether this TopicQuery has been closed with "
                     "close().")
             .def_property_readonly(
                     "datareader",
                     [](TopicQuery& tq) {
+                        py::gil_scoped_release release;
                         return PyAnyDataReader(tq.datareader());
                     },
                     "Gets the DataReader associated to this TopicQuery.")
             .def(
                     "retain",
                     [](TopicQuery& tq) { tq.retain(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Disable automatic destruction of this TopicQuery.")
             .def("unretain", [](TopicQuery& tq) { tq.delegate()->unretain(); })
             .def(
@@ -129,10 +152,14 @@ void init_class_defs(py::class_<TopicQuery>& cls)
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Exit a context managed block for a TopicQuery.")
-            .def(py::self == py::self,
-                 "Compare DataStateEx objects for equality.")
-            .def(py::self != py::self,
-                 "Compare DataStateEx objects for inequality.")
+            .def(
+                    py::self == py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Compare DataStateEx objects for equality.")
+            .def(
+                    py::self != py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Compare DataStateEx objects for inequality.")
             .def_static(
                     "use_reader_content_filter",
                     [](PyIAnyDataReader& adr) {
@@ -140,6 +167,7 @@ void init_class_defs(py::class_<TopicQuery>& cls)
                         return TopicQuery::UseReaderContentFilter(dr);
                     },
                     py::arg("reader"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Create a TopicQuery with a DataReader's content filter.")
             .def_static(
                     "select_all",
@@ -148,6 +176,7 @@ void init_class_defs(py::class_<TopicQuery>& cls)
                         return TopicQuery::SelectAll(dr);
                     },
                     py::arg("reader"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Create a TopicQuery that requests all data.")
             .def_static(
                     "find",
@@ -159,7 +188,8 @@ void init_class_defs(py::class_<TopicQuery>& cls)
                             retval = tq;
                         }
                         return retval;
-                    });
+                    },
+                    py::call_guard<py::gil_scoped_release>());
 }
 
 template<>
@@ -197,11 +227,19 @@ void process_inits<TopicQuery>(py::module& m, ClassInitList& l)
     });
 
     l.push_back([m]() mutable {
-        return init_class<TopicQueryData>(m, "TopicQueryData");
+        return init_class<
+            TopicQueryData,
+            std::unique_ptr<TopicQueryData, no_gil_delete<TopicQueryData>>>(
+                m,
+                "TopicQueryData");
     });
 
-    l.push_back(
-            [m]() mutable { return init_class<TopicQuery>(m, "TopicQuery"); });
+    l.push_back([m]() mutable { 
+        return init_class<
+            TopicQuery,
+            std::unique_ptr<TopicQuery, no_gil_delete<TopicQuery>>>(
+                m,
+                "TopicQuery"); });
 }
 
 }  // namespace pyrti
