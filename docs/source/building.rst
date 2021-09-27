@@ -129,18 +129,18 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
     :caption: Windows
 
-    $ pip install setuptools wheel cmake pybind11==2.6.1
+    $ pip install setuptools wheel cmake pybind11==2.7.1
 
 .. code-block:: shell
     :caption: Linux
 
-    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.6.1
+    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.7.1
 
 
 .. code-block:: shell
     :caption: macOS
 
-    $ pip install setuptools wheel cmake delocate pybind11==2.6.1
+    $ pip install setuptools wheel cmake delocate pybind11==2.7.1
 
 2. Clone the repository and submodules, and enter the directory.
 
@@ -182,7 +182,7 @@ compiled version of Python for the target.
 .. code-block:: shell
     :caption: Linux
 
-    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.6.1
+    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.7.1
 
 2. Clone the repository and enter the directory.
 
