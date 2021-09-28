@@ -149,8 +149,6 @@ public:
     {
         this->delegate()->unretain();
     }
-
-    void py_destroy_managed_resources() override {}
 };
 
 template<typename T>
@@ -187,9 +185,7 @@ public:
         }
     }
 
-    virtual ~PyTopic() {}
-
-    void py_destroy_managed_resources() override
+    virtual ~PyTopic()
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -312,12 +308,6 @@ public:
         this->qos(q);
     }
 };
-
-
-template<typename T>
-void py_destroy(PyTopic<T>* ptr) {
-    ptr->py_destroy_managed_resources();
-}
 
 
 template<typename T>

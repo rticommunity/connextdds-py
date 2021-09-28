@@ -203,20 +203,13 @@ TPtr downcast_listener_ptr(TBasePtr p) {
 py::object py_cast_type(dds::core::xtypes::DynamicType&);
 
 
-// Default Python-specific destruction for use with no-GIL destruction
-template<typename T>
-void py_destroy(T* ptr) {}
-
 // custom holder deleters for released GIL destruction
 template<typename T>
 struct no_gil_delete {
     void operator()(T* ptr) {
-        // perform basic destruction, then release GIL for native destruction
-        py_destroy(ptr);
-        {
-            pybind11::gil_scoped_release release;
-            delete ptr;
-        }
+        // release GIL for native destruction
+        pybind11::gil_scoped_release release;
+        delete ptr;
     }
 };
 

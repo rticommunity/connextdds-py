@@ -55,9 +55,7 @@ PySubscriber::PySubscriber(
     }
 }
 
-PySubscriber::~PySubscriber() {}
-
-void PySubscriber::py_destroy_managed_resources()
+PySubscriber::~PySubscriber()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -86,12 +84,6 @@ void PySubscriber::py_close()
         }
     }
     this->close();
-}
-
-
-template<>
-void py_destroy(PySubscriber* ptr) {
-    ptr->py_destroy_managed_resources();
 }
 
 

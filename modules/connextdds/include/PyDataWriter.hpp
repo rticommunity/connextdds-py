@@ -88,9 +88,7 @@ public:
         }
     }
 
-    virtual ~PyDataWriter() {}
-
-    void py_destroy_managed_resources() override
+    virtual ~PyDataWriter()
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -202,12 +200,6 @@ public:
         this->delegate()->unretain();
     }
 };
-
-
-template<typename T>
-void py_destroy(PyDataWriter<T>* ptr) {
-    ptr->py_destroy_managed_resources();
-}
 
 
 template<typename T>

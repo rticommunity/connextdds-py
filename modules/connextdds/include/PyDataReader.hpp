@@ -135,9 +135,7 @@ public:
     }
 #endif
 
-    virtual ~PyDataReader() {}
-
-    void py_destroy_managed_resources() override
+    virtual ~PyDataReader()
     {
         if (*this != dds::core::null) {
             if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -256,12 +254,6 @@ public:
         return dds::sub::Query(*this, expression, params);
     }
 };
-
-
-template<typename T>
-void py_destroy(PyDataReader<T>* ptr) {
-    ptr->py_destroy_managed_resources();
-}
 
 
 template<typename T>

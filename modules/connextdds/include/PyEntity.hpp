@@ -76,8 +76,6 @@ public:
 
     virtual void py_unretain() = 0;
 
-    virtual void py_destroy_managed_resources() = 0;
-
     virtual ~PyIEntity()
     {
     }
@@ -140,8 +138,6 @@ public:
     {
         this->delegate()->unretain();
     }
-
-    void py_destroy_managed_resources() override {}
 
     virtual ~PyEntity()
     {
@@ -237,8 +233,6 @@ public:
         this->delegate()->unretain();
     }
 
-    void py_destroy_managed_resources() override;
-
     template<typename T, typename F>
     PyDataReader<T>&
     py_builtin_reader(PyDomainParticipant::Property, F);
@@ -314,8 +308,6 @@ public:
         this->delegate()->unretain();
     }
 
-    void py_destroy_managed_resources() override;
-
     virtual ~PyPublisher();
 };
 
@@ -379,8 +371,6 @@ public:
     {
         this->delegate()->unretain();
     }
-
-    void py_destroy_managed_resources() override;
 
     virtual ~PySubscriber();
 };

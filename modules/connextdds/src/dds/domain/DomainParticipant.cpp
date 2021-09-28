@@ -60,10 +60,7 @@ PyDomainParticipant::PyDomainParticipant(
 }
 
 
-PyDomainParticipant::~PyDomainParticipant() {}
-
-
-void PyDomainParticipant::py_destroy_managed_resources()
+PyDomainParticipant::~PyDomainParticipant()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -171,12 +168,6 @@ uint32_t find_participants(ParticipantFwdIterator begin)
             ParticipantFwdIterator>(begin, participants_adapter);
 
     return participants_adapter.size();
-}
-
-
-template<>
-void py_destroy(PyDomainParticipant* ptr) {
-    ptr->py_destroy_managed_resources();
 }
 
 

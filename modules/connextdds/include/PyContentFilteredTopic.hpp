@@ -102,8 +102,6 @@ public:
         this->delegate()->unretain();
     }
 
-    void py_destroy_managed_resources() override {}
-
     dds::topic::AnyTopic get_any_topic() const override
     {
         return dds::topic::AnyTopic(this->topic());

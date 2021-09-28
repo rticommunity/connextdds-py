@@ -56,9 +56,7 @@ PyPublisher::PyPublisher(
     }
 }
 
-PyPublisher::~PyPublisher() {}
-
-void PyPublisher::py_destroy_managed_resources()
+PyPublisher::~PyPublisher()
 {
     if (*this != dds::core::null) {
         if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
@@ -87,12 +85,6 @@ void PyPublisher::py_close()
         }
     }
     this->close();
-}
-
-
-template<>
-void py_destroy(PyPublisher* ptr) {
-    ptr->py_destroy_managed_resources();
 }
 
 
