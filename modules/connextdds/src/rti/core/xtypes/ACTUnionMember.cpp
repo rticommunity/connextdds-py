@@ -34,19 +34,26 @@ void init_class_defs(
                                  UnionMember>::*) (AbstractConstructedType<UnionMember>::
                                                            MemberIndex) const)
                          & AbstractConstructedType<UnionMember>::member,
+                 py::return_value_policy::reference_internal,
                  "Gets a member by its index.")
             .def("member",
                  (const UnionMember& (AbstractConstructedType<
                                       UnionMember>::*) (const std::string&)
                           const)
                          & AbstractConstructedType<UnionMember>::member,
+                 py::return_value_policy::reference_internal,
                  "Gets a member by its name.")
             .def("__getitem__",
                  [](const AbstractConstructedType<UnionMember>& act,
-                    const std::string& name) { return act.member(name); })
+                    const std::string& name) -> const UnionMember& { 
+                            return act.member(name); 
+                 },
+                 py::return_value_policy::reference_internal)
             .def("__getitem__",
                  [](const AbstractConstructedType<UnionMember>& act,
-                    uint32_t index) { return act.member(index); })
+                    uint32_t index) -> const UnionMember& { 
+                            return act.member(index); 
+                 })
             .def("find_member_by_name",
                  &AbstractConstructedType<UnionMember>::find_member_by_name,
                  "Obtains the member index from its name.")
