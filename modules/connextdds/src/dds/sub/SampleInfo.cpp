@@ -160,13 +160,13 @@ void init_class_defs(py::class_<SampleInfo>& cls)
                     "topic_query_guid",
                     [](const SampleInfo& s) { return s->topic_query_guid(); },
                     "The GUID of the TopicQuery that is related to the sample.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly(
                     "encapsulation_id",
                     [](const SampleInfo& s) { return s->encapsulation_id(); },
                     "The encapsulation kind.")
 #endif
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property_readonly(
                     "coherent_set_info",
                     [](const SampleInfo& s) { return s->coherent_set_info(); },

@@ -24,7 +24,7 @@ class PyDomainParticipantListener;
 class PyPublisherListener;
 class PySubscriberListener;
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using DomainParticipantListenerPtr = dds::domain::DomainParticipantListener*;
 
 using PyDomainParticipantListenerPtr = PyDomainParticipantListener*;
@@ -34,7 +34,7 @@ using DomainParticipantListenerPtr = std::shared_ptr<dds::domain::DomainParticip
 using PyDomainParticipantListenerPtr = std::shared_ptr<PyDomainParticipantListener>;
 #endif
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using PublisherListenerPtr = dds::pub::PublisherListener*;
 
 using PyPublisherListenerPtr = PyPublisherListener*;
@@ -44,7 +44,7 @@ using PublisherListenerPtr = std::shared_ptr<dds::pub::PublisherListener>;
 using PyPublisherListenerPtr = std::shared_ptr<PyPublisherListener>;
 #endif
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 using SubscriberListenerPtr = dds::sub::SubscriberListener*;
 
 using PySubscriberListenerPtr = PySubscriberListener*;
@@ -164,6 +164,13 @@ public:
         IMPLICIT_SUBSCRIBER,
     };
 
+    struct PropertyHash {
+        std::size_t operator()(Property p) const
+        {
+            return static_cast<std::size_t>(p);
+        }
+    };
+
     PyDomainParticipant(const PyDomainParticipant& dp) : dds::domain::DomainParticipant(dp)
     {}
 
@@ -236,7 +243,7 @@ public:
     virtual ~PyDomainParticipant();
 
 private:
-    std::unordered_map<Property, pybind11::object> _properties;
+    std::unordered_map<Property, pybind11::object, PropertyHash> _properties;
     static std::recursive_mutex _property_lock;
 };
 
@@ -304,7 +311,7 @@ public:
     virtual ~PyPublisher();
 };
 
-class PySubscriber : public dds::sub::Subscriber, public PyIEntity {
+class PYRTI_SYMBOL_PUBLIC PySubscriber : public dds::sub::Subscriber, public PyIEntity {
 public:
     using dds::sub::Subscriber::Subscriber;
 

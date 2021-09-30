@@ -71,13 +71,13 @@ py::class_<T> init_mask_type_no_int_constructor(
                         return mask.none();
                     },
                     "Test if none of the bits are set.")
-            .def(
+            .def_property_readonly(
                     "count",
                     [](const T& mask) {
                         return mask.count();
                     },
                     "Returns the number of bits set in the mask.")
-            .def(
+            .def_property_readonly(
                     "size",
                     [](const T& mask) {
                         return mask.size();
@@ -85,14 +85,14 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "Returns the number of bits in the mask type.")
             .def(
                     "set",
-                    [](T& mask) {
+                    [](T& mask) -> T& {
                         mask.set();
                         return mask;
                     },
                     "Set all bits in the mask.")
             .def(
                     "set",
-                    [](T& mask, std::size_t pos, bool value) {
+                    [](T& mask, std::size_t pos, bool value) -> T& {
                         mask.set(pos, value);
                         return mask;
                     },
@@ -103,14 +103,14 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "(default: true).")
             .def(
                     "reset",
-                    [](T& mask) {
+                    [](T& mask) -> T& {
                         mask.reset();
                         return mask;
                     },
                     "Clear all bits in the mask.")
             .def(
                     "reset",
-                    [](T& mask, std::size_t pos) {
+                    [](T& mask, std::size_t pos) -> T& {
                         mask.reset(pos);
                         return mask;
                     },
@@ -118,14 +118,14 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "Clear the mask bit at the specified position.")
             .def(
                     "flip",
-                    [](T& mask) {
+                    [](T& mask) -> T& {
                         mask.flip();
                         return mask;
                     },
                     "Flip all bits in the mask.")
             .def(
                     "flip",
-                    [](T& mask, std::size_t pos) {
+                    [](T& mask, std::size_t pos) -> T& {
                         mask.flip(pos);
                         return mask;
                     },
@@ -135,7 +135,7 @@ py::class_<T> init_mask_type_no_int_constructor(
             .def(py::self != py::self, "Compare masks for inequality.")
             .def(
                     "__iand__",
-                    [](T& mask, const T& other) {
+                    [](T& mask, const T& other) -> T& {
                         mask &= other;
                         return mask;
                     },
@@ -143,7 +143,7 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "Set mask to logical AND with another mask.")
             .def(
                     "__ior__",
-                    [](T& mask, const T& other) {
+                    [](T& mask, const T& other) -> T& {
                         mask |= other;
                         return mask;
                     },
@@ -151,7 +151,7 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "Set mask to logical OR with another mask.")
             .def(
                     "__ixor__",
-                    [](T& mask, const T& other) {
+                    [](T& mask, const T& other) -> T& {
                         mask ^= other;
                         return mask;
                     },
@@ -159,7 +159,7 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "Set mask to logical XOR with another mask.")
             .def(
                     "__ilshift__",
-                    [](T& mask, std::size_t value) {
+                    [](T& mask, std::size_t value) -> T& {
                         mask <<= value;
                         return mask;
                     },
@@ -167,7 +167,7 @@ py::class_<T> init_mask_type_no_int_constructor(
                     "Left shift bits in mask.")
             .def(
                     "__irshift__",
-                    [](T& mask, std::size_t value) {
+                    [](T& mask, std::size_t value) -> T& {
                         mask <<= value;
                         return mask;
                     },

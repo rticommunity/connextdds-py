@@ -34,25 +34,33 @@ void init_class_defs(
                                  EnumMember>::*) (AbstractConstructedType<EnumMember>::
                                                           MemberIndex) const)
                          & AbstractConstructedType<EnumMember>::member,
+                 py::return_value_policy::reference_internal,
                  "Gets a member by its index.")
             .def("member",
                  (const EnumMember& (AbstractConstructedType<
                                      EnumMember>::*) (const std::string&) const)
                          & AbstractConstructedType<EnumMember>::member,
+                 py::return_value_policy::reference_internal,
                  "Gets a member by its name.")
             .def("__getitem__",
                  [](const AbstractConstructedType<EnumMember>& act,
-                    const std::string& name) { return act.member(name); })
+                    const std::string& name) -> const EnumMember& { 
+                            return act.member(name); 
+                 },
+                 py::return_value_policy::reference_internal)
             .def("__getitem__",
                  [](const AbstractConstructedType<EnumMember>& act,
-                    uint32_t index) { return act.member(index); })
+                    uint32_t index) -> const EnumMember& { 
+                            return act.member(index); 
+                 },
+                 py::return_value_policy::reference_internal)
             .def("find_member_by_name",
                  &AbstractConstructedType<EnumMember>::find_member_by_name,
                  "Obtains the member index from its name.")
             .def("members",
                  &AbstractConstructedType<EnumMember>::members,
                  "Gets a copy of all the members")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def("cdr_serialized_sample_max_size",
                  &AbstractConstructedType<
                          EnumMember>::cdr_serialized_sample_max_size,

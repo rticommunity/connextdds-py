@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="file:////Applications/rti_connext_dds-6.1.0/bin/../resource/app/app_support/rtiddsgen/schema/rti_dds_profiles.xsd">
+<types>
+<struct name= "PrimeNumberRequest">
+  <member name="n" type="int32"/>
+  <member name="primes_per_reply" type="int32"/>
+</struct>
+<const name="PRIME_SEQUENCE_MAX_LENGTH" type="int32" value="1024"/>
+<enum name="PrimeNumberCalculationStatus">
+  <enumerator name="REPLY_IN_PROGRESS"/>
+  <enumerator name="REPLY_COMPLETED"/>
+  <enumerator name="REPLY_ERROR"/>
+</enum> 
+<struct name= "PrimeNumberReply">
+  <member name="primes" sequenceMaxLength="PRIME_SEQUENCE_MAX_LENGTH" type="int32"/>
+  <member name="status" type="nonBasic"  nonBasicTypeName= "PrimeNumberCalculationStatus"/>
+</struct>
+</types>
+</dds>

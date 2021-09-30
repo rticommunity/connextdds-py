@@ -39,7 +39,7 @@ void init_namespace_rti_util(py::module& m, pyrti::ClassInitList& l, pyrti::DefI
 
     init_heap_monitoring(m, l, v);
 
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
     init_network_capture(m, l, v);
 #endif
 }

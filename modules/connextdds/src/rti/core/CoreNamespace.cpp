@@ -38,7 +38,7 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l, pyrti::DefI
     pyrti::process_inits<TransportInfo>(m, l);
     pyrti::process_inits<TransportMulticastSettings>(m, l);
     pyrti::process_inits<VendorId>(m, l);
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 #ifndef _MSC_VER
     pyrti::process_inits<DataReaderResourceLimitsInstanceReplacementSettings>(m, l);
 #endif

@@ -418,7 +418,7 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                     "locators are reachable from other DomainParticipants."
                     "\n\n"
                     "This property's getter returns a deep copy.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "secure_volatile_writer_publish_mode",
                     (PublishMode & (DiscoveryConfig::*) ())

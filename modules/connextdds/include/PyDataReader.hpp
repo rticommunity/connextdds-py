@@ -32,7 +32,7 @@
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 template<typename T>
 using DataReaderListenerPtr = dds::sub::DataReaderListener<T>*;
 
@@ -93,31 +93,61 @@ public:
             const dds::core::status::StatusMask& m)
             : dds::sub::DataReader<T>(s, t, q, l, m)
     {
-        if (nullptr != l)
+        if (nullptr != l) {
+            py::gil_scoped_acquire acquire;
             py::cast(l).inc_ref();
+        }
     }
 
+
+#if rti_connext_version_gte(6, 1, 0, 0) && rti_connext_version_lte(6, 1, 0, 3)
     PyDataReader(
             const PySubscriber& s,
             const PyContentFilteredTopic<T>& t,
             const dds::sub::qos::DataReaderQos& q,
-            PyDataReaderListener<T>* l,
+            PyDataReaderListenerPtr<T> l,
+            const dds::core::status::StatusMask& m)
+            : dds::sub::DataReader<T>(s, t, q, l.get(), m)
+    {
+        if (nullptr != l) {
+            // switch to shared_ptr
+            this->py_unretain();
+            this->set_listener(l, m);
+            {
+                py::gil_scoped_acquire acquire;
+                py::cast(l).inc_ref();
+            }
+        }
+    }
+#else
+    PyDataReader(
+            const PySubscriber& s,
+            const PyContentFilteredTopic<T>& t,
+            const dds::sub::qos::DataReaderQos& q,
+            PyDataReaderListenerPtr<T> l,
             const dds::core::status::StatusMask& m)
             : dds::sub::DataReader<T>(s, t, q, l, m)
     {
-        if (nullptr != l)
+        if (nullptr != l) {
+            py::gil_scoped_acquire acquire;
             py::cast(l).inc_ref();
+        }
     }
+#endif
 
     virtual ~PyDataReader()
     {
         if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
-                && nullptr != get_dr_listener(*this)) {
-                py::object listener = py::cast(get_dr_listener(*this));
-                PyDataReaderListenerPtr<T> null_listener = nullptr;
-                set_dr_listener(*this, null_listener, dds::core::status::StatusMask::none());
-                listener.dec_ref();
+            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
+                auto listener_ptr = get_dr_listener(*this);
+                if (nullptr != listener_ptr) {
+                    PyDataReaderListenerPtr<T> null_listener = nullptr;
+                    set_dr_listener(*this, null_listener, dds::core::status::StatusMask::none());
+                    {
+                        py::gil_scoped_acquire acquire;
+                        py::cast(listener_ptr).dec_ref();
+                    }
+                }
             }
         }
     }
@@ -175,11 +205,14 @@ public:
 
     void py_close() override
     {
-        if (nullptr != get_dr_listener(*this)) {
-            py::object listener = py::cast(get_dr_listener(*this));
+        auto listener_ptr = get_dr_listener(*this);
+        if (nullptr != listener_ptr) {
             PyDataReaderListenerPtr<T> null_listener = nullptr;
             set_dr_listener(*this, null_listener, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+            {
+                py::gil_scoped_acquire acquire;
+                py::cast(listener_ptr).dec_ref();
+            }
         }
         this->close();
     }
@@ -222,9 +255,13 @@ public:
     }
 };
 
+
 template<typename T>
 void init_dds_typed_datareader_base_template(
-        py::class_<PyDataReader<T>, PyIDataReader>& cls)
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
 {
     py::class_<typename PyDataReader<T>::Selector> selector(cls, "Selector");
 
@@ -261,7 +298,7 @@ void init_dds_typed_datareader_base_template(
             .def(py::init([](const PySubscriber& s,
                              const PyContentFilteredTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
-                             dds::core::optional<PyDataReaderListener<T>*> l,
+                             dds::core::optional<PyDataReaderListenerPtr<T>> l,
                              const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
@@ -293,7 +330,7 @@ void init_dds_typed_datareader_base_template(
                  "Create a typed DataReader from an Entity.")
             .def_property(
                     "default_filter_state",
-                    [](PyDataReader<T>& dr) {
+                    [](PyDataReader<T>& dr) -> const dds::sub::status::DataState& {
                         py::gil_scoped_release guard;
                         return dr.default_filter_state();
                     },
@@ -322,7 +359,7 @@ void init_dds_typed_datareader_base_template(
                          & PyDataReader<T>::take,
                  py::call_guard<py::gil_scoped_release>(),
                  "Take all samples using the default filter state")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "read_valid",
                     [](PyDataReader<T>& dr) {
@@ -380,13 +417,15 @@ void init_dds_typed_datareader_base_template(
                         const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
-                            py::object py_l = py::cast(listener);
-                            py_l.inc_ref();
+                            py::gil_scoped_acquire acquire;
+                            py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_dr_listener(dr)){
-                            py::cast(get_dr_listener(dr)).dec_ref();
-                        }
+                        auto old_listener = get_dr_listener(dr);
                         set_dr_listener(dr, listener, m);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
@@ -398,13 +437,15 @@ void init_dds_typed_datareader_base_template(
                         dds::core::optional<PyDataReaderListenerPtr<T>> l) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
-                            py::object py_l = py::cast(listener);
-                            py_l.inc_ref();
+                            py::gil_scoped_acquire acquire;
+                            py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_dr_listener(dr)){
-                            py::cast(get_dr_listener(dr)).dec_ref();
-                        }
+                        auto old_listener = get_dr_listener(dr);
                         set_dr_listener(dr, listener);
+                        if (nullptr != old_listener){
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -558,7 +599,7 @@ void init_dds_typed_datareader_base_template(
                     py::arg("sample_info"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Acknowledge a single sample.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "is_data_consistent",
                     [](PyDataReader<T>& dr,
@@ -609,7 +650,7 @@ void init_dds_typed_datareader_base_template(
                     "Get the type name associated with this DataReader.")
             .def(
                     "close",
-                    [](PyDataReader<T>& dr) { dr->close(); },
+                    [](PyDataReader<T>& dr) { dr.py_close(); },
                     py::call_guard<py::gil_scoped_release>(),
                     "Close this DataReader.")
             .def(
@@ -622,7 +663,7 @@ void init_dds_typed_datareader_base_template(
                     [](PyDataReader<T>& dr,
                        py::object,
                        py::object,
-                       py::object) { dr->close(); },
+                       py::object) { dr.py_close(); },
                     py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for this DataReader, cleaning up "
                     "resources.")
@@ -654,7 +695,7 @@ void init_dds_typed_datareader_base_template(
                     py::call_guard<py::gil_scoped_release>(),
                     "Get the ParticipantBuiltinTopicData for a publication "
                     "matched to this DataReader.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def(
                     "is_matched_publication_alive",
                     [](const PyDataReader<T>& dr, const dds::core::InstanceHandle& h) {
@@ -771,7 +812,7 @@ void init_dds_typed_datareader_base_template(
                          & PyDataReader<T>::Selector::read,
                  py::call_guard<py::gil_scoped_release>(),
                  "Read samples based on Selector settings.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "read_valid",
                     [](typename PyDataReader<T>::Selector& s) {
@@ -785,7 +826,7 @@ void init_dds_typed_datareader_base_template(
                          & PyDataReader<T>::Selector::take,
                  py::call_guard<py::gil_scoped_release>(),
                  "Take samples based on Selector settings.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "take_valid",
                     [](typename PyDataReader<T>::Selector& s) {
@@ -802,7 +843,10 @@ void init_dds_typed_datareader_base_template(
 
 template<typename T>
 void init_dds_typed_datareader_template(
-        py::class_<PyDataReader<T>, PyIDataReader>& cls)
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
 {
     init_dds_typed_datareader_base_template<T>(cls);
 
@@ -862,7 +906,12 @@ void init_dds_typed_datareader_template(
 }
 
 template<typename T>
-void init_datareader(py::class_<PyDataReader<T>, PyIDataReader>& dr)
+void init_datareader(
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>,
+            no_gil_delete<PyDataReader<T>>>>& dr)
 {
     init_dds_typed_datareader_template(dr);
 }

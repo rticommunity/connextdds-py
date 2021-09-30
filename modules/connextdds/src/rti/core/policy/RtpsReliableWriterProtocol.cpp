@@ -343,7 +343,7 @@ void init_class_defs(py::class_<RtpsReliableWriterProtocol>& cls)
                     "The minimum number of requesting readers needed to "
                     "trigger a "
                     "multicast resend.")
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property(
                     "disable_repair_piggyback_heartbeat",
                     (bool(RtpsReliableWriterProtocol::*)() const)

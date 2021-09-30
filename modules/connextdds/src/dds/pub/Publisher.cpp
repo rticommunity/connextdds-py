@@ -50,36 +50,50 @@ PyPublisher::PyPublisher(
         const dds::core::status::StatusMask& m)
         : dds::pub::Publisher(p, q, l, m)
 {
-    if (nullptr != l)
+    if (nullptr != l) {
+        py::gil_scoped_acquire acquire;
         py::cast(l).inc_ref();
+    }
 }
 
 PyPublisher::~PyPublisher()
 {
     if (*this != dds::core::null) {
-        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
-            && nullptr != get_publisher_listener(*this)) {
-            py::object listener = py::cast(get_publisher_listener(*this));
-            PyPublisherListenerPtr null_listener = nullptr;
-            set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+        if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
+            auto listener_ptr = get_publisher_listener(*this);
+            if (nullptr != listener_ptr) {
+                PyPublisherListenerPtr null_listener = nullptr;
+                set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
+                {
+                    py::gil_scoped_acquire acquire;
+                    py::cast(listener_ptr).dec_ref();
+                }
+            }
         }
     }
 }
 
 void PyPublisher::py_close()
 {
-    if (nullptr != get_publisher_listener(*this)) {
-        py::object listener = py::cast(get_publisher_listener(*this));
+    auto listener_ptr = get_publisher_listener(*this);
+    if (nullptr != listener_ptr) {
         PyPublisherListenerPtr null_listener = nullptr;
         set_publisher_listener(*this, null_listener, dds::core::status::StatusMask::none());
-        listener.dec_ref();
+        {
+            py::gil_scoped_acquire acquire;
+            py::cast(listener_ptr).dec_ref();
+        }
     }
     this->close();
 }
 
+
 template<>
-void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
+void init_class_defs(
+        py::class_<
+            PyPublisher,
+            PyIEntity,
+            std::unique_ptr<PyPublisher, no_gil_delete<PyPublisher>>>& cls)
 {
     cls
 
@@ -173,12 +187,15 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_publisher_listener(pub)) {
-                            py::cast(pub.listener()).dec_ref();
-                        }
+                        auto old_listener = get_publisher_listener(pub);
                         set_publisher_listener(pub, listener, m);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     py::arg("listener"),
@@ -190,12 +207,15 @@ void init_class_defs(py::class_<PyPublisher, PyIEntity>& cls)
                        dds::core::optional<PyPublisherListenerPtr> l) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_publisher_listener(pub)) {
-                            py::cast(pub.listener()).dec_ref();
-                        }
+                        auto old_listener = get_publisher_listener(pub);
                         set_publisher_listener(pub, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     py::arg("listener"),
@@ -270,7 +290,12 @@ template<>
 void process_inits<Publisher>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyPublisher, PyIEntity>(m, "Publisher");
+        return init_class_with_seq<
+            PyPublisher,
+            PyIEntity,
+            std::unique_ptr<PyPublisher, no_gil_delete<PyPublisher>>>(
+                m,
+                "Publisher");
     });
 }
 

@@ -17,7 +17,11 @@
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
+void init_class_defs(
+        py::class_<
+            PyQueryCondition,
+            PyIReadCondition,
+            std::unique_ptr<PyQueryCondition, no_gil_delete<PyQueryCondition>>>& cls)
 {
     cls.def(py::init<
                     const dds::sub::Query&,
@@ -25,7 +29,7 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
             py::arg("query"),
             py::arg("status"),
             "Create a QueryCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](const dds::sub::Query& q,
                              const dds::sub::status::DataState& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -42,6 +46,7 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
                  py::arg("query"),
                  py::arg("status"),
                  py::arg("handler"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a QueryCondition.")
 #endif
             .def(py::init([](const dds::sub::Query& q,
@@ -51,8 +56,9 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
                  }),
                  py::arg("query"),
                  py::arg("status_ex"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a QueryCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](const dds::sub::Query& q,
                              const rti::sub::status::DataStateEx& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -71,6 +77,7 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
                  py::arg("query"),
                  py::arg("status_ex"),
                  py::arg("handler"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a QueryCondition.")
             .def(py::init([](PyICondition& py_c) {
                      auto condition = py_c.get_condition();
@@ -92,27 +99,46 @@ void init_class_defs(py::class_<PyQueryCondition, PyIReadCondition>& cls)
                      return PyQueryCondition(qcd.get());
                  }),
                  py::arg("condition"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Cast a condition to a QueryCondition.")
 #endif
             .def_property_readonly(
                     "expression",
-                    &PyQueryCondition::expression,
+                    [](PyQueryCondition& qc) {
+                        py::gil_scoped_release relase;
+                        return qc.expression();
+                    },
                     "The expression.")
             .def_property(
                     "parameters",
-                    (std::vector<std::string>(PyQueryCondition::*)() const)
-                            & PyQueryCondition::parameters,
+                    [](PyQueryCondition& qc) {
+                        py::gil_scoped_release release;
+                        return qc.parameters();
+                    },
                     [](PyQueryCondition& q, std::vector<std::string>& v) {
+                        py::gil_scoped_release release;
                         q.parameters(v.begin(), v.end());
                     },
                     "The parameters for the expression.")
             .def_property_readonly(
                     "parameters_length",
-                    &PyQueryCondition::parameters_length,
+                    [](PyQueryCondition& qc) {
+                        py::gil_scoped_release release;
+                        return qc.parameters_length();
+                    },
                     "The parameter sequence length.")
-            .def("__len__", &PyQueryCondition::parameters_length)
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+            .def(
+                    "__len__",
+                    &PyQueryCondition::parameters_length,
+                    py::call_guard<py::gil_scoped_release>())
+            .def(
+                    py::self == py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for equality.")
+            .def(
+                    py::self != py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for inequality.");
 }
 
 template<>
@@ -121,7 +147,10 @@ void process_inits<dds::sub::cond::QueryCondition>(
         ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class<PyQueryCondition, PyIReadCondition>(
+        return init_class<
+            PyQueryCondition,
+            PyIReadCondition,
+            std::unique_ptr<PyQueryCondition, no_gil_delete<PyQueryCondition>>>(
                 m,
                 "QueryCondition");
     });

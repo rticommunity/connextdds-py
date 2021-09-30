@@ -11,7 +11,7 @@
 
 #include "PyConnext.hpp"
 
-#if rti_connext_version_gte(6, 1, 0)
+#if rti_connext_version_gte(6, 1, 0, 0)
 
 #include <rti/core/policy/CorePolicy.hpp>
 #include "PySafeEnum.hpp"

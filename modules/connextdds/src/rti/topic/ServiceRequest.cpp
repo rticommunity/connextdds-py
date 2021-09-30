@@ -27,7 +27,8 @@ void init_dds_typed_topic_template(
         py::class_<
                 PyTopic<rti::topic::ServiceRequest>,
                 PyITopicDescription<rti::topic::ServiceRequest>,
-                PyIAnyTopic>& cls)
+                PyIAnyTopic,
+                std::unique_ptr<PyTopic<rti::topic::ServiceRequest>, no_gil_delete<PyTopic<rti::topic::ServiceRequest>>>>& cls)
 {
     init_dds_typed_topic_base_template(cls);
 }

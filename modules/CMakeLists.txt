@@ -37,3 +37,4 @@ check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
 
 add_subdirectory(connextdds)
 add_subdirectory(distlog)
+add_subdirectory(request)

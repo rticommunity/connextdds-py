@@ -19,7 +19,11 @@ using namespace dds::pub::qos;
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyAnyDataWriter, PyIAnyDataWriter>& cls)
+void init_class_defs(
+        py::class_<
+            PyAnyDataWriter,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyAnyDataWriter, no_gil_delete<PyAnyDataWriter>>>& cls)
 {
     cls.def(py::init<const PyIAnyDataWriter&>(),
             py::arg("writer"),
@@ -31,7 +35,10 @@ void init_class_defs(py::class_<PyAnyDataWriter, PyIAnyDataWriter>& cls)
 }
 
 template<>
-void init_class_defs(py::class_<PyIAnyDataWriter>& cls)
+void init_class_defs(
+        py::class_<
+            PyIAnyDataWriter,
+            std::unique_ptr<PyIAnyDataWriter, no_gil_delete<PyIAnyDataWriter>>>& cls)
 {
     cls.def_property(
                "qos",
@@ -68,14 +75,20 @@ void init_class_defs(py::class_<PyIAnyDataWriter>& cls)
                     },
                     "The Publisher for this AnyDataWriter.")
             .def("wait_for_acknowledgments",
-                 &PyIAnyDataWriter::py_wait_for_acknowledgments,
-                 py::arg("timeout"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Wait for acknowledgments from subscribers.")
-            .def("close", &PyIAnyDataWriter::py_close, "Close this DataWriter.")
-            .def("retain",
-                 &PyIAnyDataWriter::py_retain,
-                 "Retain this DataWriter.")
+                    &PyIAnyDataWriter::py_wait_for_acknowledgments,
+                    py::arg("timeout"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Wait for acknowledgments from subscribers.")
+            .def(
+                    "close",
+                    &PyIAnyDataWriter::py_close,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Close this DataWriter.")
+            .def(
+                    "retain",
+                    &PyIAnyDataWriter::py_retain,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Retain this DataWriter.")
             .def(
                     "__eq__",
                     [](PyIAnyDataWriter& adw, PyIAnyDataWriter& other) {
@@ -100,10 +113,17 @@ template<>
 void process_inits<AnyDataWriter>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_ptr_seq<PyIAnyDataWriter>(m, "IAnyDataWriter");
+        return init_class_with_ptr_seq<
+            PyIAnyDataWriter,
+            std::unique_ptr<PyIAnyDataWriter, no_gil_delete<PyIAnyDataWriter>>>(
+                m,
+                "IAnyDataWriter");
     });
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyAnyDataWriter, PyIAnyDataWriter>(
+        return init_class_with_seq<
+            PyAnyDataWriter,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyAnyDataWriter, no_gil_delete<PyAnyDataWriter>>>(
                 m,
                 "AnyDataWriter");
     });

@@ -46,7 +46,7 @@ void process_inits<Exception>(py::module& m, ClassInitList& l)
                 m,
                 "InvalidDowncastError",
                 ex.ptr());
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
         py::register_exception<NotAllowedBySecurityError>(
                 m,
                 "NotAllowedBySecurityError",

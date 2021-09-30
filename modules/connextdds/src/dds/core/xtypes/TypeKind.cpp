@@ -78,7 +78,7 @@ void process_inits<TypeKind>(py::module& m, ClassInitList&)
                 .value("CHAR_8_TYPE",
                        TypeKind::type::CHAR_8_TYPE,
                        "8-bit character type.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
                 .value("CHAR_16_TYPE",
                        TypeKind::type::CHAR_16_TYPE,
                        "16-bit character type.")
@@ -101,7 +101,7 @@ void process_inits<TypeKind>(py::module& m, ClassInitList&)
                        TypeKind::type::WSTRING_TYPE,
                        "Wide character string type.")
                 .value("MAP_TYPE",
-#if rti_connext_version_lt(6, 0, 1)
+#if rti_connext_version_lt(6, 0, 1, 0)
                        TypeKind::type::MAP_TYPE,
 #else
                     TypeKind::type::MAP_TYPE_OMG,

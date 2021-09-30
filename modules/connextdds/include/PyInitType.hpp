@@ -34,7 +34,7 @@
 #include "PyWriterContentFilterHelper.hpp"
 #include "PyBindVector.hpp"
 
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     #include "PyValidLoanedSamples.hpp"
 #endif
 
@@ -103,13 +103,23 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<PyITopicDescription<T>, PyIEntity> itd(
+        py::class_<
+            PyITopicDescription<T>,
+            PyIEntity,
+            std::unique_ptr<PyITopicDescription<T>, no_gil_delete<PyITopicDescription<T>>>> itd(
                 cls,
                 "ITopicDescription");
-        py::class_<PyTopicDescription<T>, PyITopicDescription<T>> td(
+        py::class_<
+            PyTopicDescription<T>,
+            PyITopicDescription<T>,
+            std::unique_ptr<PyTopicDescription<T>, no_gil_delete<PyTopicDescription<T>>>> td(
                 cls,
                 "TopicDescription");
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic> t(
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>> t(
                 cls,
                 "Topic");
         pyrti::bind_vector<PyTopic<T>>(cls, "TopicSeq");
@@ -154,14 +164,20 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<dds::sub::LoanedSamples<T>> ls(cls, "LoanedSamples");
+        py::class_<
+            dds::sub::LoanedSamples<T>,
+            std::unique_ptr<dds::sub::LoanedSamples<T>, no_gil_delete<dds::sub::LoanedSamples<T>>>> ls(
+                cls,
+                "LoanedSamples");
 
         return ([ls]() mutable { init_loaned_samples<T>(ls); });
     });
 
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     l.push_back([cls] {
-        py::class_<rti::sub::ValidLoanedSamples<T>> vls(
+        py::class_<
+            rti::sub::ValidLoanedSamples<T>,
+            std::unique_ptr<rti::sub::ValidLoanedSamples<T>, no_gil_delete<rti::sub::ValidLoanedSamples<T>>>> vls(
                 cls,
                 "ValidLoanedSamples");
 
@@ -179,7 +195,8 @@ DefInitFunc init_type_class(
         py::class_<
                 PyContentFilteredTopic<T>,
                 PyITopicDescription<T>,
-                PyIAnyTopic>
+                PyIAnyTopic,
+                std::unique_ptr<PyContentFilteredTopic<T>, no_gil_delete<PyContentFilteredTopic<T>>>>
                 cft(cls, "ContentFilteredTopic");
         pyrti::bind_vector<PyContentFilteredTopic<T>>(
                 cls,
@@ -233,7 +250,12 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<PyDataReader<T>, PyIDataReader> dr(cls, "DataReader");
+        py::class_<
+            PyDataReader<T>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>> dr(
+                cls,
+                "DataReader");
         pyrti::bind_vector<PyDataReader<T>>(cls, "DataReaderSeq");
         py::implicitly_convertible<
                 py::iterable,
@@ -243,7 +265,11 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<PyDataWriter<T>, PyIEntity, PyIAnyDataWriter> dw(
+        py::class_<
+            PyDataWriter<T>,
+            PyIEntity,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyDataWriter<T>, no_gil_delete<PyDataWriter<T>>>> dw(
                 cls,
                 "DataWriter");
         pyrti::bind_vector<PyDataWriter<T>>(cls, "DataWriterSeq");

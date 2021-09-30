@@ -19,7 +19,9 @@ namespace pyrti {
 
 template<typename T>
 void init_valid_loaned_samples_def(
-        py::class_<rti::sub::ValidLoanedSamples<T>>& cls)
+        py::class_<
+            rti::sub::ValidLoanedSamples<T>,
+            std::unique_ptr<rti::sub::ValidLoanedSamples<T>, no_gil_delete<rti::sub::ValidLoanedSamples<T>>>>& cls)
 {
     cls.def(
                "__iter__",
@@ -35,11 +37,15 @@ void init_valid_loaned_samples_def(
                  [](rti::sub::ValidLoanedSamples<T>& ls,
                     py::object,
                     py::object,
-                    py::object) {});
+                    py::object) {},
+                py::call_guard<py::gil_scoped_release>());
 }
 
 template<typename T>
-void init_valid_loaned_samples(py::class_<rti::sub::ValidLoanedSamples<T>>& vls)
+void init_valid_loaned_samples(
+        py::class_<
+            rti::sub::ValidLoanedSamples<T>,
+            std::unique_ptr<rti::sub::ValidLoanedSamples<T>, no_gil_delete<rti::sub::ValidLoanedSamples<T>>>>& vls)
 {
     init_valid_loaned_samples_def(vls);
 }

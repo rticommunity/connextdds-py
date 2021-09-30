@@ -19,7 +19,10 @@ namespace py = pybind11;
 namespace pyrti {
 
 template<typename T>
-void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls)
+void init_loaned_samples_defs(
+    py::class_<
+        dds::sub::LoanedSamples<T>,
+        std::unique_ptr<dds::sub::LoanedSamples<T>, no_gil_delete<dds::sub::LoanedSamples<T>>>>& cls)
 {
     cls.def(py::init<>(), "Create an empty LoanedSamples object.")
             .def(
@@ -31,15 +34,16 @@ void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls)
                     },
                     "Access a LoanedSample object in an array-like syntax")
             .def("__len__",
-                 &dds::sub::LoanedSamples<T>::length,
-                 "Get the number of samples in the loan.")
+                    &dds::sub::LoanedSamples<T>::length,
+                    "Get the number of samples in the loan.")
             .def_property_readonly(
                     "length",
                     &dds::sub::LoanedSamples<T>::length,
                     "Get the number of samples in the loan.")
             .def("return_loan",
-                 &dds::sub::LoanedSamples<T>::return_loan,
-                 "Returns the loan to the DataReader.")
+                    &dds::sub::LoanedSamples<T>::return_loan,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Returns the loan to the DataReader.")
             .def(
                     "__iter__",
                     [](dds::sub::LoanedSamples<T>& ls) {
@@ -59,12 +63,16 @@ void init_loaned_samples_defs(py::class_<dds::sub::LoanedSamples<T>>& cls)
                        py::object,
                        py::object,
                        py::object) { ls.return_loan(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for the loaned samples, returning the "
                     "resources.");
 }
 
 template<typename T>
-void init_loaned_samples(py::class_<dds::sub::LoanedSamples<T>>& ls)
+void init_loaned_samples(
+        py::class_<
+            dds::sub::LoanedSamples<T>,
+            std::unique_ptr<dds::sub::LoanedSamples<T>, no_gil_delete<dds::sub::LoanedSamples<T>>>>& ls)
 {
     init_loaned_samples_defs(ls);
 }

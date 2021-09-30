@@ -28,7 +28,8 @@ void init_dds_typed_topic_template(
         py::class_<
                 PyTopic<dds::topic::ParticipantBuiltinTopicData>,
                 PyITopicDescription<dds::topic::ParticipantBuiltinTopicData>,
-                PyIAnyTopic>& cls)
+                PyIAnyTopic,
+                std::unique_ptr<PyTopic<dds::topic::ParticipantBuiltinTopicData>, no_gil_delete<PyTopic<dds::topic::ParticipantBuiltinTopicData>>>>& cls)
 {
     init_dds_typed_topic_base_template(cls);
 }
@@ -48,20 +49,20 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "DomainParticipant.")
             .def_property_readonly(
                     "property",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const rti::core::policy::Property& {
                         return p->property();
                     },
                     "Get the Property policy of the corresponding "
                     "DomainParticipant.")
             .def_property_readonly(
                     "rtps_protocol_version",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const rti::core::ProtocolVersion& {
                         return p->rtps_protocol_version();
                     },
                     "Get the version number of the RTPS wire protocol used.")
             .def_property_readonly(
                     "rtps_vendor_id",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const rti::core::VendorId& {
                         return p->rtps_vendor_id();
                     },
                     "Get the ID of the vendor implementing the RTPS wire "
@@ -74,7 +75,7 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "Bitmap of builtin endpoints supported by the participant.")
             .def_property_readonly(
                     "default_unicast_locators",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const dds::core::vector<rti::core::Locator>& {
                         return p->default_unicast_locators();
                     },
                     "Get the unicast locators used when individual entities do "
@@ -82,13 +83,13 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "specify unicast locators.")
             .def_property_readonly(
                     "product_version",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const rti::core::ProductVersion& {
                         return p->product_version();
                     },
                     "Get the current version for RTI Connext.")
             .def_property_readonly(
                     "participant_name",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const rti::core::policy::EntityName& {
                         return p->participant_name();
                     },
                     "Get the participant name and role name.")
@@ -101,7 +102,7 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "DomainParticipant.")
             .def_property_readonly(
                     "transport_info",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const std::vector<rti::core::TransportInfo>& {
                         return p->transport_info();
                     },
                     "Get the sequence of TransportInfo containing information "
@@ -110,7 +111,7 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "DomainParticipant.")
             .def_property_readonly(
                     "reachability_lease_duration",
-                    [](const ParticipantBuiltinTopicData& p) {
+                    [](const ParticipantBuiltinTopicData& p) -> const dds::core::Duration& {
                         return p->reachability_lease_duration();
                     },
                     "The reachability lease duration.")

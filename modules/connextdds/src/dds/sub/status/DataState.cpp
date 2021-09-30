@@ -253,6 +253,10 @@ void init_class_defs(py::class_<DataState>& cls)
                     },
                     "Create a DataState with InstanceState.ALIVE, "
                     "ViewState.NEW_VIEW, and SampleState.ANY");
+
+        py::implicitly_convertible<SampleState, DataState>();
+        py::implicitly_convertible<ViewState, DataState>();
+        py::implicitly_convertible<InstanceState, DataState>();
 }
 
 

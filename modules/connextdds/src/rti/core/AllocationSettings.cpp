@@ -10,7 +10,7 @@
  */
 
 #include "PyConnext.hpp"
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 0, 1, 20)
 #include <rti/core/AllocationSettings.hpp>
 #else
 #include <rti/core/PolicySettings.hpp>
@@ -53,7 +53,7 @@ void init_class_defs(py::class_<AllocationSettings>& cls)
                     (AllocationSettings & (AllocationSettings::*) (int32_t))
                             & AllocationSettings::incremental_count,
                     "Incremental count of resources.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly_static(
                     "AUTO_COUNT",
                     [](py::object&) { return AllocationSettings::AUTO_COUNT; },

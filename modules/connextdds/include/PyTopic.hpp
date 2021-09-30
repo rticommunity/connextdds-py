@@ -22,7 +22,7 @@
 
 namespace pyrti {
 
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
 template<typename T>
 using TopicListenerPtr = dds::topic::TopicListener<T>*;
 
@@ -165,8 +165,10 @@ public:
             const dds::core::status::StatusMask& m)
             : dds::topic::Topic<T>(dp, n, q, l, m)
     {
-        if (nullptr != l)
+        if (nullptr != l) {
+            py::gil_scoped_acquire acquire;
             py::cast(l).inc_ref();
+        }
     }
 
     PyTopic(const PyDomainParticipant& dp,
@@ -177,19 +179,25 @@ public:
             const dds::core::status::StatusMask& m)
             : dds::topic::Topic<T>(dp, n, tn, q, l, m)
     {
-        if (nullptr != l)
+        if (nullptr != l) {
+            py::gil_scoped_acquire acquire;
             py::cast(l).inc_ref();
+        }
     }
 
     virtual ~PyTopic()
     {
         if (*this != dds::core::null) {
-            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()
-                && nullptr != get_topic_listener(*this)) {
-                py::object listener = py::cast(get_topic_listener(*this));
-                PyTopicListenerPtr<T> null_listener = nullptr;
-                set_topic_listener(*this, null_listener, dds::core::status::StatusMask::none());
-                listener.dec_ref();
+            if (this->delegate().use_count() <= LISTENER_USE_COUNT_MIN && !this->delegate()->closed()) {
+                auto listener_ptr = get_topic_listener(*this);
+                if (nullptr != listener_ptr) {
+                    PyTopicListenerPtr<T> null_listener = nullptr;
+                    set_topic_listener(*this, null_listener, dds::core::status::StatusMask::none());
+                    {
+                        py::gil_scoped_acquire acquire;
+                        py::cast(listener_ptr).dec_ref();
+                    }
+                }
             }
         }
     }
@@ -237,11 +245,14 @@ public:
 
     void py_close() override
     {
-        if (nullptr != get_topic_listener(*this)) {
-            py::object listener = py::cast(get_topic_listener(*this));
+        auto listener_ptr = get_topic_listener(*this);
+        if (nullptr != listener_ptr) {
             PyTopicListenerPtr<T> null_listener = nullptr;
             set_topic_listener(*this, null_listener, dds::core::status::StatusMask::none());
-            listener.dec_ref();
+            {
+                py::gil_scoped_acquire acquire;
+                py::cast(listener_ptr).dec_ref();
+            }
         }
         this->close();
     }
@@ -298,9 +309,13 @@ public:
     }
 };
 
+
 template<typename T>
 void init_itopic_description_defs(
-        py::class_<PyITopicDescription<T>, PyIEntity>& cls)
+        py::class_<
+            PyITopicDescription<T>,
+            PyIEntity,
+            std::unique_ptr<PyITopicDescription<T>, no_gil_delete<PyITopicDescription<T>>>>& cls)
 {
     cls.def_property_readonly(
                "name",
@@ -328,7 +343,10 @@ void init_itopic_description_defs(
 
 template<typename T>
 void init_topic_description_defs(
-        py::class_<PyTopicDescription<T>, PyITopicDescription<T>>& cls)
+        py::class_<
+            PyTopicDescription<T>,
+            PyITopicDescription<T>,
+            std::unique_ptr<PyTopicDescription<T>, no_gil_delete<PyTopicDescription<T>>>>& cls)
 {
     cls.def(py::init([](PyITopicDescription<T>& t) {
                 return PyTopicDescription<T>(t.get_topic_description());
@@ -352,7 +370,11 @@ void init_topic_description_defs(
 
 template<typename T>
 void init_dds_typed_topic_base_template(
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& cls)
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>>& cls)
 {
     cls.def(py::init([](PyIEntity& e) {
                 auto entity = e.get_entity();
@@ -393,12 +415,15 @@ void init_dds_typed_topic_base_template(
                        const dds::core::status::StatusMask& m) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_topic_listener(t)) {
-                            py::cast(get_topic_listener(t)).dec_ref();
-                        }
+                        auto old_listener = get_topic_listener(t);
                         set_topic_listener(t, listener, m);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::arg("event_mask"),
@@ -410,12 +435,15 @@ void init_dds_typed_topic_base_template(
                        dds::core::optional<PyTopicListenerPtr<T>> l) {
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
                         }
-                        if (nullptr != get_topic_listener(t)) {
-                            py::cast(get_topic_listener(t)).dec_ref();
-                        }
+                        auto old_listener = get_topic_listener(t);
                         set_topic_listener(t, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     py::arg("listener"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -466,7 +494,11 @@ void init_dds_typed_topic_base_template(
 
 template<typename T>
 void init_dds_typed_topic_template(
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& cls)
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>>& cls)
 {
     init_dds_typed_topic_base_template<T>(cls);
 
@@ -526,9 +558,19 @@ void init_dds_typed_topic_template(
 
 template<typename T>
 void init_topic(
-        py::class_<PyITopicDescription<T>, PyIEntity>& itd,
-        py::class_<PyTopicDescription<T>, PyITopicDescription<T>>& td,
-        py::class_<PyTopic<T>, PyITopicDescription<T>, PyIAnyTopic>& t)
+        py::class_<
+            PyITopicDescription<T>,
+            PyIEntity,
+            std::unique_ptr<PyITopicDescription<T>, no_gil_delete<PyITopicDescription<T>>>>& itd,
+        py::class_<
+            PyTopicDescription<T>,
+            PyITopicDescription<T>,
+            std::unique_ptr<PyTopicDescription<T>, no_gil_delete<PyTopicDescription<T>>>>& td,
+        py::class_<
+            PyTopic<T>,
+            PyITopicDescription<T>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<T>, no_gil_delete<PyTopic<T>>>>& t)
 {
     init_itopic_description_defs(itd);
     init_topic_description_defs(td);

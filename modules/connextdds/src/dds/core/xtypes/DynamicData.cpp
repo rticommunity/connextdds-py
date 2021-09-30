@@ -541,7 +541,7 @@ static py::object get_collection_member(
     }
     case TypeKind::CHAR_8_TYPE:
         return py::cast(get_collection_buffer_member<char, T>(dd, key));
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     case TypeKind::CHAR_16_TYPE: {
         std::vector<wchar_t> retval;
         auto dd_values = dd.get_values<uint16_t>(key);
@@ -616,7 +616,7 @@ static py::object get_member(
         return py::cast(dd.value<rti::core::LongDouble>(key));
     case TypeKind::CHAR_8_TYPE:
         return py::cast(dd.value<char>(key));
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     case TypeKind::CHAR_16_TYPE:
         return py::cast(static_cast<wchar_t>(dd.value<DDS_Wchar>(key)));
 #endif
@@ -836,7 +836,7 @@ static void set_collection_member(
     case TypeKind::CHAR_8_TYPE:
         dd.set_values<char>(key, py::cast<std::vector<char>>(values));
         break;
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     case TypeKind::CHAR_16_TYPE: {
         auto s = py::cast<std::vector<wchar_t>>(values);
         std::vector<DDS_Wchar> v;
@@ -957,7 +957,7 @@ static void set_member(
     case TypeKind::CHAR_8_TYPE:
         dd.value<char>(key, py::cast<char>(value));
         break;
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     case TypeKind::CHAR_16_TYPE:
         dd.value<DDS_Wchar>(
                 key,
@@ -1039,7 +1039,7 @@ static bool test_index(
                 == py::cast<rti::core::LongDouble>(obj);
     case TypeKind::CHAR_8_TYPE:
         return dd.value<char>(index) == py::cast<char>(obj);
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
     case TypeKind::CHAR_16_TYPE:
         return dd.value<DDS_Wchar>(index)
                 == static_cast<DDS_Wchar>(py::cast<wchar_t>(obj));
@@ -1321,10 +1321,12 @@ private:
 
 
 template<>
-void init_dds_typed_topic_template(py::class_<
-                                   PyTopic<DynamicData>,
-                                   PyITopicDescription<DynamicData>,
-                                   PyIAnyTopic>& cls)
+void init_dds_typed_topic_template(
+        py::class_<
+            PyTopic<DynamicData>,
+            PyITopicDescription<DynamicData>,
+            PyIAnyTopic,
+            std::unique_ptr<PyTopic<DynamicData>, no_gil_delete<PyTopic<DynamicData>>>>& cls)
 {
     init_dds_typed_topic_base_template(cls);
     cls.def(py::init([](PyDomainParticipant& dp,
@@ -1387,7 +1389,11 @@ void init_dds_typed_topic_template(py::class_<
 
 template<>
 void init_dds_typed_datawriter_template(
-        py::class_<PyDataWriter<DynamicData>, PyIEntity, PyIAnyDataWriter>& cls)
+        py::class_<
+            PyDataWriter<DynamicData>,
+            PyIEntity,
+            PyIAnyDataWriter,
+            std::unique_ptr<PyDataWriter<DynamicData>, no_gil_delete<PyDataWriter<DynamicData>>>>& cls)
 {
     init_dds_typed_datawriter_base_template(cls);
     cls.def(
@@ -1470,7 +1476,10 @@ void init_dds_typed_datawriter_template(
 
 template<>
 void init_dds_typed_datareader_template(
-        py::class_<PyDataReader<DynamicData>, PyIDataReader>& cls)
+        py::class_<
+            PyDataReader<DynamicData>,
+            PyIDataReader,
+            std::unique_ptr<PyDataReader<DynamicData>, no_gil_delete<PyDataReader<DynamicData>>>>& cls)
 {
     init_dds_typed_datareader_base_template(cls);
     cls.def(
@@ -2081,7 +2090,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     py::arg("index"),
                     "Clear the contents of a single optional data member of "
                     "this object.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def("clear_member",
                  (void (DynamicData::*)(const std::string&))
                          & DynamicData::clear_member,
@@ -2096,7 +2105,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     "Clear the contents of a single data member of this "
                     "object.")
 #endif
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
             .def("set_buffer",
                  &DynamicData::set_buffer,
                  py::arg("storage"),
@@ -2738,7 +2747,7 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
                     &topic_type_support<DynamicData>::to_cdr_buffer,
                     py::arg("buffer"),
                     py::arg("sample"),
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
                     py::arg("representation_id") =
                             dds::core::policy::DataRepresentation::auto_id(),
 #endif

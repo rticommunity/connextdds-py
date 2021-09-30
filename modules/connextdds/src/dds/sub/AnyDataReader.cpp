@@ -20,7 +20,11 @@ using namespace dds::sub::qos;
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyAnyDataReader, PyIAnyDataReader>& cls)
+void init_class_defs(
+        py::class_<
+            PyAnyDataReader,
+            PyIAnyDataReader,
+            std::unique_ptr<PyAnyDataReader, no_gil_delete<PyAnyDataReader>>>& cls)
 {
     cls.def(py::init<const PyIAnyDataReader&>(),
             py::arg("reader"),
@@ -32,7 +36,10 @@ void init_class_defs(py::class_<PyAnyDataReader, PyIAnyDataReader>& cls)
 }
 
 template<>
-void init_class_defs(py::class_<PyIAnyDataReader>& cls)
+void init_class_defs(
+        py::class_<
+            PyIAnyDataReader,
+            std::unique_ptr<PyIAnyDataReader, no_gil_delete<PyIAnyDataReader>>>& cls)
 {
     cls.def_property(
                "qos",
@@ -74,9 +81,9 @@ void init_class_defs(py::class_<PyIAnyDataReader>& cls)
                     py::call_guard<py::gil_scoped_release>(),
                     "Close this DataReader.")
             .def("retain",
-                 &PyIAnyDataReader::py_retain,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Retain this DataReader.")
+                    &PyIAnyDataReader::py_retain,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Retain this DataReader.")
             .def(
                     "__eq__",
                     [](PyIAnyDataReader& adr, PyIAnyDataReader& other) {
@@ -101,10 +108,17 @@ template<>
 void process_inits<AnyDataReader>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_ptr_seq<PyIAnyDataReader>(m, "IAnyDataReader");
+        return init_class_with_ptr_seq<
+            PyIAnyDataReader,
+            std::unique_ptr<PyIAnyDataReader, no_gil_delete<PyIAnyDataReader>>>(
+                m,
+                "IAnyDataReader");
     });
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyAnyDataReader, PyIAnyDataReader>(
+        return init_class_with_seq<
+            PyAnyDataReader,
+            PyIAnyDataReader,
+            std::unique_ptr<PyAnyDataReader, no_gil_delete<PyAnyDataReader>>>(
                 m,
                 "AnyDataReader");
     });

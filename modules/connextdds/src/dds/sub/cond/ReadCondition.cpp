@@ -19,7 +19,11 @@
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
+void init_class_defs(
+        py::class_<
+            PyReadCondition,
+            PyIReadCondition,
+            std::unique_ptr<PyReadCondition, no_gil_delete<PyReadCondition>>>& cls)
 {
     cls.def(py::init([](PyIAnyDataReader& adr,
                         const dds::sub::status::DataState& ds) {
@@ -29,8 +33,9 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
             }),
             py::arg("reader"),
             py::arg("status"),
+            py::call_guard<py::gil_scoped_release>(),
             "Create a ReadCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](PyIAnyDataReader& dr,
                              const dds::sub::status::DataState& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -49,6 +54,7 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
                  py::arg("reader"),
                  py::arg("status"),
                  py::arg("handler"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a ReadCondition.")
 #endif
             .def(py::init([](PyIAnyDataReader& dr,
@@ -60,8 +66,9 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
                  }),
                  py::arg("reader"),
                  py::arg("status"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a ReadCondition.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](PyIAnyDataReader& dr,
                              const rti::sub::status::DataStateEx& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -81,12 +88,14 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
                  py::arg("status"),
                  py::arg("handler"),
                  py::keep_alive<1, 4>(),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Create a ReadCondition.")
             .def(py::init([](PyICondition& py_c) {
                      auto c = py_c.get_condition();
                      return PyReadCondition(dds::core::polymorphic_cast<
                                             dds::sub::cond::ReadCondition>(c));
                  }),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Cast a compatible Condition to a ReadCondition.");
 #else
             .def(py::init([](PyICondition& py_c) {
@@ -99,34 +108,50 @@ void init_class_defs(py::class_<PyReadCondition, PyIReadCondition>& cls)
                                  "Condition");
                      return PyReadCondition(rcd.get());
                  }),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Cast a compatible Condition to a ReadCondition.");
 #endif
 }
 
 template<>
-void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls)
+void init_class_defs(
+        py::class_<
+            PyIReadCondition,
+            PyICondition,
+            std::unique_ptr<PyIReadCondition, no_gil_delete<PyIReadCondition>>>& cls)
 {
     cls.def_property_readonly(
                "state_filter",
-               &PyIReadCondition::py_state_filter,
+               [](PyIReadCondition& rc) {
+                   py::gil_scoped_release release;
+                   return rc.py_state_filter();
+               },
                "Returns the DataState of this condition.")
             .def_property_readonly(
                     "data_reader",
-                    &PyIReadCondition::py_data_reader,
+                    [](PyIReadCondition& rc) {
+                        py::gil_scoped_release release;
+                        return rc.py_data_reader();
+                    },
                     "Returns the DataReader associated to this condition.")
             .def("close",
                  &PyIReadCondition::py_close,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Returns the DataReader associated to this condition.")
             .def_property_readonly(
                     "closed",
-                    &PyIReadCondition::py_closed,
+                    [](PyIReadCondition& rc) {
+                        py::gil_scoped_release release;
+                        return rc.py_closed();
+                    },
                     "Returns the DataReader associated to this condition.")
             .def("__enter__",
                  [](PyIReadCondition& rc) -> PyIReadCondition& { return rc; })
             .def("__exit__",
                  [](PyIReadCondition& rc, py::object, py::object, py::object) {
                      rc.py_close();
-                 })
+                 },
+                 py::call_guard<py::gil_scoped_release>())
             .def(
                     "__eq__",
                     [](PyIReadCondition& rc, PyIReadCondition& other) {
@@ -134,6 +159,7 @@ void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls)
                                 == other.get_read_condition();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for equality.")
             .def(
                     "__ne__",
@@ -142,6 +168,7 @@ void init_class_defs(py::class_<PyIReadCondition, PyICondition>& cls)
                                 != other.get_read_condition();
                     },
                     py::is_operator(),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Test for inequality.");
 }
 
@@ -151,11 +178,19 @@ void process_inits<dds::sub::cond::ReadCondition>(
         ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class<PyIReadCondition, PyICondition>(m, "IReadCondition");
+        return init_class<
+            PyIReadCondition,
+            PyICondition,
+            std::unique_ptr<PyIReadCondition, no_gil_delete<PyIReadCondition>>>(
+                m,
+                "IReadCondition");
     });
 
     l.push_back([m]() mutable {
-        return init_class<PyReadCondition, PyIReadCondition>(
+        return init_class<
+            PyReadCondition,
+            PyIReadCondition,
+            std::unique_ptr<PyReadCondition, no_gil_delete<PyReadCondition>>>(
                 m,
                 "ReadCondition");
     });

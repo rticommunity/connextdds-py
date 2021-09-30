@@ -16,7 +16,11 @@
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls)
+void init_class_defs(
+        py::class_<
+            PyStatusCondition,
+            PyICondition,
+            std::unique_ptr<PyStatusCondition, no_gil_delete<PyStatusCondition>>>& cls)
 {
     cls.def(py::init([](PyIEntity& e) {
                 return PyStatusCondition(e.get_entity());
@@ -29,15 +33,18 @@ void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls)
                      return dds::core::polymorphic_cast<PyStatusCondition>(sc);
                  }),
                  py::arg("condition"),
+                 py::call_guard<py::gil_scoped_release>(),
                  "Downcast a Condition to a StatusCondition.")
             .def_property(
                     "enabled_statuses",
-                    (const dds::core::status::StatusMask (
-                            PyStatusCondition::*)() const)
-                            & PyStatusCondition::enabled_statuses,
-                    (void (PyStatusCondition::*)(
-                            const dds::core::status::StatusMask&))
-                            & PyStatusCondition::enabled_statuses,
+                    [](PyStatusCondition& sc) { 
+                        py::gil_scoped_release release;
+                        return sc.enabled_statuses();
+                    },
+                    [](PyStatusCondition& sc, const dds::core::status::StatusMask& mask) { 
+                        py::gil_scoped_release release;
+                        sc.enabled_statuses(mask);
+                    },
                     "Get/set the enabled statuses for this condition.")
             .def_property_readonly(
                     "entity",
@@ -45,6 +52,7 @@ void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls)
                         auto e = PyEntity(sc.entity());
                         return e;
                     },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Get the Entity associated with this StatusCondition.")
             .def(
                     "set_handler",
@@ -58,21 +66,27 @@ void init_class_defs(py::class_<PyStatusCondition, PyICondition>& cls)
                         });
                     },
                     py::arg("func"),
+                    py::call_guard<py::gil_scoped_release>(),
                     "Set a handler function for this StatusCondition.")
             .def(
                     "reset_handler",
                     [](PyStatusCondition& sc) { sc->reset_handler(); },
+                    py::call_guard<py::gil_scoped_release>(),
                     "Resets the handler for this StatusCondition.")
             .def("dispatch",
                  &PyStatusCondition::dispatch,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Dispatches the functions registered with the condition.")
             .def_property_readonly(
                     "trigger_value",
                     &PyStatusCondition::trigger_value,
+                    py::call_guard<py::gil_scoped_release>(),
                     "The trigger value of the condition.")
             .def(py::self == py::self,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Compare StatusCondition objects for equality.")
             .def(py::self != py::self,
+                 py::call_guard<py::gil_scoped_release>(),
                  "Compare StatusCondition objects for inequality.");
 }
 
@@ -82,7 +96,10 @@ void process_inits<dds::core::cond::StatusCondition>(
         ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class<PyStatusCondition, PyICondition>(
+        return init_class<
+            PyStatusCondition,
+            PyICondition,
+            std::unique_ptr<PyStatusCondition, no_gil_delete<PyStatusCondition>>>(
                 m,
                 "StatusCondition");
     });

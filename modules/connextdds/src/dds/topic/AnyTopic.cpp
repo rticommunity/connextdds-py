@@ -20,7 +20,11 @@ using namespace dds::topic::qos;
 namespace pyrti {
 
 template<>
-void init_class_defs(py::class_<PyAnyTopic>& cls)
+void init_class_defs(
+    py::class_<
+        PyAnyTopic,
+        PyIAnyTopic,
+        std::unique_ptr<PyAnyTopic, no_gil_delete<PyAnyTopic>>>& cls)
 {
     cls.def(py::init<const PyIAnyTopic&>(),
             py::arg("topic"),
@@ -32,7 +36,10 @@ void init_class_defs(py::class_<PyAnyTopic>& cls)
 }
 
 template<>
-void init_class_defs(py::class_<PyIAnyTopic>& cls)
+void init_class_defs(
+        py::class_<
+            PyIAnyTopic,
+            std::unique_ptr<PyIAnyTopic, no_gil_delete<PyIAnyTopic>>>& cls)
 {
     cls.def_property(
                "qos",
@@ -62,10 +69,10 @@ void init_class_defs(py::class_<PyIAnyTopic>& cls)
                     },
                     "The type name for this AnyTopic.")
             .def(
-                "close",
-                &PyIAnyTopic::py_close,
-                py::call_guard<py::gil_scoped_release>(),
-                "Close this Topic.")
+                    "close",
+                    &PyIAnyTopic::py_close,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Close this Topic.")
             .def(
                     "__eq__",
                     [](PyIAnyTopic& at, PyIAnyTopic& other) {
@@ -88,11 +95,20 @@ template<>
 void process_inits<AnyTopic>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class_with_ptr_seq<PyIAnyTopic>(m, "IAnyTopic");
+        return init_class_with_ptr_seq<
+            PyIAnyTopic,
+            std::unique_ptr<PyIAnyTopic, no_gil_delete<PyIAnyTopic>>>(
+                m,
+                "IAnyTopic");
     });
 
     l.push_back([m]() mutable {
-        return init_class_with_seq<PyAnyTopic>(m, "AnyTopic");
+        return init_class_with_seq<
+            PyAnyTopic,
+            PyIAnyTopic,
+            std::unique_ptr<PyAnyTopic, no_gil_delete<PyAnyTopic>>>(
+                m,
+                "AnyTopic");
     });
 }
 

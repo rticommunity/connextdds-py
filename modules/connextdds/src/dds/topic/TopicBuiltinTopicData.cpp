@@ -26,7 +26,8 @@ void init_dds_typed_topic_template(
         py::class_<
                 PyTopic<dds::topic::TopicBuiltinTopicData>,
                 PyITopicDescription<dds::topic::TopicBuiltinTopicData>,
-                PyIAnyTopic>& cls)
+                PyIAnyTopic,
+                std::unique_ptr<PyTopic<dds::topic::TopicBuiltinTopicData>, no_gil_delete<PyTopic<dds::topic::TopicBuiltinTopicData>>>>& cls)
 {
     init_dds_typed_topic_base_template(cls);
 }
@@ -106,7 +107,7 @@ void init_class_defs(py::class_<TopicBuiltinTopicData>& cls)
                     "topic_data",
                     &TopicBuiltinTopicData::topic_data,
                     "Get the TopicData policy of the corresponding Topic.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly(
                     "representation",
                     &TopicBuiltinTopicData::representation,

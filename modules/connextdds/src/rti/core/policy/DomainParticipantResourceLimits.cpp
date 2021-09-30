@@ -728,7 +728,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_topic_query_hash_buckets,
                     "Number of hash buckets for remote TopicQueries.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "writer_data_tag_list_max_length",
                     (int32_t(DomainParticipantResourceLimits::*)() const)

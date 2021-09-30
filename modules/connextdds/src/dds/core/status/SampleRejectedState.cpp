@@ -36,7 +36,7 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITER_SAMPLES_PER_VIRTUAL_QUEUE_LIMIT");
                 case DDS_REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_SAMPLES_PER_REMOTE_WRITER_LIMIT");
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
                 case DDS_REJECTED_BY_REMOTE_WRITERS_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_LIMIT");
                 case DDS_REJECTED_BY_REMOTE_WRITERS_PER_INSTANCE_LIMIT:
@@ -45,7 +45,7 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     return std::string("SampleRejectedState.REJECTED_BY_VIRTUAL_WRITERS_LIMIT");
                 case DDS_REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT:
                     return std::string("SampleRejectedState.REJECTED_BY_REMOTE_WRITERS_PER_SAMPLE_LIMIT");
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
                 case DDS_REJECTED_BY_UNKNOWN_INSTANCE:
                     return std::string("SampleRejectedState.REJECTED_BY_UNKNOWN_INSTANCE");
 #endif
@@ -106,7 +106,7 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     "from a given remote writer that a DataReader may store "
                     "was "
                     "reached.")
-#if rti_connext_version_lt(6, 1, 0)
+#if rti_connext_version_lt(6, 1, 0, 0)
             .def_property_readonly_static(
                     "REJECTED_BY_REMOTE_WRITERS_LIMIT",
                     [](py::object&) {
@@ -148,7 +148,7 @@ void init_class_defs(py::class_<SampleRejectedState>& cls)
                     "rejected because the resource limit on the number of "
                     "remote "
                     "writers per sample was reached.")
-#if rti_connext_version_gte(6, 0, 0)
+#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly_static(
                     "REJECTED_BY_UNKNOWN_INSTANCE",
                     []() {
