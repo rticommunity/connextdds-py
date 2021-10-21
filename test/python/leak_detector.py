@@ -15,6 +15,10 @@ import rti.connextdds.heap_monitoring as heap_monitoring
 import rti.connextdds as dds
 import os
 
+#
+# This module is ran by conftest.py to detect leaks after all tests run
+#
+
 HEAP_USAGE_FILENAME = "test_heap_snapshot.txt"
 
 def get_heap_usage_from_heap_snapshot(file: str) -> int:
@@ -31,7 +35,7 @@ def check_leaks() -> None:
 
     # Finalize global state
 
-    dds._PluginDynamicTypeFactory.delete_instance()
+    dds._GenericTypePluginFactory.delete_instance()
     dds.DomainParticipant.finalize_participant_factory()
 
     # Take snapshot when all native heap memory should've been freed

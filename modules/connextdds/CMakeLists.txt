@@ -139,7 +139,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/PrintFormatProperty.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/ServiceRequest.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/IdlTypeSupport.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/PluginDynamicTypeFactory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/GenericTypePluginFactory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/status/StatusNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/status/DataStateEx.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/AckResponseData.cpp"

@@ -10,18 +10,15 @@
  */
 
 #include "PyConnext.hpp"
-#include <rti/core/xtypes/PluginDynamicTypeFactory.hpp>
+#include "PyGenericTypePluginFactory.hpp"
 #include <dds/core/Duration.hpp>
 #include <rti/core/constants.hpp>
 
 using namespace rti::core::xtypes;
+using namespace rti::topic::cdr;
 using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
 namespace pyrti {
-
-struct PluginDynamicTypeHolder {
-    DynamicTypeImpl *type;
-};
 
 template<>
 void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
@@ -33,24 +30,25 @@ void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
 }
 
 template<>
-void init_class_defs(py::class_<PluginDynamicTypeFactory>& cls)
+void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
 {
-    cls  // define PluginDynamicTypeFactory python class
+    cls  // define GenericTypePluginFactory python class
             .def("create_struct",
-                 [](PluginDynamicTypeFactory& self,
+                 [](GenericTypePluginFactory& self,
                     const std::string& name,
                     dds::core::xtypes::ExtensibilityKind extensibility,
                     int32_t type_size,
                     const std::vector<int32_t>& member_offsets)
                          -> PluginDynamicTypeHolder {
                      return PluginDynamicTypeHolder { self.create_struct(
-                             name,
-                             extensibility,
-                             type_size,
-                             member_offsets) };
+                                                              name,
+                                                              extensibility,
+                                                              type_size,
+                                                              member_offsets),
+                                                      nullptr };
                  })
             .def("add_member_previous",
-                 &PluginDynamicTypeFactory::add_member,
+                 &GenericTypePluginFactory::add_member,
                  py::arg("type"),
                  py::arg("name"),
                  py::arg("member_type"),
@@ -60,7 +58,7 @@ void init_class_defs(py::class_<PluginDynamicTypeFactory>& cls)
                  py::arg("is_external") = false)
             .def(
                     "add_member",
-                    [](PluginDynamicTypeFactory& factory,
+                    [](GenericTypePluginFactory& factory,
                        PluginDynamicTypeHolder& type_holder,
                        const std::string& name,
                        const dds::core::xtypes::DynamicType& member_type,
@@ -69,7 +67,7 @@ void init_class_defs(py::class_<PluginDynamicTypeFactory>& cls)
                        bool is_optional,
                        bool is_external) {
                         return factory.add_member(
-                                static_cast<StructTypeImpl*>(type_holder.type),
+                                *static_cast<StructTypeImpl*>(type_holder.type),
                                 name,
                                 member_type,
                                 id,
@@ -86,7 +84,7 @@ void init_class_defs(py::class_<PluginDynamicTypeFactory>& cls)
                     py::arg("is_external") = false)
             .def(
                     "add_member",
-                    [](PluginDynamicTypeFactory& factory,
+                    [](GenericTypePluginFactory& factory,
                        PluginDynamicTypeHolder& type_holder,
                        const std::string& name,
                        const PluginDynamicTypeHolder& member_type_holder,
@@ -95,7 +93,7 @@ void init_class_defs(py::class_<PluginDynamicTypeFactory>& cls)
                        bool is_optional,
                        bool is_external) {
                         return factory.add_member(
-                                static_cast<StructTypeImpl*>(type_holder.type),
+                                *static_cast<StructTypeImpl*>(type_holder.type),
                                 name,
                                 *member_type_holder.type,
                                 id,
@@ -110,24 +108,33 @@ void init_class_defs(py::class_<PluginDynamicTypeFactory>& cls)
                     py::arg("is_key") = false,
                     py::arg("is_optional") = false,
                     py::arg("is_external") = false)
+            .def(
+                    "create_type_plugin",
+                    [](GenericTypePluginFactory& factory,
+                       PluginDynamicTypeHolder& type_holder) {
+                        CTypePlugin& plugin =
+                                factory.create_type_plugin(*type_holder.type);
+                        type_holder.type_plugin = &plugin;
+                    },
+                    py::arg("type"))
             .def_property_readonly_static(
                     "instance",
-                    [](py::object&) -> PluginDynamicTypeFactory& {
-                        return PluginDynamicTypeFactory::instance();
+                    [](py::object&) -> GenericTypePluginFactory& {
+                        return GenericTypePluginFactory::instance();
                     })
             .def_static("delete_instance", []() {
-                PluginDynamicTypeFactory::delete_instance();
+                GenericTypePluginFactory::delete_instance();
                 DDS_TypeCodeFactory_finalize_instance();
             });
 }
 
 template<>
-void process_inits<PluginDynamicTypeFactory>(py::module& m, ClassInitList& l)
+void process_inits<GenericTypePluginFactory>(py::module& m, ClassInitList& l)
 {
     l.push_back([m]() mutable {
-        return init_class<PluginDynamicTypeFactory>(
+        return init_class<GenericTypePluginFactory>(
                 m,
-                "_PluginDynamicTypeFactory");
+                "_GenericTypePluginFactory");
     });
 
     l.push_back([m]() mutable {

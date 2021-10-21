@@ -9,19 +9,21 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <pybind11/numpy.h>
+
 #include "PyConnext.hpp"
 #include "PySeq.hpp"
-#include <pybind11/numpy.h>
-#include <dds/core/xtypes/DynamicData.hpp>
-#include <dds/core/QosProvider.hpp>
-#include <rti/topic/cdr/GenericInterpreterTypePlugin.hpp>
+#include "PyGenericTypePluginFactory.hpp"
 #include "PyInitType.hpp"
 #include "PyDynamicTypeMap.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
+#include <dds/core/xtypes/DynamicData.hpp>
+#include <dds/core/QosProvider.hpp>
+
 using namespace dds::core::xtypes;
 using namespace dds::topic;
-using rti::topic::cdr::CSampleWrapper;
+using namespace rti::topic::cdr;
 
 namespace pyrti {
 
@@ -34,32 +36,6 @@ void* get_buffer(const py::object& wrapper)
     Py_buffer pybuffer;
     int result = PyObject_GetBuffer(ptr, &pybuffer, 0);
     return pybuffer.buf;
-}
-
-// TODO PY-16: remove this temporary function when CORE-11850 is implemented
-static rti::topic::cdr::DataFunctions get_c_data_functions()
-{
-    struct Functions {
-        static void *create_data()
-        {
-            return new rti::topic::cdr::CSampleWrapper { new char[100] };
-        }
-
-        static void delete_data(void *data)
-        {
-            if (data != nullptr) {
-                auto wrapper =
-                        static_cast<rti::topic::cdr::CSampleWrapper *>(data);
-                delete [] static_cast<char*>(wrapper->sample);
-                delete wrapper;
-            }
-        }
-    };
-
-    return { Functions::create_data,
-             Functions::delete_data,
-             Functions::create_data,
-             Functions::delete_data };
 }
 
 // From an @idl_type-decorated python dataclass we get its DynamicType,
@@ -85,7 +61,7 @@ static py::object get_type_support_from_idl_type(py::object& type)
 
     // the type_support must have a dynamic_type attribute
     auto type_support = type.attr("type_support");
-    if (!py::hasattr(type_support, "dynamic_type")) {
+    if (!py::hasattr(type_support, "_plugin_dynamic_type")) {
         throw py::type_error(
                 "Incompatible 'type' argument: not a valid an @idl.struct or "
                 "@idl.union");
@@ -94,40 +70,61 @@ static py::object get_type_support_from_idl_type(py::object& type)
     return type_support;
 }
 
-static DynamicType* get_dynamic_type_from_type_support(py::object& type_support)
+static CTypePlugin* get_type_plugin_from_type_support(py::object& type_support)
 {
-    // get the DynamicType object
-    auto py_dynamic_type = type_support.attr("dynamic_type");
+    // get the struct holding the DynamicType and the associated Type Plugin
+    auto py_type_plugin_holder = type_support.attr("_plugin_dynamic_type");
 
     // pybind11 magic allows casting the python object to the C++ one
-    return py::cast<DynamicType *>(py_dynamic_type);
+    PluginDynamicTypeHolder type_plugin_holder =
+            py::cast<PluginDynamicTypeHolder>(py_type_plugin_holder);
+
+    return type_plugin_holder.type_plugin;
 }
 
 
 using rti::topic::cdr::CTypePlugin;
 
+using IdlGenericTopicPyClass = py::class_<
+        PyTopic<CSampleWrapper>,
+        PyITopicDescription<CSampleWrapper>,
+        PyIAnyTopic,
+        std::unique_ptr<
+                PyTopic<CSampleWrapper>,
+                no_gil_delete<PyTopic<CSampleWrapper>>>>;
+
+using IdlGenericTopicDescriptionPyClass = py::class_<
+        PyTopicDescription<CSampleWrapper>,
+        PyITopicDescription<CSampleWrapper>,
+        std::unique_ptr<
+                PyTopicDescription<CSampleWrapper>,
+                no_gil_delete<PyTopicDescription<CSampleWrapper>>>>;
+
+using IdlGenericITopicDescriptionPyClass = py::class_<
+        PyITopicDescription<CSampleWrapper>,
+        PyIEntity,
+        std::unique_ptr<
+                PyITopicDescription<CSampleWrapper>,
+                no_gil_delete<PyITopicDescription<CSampleWrapper>>>>;
+
 template<>
-void init_dds_typed_topic_template(py::class_<
-                                   PyTopic<CSampleWrapper>,
-                                   PyITopicDescription<CSampleWrapper>,
-                                   PyIAnyTopic> &cls)
+void init_dds_typed_topic_template(IdlGenericTopicPyClass &cls)
 {
     init_dds_typed_topic_base_template(cls);
     cls.def(py::init([](PyDomainParticipant &participant,
                         const ::std::string &topic_name,
                         py::object &type) {
+
+                // Get the type support created in python
                 py::object type_support = get_type_support_from_idl_type(type);
 
-                const DynamicType *dynamic_type =
-                        get_dynamic_type_from_type_support(type_support);
+                // Get the Type Plugin based on a DynamicType that was created 
+                // reflectively in python by inspecting the IDL-derived dataclass
+                CTypePlugin *plugin =
+                        get_type_plugin_from_type_support(type_support);
 
-                auto plugin =
-                        new CTypePlugin(*dynamic_type, get_c_data_functions());
-
-                plugin->register_type(
-                        participant,
-                        dynamic_type->name().c_str());
-
+                // Register the plugin with this Topic's participant 
+                plugin->register_type(participant);
 
                 auto topic = PyTopic<CSampleWrapper>(
                         dds::core::construct_from_native_tag_t(),
@@ -135,7 +132,7 @@ void init_dds_typed_topic_template(py::class_<
                                 rti::topic::detail::no_register_tag_t(),
                                 participant,
                                 topic_name,
-                                dynamic_type->name().c_str(),
+                                plugin->type_name().c_str(),
                                 NULL,
                                 nullptr,
                                 dds::core::status::StatusMask::none()));
@@ -159,9 +156,16 @@ void init_dds_typed_topic_template(py::class_<
 
 // TODO PY-16: all that follows is temporary
 
+using IdlDataWriterPyClass = py::class_<
+        PyDataWriter<CSampleWrapper>,
+        PyIEntity,
+        PyIAnyDataWriter,
+        std::unique_ptr<
+                PyDataWriter<CSampleWrapper>,
+                no_gil_delete<PyDataWriter<CSampleWrapper>>>>;
+
 template<>
-void init_dds_typed_datawriter_template(
-        py::class_<PyDataWriter<CSampleWrapper>, PyIEntity, PyIAnyDataWriter> &cls)
+void init_dds_typed_datawriter_template(IdlDataWriterPyClass &cls)
 {
     init_dds_typed_datawriter_base_template(cls);
     cls.def(
@@ -244,9 +248,15 @@ void init_dds_typed_datawriter_template(
     //         "handle.");
 }
 
+using IdlDataReaderPyClass = py::class_<
+        PyDataReader<CSampleWrapper>,
+        PyIDataReader,
+        std::unique_ptr<
+                PyDataReader<CSampleWrapper>,
+                no_gil_delete<PyDataReader<CSampleWrapper>>>>;
+
 template<>
-void init_dds_typed_datareader_template(
-        py::class_<PyDataReader<CSampleWrapper>, PyIDataReader> &cls)
+void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
     init_dds_typed_datareader_base_template(cls);
     cls.def(
@@ -260,7 +270,6 @@ void init_dds_typed_datareader_template(
                         py::handle(static_cast<PyObject *>(topic->get_user_data_()));
 
                 auto tmp = dr.take();
-                std::cout << "I have " << tmp.length() << " samples" << std::endl;
                 auto samples = rti::sub::valid_data(std::move(tmp));
                 std::vector<py::object> py_samples;
 
@@ -292,19 +301,9 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
 
     list.push_back([module] {
         return ([module]() mutable {
-            auto itd =
-                    py::class_<PyITopicDescription<CSampleWrapper>, PyIEntity>(
-                            module,
-                            "ITopicDescription");
-            auto td = py::class_<
-                    PyTopicDescription<CSampleWrapper>,
-                    PyITopicDescription<CSampleWrapper>>(
-                    module,
-                    "TopicDescription");
-            auto t = py::class_<
-                    PyTopic<CSampleWrapper>,
-                    PyITopicDescription<CSampleWrapper>,
-                    PyIAnyTopic>(module, "Topic");
+            IdlGenericITopicDescriptionPyClass itd(module, "ITopicDescription");
+            IdlGenericTopicDescriptionPyClass td(module, "TopicDescription");
+            IdlGenericTopicPyClass t(module, "Topic");
 
             pyrti::bind_vector<PyTopic<CSampleWrapper>>(module, "TopicSeq");
             py::implicitly_convertible<
@@ -312,10 +311,7 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     std::vector<PyTopic<CSampleWrapper>>>();
             init_topic<CSampleWrapper>(itd, td, t);
 
-            auto dw = py::class_<
-                    PyDataWriter<CSampleWrapper>,
-                    PyIEntity,
-                    PyIAnyDataWriter>(module, "DataWriter");
+            IdlDataWriterPyClass dw(module, "DataWriter");
 
             pyrti::bind_vector<PyDataWriter<CSampleWrapper>>(
                     module,
@@ -326,9 +322,7 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
 
             init_datawriter<CSampleWrapper>(dw);
 
-            auto dr = py::class_<
-                    PyDataReader<CSampleWrapper>,
-                    PyIDataReader>(module, "DataReader");
+            IdlDataReaderPyClass dr(module, "DataReader");
 
             pyrti::bind_vector<PyDataReader<CSampleWrapper>>(
                     module,

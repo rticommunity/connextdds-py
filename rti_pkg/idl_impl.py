@@ -19,14 +19,14 @@ import rti.connextdds as dds
 # This module contains the implementation details of the IDL Type Support
 #
 
-_type_factory = dds._PluginDynamicTypeFactory.instance
+_type_factory = dds._GenericTypePluginFactory.instance
 
 @atexit.register
 def _cleanup():
     """Clean up global variables when this module is unloaded."""
 
     _type_factory = None
-    dds._PluginDynamicTypeFactory.delete_instance()
+    dds._GenericTypePluginFactory.delete_instance()
 
 # --- Annotation classes ------------------------------------------------------
 
@@ -153,6 +153,10 @@ def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=No
 
         _type_factory.add_member(
             dynamic_type, field, member_dynamic_type(), id=member_id.value, is_key=is_key.value, is_optional=is_optional, is_external=False)
+
+    # Once finalized the type creation, this creates the plugin and assigns it
+    # to dynamic_type
+    _type_factory.create_type_plugin(dynamic_type)
 
     return dynamic_type
 
