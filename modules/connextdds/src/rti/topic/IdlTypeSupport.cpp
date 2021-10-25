@@ -82,10 +82,16 @@ static CTypePlugin* get_type_plugin_from_type_support(py::object& type_support)
     return type_plugin_holder.type_plugin;
 }
 
+// Gets the python TypeSupport from a C++ Topic object, which is stored in its
+// user data.
+static py::handle get_py_type_support_from_topic(PyTopic<CSampleWrapper>& topic)
+{
+    return py::handle(static_cast<PyObject*>(topic->get_user_data_()));
+}
 
 using rti::topic::cdr::CTypePlugin;
 
-using IdlGenericTopicPyClass = py::class_<
+using IdlTopicPyClass = py::class_<
         PyTopic<CSampleWrapper>,
         PyITopicDescription<CSampleWrapper>,
         PyIAnyTopic,
@@ -93,14 +99,14 @@ using IdlGenericTopicPyClass = py::class_<
                 PyTopic<CSampleWrapper>,
                 no_gil_delete<PyTopic<CSampleWrapper>>>>;
 
-using IdlGenericTopicDescriptionPyClass = py::class_<
+using IdlTopicDescriptionPyClass = py::class_<
         PyTopicDescription<CSampleWrapper>,
         PyITopicDescription<CSampleWrapper>,
         std::unique_ptr<
                 PyTopicDescription<CSampleWrapper>,
                 no_gil_delete<PyTopicDescription<CSampleWrapper>>>>;
 
-using IdlGenericITopicDescriptionPyClass = py::class_<
+using IdlITopicDescriptionPyClass = py::class_<
         PyITopicDescription<CSampleWrapper>,
         PyIEntity,
         std::unique_ptr<
@@ -108,22 +114,31 @@ using IdlGenericITopicDescriptionPyClass = py::class_<
                 no_gil_delete<PyITopicDescription<CSampleWrapper>>>>;
 
 template<>
-void init_dds_typed_topic_template(IdlGenericTopicPyClass &cls)
+void init_dds_typed_topic_template(IdlTopicPyClass &cls)
 {
+    // First initialize the "base" class, i.e. the python methods that are
+    // common to all topics
+    //
+    // TODO PY-20: the constructor from AnyTopic is not safe for IDL Topics
+    // as it is implemented in the base class.
     init_dds_typed_topic_base_template(cls);
-    cls.def(py::init([](PyDomainParticipant &participant,
-                        const ::std::string &topic_name,
-                        py::object &type) {
 
+    // Then add new methods that are only available for IDL topics
+    //
+    // TODO PY-17: add the rest of constructors (with qos and listener)
+    cls.def(py::init([](PyDomainParticipant& participant,
+                        const ::std::string& topic_name,
+                        py::object& type) {
                 // Get the type support created in python
                 py::object type_support = get_type_support_from_idl_type(type);
 
-                // Get the Type Plugin based on a DynamicType that was created 
-                // reflectively in python by inspecting the IDL-derived dataclass
-                CTypePlugin *plugin =
+                // Get the Type Plugin based on a DynamicType that was created
+                // reflectively in python by inspecting the IDL-derived
+                // dataclass
+                CTypePlugin* plugin =
                         get_type_plugin_from_type_support(type_support);
 
-                // Register the plugin with this Topic's participant 
+                // Register the plugin with this Topic's participant
                 plugin->register_type(participant);
 
                 auto topic = PyTopic<CSampleWrapper>(
@@ -144,14 +159,21 @@ void init_dds_typed_topic_template(IdlGenericTopicPyClass &cls)
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("type"),
-            "Create a Topic for an @idl_type-decorated type.")
-            .def_property_readonly(
-                    "type_support",
-                    [](PyTopic<CSampleWrapper> &self) {
-                        return py::handle(static_cast<PyObject *>(
-                                self->get_user_data_()));
-                    },
-                    "Get the type_support object associated with the topic.");
+            "Create a Topic for an @idl.struct or @idl.union type.");
+
+    cls.def_property_readonly(
+            "type_support",
+            [](PyTopic<CSampleWrapper>& self) {
+                return get_py_type_support_from_topic(self);
+            },
+            "Get the type_support object associated with the topic.");
+
+    cls.def_property_readonly(
+            "type",
+            [](PyTopic<CSampleWrapper>& self) {
+                return get_py_type_support_from_topic(self).attr("type");
+            },
+            "Get the type associated with the topic.");
 }
 
 // TODO PY-16: all that follows is temporary
@@ -301,9 +323,9 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
 
     list.push_back([module] {
         return ([module]() mutable {
-            IdlGenericITopicDescriptionPyClass itd(module, "ITopicDescription");
-            IdlGenericTopicDescriptionPyClass td(module, "TopicDescription");
-            IdlGenericTopicPyClass t(module, "Topic");
+            IdlITopicDescriptionPyClass itd(module, "ITopicDescription");
+            IdlTopicDescriptionPyClass td(module, "TopicDescription");
+            IdlTopicPyClass t(module, "Topic");
 
             pyrti::bind_vector<PyTopic<CSampleWrapper>>(module, "TopicSeq");
             py::implicitly_convertible<

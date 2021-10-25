@@ -10,7 +10,6 @@
 #
 
 import ctypes
-import pytest
 from time import sleep
 
 import rti.connextdds as dds
@@ -39,6 +38,16 @@ def test_type_plugin_basic():
     assert dynamic_type["x"].type == dds.Int32Type()
 
 
+def test_idl_topic():
+
+    participant = dds.DomainParticipant(domain_id=0)
+    topic = dds.Topic(participant, "MyPoint", Point)
+
+    assert topic.name == "MyPoint"
+    assert topic.type_name == "Point"
+    assert topic.type_support is Point.type_support
+    assert topic.type is Point
+
 def test_basic_pub_sub():
     participant = dds.DomainParticipant(domain_id=0)
     topic = dds.Topic(participant, "Point", type=Point)
@@ -54,7 +63,6 @@ def test_basic_pub_sub():
     sleep(2)  # TODO: wait without sleep
 
     samples = reader.take_valid_data()
-    print(type(samples))
     assert type(samples) is list
     assert len(samples) == 1
     assert samples[0] == Point(x=11, y=22)

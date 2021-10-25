@@ -10,7 +10,6 @@
 #
 
 import pytest
-import tempfile
 import rti.connextdds.heap_monitoring as heap_monitoring
 import rti.connextdds as dds
 import os
