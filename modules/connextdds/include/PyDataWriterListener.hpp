@@ -12,12 +12,17 @@
 #pragma once
 
 #include "PyConnext.hpp"
+#include "PyDataWriterTraits.hpp"
 #include <dds/pub/DataWriterListener.hpp>
 
 namespace pyrti {
 
+template<typename T, typename PyDataWriterTraits>
+class TPyDataWriter;
+
+// TODO PY-17: Temporary alias while the code is updated
 template<typename T>
-class PyDataWriter;
+using PyDataWriter = TPyDataWriter<T, DefaultPyDataWriterTraits<T>>;
 
 template<typename T>
 class PyDataWriterListener : public dds::pub::DataWriterListener<T> {

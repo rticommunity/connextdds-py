@@ -608,6 +608,13 @@ void init_class_defs(
                     py::call_guard<py::gil_scoped_release>(),
                     "Exit the context for this Domain Participant, cleaning up "
                     "resources.")
+            .def(
+                    "close_contained_entities",
+                    [](PyDomainParticipant& dp) {
+                        dp->close_contained_entities();
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Destroy all contained entities.")
             .def_static(
                     "find",
                     [](const std::string& n) {

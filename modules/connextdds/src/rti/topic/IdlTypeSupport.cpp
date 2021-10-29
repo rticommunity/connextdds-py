@@ -27,17 +27,6 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-// TODO PY-16: rename to get_buffer
-void* get_buffer(const py::object& wrapper)
-{
-    PyObject* ptr = wrapper.ptr();
-
-    // TODO PY-16: return buffer must be called
-    Py_buffer pybuffer;
-    int result = PyObject_GetBuffer(ptr, &pybuffer, 0);
-    return pybuffer.buf;
-}
-
 // From an @idl_type-decorated python dataclass we get its DynamicType,
 // which must be cached in the associated type_support
 //
@@ -176,99 +165,67 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
             "Get the type associated with the topic.");
 }
 
-// TODO PY-16: all that follows is temporary
 
-using IdlDataWriterPyClass = py::class_<
-        PyDataWriter<CSampleWrapper>,
-        PyIEntity,
-        PyIAnyDataWriter,
-        std::unique_ptr<
-                PyDataWriter<CSampleWrapper>,
-                no_gil_delete<PyDataWriter<CSampleWrapper>>>>;
+struct PyCTypesBuffer {
+    Py_buffer py_buffer;
+
+    explicit PyCTypesBuffer(const py::object& ctypes_sample)
+    {
+        PyObject* py_object_ptr = ctypes_sample.ptr();
+        PyObject_GetBuffer(py_object_ptr, &py_buffer, PyBUF_SIMPLE);
+    }
+
+    // move-only struct
+    PyCTypesBuffer(const PyCTypesBuffer&) = delete;
+    PyCTypesBuffer& operator=(const PyCTypesBuffer&) = delete;
+    PyCTypesBuffer(PyCTypesBuffer&& other) = default;
+    PyCTypesBuffer& operator=(PyCTypesBuffer&& other) = default;
+
+    ~PyCTypesBuffer()
+    {
+        PyBuffer_Release(&py_buffer);
+    }
+
+    // Obtain the actual buffer as a CSampleWrapper, as required by
+    // PyDataWriter::py_write
+    operator CSampleWrapper()
+    {
+        return { py_buffer.buf };
+    }
+};
+
+struct PyToCSampleConverter {
+    static PyCTypesBuffer convert(
+            dds::pub::DataWriter<CSampleWrapper>& writer,
+            const py::object& sample)
+    {
+        auto&& type_support = py::handle(
+                static_cast<PyObject*>(writer.topic()->get_user_data_()));
+        auto&& c_sample = type_support.attr("_create_c_sample")(sample);
+        return PyCTypesBuffer(c_sample);
+    }
+};
+
+struct IdlDataWriterTraits {
+    using py_type = py::object;
+    using before_write_gil_policy = py::gil_scoped_acquire;
+    using native_write_gil_policy = py::gil_scoped_release;
+    using sample_converter = PyToCSampleConverter;
+};
+
+using IdlPyDataWriter = TPyDataWriter<CSampleWrapper, IdlDataWriterTraits>;
+
+using IdlDataWriterPyClass =
+        PyDataWriterClass<CSampleWrapper, IdlDataWriterTraits>;
 
 template<>
 void init_dds_typed_datawriter_template(IdlDataWriterPyClass &cls)
 {
     init_dds_typed_datawriter_base_template(cls);
-    cls.def(
-            "write",
-            [](PyDataWriter<CSampleWrapper> &dw, py::object &sample)
-            {
 
-                auto type_support = py::handle(
-                    static_cast<PyObject *>(dw.topic()->get_user_data_()));
-
-                auto c_sample = type_support.attr("_create_c_sample")(sample);
-
-                CSampleWrapper wrapped_c_sample { get_buffer(c_sample) };
-
-                py::gil_scoped_release release;
-                dw.write(wrapped_c_sample);
-            },
-            py::arg("sample_data"),
-            "Write a data sample.");
-    // .def(
-    //         "write_async",
-    //         [](PyDataWriter<dds::core::xtypes::DynamicData> &dw,
-    //            py::dict &dict) {
-    //             return PyAsyncioExecutor::run<void>(
-    //                     std::function<void()>([&dw, &dict]() {
-    //                         py::gil_scoped_acquire acquire;
-    //                         auto dt = PyDynamicTypeMap::get(
-    //                                 dw->type_name());
-    //                         dds::core::xtypes::DynamicData sample(dt);
-    //                         update_dynamicdata_object(sample, dict);
-    //                         {
-    //                             py::gil_scoped_release release;
-    //                             dw.write(sample);
-    //                         }
-    //                     }));
-    //         },
-    //         py::arg("sample_data"),
-    //         py::keep_alive<0, 1>(),
-    //         py::keep_alive<0, 2>(),
-    //         "Create a DynamicData object and write it with the given "
-    //         "dictionary containing field names as keys. This method is "
-    //         "awaitable and is only for use with asyncio.")
-    // .def(
-    //         "create_data",
-    //         [](PyDataWriter<dds::core::xtypes::DynamicData> &dw) {
-    //             return dds::core::xtypes::DynamicData(
-    //                     PyDynamicTypeMap::get(dw->type_name()));
-    //         },
-    //         py::call_guard<py::gil_scoped_release>(),
-    //         "Create data of the writer's associated type and "
-    //         "initialize it.")
-    // .def(
-    //         "key_value",
-    //         [](PyDataWriter<dds::core::xtypes::DynamicData> &dw,
-    //            const dds::core::InstanceHandle &handle) {
-    //             dds::core::xtypes::DynamicData d(
-    //                     PyDynamicTypeMap::get(dw->type_name()));
-    //             dw.key_value(d, handle);
-    //             return d;
-    //         },
-    //         py::arg("handle"),
-    //         py::call_guard<py::gil_scoped_release>(),
-    //         "Retrieve the instance key that corresponds to an instance "
-    //         "handle.")
-    // .def(
-    //         "topic_instance_key_value",
-    //         [](PyDataWriter<dds::core::xtypes::DynamicData> &dw,
-    //            const dds::core::InstanceHandle &handle) {
-    //             dds::core::xtypes::DynamicData d(
-    //                     PyDynamicTypeMap::get(dw->type_name()));
-    //             dds::topic::TopicInstance<
-    //                     dds::core::xtypes::DynamicData>
-    //                     ti(handle, d);
-    //             dw.key_value(ti, handle);
-    //             return ti;
-    //         },
-    //         py::arg("handle"),
-    //         py::call_guard<py::gil_scoped_release>(),
-    //         "Retrieve the instance key that corresponds to an instance "
-    //         "handle.");
 }
+
+// TODO PY-16: all that follows is temporary
 
 using IdlDataReaderPyClass = py::class_<
         PyDataReader<CSampleWrapper>,
@@ -342,7 +299,7 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     py::iterable,
                     std::vector<PyDataWriter<CSampleWrapper>>>();
 
-            init_datawriter<CSampleWrapper>(dw);
+            init_datawriter(dw);
 
             IdlDataReaderPyClass dr(module, "DataReader");
 

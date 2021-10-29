@@ -13,7 +13,6 @@ import rti.connextdds as dds
 import time
 import pathlib
 
-
 class TestSystem:
     def __init__(self, domain_id, sample_type):
         self.participant = create_participant(domain_id)

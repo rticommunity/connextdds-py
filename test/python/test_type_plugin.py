@@ -10,20 +10,19 @@
 #
 
 import ctypes
-from time import sleep
+import pytest
 
 import rti.connextdds as dds
 import rti.idl as idl
 
+from test_utils import fixtures
 
 @idl.struct
 class Point:
     x: int = 0
     y: int = 0
 
-
 def test_type_plugin_basic():
-
     assert hasattr(Point, "type_support")
     assert Point.type_support is not None
 
@@ -37,10 +36,8 @@ def test_type_plugin_basic():
     assert dynamic_type["x"].name == "x"
     assert dynamic_type["x"].type == dds.Int32Type()
 
-
 def test_idl_topic():
-
-    participant = dds.DomainParticipant(domain_id=0)
+    participant = fixtures.create_participant(domain_id=54)
     topic = dds.Topic(participant, "MyPoint", Point)
 
     assert topic.name == "MyPoint"
@@ -48,21 +45,17 @@ def test_idl_topic():
     assert topic.type_support is Point.type_support
     assert topic.type is Point
 
-def test_basic_pub_sub():
-    participant = dds.DomainParticipant(domain_id=0)
-    topic = dds.Topic(participant, "Point", type=Point)
+def test_idl_writer_fails_with_bad_sample_type():
+    @idl.struct
+    class NotAPoint:
+        a: int = 0
 
+    participant = fixtures.create_participant(domain_id=0)
+    topic = dds.Topic(participant, "MyPoint", Point)
     writer = dds.DataWriter(participant.implicit_publisher, topic)
-    reader = dds.DataReader(participant.implicit_subscriber, topic)
 
-    sleep(2)  # TODO: Wait for discovery
+    with pytest.raises(TypeError):
+        writer.write(NotAPoint())
 
-    sample = Point(x=11, y=22)
-    writer.write(sample)
-
-    sleep(2)  # TODO: wait without sleep
-
-    samples = reader.take_valid_data()
-    assert type(samples) is list
-    assert len(samples) == 1
-    assert samples[0] == Point(x=11, y=22)
+    with pytest.raises(TypeError):
+        writer.write(4)

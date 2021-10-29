@@ -224,6 +224,10 @@ class TypeSupport:
             idl_type, self.c_type, type_annotations, member_annotations)
 
     def _create_c_sample(self, sample):
+        if (type(sample) is not self.type):
+            raise TypeError(
+                f'Expected type {self.type}, got {type(sample)}')
+
         c_sample = self.c_type()
         copy_to_c_sample(sample, c_sample)
         return c_sample

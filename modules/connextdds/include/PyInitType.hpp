@@ -277,7 +277,7 @@ DefInitFunc init_type_class(
                 py::iterable,
                 std::vector<PyDataWriter<T>>>();
 
-        return ([dw]() mutable { init_datawriter<T>(dw); });
+        return ([dw]() mutable { init_datawriter(dw); });
     });
 
     return ([cls, cls_name, parent]() mutable {
