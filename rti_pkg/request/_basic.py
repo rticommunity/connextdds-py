@@ -143,6 +143,7 @@ class Requester(_util.RequestReplyBase):
 
 
     def read_replies(self, related_request_id=None):
+        # type: (Optional[rti.connextdds.SampleIdentity]) -> Union[rti.connextdds.DynamicData.LoanedSamples, object]
         """Read received replies.
 
         :param related_request_id: The id used to correlate replies to a specific request, default None (read any replies).
@@ -150,7 +151,6 @@ class Requester(_util.RequestReplyBase):
         :return: A loaned samples object containing the replies.
         :rtype: Union[rti.connextdds.DynamicData.LoanedSamples, object]
         """
-        # type: (Optional[rti.connextdds.SampleIdentity]) -> Union[rti.connextdds.DynamicData.LoanedSamples, object]
         if related_request_id is None:
             return self._reader.read()
         else:

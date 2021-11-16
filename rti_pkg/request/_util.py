@@ -161,7 +161,7 @@ def create_reader(
     default_reader_topic_suffix,    # type: str
     cft_guid                        # type: Optional[str]
 ):
-     # type: (...) -> None
+    # type: (...) -> None
     topic = get_topic(reader_type, participant, service_name, reader_topic, default_reader_topic_suffix, cft_guid is None)
 
     if isinstance(reader_type, rti.connextdds.DynamicType):
