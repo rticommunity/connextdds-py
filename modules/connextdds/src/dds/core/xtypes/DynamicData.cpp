@@ -1384,7 +1384,7 @@ void init_dds_typed_topic_template(
                          dds::core::status::StatusMask::all(),
                          "StatusMask.ALL"),
                  py::call_guard<py::gil_scoped_release>(),
-                 "Creates a new Topic.");;
+                 "Creates a new Topic.");
 }
 
 template<>

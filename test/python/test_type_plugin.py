@@ -45,6 +45,22 @@ def test_idl_topic():
     assert topic.type_support is Point.type_support
     assert topic.type is Point
 
+
+def test_idl_topic_with_qos():
+    participant = fixtures.create_participant(domain_id=54)
+    qos = dds.TopicQos()
+    qos.history.kind = dds.HistoryKind.KEEP_LAST
+    qos.history.depth = 13
+    topic = dds.Topic(participant, "MyPoint", Point, qos)
+
+    assert topic.name == "MyPoint"
+    assert topic.type_name == "Point"
+    assert topic.type_support is Point.type_support
+    assert topic.type is Point
+
+    assert topic.qos.history.kind == dds.HistoryKind.KEEP_LAST
+    assert topic.qos.history.depth == 13
+
 def test_idl_writer_fails_with_bad_sample_type():
     @idl.struct
     class NotAPoint:

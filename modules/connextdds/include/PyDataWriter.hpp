@@ -218,7 +218,7 @@ public:
 
         // Note that convert can return by reference when no conversion is
         // needed or by value when a conversion has been done; either way
-        // auto&& correctly to the return value.
+        // auto&& correctly binds to the return value.
         auto&& cpp_sample = SampleConverter::convert(*this, py_sample);
 
         // Release the GIL if it was previously acquired, depending on what the

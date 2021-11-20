@@ -102,6 +102,39 @@ using IdlITopicDescriptionPyClass = py::class_<
                 PyITopicDescription<CSampleWrapper>,
                 no_gil_delete<PyITopicDescription<CSampleWrapper>>>>;
 
+static PyTopic<CSampleWrapper> create_idl_py_topic(
+        PyDomainParticipant& participant,
+        const ::std::string& topic_name,
+        py::object& type,
+        const dds::topic::qos::TopicQos *qos = NULL)
+{
+    // Get the type support created in python
+    py::object type_support = get_type_support_from_idl_type(type);
+
+    // Get the Type Plugin based on a DynamicType that was created
+    // reflectively in python by inspecting the IDL-derived
+    // dataclass
+    CTypePlugin* plugin = get_type_plugin_from_type_support(type_support);
+
+    // Register the plugin with this Topic's participant
+    plugin->register_type(participant);
+
+    auto topic = PyTopic<CSampleWrapper>(
+            dds::core::construct_from_native_tag_t(),
+            new rti::topic::TopicImpl<CSampleWrapper>(
+                    rti::topic::detail::no_register_tag_t(),
+                    participant,
+                    topic_name,
+                    plugin->type_name().c_str(),
+                    qos,
+                    nullptr,
+                    dds::core::status::StatusMask::none()));
+
+    topic->set_user_data_(type_support.ptr());
+
+    return topic;
+}
+
 template<>
 void init_dds_typed_topic_template(IdlTopicPyClass &cls)
 {
@@ -113,42 +146,31 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
     init_dds_typed_topic_base_template(cls);
 
     // Then add new methods that are only available for IDL topics
-    //
-    // TODO PY-17: add the rest of constructors (with qos and listener)
     cls.def(py::init([](PyDomainParticipant& participant,
                         const ::std::string& topic_name,
                         py::object& type) {
-                // Get the type support created in python
-                py::object type_support = get_type_support_from_idl_type(type);
-
-                // Get the Type Plugin based on a DynamicType that was created
-                // reflectively in python by inspecting the IDL-derived
-                // dataclass
-                CTypePlugin* plugin =
-                        get_type_plugin_from_type_support(type_support);
-
-                // Register the plugin with this Topic's participant
-                plugin->register_type(participant);
-
-                auto topic = PyTopic<CSampleWrapper>(
-                        dds::core::construct_from_native_tag_t(),
-                        new rti::topic::TopicImpl<CSampleWrapper>(
-                                rti::topic::detail::no_register_tag_t(),
-                                participant,
-                                topic_name,
-                                plugin->type_name().c_str(),
-                                NULL,
-                                nullptr,
-                                dds::core::status::StatusMask::none()));
-
-                topic->set_user_data_(type_support.ptr());
-
-                return topic;
+                return create_idl_py_topic(participant, topic_name, type);
             }),
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("type"),
-            "Create a Topic for an @idl.struct or @idl.union type.");
+            "Create a Topic for an @idl.struct or @idl.union type with default "
+            "QoS");
+
+    cls.def(py::init([](PyDomainParticipant& participant,
+                        const ::std::string& topic_name,
+                        py::object& type,
+                        const dds::topic::qos::TopicQos& qos) {
+                return create_idl_py_topic(participant, topic_name, type, &qos);
+            }),
+            py::arg("participant"),
+            py::arg("topic_name"),
+            py::arg("type"),
+            py::arg("qos"),
+            "Create a Topic for an @idl.struct or @idl.union type with specific "
+            "QoS");
+
+    // TODO PY-17: add the rest of constructors (with listener)
 
     cls.def_property_readonly(
             "type_support",
