@@ -140,9 +140,6 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
 {
     // First initialize the "base" class, i.e. the python methods that are
     // common to all topics
-    //
-    // TODO PY-20: the constructor from AnyTopic is not safe for IDL Topics
-    // as it is implemented in the base class.
     init_dds_typed_topic_base_template(cls);
 
     // Then add new methods that are only available for IDL topics
