@@ -16,7 +16,7 @@ import pathlib
 import array
 
 
-FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../xml/UnionWithEnum.xml"
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../../xml/UnionWithEnum.xml"
 
 PROVIDER = dds.QosProvider(FILE)
 UNION = PROVIDER.type("TestUnionWithEnum")

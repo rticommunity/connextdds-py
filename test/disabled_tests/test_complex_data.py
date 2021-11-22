@@ -11,16 +11,18 @@
 
 import rti.connextdds as dds
 import pytest
-import utils
 import pathlib
 
-FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../xml/PerformanceTester.xml"
+"""
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../../xml/PerformanceTester.xml"
 
 PROVIDER = dds.QosProvider(FILE)
 PRIMITIVE_ARRAY_TYPE_4 = PROVIDER.type("PrimitiveArrayType4")
 NON_PRIMITIVE_TYPE = PROVIDER.type("NonPrimitiveType")
+"""
 
-
+#skip
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 def test_sequence():
     sample = dds.DynamicData(PRIMITIVE_ARRAY_TYPE_4)
     sample["longArray"] = list(range(0, 4))
@@ -29,6 +31,7 @@ def test_sequence():
         assert i == sample["longArray"][i]
 
 
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 def test_non_primitive_type():
     sample = dds.DynamicData(NON_PRIMITIVE_TYPE)
     sample["x"] = 5
@@ -37,6 +40,7 @@ def test_non_primitive_type():
     assert sample["y"] == 9
 
 
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 def test_nested_struct():
     # Here we create a nested type. It has two members, both are the simple non-primitive type
     nested_type = dds.StructType("nested_type")
@@ -57,6 +61,7 @@ def test_nested_struct():
     assert sample["b.y"] == 4
 
 
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 def test_nested_struct_copy():
     nested_type = dds.StructType("nested_type")
     nested_type.add_member(dds.Member("a", NON_PRIMITIVE_TYPE))
@@ -77,6 +82,7 @@ def test_nested_struct_copy():
     assert nested["x"] == x
 
 
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 def test_nested_struct_loan():
     nested_type = dds.StructType("nested_type")
     nested_type.add_member(dds.Member("a", NON_PRIMITIVE_TYPE))
@@ -100,6 +106,7 @@ def test_nested_struct_loan():
     assert sample["a.y"] == 234235
 
 
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 @pytest.mark.parametrize("size", [1, 4, 16])
 def test_squence_of_nested_structs(size):
     nested_type = dds.StructType("nested_type")
@@ -135,6 +142,9 @@ def test_squence_of_nested_structs(size):
         )
 
 # Tests code examples used in types.rst
+
+
+@pytest.mark.skip(reason="Needs to be updated for leaks")
 def test_documentation_examples():
     # struct Point {
     #     float x, y;
@@ -194,5 +204,3 @@ def test_documentation_examples():
         sample["bad_member"] = "bad value"
     with pytest.raises(ValueError) as excinfo:
         sample["location"] = "bad value"
-
-test_sequence()

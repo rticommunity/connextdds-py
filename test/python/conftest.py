@@ -13,17 +13,13 @@ import pytest
 import leak_detector
 import rti.connextdds.heap_monitoring as heap_monitoring
 
-# TODO PY-19: heap monitoring can't be enabled until several test files are
-#             refactored to stop using global variables for DDS objects.
-
 # Enable heap monitoring for all tests. Heap monitoring is used to detect
 # memory leaks by the fixture below
 
-# TODO PY-19: uncomment
-# heap_monitoring.enable()
+heap_monitoring.enable()
 
 # This fixture ensures that at the end of the last test we run
 # leak_detector.check_leaks
-@pytest.fixture(scope="session", autouse=False) # TODO PY-19: autouse=True
+@pytest.fixture(scope="session", autouse=True)
 def leak_detection_fixture(request):
     request.addfinalizer(leak_detector.check_leaks)

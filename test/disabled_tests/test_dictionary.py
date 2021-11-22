@@ -15,7 +15,7 @@ import pytest
 import pathlib
 import time
 
-FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../xml/PerformanceTester.xml"
+FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../../xml/PerformanceTester.xml"
 PROVIDER = dds.QosProvider(FILE)
 # A type with an x and a y value
 COORD_TYPE = PROVIDER.type("NonPrimitiveType")
