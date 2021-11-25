@@ -87,16 +87,17 @@ def subscriber_main(domain_id, sample_count):
         count += 1
 
 
-parser = argparse.ArgumentParser(
-    description="RTI Connext DDS Example: Waitsets with Query Conditions (Subscriber)"
-)
-parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
-parser.add_argument(
-    "-c", "--count", type=int, default=0, help="Number of samples to send"
-)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="RTI Connext DDS Example: Waitsets with Query Conditions (Subscriber)"
+    )
+    parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
+    parser.add_argument(
+        "-c", "--count", type=int, default=0, help="Number of samples to send"
+    )
 
-args = parser.parse_args()
-assert 0 <= args.domain < 233
-assert args.count >= 0
+    args = parser.parse_args()
+    assert 0 <= args.domain < 233
+    assert args.count >= 0
 
-subscriber_main(args.domain, args.count)
+    subscriber_main(args.domain, args.count)
