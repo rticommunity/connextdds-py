@@ -1,6 +1,6 @@
 # connextdds-py
 
-A full Python binding for RTI Connext DDS using pybind11
+A full Python binding for RTI Connext DDS using pybind11. (This binding is experimental.)
 
 ## Documentation
 
