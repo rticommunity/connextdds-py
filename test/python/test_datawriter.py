@@ -25,9 +25,15 @@ def same_elements(a, b):
 
 def check_expected_data(reader: dds.DataReader, expected_samples: list):
     wait.for_data(reader, count=len(expected_samples))
-    samples = reader.take_valid_data()
+    samples = reader.take_data()
     assert same_elements(samples, expected_samples)
 
+
+def check_data_and_get_info(reader: dds.DataReader, expected_samples: list):
+    wait.for_data(reader, count=len(expected_samples))
+    samples = reader.take()
+    assert same_elements([data for (data, _) in samples], expected_samples)
+    return [info for (_, info) in samples]
 
 @idl.struct(member_annotations={'x': [idl.key]})
 class Point:
@@ -63,6 +69,14 @@ def test_write(pubsub):
     check_expected_data(pubsub.reader, [sample])
 
 
+def test_alex(pubsub):
+    sample = Point(x=11, y=22)
+    pubsub.writer.write(sample)
+    # check_expected_data(pubsub.reader, [sample])
+    wait.for_data(pubsub.reader)
+    samples = pubsub.reader.take()
+    assert len(samples) == 1
+
 def test_write_with_shift_operator(pubsub):
     sample = Point(x=11, y=22)
     pubsub.writer << sample
@@ -72,23 +86,31 @@ def test_write_with_shift_operator(pubsub):
 def test_write_with_timestamp(pubsub):
     sample = Point(x=11, y=22)
     pubsub.writer.write(sample, dds.Time(123))
-    check_expected_data(pubsub.reader, [sample])
+    info = check_data_and_get_info(pubsub.reader, [sample])
 
-    # TODO PY-17 check timestamp
-    # assert samples[0].timestamp == dds.Time(123)
-
+    assert info[0].source_timestamp == dds.Time(123)
 
 def test_write_with_instance_handle(pubsub):
     sample = Point(x=11, y=22)
-    pubsub.writer.write(sample, handle=dds.InstanceHandle.nil())
-    check_expected_data(pubsub.reader, [sample])
+    instance_handle = pubsub.writer.register_instance(sample)
+    assert not instance_handle.is_nil
+
+    pubsub.writer.write(sample, handle=instance_handle)
+    info = check_data_and_get_info(pubsub.reader, [sample])
+
+    assert info[0].instance_handle == instance_handle
 
 
 def test_write_with_instance_handle_and_timestamp(pubsub):
     sample = Point(x=11, y=22)
-    pubsub.writer.write(sample, handle=dds.InstanceHandle.nil(),
+    instance_handle = pubsub.writer.register_instance(sample)
+
+    pubsub.writer.write(sample, handle=instance_handle,
                         timestamp=dds.Time(123))
-    check_expected_data(pubsub.reader, [sample])
+    info = check_data_and_get_info(pubsub.reader, [sample])
+
+    assert info[0].instance_handle == instance_handle
+    assert info[0].source_timestamp == dds.Time(123)
 
 
 def test_write_w_params(pubsub):
@@ -96,13 +118,17 @@ def test_write_w_params(pubsub):
     params = dds.WriteParams()
     params.source_timestamp = dds.Time(123)
     pubsub.writer.write(sample, params)
-    check_expected_data(pubsub.reader, [sample])
+
+    info = check_data_and_get_info(pubsub.reader, [sample])
+    assert info[0].source_timestamp == dds.Time(123)
 
 
 def test_write_with_timestamp_with_shift_operator(pubsub):
     sample = Point(x=11, y=22)
     pubsub.writer << (sample, dds.Time(123))
-    check_expected_data(pubsub.reader, [sample])
+
+    info = check_data_and_get_info(pubsub.reader, [sample])
+    assert info[0].source_timestamp == dds.Time(123)
 
 
 def test_write_list(pubsub):
@@ -120,13 +146,17 @@ def test_write_list_with_shift_operator(pubsub):
 def test_write_list_with_timestamp(pubsub):
     samples = [Point(x=11, y=22), Point(x=33, y=44)]
     pubsub.writer.write(samples, dds.Time(123))
-    check_expected_data(pubsub.reader, samples)
+
+    infos = check_data_and_get_info(pubsub.reader, samples)
+    assert all(info.source_timestamp == dds.Time(123) for info in infos)
 
 
 def test_write_list_of_pairs_with_shift_operator(pubsub):
     samples = [Point(x=11, y=22), Point(x=33, y=44)]
     pubsub.writer << [(sample, dds.Time(sample.x)) for sample in samples]
-    check_expected_data(pubsub.reader, samples)
+
+    infos = check_data_and_get_info(pubsub.reader, samples)
+    assert all(info.source_timestamp == dds.Time(sample.x) for info, sample in zip(infos, samples))
 
 
 # --- Instance tests ----------------------------------------------------------

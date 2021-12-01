@@ -1482,6 +1482,9 @@ void init_dds_typed_datareader_template(
             std::unique_ptr<PyDataReader<DynamicData>, no_gil_delete<PyDataReader<DynamicData>>>>& cls)
 {
     init_dds_typed_datareader_base_template(cls);
+    init_dds_datareader_read_methods(cls);
+    init_dds_datareader_selector(cls);
+
     cls.def(
                "key_value",
                [](PyDataReader<dds::core::xtypes::DynamicData>& dr,

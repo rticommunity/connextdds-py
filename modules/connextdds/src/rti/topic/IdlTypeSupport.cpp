@@ -18,122 +18,13 @@
 #include "PyDynamicTypeMap.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
-#include <dds/core/xtypes/DynamicData.hpp>
-#include <dds/core/QosProvider.hpp>
+#include "IdlTopic.hpp"
 
 using namespace dds::core::xtypes;
 using namespace dds::topic;
 using namespace rti::topic::cdr;
 
 namespace pyrti {
-
-// From an @idl_type-decorated python dataclass we get its DynamicType,
-// which must be cached in the associated type_support
-//
-// @pre The GIL must be held
-// @throw TypeError if idl_type is not a valid @idl_type-annotated type
-static py::object get_type_support_from_idl_type(py::object& type)
-{
-    // type must be a type
-    if (!py::isinstance<py::type>(type)) {
-        throw py::type_error(
-                "Incompatible 'type' argument: an @idl.struct or @idl.union is "
-                "required");
-    }
-
-    // type must have a type_support attribute (which is added by the decorator)
-    if (!py::hasattr(type, "type_support")) {
-        throw py::type_error(
-                "Incompatible 'type' argument: an @idl.struct or @idl.union is "
-                "required");
-    }
-
-    // the type_support must have a dynamic_type attribute
-    auto type_support = type.attr("type_support");
-    if (!py::hasattr(type_support, "_plugin_dynamic_type")) {
-        throw py::type_error(
-                "Incompatible 'type' argument: not a valid an @idl.struct or "
-                "@idl.union");
-    }
-
-    return type_support;
-}
-
-static CTypePlugin* get_type_plugin_from_type_support(py::object& type_support)
-{
-    // get the struct holding the DynamicType and the associated Type Plugin
-    auto py_type_plugin_holder = type_support.attr("_plugin_dynamic_type");
-
-    // pybind11 magic allows casting the python object to the C++ one
-    PluginDynamicTypeHolder type_plugin_holder =
-            py::cast<PluginDynamicTypeHolder>(py_type_plugin_holder);
-
-    return type_plugin_holder.type_plugin;
-}
-
-// Gets the python TypeSupport from a C++ Topic object, which is stored in its
-// user data.
-static py::handle get_py_type_support_from_topic(PyTopic<CSampleWrapper>& topic)
-{
-    return py::handle(static_cast<PyObject*>(topic->get_user_data_()));
-}
-
-using rti::topic::cdr::CTypePlugin;
-
-using IdlTopicPyClass = py::class_<
-        PyTopic<CSampleWrapper>,
-        PyITopicDescription<CSampleWrapper>,
-        PyIAnyTopic,
-        std::unique_ptr<
-                PyTopic<CSampleWrapper>,
-                no_gil_delete<PyTopic<CSampleWrapper>>>>;
-
-using IdlTopicDescriptionPyClass = py::class_<
-        PyTopicDescription<CSampleWrapper>,
-        PyITopicDescription<CSampleWrapper>,
-        std::unique_ptr<
-                PyTopicDescription<CSampleWrapper>,
-                no_gil_delete<PyTopicDescription<CSampleWrapper>>>>;
-
-using IdlITopicDescriptionPyClass = py::class_<
-        PyITopicDescription<CSampleWrapper>,
-        PyIEntity,
-        std::unique_ptr<
-                PyITopicDescription<CSampleWrapper>,
-                no_gil_delete<PyITopicDescription<CSampleWrapper>>>>;
-
-static PyTopic<CSampleWrapper> create_idl_py_topic(
-        PyDomainParticipant& participant,
-        const ::std::string& topic_name,
-        py::object& type,
-        const dds::topic::qos::TopicQos *qos = NULL)
-{
-    // Get the type support created in python
-    py::object type_support = get_type_support_from_idl_type(type);
-
-    // Get the Type Plugin based on a DynamicType that was created
-    // reflectively in python by inspecting the IDL-derived
-    // dataclass
-    CTypePlugin* plugin = get_type_plugin_from_type_support(type_support);
-
-    // Register the plugin with this Topic's participant
-    plugin->register_type(participant);
-
-    auto topic = PyTopic<CSampleWrapper>(
-            dds::core::construct_from_native_tag_t(),
-            new rti::topic::TopicImpl<CSampleWrapper>(
-                    rti::topic::detail::no_register_tag_t(),
-                    participant,
-                    topic_name,
-                    plugin->type_name().c_str(),
-                    qos,
-                    nullptr,
-                    dds::core::status::StatusMask::none()));
-
-    topic->set_user_data_(type_support.ptr());
-
-    return topic;
-}
 
 template<>
 void init_dds_typed_topic_template(IdlTopicPyClass &cls)
@@ -254,41 +145,7 @@ using IdlDataReaderPyClass = py::class_<
                 no_gil_delete<PyDataReader<CSampleWrapper>>>>;
 
 template<>
-void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
-{
-    init_dds_typed_datareader_base_template(cls);
-    cls.def(
-            "take_valid_data",
-            [](PyDataReader<CSampleWrapper> &dr) {
-                py::gil_scoped_release release;
-                auto topic = dds::core::polymorphic_cast<
-                        dds::topic::Topic<CSampleWrapper>>(
-                        dr.topic_description());
-                auto type_support =
-                        py::handle(static_cast<PyObject *>(topic->get_user_data_()));
-
-                auto tmp = dr.take();
-                auto samples = rti::sub::valid_data(std::move(tmp));
-                std::vector<py::object> py_samples;
-
-                py::gil_scoped_acquire acquire;
-
-                // This is the type support function that converts from C data
-                // to the user-facing python object.
-                auto create_py_sample = type_support.attr("_create_py_sample");
-                for (auto &sample : samples) {
-                    // We pass the pointer to the python function as an integer,
-                    // because that's what ctypes.cast expects.
-                    size_t sample_ptr =
-                            reinterpret_cast<size_t>((sample.data().sample));
-                    py_samples.push_back(
-                            create_py_sample(sample_ptr));
-                }
-
-                return py_samples;
-            },
-            "Take copies of all available valid data");
-}
+void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls);
 
 template<>
 void process_inits<rti::topic::cdr::CSampleWrapper>(

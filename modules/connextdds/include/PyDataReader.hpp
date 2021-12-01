@@ -255,7 +255,8 @@ public:
     }
 };
 
-
+// Defines the Python methods common to all DataReaders, including IDL,
+// DynamicData, and built-in types.
 template<typename T>
 void init_dds_typed_datareader_base_template(
         py::class_<
@@ -263,8 +264,6 @@ void init_dds_typed_datareader_base_template(
             PyIDataReader,
             std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
 {
-    py::class_<typename PyDataReader<T>::Selector> selector(cls, "Selector");
-
     cls.def(py::init<const PySubscriber&, const PyTopic<T>&>(),
             py::arg("sub"),
             py::arg("topic"),
@@ -349,41 +348,6 @@ void init_dds_typed_datareader_base_template(
                     py::self != py::self,
                     py::call_guard<py::gil_scoped_release>(),
                     "Test for inequality.")
-            .def("read",
-                 (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
-                         & PyDataReader<T>::read,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Read all samples using the default filter state")
-            .def("take",
-                 (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
-                         & PyDataReader<T>::take,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Take all samples using the default filter state")
-#if rti_connext_version_gte(6, 0, 0, 0)
-            .def(
-                    "read_valid",
-                    [](PyDataReader<T>& dr) {
-                        return rti::sub::ValidLoanedSamples<T>(dr.read());
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Read only valid samples.")
-            .def(
-                    "take_valid",
-                    [](PyDataReader<T>& dr) {
-                        return rti::sub::ValidLoanedSamples<T>(dr.take());
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Take only valid samples.")
-#endif
-            .def(
-                    "select",
-                    [](PyDataReader<T>& dr) {
-                        return typename PyDataReader<T>::Selector(dr.select());
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Get a Selector to perform complex data selections, such "
-                    "as "
-                    "per-instance selection, content, and status filtering.")
             .def_property_readonly(
                     "topic_description",
                     [](const PyDataReader<T>& dr) {
@@ -599,41 +563,6 @@ void init_dds_typed_datareader_base_template(
                     py::arg("sample_info"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Acknowledge a single sample.")
-#if rti_connext_version_gte(6, 0, 0, 0)
-            .def(
-                    "is_data_consistent",
-                    [](PyDataReader<T>& dr,
-                       const T& data,
-                       const dds::sub::SampleInfo& info) {
-                        return dr->is_data_consistent(data, info);
-                    },
-                    py::arg("sample_data"),
-                    py::arg("sample_info"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Checks if the sample has been overwritten by the "
-                    "DataWriter.")
-            .def(
-                    "is_data_consistent",
-                    [](PyDataReader<T>& dr, const dds::sub::Sample<T>& sample) {
-                        return dr->is_data_consistent(
-                                sample.data(),
-                                sample.info());
-                    },
-                    py::arg("sample"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Checks if the sample has been overwritten by the "
-                    "DataWriter.")
-            .def(
-                    "is_data_consistent",
-                    [](PyDataReader<T>& dr,
-                       const rti::sub::LoanedSample<T>& sample) {
-                        return dr->is_data_consistent(sample);
-                    },
-                    py::arg("sample"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Checks if the sample has been overwritten by the "
-                    "DataWriter.")
-#endif
             .def_property_readonly(
                     "topic_name",
                     [](PyDataReader<T>& dr) { 
@@ -766,81 +695,206 @@ void init_dds_typed_datareader_base_template(
                     "Find DataReader in Subscriber with a topic name, "
                     "returning the first found.");
 
-    selector.def(py::init<PyDataReader<T>&>(),
-                 py::arg("datareader"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a Selector for a DataReader to read/take based on "
-                 "selected conditions")
-            .def("instance",
-                 &PyDataReader<T>::Selector::instance,
-                 py::arg("handle"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Select a specific instance to read/take.")
-            .def("next_instance",
-                 &PyDataReader<T>::Selector::next_instance,
-                 py::arg("previous"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Select the instance after the specified instance to "
-                 "read/take.")
-            .def("state",
-                 &PyDataReader<T>::Selector::state,
-                 py::arg("state"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Select samples with a specified data state.")
-            .def("content",
-                 &PyDataReader<T>::Selector::content,
-                 py::arg("query"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Select samples based on a Query.")
-            .def(
-                    "condition",
-                    [](typename PyDataReader<T>::Selector& sel,
-                       PyIReadCondition& rc) {
-                        auto cond = rc.get_read_condition();
-                        return sel.condition(cond);
-                    },
-                    py::arg("condition"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Select samples based on a ReadCondition.")
-            .def("max_samples",
-                 &PyDataReader<T>::Selector::max_samples,
-                 py::arg("max"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Limit the number of samples read/taken by the Select.")
-            .def("read",
-                 (dds::sub::LoanedSamples<T>(PyDataReader<T>::Selector::*)())
-                         & PyDataReader<T>::Selector::read,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Read samples based on Selector settings.")
+    py::implicitly_convertible<PyIAnyDataReader, PyDataReader<T>>();
+    py::implicitly_convertible<PyIEntity, PyDataReader<T>>();
+}
+
+// Defines the read/take methods for all DataReaders except the DataReader for
+// IDL types.
+template<typename T>
+void init_dds_datareader_read_methods(
+        py::class_<
+                PyDataReader<T>,
+                PyIDataReader,
+                std::unique_ptr<
+                        PyDataReader<T>,
+                        no_gil_delete<PyDataReader<T>>>>& cls)
+{
+    cls.def("read",
+            (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
+                    & PyDataReader<T>::read,
+            py::call_guard<py::gil_scoped_release>(),
+            "Read all samples using the default filter state");
+    cls.def("take",
+            (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
+                    & PyDataReader<T>::take,
+            py::call_guard<py::gil_scoped_release>(),
+            "Take all samples using the default filter state");
 #if rti_connext_version_gte(6, 0, 0, 0)
-            .def(
-                    "read_valid",
-                    [](typename PyDataReader<T>::Selector& s) {
-                        return rti::sub::ValidLoanedSamples<T>(s.read());
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Read valid samples based on Selector settings.")
+    cls.def(
+            "read_valid",
+            [](PyDataReader<T>& dr) {
+                return rti::sub::ValidLoanedSamples<T>(dr.read());
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Read only valid samples.");
+    cls.def(
+            "take_valid",
+            [](PyDataReader<T>& dr) {
+                return rti::sub::ValidLoanedSamples<T>(dr.take());
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Take only valid samples.");
 #endif
-            .def("take",
-                 (dds::sub::LoanedSamples<T>(PyDataReader<T>::Selector::*)())
-                         & PyDataReader<T>::Selector::take,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Take samples based on Selector settings.")
+    cls.def(
+            "select",
+            [](PyDataReader<T>& dr) {
+                return typename PyDataReader<T>::Selector(dr.select());
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Get a Selector to perform complex data selections, such "
+            "as "
+            "per-instance selection, content, and status filtering.");
+
 #if rti_connext_version_gte(6, 0, 0, 0)
-            .def(
-                    "take_valid",
-                    [](typename PyDataReader<T>::Selector& s) {
-                        return rti::sub::ValidLoanedSamples<T>(s.take());
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Take valid samples based on Selector settings.")
+    cls.def(
+            "is_data_consistent",
+            [](PyDataReader<T>& dr,
+               const T& data,
+               const dds::sub::SampleInfo& info) {
+                return dr->is_data_consistent(data, info);
+            },
+            py::arg("sample_data"),
+            py::arg("sample_info"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Checks if the sample has been overwritten by the "
+            "DataWriter.");
+    cls.def(
+            "is_data_consistent",
+            [](PyDataReader<T>& dr, const dds::sub::Sample<T>& sample) {
+                return dr->is_data_consistent(sample.data(), sample.info());
+            },
+            py::arg("sample"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Checks if the sample has been overwritten by the "
+            "DataWriter.");
+    cls.def(
+            "is_data_consistent",
+            [](PyDataReader<T>& dr, const rti::sub::LoanedSample<T>& sample) {
+                return dr->is_data_consistent(sample);
+            },
+            py::arg("sample"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Checks if the sample has been overwritten by the "
+            "DataWriter.");
 #endif
-            ;
 
     py::implicitly_convertible<PyIAnyDataReader, PyDataReader<T>>();
     py::implicitly_convertible<PyIEntity, PyDataReader<T>>();
 }
 
+// Defines the read/take methods for all Selectors except the Selector for IDL
+// types
+template<typename T>
+void init_dds_datareader_selector_read_methods(
+        py::class_<typename PyDataReader<T>::Selector> &selector)
+{
+    selector.def(
+            "read",
+            (dds::sub::LoanedSamples<T>(PyDataReader<T>::Selector::*)())
+                    & PyDataReader<T>::Selector::read,
+            py::call_guard<py::gil_scoped_release>(),
+            "Read samples based on Selector settings.");
+#if rti_connext_version_gte(6, 0, 0, 0)
+    selector.def(
+            "read_valid",
+            [](typename PyDataReader<T>::Selector& s) {
+                return rti::sub::ValidLoanedSamples<T>(s.read());
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Read valid samples based on Selector settings.");
+#endif
+    selector.def(
+            "take",
+            (dds::sub::LoanedSamples<T>(PyDataReader<T>::Selector::*)())
+                    & PyDataReader<T>::Selector::take,
+            py::call_guard<py::gil_scoped_release>(),
+            "Take samples based on Selector settings.");
+#if rti_connext_version_gte(6, 0, 0, 0)
+    selector.def(
+            "take_valid",
+            [](typename PyDataReader<T>::Selector& s) {
+                return rti::sub::ValidLoanedSamples<T>(s.take());
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Take valid samples based on Selector settings.");
+#endif
+}
+
+// Defines the common methods for all Selectors
+template<typename T>
+void init_dds_datareader_selector_base(
+        py::class_<typename PyDataReader<T>::Selector> &selector)
+{
+    selector.def(
+            py::init<PyDataReader<T>&>(),
+            py::arg("datareader"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a Selector for a DataReader to read/take based on "
+            "selected conditions");
+
+    selector.def(
+            "instance",
+            &PyDataReader<T>::Selector::instance,
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Select a specific instance to read/take.");
+
+    selector.def(
+            "next_instance",
+            &PyDataReader<T>::Selector::next_instance,
+            py::arg("previous"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Select the instance after the specified instance to "
+            "read/take.");
+    selector.def(
+            "state",
+            &PyDataReader<T>::Selector::state,
+            py::arg("state"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Select samples with a specified data state.");
+
+    selector.def(
+            "content",
+            &PyDataReader<T>::Selector::content,
+            py::arg("query"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Select samples based on a Query.");
+    selector.def(
+            "condition",
+            [](typename PyDataReader<T>::Selector& sel, PyIReadCondition& rc) {
+                auto cond = rc.get_read_condition();
+                return sel.condition(cond);
+            },
+            py::arg("condition"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Select samples based on a ReadCondition.");
+
+    selector.def(
+            "max_samples",
+            &PyDataReader<T>::Selector::max_samples,
+            py::arg("max"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Limit the number of samples read/taken by the Select.");
+}
+
+template<typename T>
+void init_dds_datareader_selector(
+        py::class_<
+                PyDataReader<T>,
+                PyIDataReader,
+                std::unique_ptr<
+                        PyDataReader<T>,
+                        no_gil_delete<PyDataReader<T>>>>& cls)
+{
+    py::class_<typename PyDataReader<T>::Selector> selector(cls, "Selector");
+    init_dds_datareader_selector_base<T>(selector);
+    init_dds_datareader_selector_read_methods<T>(selector);
+}
+
+// Initializes all DataReaders except the DataReader for DynamicData and the
+// DataReader for IDL types. These two define template specializations of this
+// function.
 template<typename T>
 void init_dds_typed_datareader_template(
         py::class_<
@@ -848,7 +902,9 @@ void init_dds_typed_datareader_template(
             PyIDataReader,
             std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
 {
-    init_dds_typed_datareader_base_template<T>(cls);
+    init_dds_typed_datareader_base_template(cls);
+    init_dds_datareader_read_methods(cls);
+    init_dds_datareader_selector(cls);
 
     cls.def(
                "key_value",

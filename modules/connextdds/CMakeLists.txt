@@ -145,6 +145,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/AckResponseData.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/TopicQuery.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/SubNamespace.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/IdlDataReader.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/AcknowledgmentInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/PubNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/FlowController.cpp"
