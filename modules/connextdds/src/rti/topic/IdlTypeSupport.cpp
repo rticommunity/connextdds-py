@@ -19,6 +19,8 @@
 #include "PyInitOpaqueTypeContainers.hpp"
 
 #include "IdlTopic.hpp"
+#include "IdlDataWriter.hpp"
+#include "IdlDataReader.hpp"
 
 using namespace dds::core::xtypes;
 using namespace dds::topic;
@@ -75,78 +77,8 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
             "Get the type associated with the topic.");
 }
 
-
-struct PyCTypesBuffer {
-    Py_buffer py_buffer;
-
-    explicit PyCTypesBuffer(const py::object& ctypes_sample)
-    {
-        PyObject* py_object_ptr = ctypes_sample.ptr();
-        PyObject_GetBuffer(py_object_ptr, &py_buffer, PyBUF_SIMPLE);
-    }
-
-    // move-only struct
-    PyCTypesBuffer(const PyCTypesBuffer&) = delete;
-    PyCTypesBuffer& operator=(const PyCTypesBuffer&) = delete;
-    PyCTypesBuffer(PyCTypesBuffer&& other) = default;
-    PyCTypesBuffer& operator=(PyCTypesBuffer&& other) = default;
-
-    ~PyCTypesBuffer()
-    {
-        PyBuffer_Release(&py_buffer);
-    }
-
-    // Obtain the actual buffer as a CSampleWrapper, as required by
-    // PyDataWriter::py_write
-    operator CSampleWrapper()
-    {
-        return { py_buffer.buf };
-    }
-};
-
-struct PyToCSampleConverter {
-    static PyCTypesBuffer convert(
-            dds::pub::DataWriter<CSampleWrapper>& writer,
-            const py::object& sample)
-    {
-        auto&& type_support = py::handle(
-                static_cast<PyObject*>(writer.topic()->get_user_data_()));
-        auto&& c_sample = type_support.attr("_create_c_sample")(sample);
-        return PyCTypesBuffer(c_sample);
-    }
-};
-
-struct IdlDataWriterTraits {
-    using py_type = py::object;
-    using before_write_gil_policy = py::gil_scoped_acquire;
-    using native_write_gil_policy = py::gil_scoped_release;
-    using sample_converter = PyToCSampleConverter;
-};
-
-using IdlPyDataWriter = TPyDataWriter<CSampleWrapper, IdlDataWriterTraits>;
-
-using IdlDataWriterPyClass =
-        PyDataWriterClass<CSampleWrapper, IdlDataWriterTraits>;
-
-template<>
-void init_dds_typed_datawriter_template(IdlDataWriterPyClass &cls)
-{
-    init_dds_typed_datawriter_base_template(cls);
-
-}
-
-// TODO PY-16: all that follows is temporary
-
-using IdlDataReaderPyClass = py::class_<
-        PyDataReader<CSampleWrapper>,
-        PyIDataReader,
-        std::unique_ptr<
-                PyDataReader<CSampleWrapper>,
-                no_gil_delete<PyDataReader<CSampleWrapper>>>>;
-
-template<>
-void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls);
-
+// Initializes the Topic, DataWriter and DataReader Python classes for IDL types
+// (dds.Topic, dds.DataWriter and dds.DataReader)
 template<>
 void process_inits<rti::topic::cdr::CSampleWrapper>(
         py::module &module,

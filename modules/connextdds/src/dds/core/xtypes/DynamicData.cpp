@@ -1389,19 +1389,22 @@ void init_dds_typed_topic_template(
 
 template<>
 void init_dds_typed_datawriter_template(
-        py::class_<
-            PyDataWriter<DynamicData>,
-            PyIEntity,
-            PyIAnyDataWriter,
-            std::unique_ptr<PyDataWriter<DynamicData>, no_gil_delete<PyDataWriter<DynamicData>>>>& cls)
+        PyDataWriterClass<dds::core::xtypes::DynamicData>& cls)
 {
-    init_dds_typed_datawriter_base_template(cls);
+    using dds::core::xtypes::DynamicData;
+
+    init_dds_datawriter_untyped_methods(cls);
+    init_dds_datawriter_write_methods<
+            DynamicData,
+            DefaultWriteImpl<DynamicData>>(cls);
+    init_dds_datawriter_async_write_methods(cls);
+
     cls.def(
                "write",
-               [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
+               [](PyDataWriter<DynamicData>& dw,
                   py::dict& dict) {
                    auto dt = PyDynamicTypeMap::get(dw->type_name());
-                   dds::core::xtypes::DynamicData sample(dt);
+                   DynamicData sample(dt);
                    update_dynamicdata_object(sample, dict);
                    {
                        py::gil_scoped_release release;
@@ -1413,14 +1416,14 @@ void init_dds_typed_datawriter_template(
                "dictionary containing field names as keys.")
             .def(
                     "write_async",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
+                    [](PyDataWriter<DynamicData>& dw,
                        py::dict& dict) {
                         return PyAsyncioExecutor::run<void>(
                                 std::function<void()>([&dw, &dict]() {
                                     py::gil_scoped_acquire acquire;
                                     auto dt = PyDynamicTypeMap::get(
                                             dw->type_name());
-                                    dds::core::xtypes::DynamicData sample(dt);
+                                    DynamicData sample(dt);
                                     update_dynamicdata_object(sample, dict);
                                     {
                                         py::gil_scoped_release release;
@@ -1436,8 +1439,8 @@ void init_dds_typed_datawriter_template(
                     "awaitable and is only for use with asyncio.")
             .def(
                     "create_data",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw) {
-                        return dds::core::xtypes::DynamicData(
+                    [](PyDataWriter<DynamicData>& dw) {
+                        return DynamicData(
                                 PyDynamicTypeMap::get(dw->type_name()));
                     },
                     py::call_guard<py::gil_scoped_release>(),
@@ -1445,9 +1448,9 @@ void init_dds_typed_datawriter_template(
                     "initialize it.")
             .def(
                     "key_value",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
+                    [](PyDataWriter<DynamicData>& dw,
                        const dds::core::InstanceHandle& handle) {
-                        dds::core::xtypes::DynamicData d(
+                        DynamicData d(
                                 PyDynamicTypeMap::get(dw->type_name()));
                         dw.key_value(d, handle);
                         return d;
@@ -1458,12 +1461,12 @@ void init_dds_typed_datawriter_template(
                     "handle.")
             .def(
                     "topic_instance_key_value",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
+                    [](PyDataWriter<DynamicData>& dw,
                        const dds::core::InstanceHandle& handle) {
-                        dds::core::xtypes::DynamicData d(
+                        DynamicData d(
                                 PyDynamicTypeMap::get(dw->type_name()));
                         dds::topic::TopicInstance<
-                                dds::core::xtypes::DynamicData>
+                                DynamicData>
                                 ti(handle, d);
                         dw.key_value(ti, handle);
                         return ti;

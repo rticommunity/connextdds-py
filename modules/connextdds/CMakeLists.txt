@@ -150,6 +150,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/PubNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/FlowController.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/WriteParams.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/IdlDataWriter.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/domain/DomainNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/domain/DomainParticipantConfigParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/RTINamespace.cpp"

@@ -12,17 +12,12 @@
 #pragma once
 
 #include "PyConnext.hpp"
-#include "PyDataWriterTraits.hpp"
 #include <dds/pub/DataWriterListener.hpp>
 
 namespace pyrti {
 
-template<typename T, typename PyDataWriterTraits>
-class TPyDataWriter;
-
-// TODO PY-17: Temporary alias while the code is updated
 template<typename T>
-using PyDataWriter = TPyDataWriter<T, DefaultPyDataWriterTraits<T>>;
+class PyDataWriter;
 
 template<typename T>
 class PyDataWriterListener : public dds::pub::DataWriterListener<T> {
@@ -506,9 +501,10 @@ public:
 };
 
 template<typename T>
-void init_class_defs(
-        py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>, std::shared_ptr<PyDataWriterListener<T>>>&
-                cls)
+void init_class_defs(py::class_<
+                     PyDataWriterListener<T>,
+                     PyDataWriterListenerTrampoline<T>,
+                     std::shared_ptr<PyDataWriterListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_offered_deadline_missed",

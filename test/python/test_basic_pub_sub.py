@@ -16,7 +16,7 @@ def test_data_reader_writer():
     fx = fixtures.PubSubFixture(0, dds.StringTopicType)
 
     # TODO PY-17: writer.write("Hello") doesn't work at the moment because
-    # of the ordering of write functions in init_dds_typed_datawriter_base_template.
+    # of the ordering of write functions in init_dds_datawriter_untyped_methods.
     for i in range(1, 6):
         fx.writer.write(dds.StringTopicType("Hello World " + str(i)))
 

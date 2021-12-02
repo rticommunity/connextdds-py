@@ -25,11 +25,10 @@ namespace pyrti {
 
 auto get_create_py_sample_function(PyDataReader<CSampleWrapper> &dr)
 {
+    // TODO PY-17: support CFT
     auto topic = dds::core::polymorphic_cast<dds::topic::Topic<CSampleWrapper>>(
             dr.topic_description());
-    auto type_support =
-            py::handle(static_cast<PyObject*>(topic->get_user_data_()));
-
+    auto type_support = get_py_type_support_from_topic(topic);
     return type_support.attr("_create_py_sample");
 }
 
@@ -130,24 +129,6 @@ static auto read_data(PyDataReader<CSampleWrapper>& dr)
 static auto read_data_and_info(PyDataReader<CSampleWrapper>& dr)
 {
     return convert_data_w_info(dr, dr.read());
-}
-
-static void test_alex(PyDataReader<CSampleWrapper>& dr, int expected_count)
-{
-    auto samples = dr.read();
-    size_t max_length = samples.length();
-    auto valid_samples = rti::sub::valid_data(std::move(samples));
-
-    size_t tst = 0;
-    size_t c = 0;
-    for (auto& sample : valid_samples) {
-        tst += (size_t) sample.data().sample;
-        c++;
-    }
-
-    if (c != expected_count) {
-        throw std::runtime_error("Expected count is wrong");
-    }
 }
 
 template<>

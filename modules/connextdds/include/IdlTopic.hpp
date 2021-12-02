@@ -42,6 +42,16 @@ using IdlITopicDescriptionPyClass = py::class_<
                         PyITopicDescription<rti::topic::cdr::CSampleWrapper>>>>;
 
 
+template<typename PyObjectType>
+static void assert_valid_type_support(PyObjectType& type_support)
+{
+    if (!py::hasattr(type_support, "_plugin_dynamic_type")) {
+        throw py::type_error(
+                "Incompatible 'type' argument: not a valid an @idl.struct or "
+                "@idl.union");
+    }
+}
+
 // From an @idl_type-decorated python dataclass we get its DynamicType,
 // which must be cached in the associated type_support
 //
@@ -66,11 +76,7 @@ static py::object get_type_support_from_idl_type(py::object& type)
 
     // the type_support must have a dynamic_type attribute
     auto type_support = type.attr("type_support");
-    if (!py::hasattr(type_support, "_plugin_dynamic_type")) {
-        throw py::type_error(
-                "Incompatible 'type' argument: not a valid an @idl.struct or "
-                "@idl.union");
-    }
+    assert_valid_type_support(type_support);
 
     return type_support;
 }
@@ -92,10 +98,23 @@ static rti::topic::cdr::CTypePlugin* get_type_plugin_from_type_support(
 
 // Gets the python TypeSupport from a C++ Topic object, which is stored in its
 // user data.
-inline
-static py::handle get_py_type_support_from_topic(PyIdlTopic& topic)
+inline static py::handle get_py_type_support_from_topic(
+        const dds::topic::Topic<rti::topic::cdr::CSampleWrapper>& topic)
 {
-    return py::handle(static_cast<PyObject*>(topic->get_user_data_()));
+    auto user_data = static_cast<PyObject*>(topic->get_user_data_());
+    if (user_data == nullptr) {
+        throw dds::core::IllegalOperationError("Not a valid Python Topic");
+    }
+
+    auto type_support = py::handle(user_data);
+
+#ifndef NDEBUG
+    // this shouldn't fail; for performance reasons, check this only in debug
+    // mode
+    assert_valid_type_support(type_support);
+#endif
+
+    return type_support;
 }
 
 inline
