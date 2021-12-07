@@ -62,14 +62,6 @@ def test_write(pubsub):
     check_expected_data(pubsub.reader, [sample])
 
 
-def test_alex(pubsub):
-    sample = Point(x=11, y=22)
-    pubsub.writer.write(sample)
-    # check_expected_data(pubsub.reader, [sample])
-    wait.for_data(pubsub.reader)
-    samples = pubsub.reader.take()
-    assert len(samples) == 1
-
 def test_write_with_shift_operator(pubsub):
     sample = Point(x=11, y=22)
     pubsub.writer << sample

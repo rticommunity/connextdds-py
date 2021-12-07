@@ -13,7 +13,7 @@
 
 #include "PyConnext.hpp"
 #include "PySeq.hpp"
-#include "PyGenericTypePluginFactory.hpp"
+#include "IdlTypeSupport.hpp"
 #include "PyInitType.hpp"
 #include "PyDynamicTypeMap.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
@@ -27,6 +27,77 @@ using namespace dds::topic;
 using namespace rti::topic::cdr;
 
 namespace pyrti {
+
+// Checks that a Python buffer definition is valid for CDR serialization
+template<typename T>
+static void validate_cdr_buffer_type(const py::buffer_info& info)
+{
+    if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T))) {
+        throw py::type_error(
+                "Bad buffer type: only valid 1D buffers are allowed");
+    }
+
+    if (!py::detail::compare_buffer_info<T>::compare(info)) {
+        throw py::type_error("Bad buffer element type");
+    }
+
+    if (info.strides[0] / static_cast<ssize_t>(sizeof(T)) != 1) {
+        throw py::type_error(
+                "Bad buffer type: only valid 1D buffers are allowed");
+    }
+}
+
+// This class and methods are internally used (in Python code) by the
+// TypeSupport class
+template<>
+void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
+{
+    cls.def("clone", [](const PluginDynamicTypeHolder& self) {
+        rti::core::xtypes::DynamicTypeImpl copy = *self.type;
+        return py_cast_type(copy);
+    });
+
+    // Used by TypeSupport.serialize, expects a sample that has already been
+    // converted to C
+    cls.def(
+            "serialize",
+            [](const PluginDynamicTypeHolder& self, py::object c_sample) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+                std::vector<uint8_t> cdr_buffer;
+                self.type_plugin->serialize_to_cdr_buffer(
+                        reinterpret_cast<std::vector<char>&>(cdr_buffer),
+                        c_sample_buffer);
+
+                return cdr_buffer;
+            },
+            py::arg("c_sample"),
+            py::call_guard<py::gil_scoped_release>());
+
+    // Used by TypeSupport.deserialize, expects a sample that has already been
+    // converted to C
+    cls.def(
+            "deserialize",
+            [](const PluginDynamicTypeHolder& self,
+               py::object c_sample,
+               py::buffer buffer) {
+                // TODO PY-25: Add support for an input buffer type that is not
+                // convertible to py::buffer (e.g. a list of bytes).
+                auto buffer_info = buffer.request();
+                validate_cdr_buffer_type<uint8_t>(buffer_info);
+
+                PyCTypesBuffer c_sample_buffer(c_sample);
+
+                py::gil_scoped_release release;
+                CSampleWrapper sample_wrapper = c_sample_buffer;
+                self.type_plugin->deserialize_from_cdr_buffer(
+                        sample_wrapper,
+                        reinterpret_cast<char*>(buffer_info.ptr),
+                        buffer_info.size);
+            },
+            py::arg("c_sample"),
+            py::arg("buffer"),
+            py::call_guard<py::gil_scoped_acquire>());
+}
 
 template<>
 void init_dds_typed_topic_template(IdlTopicPyClass &cls)

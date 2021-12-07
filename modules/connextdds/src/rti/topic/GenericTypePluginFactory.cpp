@@ -10,24 +10,16 @@
  */
 
 #include "PyConnext.hpp"
-#include "PyGenericTypePluginFactory.hpp"
 #include <dds/core/Duration.hpp>
 #include <rti/core/constants.hpp>
+
+#include "IdlTypeSupport.hpp"
 
 using namespace rti::core::xtypes;
 using namespace rti::topic::cdr;
 using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
 namespace pyrti {
-
-template<>
-void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
-{
-    cls.def("clone", [](const PluginDynamicTypeHolder& self) {
-        DynamicTypeImpl copy = *self.type;
-        return py_cast_type(copy);
-    });
-}
 
 template<>
 void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
@@ -140,7 +132,7 @@ void process_inits<GenericTypePluginFactory>(py::module& m, ClassInitList& l)
     l.push_back([m]() mutable {
         return init_class<PluginDynamicTypeHolder>(
                 m,
-                "_PluginDynamicTypeHolder");
+                "_TypePluginDynamicTypeHolder");
     });
 }
 

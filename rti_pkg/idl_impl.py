@@ -96,7 +96,9 @@ def create_ctype_from_dataclass(py_type):
             underlying_type = get_underlying_optional_type(info.type)
             member_type = ctypes.POINTER(py_to_ctypes_map[underlying_type])
         else:
-            member_type = py_to_ctypes_map[info.type]
+            member_type = py_to_ctypes_map.get(info.type, None)
+            if member_type is None:
+                member_type = info.type.type_support.c_type
 
         c_fields.append((field, member_type))
 
@@ -145,14 +147,16 @@ def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=No
                 info.type, None)
 
         if member_dynamic_type is None:
-            member_dynamic_type = info.type.type_support.dynamic_type
+            member_dynamic_type_instance = info.type.type_support.dynamic_type
+        else:
+            member_dynamic_type_instance = member_dynamic_type()
 
         annotations = member_annotations.get(field, {})
         is_key = find_annotation(annotations, cls=KeyAnnotation)
         member_id = find_annotation(annotations, cls=IdAnnotation)
 
         _type_factory.add_member(
-            dynamic_type, field, member_dynamic_type(), id=member_id.value, is_key=is_key.value, is_optional=is_optional, is_external=False)
+            dynamic_type, field, member_dynamic_type_instance, id=member_id.value, is_key=is_key.value, is_optional=is_optional, is_external=False)
 
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type
@@ -184,7 +188,11 @@ def copy_to_c_sample(sample, c_sample):
         if isinstance(value, str):
             setattr(c_sample, field, copy_python_str_to_ctype(value))
         else:
-            setattr(c_sample, field, value)
+            member_type = type(value)
+            if hasattr(member_type, 'type_support'):
+                copy_to_c_sample(value, getattr(c_sample, field))
+            else:
+                setattr(c_sample, field, value)
 
 
 def create_c_sample(sample):
@@ -200,7 +208,10 @@ def copy_from_c_sample(sample, c_sample):
             setattr(sample, field, create_python_str_from_ctype(
                 getattr(c_sample, field)))
         else:
-            setattr(sample, field, getattr(c_sample, field))
+            if hasattr(type(value), 'type_support'):
+                copy_from_c_sample(value, getattr(c_sample, field))
+            else:
+                setattr(sample, field, getattr(c_sample, field))
 
 def create_py_sample(idl_type, c_type):
     def _create_py_sample(c_sample_ptr):
@@ -214,7 +225,7 @@ def create_py_sample(idl_type, c_type):
 
 class TypeSupport:
     """
-    Supporting properties for an IDL type
+    Support and utility methods for the usage of an IDL type
     """
 
     def __init__(self, idl_type, type_annotations=None, member_annotations=None):
@@ -237,6 +248,26 @@ class TypeSupport:
         c_sample = ctypes.cast(c_sample_ptr, ctypes.POINTER(self.c_type))[0]
         copy_from_c_sample(py_sample, c_sample)
         return py_sample
+
+    def _create_py_sample_no_ptr(self, c_sample):
+        py_sample = self.type()
+        copy_from_c_sample(py_sample, c_sample)
+        return py_sample
+
+    def serialize(self, sample):
+        """Serialize a data sample into a cdr byte buffer"""
+
+        c_sample = self._create_c_sample(sample)
+        return self._plugin_dynamic_type.serialize(c_sample)
+
+    def deserialize(self, buffer):
+        """Create a data sample for the data type for this TypeSupport by
+           deserializing a cdr byte buffer
+        """
+
+        c_sample = self.c_type()
+        self._plugin_dynamic_type.deserialize(c_sample, buffer)
+        return self._create_py_sample_no_ptr(c_sample)
 
     @property
     def dynamic_type(self):

@@ -13,7 +13,7 @@
 
 #include "PyConnext.hpp"
 #include "PyTopic.hpp"
-#include "PyGenericTypePluginFactory.hpp"
+#include "IdlTypeSupport.hpp"
 
 namespace pyrti {
 
@@ -41,61 +41,6 @@ using IdlITopicDescriptionPyClass = py::class_<
                 no_gil_delete<
                         PyITopicDescription<rti::topic::cdr::CSampleWrapper>>>>;
 
-
-template<typename PyObjectType>
-static void assert_valid_type_support(PyObjectType& type_support)
-{
-    if (!py::hasattr(type_support, "_plugin_dynamic_type")) {
-        throw py::type_error(
-                "Incompatible 'type' argument: not a valid an @idl.struct or "
-                "@idl.union");
-    }
-}
-
-// From an @idl_type-decorated python dataclass we get its DynamicType,
-// which must be cached in the associated type_support
-//
-// @pre The GIL must be held
-// @throw TypeError if idl_type is not a valid @idl_type-annotated type
-inline
-static py::object get_type_support_from_idl_type(py::object& type)
-{
-    // type must be a type
-    if (!py::isinstance<py::type>(type)) {
-        throw py::type_error(
-                "Incompatible 'type' argument: an @idl.struct or @idl.union is "
-                "required");
-    }
-
-    // type must have a type_support attribute (which is added by the decorator)
-    if (!py::hasattr(type, "type_support")) {
-        throw py::type_error(
-                "Incompatible 'type' argument: an @idl.struct or @idl.union is "
-                "required");
-    }
-
-    // the type_support must have a dynamic_type attribute
-    auto type_support = type.attr("type_support");
-    assert_valid_type_support(type_support);
-
-    return type_support;
-}
-
-inline
-static rti::topic::cdr::CTypePlugin* get_type_plugin_from_type_support(
-        py::object& type_support)
-{
-    // get the struct holding the DynamicType and the associated Type
-    // Plugin
-    auto py_type_plugin_holder = type_support.attr("_plugin_dynamic_type");
-
-    // pybind11 magic allows casting the python object to the C++ one
-    PluginDynamicTypeHolder type_plugin_holder =
-            py::cast<PluginDynamicTypeHolder>(py_type_plugin_holder);
-
-    return type_plugin_holder.type_plugin;
-}
-
 // Gets the python TypeSupport from a C++ Topic object, which is stored in its
 // user data.
 inline static py::handle get_py_type_support_from_topic(
@@ -117,8 +62,7 @@ inline static py::handle get_py_type_support_from_topic(
     return type_support;
 }
 
-inline
-PyIdlTopic create_idl_py_topic(
+inline PyIdlTopic create_idl_py_topic(
         PyDomainParticipant& participant,
         const ::std::string& topic_name,
         py::object& type,

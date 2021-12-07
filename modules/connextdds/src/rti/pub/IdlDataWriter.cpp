@@ -23,35 +23,8 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-struct PyCTypesBuffer {
-    Py_buffer py_buffer;
-
-    explicit PyCTypesBuffer(const py::object& ctypes_sample)
-    {
-        PyObject* py_object_ptr = ctypes_sample.ptr();
-        PyObject_GetBuffer(py_object_ptr, &py_buffer, PyBUF_SIMPLE);
-    }
-
-    // move-only struct
-    PyCTypesBuffer(const PyCTypesBuffer&) = delete;
-    PyCTypesBuffer& operator=(const PyCTypesBuffer&) = delete;
-    PyCTypesBuffer(PyCTypesBuffer&& other) = default;
-    PyCTypesBuffer& operator=(PyCTypesBuffer&& other) = default;
-
-    ~PyCTypesBuffer()
-    {
-        PyBuffer_Release(&py_buffer);
-    }
-
-    // Obtain the actual buffer as a CSampleWrapper, as required by
-    // PyDataWriter::py_write
-    operator CSampleWrapper()
-    {
-        return { py_buffer.buf };
-    }
-};
-
-auto get_create_c_sample_function(dds::pub::DataWriter<CSampleWrapper>& writer)
+static auto get_create_c_sample_function(
+        dds::pub::DataWriter<CSampleWrapper>& writer)
 {
     auto type_support = get_py_type_support_from_topic(writer.topic());
     return type_support.attr("_create_c_sample");
