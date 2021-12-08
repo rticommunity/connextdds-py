@@ -89,7 +89,7 @@ def replier_main(domain_id):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="RTI Connext DDS Example: Using Coherent Presentation (Publisher)"
+        description="RTI Connext DDS Example: Request-Reply (Replier)"
     )
     parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID (default: 0)")
 
