@@ -1684,15 +1684,28 @@ void add_field_type_collection(
 template<>
 void init_class_defs(py::class_<DynamicData>& dd_class)
 {
-    dd_class.def(py::init<const DynamicType&>())
+    dd_class.def(py::init<const DynamicType&>(), 
+                py::arg("dynamic_type"),
+                "Create a DynamicData object from a DynamicType.")
             .def(py::init<
                     const DynamicType&,
-                    const rti::core::xtypes::DynamicDataProperty&>())
+                    const rti::core::xtypes::DynamicDataProperty&>(),
+                py::arg("dynamic_type"),
+                py::arg("property"),
+                "Create a DynamicData object from a DynamicType with "
+                "properties.")
             .def(py::init([](const DynamicType& dt, py::dict& data) {
-                DynamicData dd(dt);
-                update_dynamicdata_object(dd, data);
-                return dd;
-            }))
+                    DynamicData dd(dt);
+                    update_dynamicdata_object(dd, data);
+                    return dd;
+                }),
+                py::arg("dynamic_type"),
+                py::arg("data"),
+                "Create a DynamicData object from a DynamicType with "
+                "a dict to initialize the fields")
+            .def(py::init<DynamicData&>(),
+                py::arg("other"),
+                "Create a copy of a DynamicData object.")
             .def(py::self == py::self, "Test for equality.")
             .def(
                     "__eq__",

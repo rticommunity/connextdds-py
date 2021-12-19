@@ -158,7 +158,11 @@ DefInitFunc init_type_class(
     });
 
     l.push_back([cls] {
-        py::class_<dds::sub::SharedSamples<T>> ss(cls, "SharedSamples");
+        py::class_<
+            dds::sub::SharedSamples<T>,
+            std::unique_ptr<dds::sub::SharedSamples<T>, no_gil_delete<dds::sub::SharedSamples<T>>>> ss(
+                cls,
+                "SharedSamples");
 
         return ([ss]() mutable { init_shared_samples<T>(ss); });
     });
