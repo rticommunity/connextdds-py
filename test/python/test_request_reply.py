@@ -307,10 +307,12 @@ def test_request_single_reply(
     reply_key, reply_val = test_object.parse_data(replies[0].data)
     assert reply_key == key
     assert reply_val == val + ' reply'
-    test_object.requester.request_datawriter.dispose_instance(req)
-    test_object.requester.request_datawriter.unregister_instance(req)
-    test_object.replier.reply_datawriter.dispose_instance(req)
-    test_object.replier.reply_datawriter.unregister_instance(req)
+
+    instance = test_object.requester.request_datawriter.lookup_instance(req)
+    test_object.requester.request_datawriter.dispose_instance(instance)
+    test_object.requester.request_datawriter.unregister_instance(instance)
+    test_object.replier.reply_datawriter.dispose_instance(instance)
+    test_object.replier.reply_datawriter.unregister_instance(instance)
     test_object.close()
 
 
