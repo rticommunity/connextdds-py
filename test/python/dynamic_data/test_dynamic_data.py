@@ -10,38 +10,65 @@
  #
 
 import rti.connextdds as dds
-import utils
 import pytest
 import pathlib
 import array
 
 
-FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../../xml/UnionWithEnum.xml"
+@pytest.fixture
+def types():
+    class TestTypes:
+        def __init__(self):
 
-PROVIDER = dds.QosProvider(FILE)
-UNION = PROVIDER.type("TestUnionWithEnum")
-ENUM_TYPE = PROVIDER.type("TestEnum")
-UNION_DEFAULT_TYPE = PROVIDER.type("TestUnionWithDefault")
+            FILE = str(pathlib.Path(__file__).parent.absolute()) + \
+                "/../../xml/UnionWithEnum.xml"
 
-PRIMITIVES = dds.StructType("Primitives")
-PRIMITIVES.add_member(dds.Member("myLong", dds.Int32Type()))
-PRIMITIVES.add_member(dds.Member("myDouble", dds.Float64Type()))
+            self.PROVIDER = dds.QosProvider(FILE)
+            self.UNION = self.PROVIDER.type("TestUnionWithEnum")
+            self.ENUM_TYPE = self.PROVIDER.type("TestEnum")
+            self.UNION_DEFAULT_TYPE = self.PROVIDER.type(
+                "TestUnionWithDefault")
 
-COMPLEX = dds.StructType("Complex")
-COMPLEX.add_member(dds.Member("myLongSeq", dds.SequenceType(dds.Int32Type(), 10)))
-COMPLEX.add_member(dds.Member("myLongArray", dds.ArrayType(dds.Int32Type(), 10)))
-COMPLEX.add_member(dds.Member("myOptional", dds.Int32Type(), is_optional=True))
-COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
-COMPLEX.add_member(dds.Member("myStringSeq", dds.SequenceType(dds.StringType(10), 10)))
-COMPLEX.add_member(dds.Member("myEnum", ENUM_TYPE))
-COMPLEX.add_member(dds.Member("myEnumSeq", dds.SequenceType(ENUM_TYPE, 10)))
-COMPLEX.add_member(dds.Member("myMultiDimArray", dds.ArrayType(dds.Int32Type(), [2, 2, 2])))
+            self.PRIMITIVES = dds.StructType("Primitives")
+            self.PRIMITIVES.add_member(dds.Member("myLong", dds.Int32Type()))
+            self.PRIMITIVES.add_member(dds.Member("myDouble", dds.Float64Type()))
 
-SIMPLE = PROVIDER.type("SimpleType")
+            COMPLEX = dds.StructType("Complex")
+            COMPLEX.add_member(dds.Member(
+                "myLongSeq", dds.SequenceType(dds.Int32Type(), 10)))
+            COMPLEX.add_member(dds.Member(
+                "myLongArray", dds.ArrayType(dds.Int32Type(), 10)))
+            COMPLEX.add_member(dds.Member(
+                "myOptional", dds.Int32Type(), is_optional=True))
+            COMPLEX.add_member(dds.Member("myString", dds.StringType(100)))
+            COMPLEX.add_member(dds.Member(
+                "myStringSeq", dds.SequenceType(dds.StringType(10), 10)))
+            COMPLEX.add_member(dds.Member("myEnum", self.ENUM_TYPE))
+            COMPLEX.add_member(dds.Member(
+                "myEnumSeq", dds.SequenceType(self.ENUM_TYPE, 10)))
+            COMPLEX.add_member(dds.Member("myMultiDimArray",
+                                          dds.ArrayType(dds.Int32Type(), [2, 2, 2])))
+            self.COMPLEX = COMPLEX
 
+            self.SIMPLE = self.PROVIDER.type("SimpleType")
 
-def test_clear_all_members():
-    data = dds.DynamicData(PRIMITIVES)
+        def finalize_types(self):
+            # This ensures that pytest doesn't keep references that case heap
+            # monitoring to report leaks
+            self.PROVIDER = None
+            self.PRIMITIVES = None
+            self.UNION = None
+            self.ENUM_TYPE = None
+            self.UNION_DEFAULT_TYPE = None
+            self.COMPLEX = None
+            self.SIMPLE = None
+
+    types = TestTypes()
+    yield types
+    types.finalize_types()
+
+def test_clear_all_members(types):
+    data = dds.DynamicData(types.PRIMITIVES)
     data["myLong"] = 3
     data["myDouble"] = 7.7
     assert data["myLong"] == 3
@@ -51,7 +78,7 @@ def test_clear_all_members():
     assert data["myLong"] == 0
     assert data["myDouble"] == 0.0
 
-    data = dds.DynamicData(COMPLEX)
+    data = dds.DynamicData(types.COMPLEX)
     data["myLongSeq"] = list(range(1, 11))
     data["myLongArray"] = array.array("i", range(1, 11))
 
@@ -71,8 +98,8 @@ def test_clear_all_members():
         assert data[f"myLongArray[{i}]"] == 0
 
 
-def test_clear_member():
-    data = dds.DynamicData(COMPLEX)
+def test_clear_member(types):
+    data = dds.DynamicData(types.COMPLEX)
     data["myOptional"] = 3
     assert data["myOptional"] == 3
     data.clear_optional_member("myOptional")
@@ -108,16 +135,16 @@ def test_clear_member():
             assert i + 1 == values[i]
 
 
-def test_is_member_key():
-    sample = dds.DynamicData(SIMPLE)
+def test_is_member_key(types):
+    sample = dds.DynamicData(types.SIMPLE)
     assert sample.is_member_key("key")
     assert not sample.is_member_key("value")
     assert sample.is_member_key(0)
     assert not sample.is_member_key(1)
 
 
-def test_member_info():
-    data = dds.DynamicData(SIMPLE)
+def test_member_info(types):
+    data = dds.DynamicData(types.SIMPLE)
     info1 = data.member_info("key")
     info2 = data.member_info(0)
     assert info1 == info2
@@ -137,7 +164,7 @@ def test_member_info():
 
     # test_value_type?
 
-    data2 = dds.DynamicData(COMPLEX)
+    data2 = dds.DynamicData(types.COMPLEX)
     info = data2.member_info("myLongSeq")
 
     assert info.kind == dds.SequenceType(dds.Int32Type()).kind
@@ -149,7 +176,7 @@ def test_member_info():
         info = loan.data.member_info(1)
         assert info.kind == dds.Int32Type().kind
 
-    data2["myEnumSeq"] = [ENUM_TYPE["BLUE"], ENUM_TYPE["RED"]]
+    data2["myEnumSeq"] = [types.ENUM_TYPE["BLUE"], types.ENUM_TYPE["RED"]]
     info = data2.member_info("myEnumSeq")
     assert info.kind == dds.TypeKind.SEQUENCE_TYPE
     
@@ -157,11 +184,11 @@ def test_member_info():
         assert loan.data.member_exists(1)
         info = loan.data.member_info(1)
         assert info.kind == dds.TypeKind.ENUMERATION_TYPE
-        assert loan.data[1] == ENUM_TYPE["RED"]
+        assert loan.data[1] == types.ENUM_TYPE["RED"]
         loan.data[0] = 3
         info = loan.data.member_info(0)
         assert info.kind == dds.TypeKind.ENUMERATION_TYPE
-        assert loan.data[0] == ENUM_TYPE["GREEN"]
+        assert loan.data[0] == types.ENUM_TYPE["GREEN"]
 
     # Cases where member doesn't exist in sample
     # but does in the type
@@ -175,7 +202,7 @@ def test_member_info():
     assert info.kind == dds.Int32Type().kind
 
     # 2) Unselected union member
-    union_sample = dds.DynamicData(UNION_DEFAULT_TYPE)
+    union_sample = dds.DynamicData(types.UNION_DEFAULT_TYPE)
     assert not union_sample.member_exists("case1")
     info = union_sample.member_info("case_default")
     assert info.kind == dds.TypeKind.ENUMERATION_TYPE
@@ -214,16 +241,16 @@ def test_member_info():
         array.data.member_info(11)
 
 
-def test_dynamic_data_info():
-    data = dds.DynamicData(SIMPLE)
+def test_dynamic_data_info(types):
+    data = dds.DynamicData(types.SIMPLE)
     info = data.info
     assert info.member_count == 2
     assert info.is_optimized_storage
 
 
-def test_dynamic_data_buffer_numpy():
+def test_dynamic_data_buffer_numpy(types):
     np = pytest.importorskip("numpy")
-    data = dds.DynamicData(COMPLEX)
+    data = dds.DynamicData(types.COMPLEX)
     my_array_unidim = np.array([1, 2, 3, 4, 5, 6], np.int32)
     my_array_multidim = np.reshape(np.array([1, 2, 3, 4, 5, 6], np.int32), (2, 3))
     my_array_short = np.array([1, 2, 3, 4, 5, 6], np.int16)
@@ -238,14 +265,14 @@ def test_dynamic_data_buffer_numpy():
         data["myLongSeq"] = my_array_short
 
 
-def test_union():
-    test_union = dds.DynamicData(UNION)
-    simple = dds.DynamicData(SIMPLE)
+def test_union(types):
+    test_union = dds.DynamicData(types.UNION)
+    simple = dds.DynamicData(types.SIMPLE)
     simple["key"] = 10
     simple["value"] = 20
     test_union["red_green"] = simple
 
-    assert test_union.discriminator_value == ENUM_TYPE["RED"]
+    assert test_union.discriminator_value == types.ENUM_TYPE["RED"]
     member_value = test_union.get_value(test_union.discriminator_value)
 
     assert member_value.get_value(0) == 10
@@ -255,16 +282,16 @@ def test_union():
         test_union.get_value("blue")
 
     test_union["blue"] = 123
-    assert test_union.discriminator_value == ENUM_TYPE["BLUE"]
+    assert test_union.discriminator_value == types.ENUM_TYPE["BLUE"]
     assert 123 == test_union.get_value(test_union.discriminator_value)
 
     test_union.clear_member("blue")
-    assert test_union.discriminator_value == ENUM_TYPE["BLUE"]
+    assert test_union.discriminator_value == types.ENUM_TYPE["BLUE"]
     assert 0 == test_union.get_value(test_union.discriminator_value)
 
 
-def test_multidim_array():
-    data = dds.DynamicData(COMPLEX)
+def test_multidim_array(types):
+    data = dds.DynamicData(types.COMPLEX)
 
     for i in range(2):
         for j in range(2):
