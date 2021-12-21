@@ -37,7 +37,7 @@ def test_type_plugin_basic():
     assert dynamic_type["x"].type == dds.Int32Type()
 
 def test_idl_topic():
-    participant = fixtures.create_participant(domain_id=54)
+    participant = fixtures.create_participant()
     topic = dds.Topic(participant, "MyPoint", Point)
 
     assert topic.name == "MyPoint"
@@ -47,7 +47,7 @@ def test_idl_topic():
 
 
 def test_idl_topic_with_qos():
-    participant = fixtures.create_participant(domain_id=54)
+    participant = fixtures.create_participant()
     qos = dds.TopicQos()
     qos.history.kind = dds.HistoryKind.KEEP_LAST
     qos.history.depth = 13
@@ -63,7 +63,7 @@ def test_idl_topic_with_qos():
 
 
 def test_idl_any_topic():
-    participant = fixtures.create_participant(domain_id=54)
+    participant = fixtures.create_participant()
     topic = dds.Topic(participant, "MyPoint", Point)
 
     as_any_topic = dds.AnyTopic(topic)
@@ -105,7 +105,7 @@ def test_deserialization_fails_with_bad_buffer_type():
         ts.deserialize(None)
 
 def test_idl_writer_fails_with_bad_sample_type():
-    participant = fixtures.create_participant(domain_id=0)
+    participant = fixtures.create_participant()
     topic = dds.Topic(participant, "MyPoint", Point)
     writer = dds.DataWriter(participant.implicit_publisher, topic)
 

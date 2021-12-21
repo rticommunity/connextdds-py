@@ -173,7 +173,7 @@ def test_stress_write():
     # TODO PY-17: this is not automated. It requires manually monitoring the
     # memory of the process to ensure that it doesn't grow unlimited.
     t = Point
-    participant = fixtures.create_participant(0)
+    participant = fixtures.create_participant()
     topic = fixtures.create_topic(participant, t)
     writer = fixtures.create_writer(topic, t, dds.DataWriterQos())
 

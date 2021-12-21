@@ -10,13 +10,18 @@
 #
 
 import pytest
+import os
 import rti.connextdds as dds
 from . import wait
 
-def create_participant(domain_id):
+def get_test_domain():
+    return int(os.environ.get('TEST_DOMAIN', 0))
+
+
+def create_participant():
     qos = dds.DomainParticipantQos()
     qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(10)
-    return dds.DomainParticipant(domain_id, qos)
+    return dds.DomainParticipant(get_test_domain(), qos)
 
 def create_topic(participant: dds.DomainParticipant, type: type):
     topic_name = f'Example {type}'
@@ -53,8 +58,8 @@ class PubSubFixture:
     def __init__(self, participant, data_type, create_writer=True, create_reader=True):
         self.data_type = data_type
 
-        if type(participant) is int:
-            self.participant = create_participant(participant)
+        if participant is None:
+            self.participant = create_participant()
         else:
             self.participant = participant
         self.topic = create_topic(self.participant, data_type)
@@ -77,7 +82,7 @@ class PubSubFixture:
 
 @pytest.fixture(scope="module")
 def shared_participant():
-    participant = create_participant(0)
+    participant = create_participant()
     yield participant
     participant.close()
 
