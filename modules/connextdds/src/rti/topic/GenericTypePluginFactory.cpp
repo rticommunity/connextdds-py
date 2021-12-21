@@ -14,6 +14,7 @@
 #include <rti/core/constants.hpp>
 
 #include "IdlTypeSupport.hpp"
+#include "PyDynamicTypeMap.hpp"
 
 using namespace rti::core::xtypes;
 using namespace rti::topic::cdr;
@@ -116,6 +117,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                     })
             .def_static("delete_instance", []() {
                 GenericTypePluginFactory::delete_instance();
+                PyDynamicTypeMap::finalize();
                 DDS_TypeCodeFactory_finalize_instance();
             });
 }
