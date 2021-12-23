@@ -10,7 +10,7 @@
 #
 
 import dataclasses
-import rti.idl_impl
+import rti.idl_impl.type_plugin as idl_impl
 import rti.connextdds
 
 #
@@ -20,18 +20,18 @@ import rti.connextdds
 
 # --- Member annotations ------------------------------------------------------
 
-key = rti.idl_impl.KeyAnnotation(True)
+key = idl_impl.KeyAnnotation(True)
 
-def id(value: int) -> rti.idl_impl.IdAnnotation:
-    return rti.idl_impl.IdAnnotation(value)
+def id(value: int) -> idl_impl.IdAnnotation:
+    return idl_impl.IdAnnotation(value)
 
 # --- Type annotations --------------------------------------------------------
 
-extensible = rti.idl_impl.ExtensibilityAnnotation(
+extensible = idl_impl.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.EXTENSIBLE)
-mutable = rti.idl_impl.ExtensibilityAnnotation(
+mutable = idl_impl.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.MUTABLE)
-final = rti.idl_impl.ExtensibilityAnnotation(
+final = idl_impl.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.FINAL)
 
 # --- Decorators --------------------------------------------------------------
@@ -43,7 +43,7 @@ def struct(cls=None, *, type_annotations={}, member_annotations={}):
 
     def wrapper(cls):
         actual_cls = dataclasses.dataclass(cls)
-        actual_cls.type_support = rti.idl_impl.TypeSupport(
+        actual_cls.type_support = idl_impl.TypeSupport(
             actual_cls, type_annotations, member_annotations)
         return actual_cls
     if cls is None:
