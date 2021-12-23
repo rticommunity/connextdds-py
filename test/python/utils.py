@@ -12,10 +12,11 @@
 import rti.connextdds as dds
 import time
 import pathlib
+import test_utils.fixtures as fixtures
 
 class TestSystem:
-    def __init__(self, domain_id, sample_type):
-        self.participant = create_participant(domain_id)
+    def __init__(self, sample_type):
+        self.participant = create_participant()
 
         reader_qos = self.participant.implicit_subscriber.default_datareader_qos
         reader_qos << dds.Durability.transient_local
@@ -62,10 +63,10 @@ class TestSystem:
             raise Exception(sample_type + " not supported in test system")
 
 
-def create_participant(domain_id=0):
-    qos = dds.DomainParticipantQos()
-    qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(10)
-    return dds.DomainParticipant(domain_id, qos)
+# PY-26: replace with test_utils.fixtures.participant fixture
+# (pass as a input fixture to the test instead of calling a function)
+def create_participant():
+    return fixtures.create_participant()
 
 
 def wait(reader, t=10, count=1):

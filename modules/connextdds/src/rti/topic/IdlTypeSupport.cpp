@@ -15,7 +15,6 @@
 #include "PySeq.hpp"
 #include "IdlTypeSupport.hpp"
 #include "PyInitType.hpp"
-#include "PyDynamicTypeMap.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
 #include "IdlTopic.hpp"

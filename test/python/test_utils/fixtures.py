@@ -14,14 +14,20 @@ import os
 import rti.connextdds as dds
 from . import wait
 
+
 def get_test_domain():
     return int(os.environ.get('TEST_DOMAIN', 0))
 
 
-def create_participant():
+def get_test_participant_qos():
     qos = dds.DomainParticipantQos()
     qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(10)
-    return dds.DomainParticipant(get_test_domain(), qos)
+    return qos
+
+
+def create_participant():
+    return dds.DomainParticipant(get_test_domain(), get_test_participant_qos())
+
 
 def create_topic(participant: dds.DomainParticipant, type: type):
     topic_name = f'Example {type}'
@@ -45,9 +51,11 @@ def _get_topic_namespace(topic, type):
     else:
         return type
 
+
 def _create_reader(topic, type, reader_qos):
     ns = _get_topic_namespace(topic, type)
     return ns.DataReader(topic.participant, topic, reader_qos)
+
 
 def _create_writer(topic, type, writer_qos):
     ns = _get_topic_namespace(topic, type)
@@ -80,9 +88,17 @@ class PubSubFixture:
             wait.for_discovery(self.reader, self.writer)
 
 
+# Provides a participant exclusively for the current test
+@pytest.fixture
+def participant():
+    participant = create_participant()
+    yield participant
+    participant.close()
+
+# Provides a participant that is shared among all the tests in a module that
+# request this fixture
 @pytest.fixture(scope="module")
 def shared_participant():
     participant = create_participant()
     yield participant
     participant.close()
-

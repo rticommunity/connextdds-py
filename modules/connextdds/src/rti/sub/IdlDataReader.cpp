@@ -32,15 +32,24 @@ auto get_create_py_sample_function(PyDataReader<CSampleWrapper> &dr)
     return type_support.attr("_create_py_sample");
 }
 
+auto get_cast_c_sample_function(PyDataReader<CSampleWrapper>& dr)
+{
+    // TODO PY-17: support CFT
+    auto topic = dds::core::polymorphic_cast<dds::topic::Topic<CSampleWrapper>>(
+            dr.topic_description());
+    auto type_support = get_py_type_support_from_topic(topic);
+    return type_support.attr("_cast_c_sample");
+}
+
 template <typename CreateSampleFunc>
-py::object invoke_create_py_sample(
-        CreateSampleFunc&& create_py_sample,
+py::object invoke_py_sample_function(
+        CreateSampleFunc&& py_function,
         const CSampleWrapper &sample)
 {
     // We pass the pointer to the python function as an integer,
     // because that's what ctypes.cast expects.
     size_t sample_ptr = reinterpret_cast<size_t>(sample.sample);
-    return create_py_sample(sample_ptr);
+    return py_function(sample_ptr);
 }
 
 static std::vector<py::object> convert_data(
@@ -58,7 +67,7 @@ static std::vector<py::object> convert_data(
     auto create_py_sample = get_create_py_sample_function(dr);
     for (auto& sample : valid_samples) {
         py_samples.push_back(
-                invoke_create_py_sample(create_py_sample, sample.data()));
+                invoke_py_sample_function(create_py_sample, sample.data()));
     }
 
     return py_samples;
@@ -82,7 +91,7 @@ static DataAndInfoVector convert_data_w_info(
     auto create_py_sample = get_create_py_sample_function(dr);
     for (auto& sample : valid_samples) {
         py::object py_data =
-                invoke_create_py_sample(create_py_sample, sample.data());
+                invoke_py_sample_function(create_py_sample, sample.data());
         py_samples.push_back({ py_data , sample.info() });
     }
 
@@ -105,7 +114,48 @@ static py::list convert_data_py(
     for (auto& sample : valid_samples) {
         // py_samples.append(
         py_samples[i++] =
-                invoke_create_py_sample(create_py_sample, sample.data());
+                invoke_py_sample_function(create_py_sample, sample.data());
+    }
+
+    return py_samples;
+}
+
+static py::list get_native_data(
+        PyDataReader<CSampleWrapper>& dr,
+        dds::sub::LoanedSamples<CSampleWrapper>&& samples)
+{
+    size_t max_length = samples.length();
+    auto valid_samples = rti::sub::valid_data(std::move(samples));
+    py::list py_samples(max_length);
+
+    py::gil_scoped_acquire acquire;
+    // This is the type support function that converts from C data
+    // to the user-facing python object.
+    auto cast_c_sample = get_cast_c_sample_function(dr);
+    size_t i = 0;
+    for (auto& sample : valid_samples) {
+        py_samples[i++] =
+                invoke_py_sample_function(cast_c_sample, sample.data());
+    }
+
+    return py_samples;
+}
+
+static std::vector<size_t> get_native_ptrs(
+        PyDataReader<CSampleWrapper>& dr,
+        dds::sub::LoanedSamples<CSampleWrapper>&& samples)
+{
+    size_t max_length = samples.length();
+    auto valid_samples = rti::sub::valid_data(std::move(samples));
+    std::vector<size_t> py_samples(max_length);
+
+    py::gil_scoped_acquire acquire;
+    // This is the type support function that converts from C data
+    // to the user-facing python object.
+    size_t i = 0;
+    for (auto& sample : valid_samples) {
+        // py_samples.append(
+        py_samples[i++] = reinterpret_cast<size_t>(sample.data().sample);
     }
 
     return py_samples;
@@ -131,6 +181,32 @@ static auto read_data_and_info(PyDataReader<CSampleWrapper>& dr)
     return convert_data_w_info(dr, dr.read());
 }
 
+static auto read_data_native(PyDataReader<CSampleWrapper>& dr)
+{
+    // TODO PY-17: Initial implementation only.
+    return get_native_ptrs(dr, dr.read());
+}
+
+// For testing purposes only
+static void test_native_reads(PyDataReader<CSampleWrapper>& dr, size_t read_count)
+{
+    struct Point {
+        int32_t x;
+        int32_t y;
+    };
+    auto samples = rti::sub::valid_data(dr.read());
+    for (auto& sample : samples) {
+         if (sample.data().sample == nullptr) {
+             throw std::runtime_error("Sample is null");
+         } else {
+            auto point = reinterpret_cast<Point*>(sample.data().sample);
+            if (point->x != point->y) {
+                throw std::runtime_error("Sample is not correct");
+            }
+         }
+    }
+}
+
 template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
@@ -144,17 +220,28 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
     cls.def("take",
             take_data_and_info,
             py::call_guard<py::gil_scoped_release>(),
-            "Take copies of all available valid data");
+            "Take copies of all available data and info");
 
     cls.def("read_data",
             read_data,
             py::call_guard<py::gil_scoped_release>(),
-            "Take copies of all available valid data");
+            "Read copies of all available valid data");
 
     cls.def("read",
             read_data_and_info,
             py::call_guard<py::gil_scoped_release>(),
-            "Take copies of all available valid data");
+            "Read copies of all available data and info");
+
+    cls.def("read_data_native",
+            read_data_native,
+            py::call_guard<py::gil_scoped_release>(),
+            "(Advanced) Read data in C format");
+
+    // TODO PY-17: For testing purposes only. Remove in final version.
+    cls.def("_test_native_reads",
+            test_native_reads,
+            py::call_guard<py::gil_scoped_release>(),
+            "For testing purposes only");
 }
 
 } // namespace pyrti

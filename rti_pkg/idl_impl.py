@@ -231,6 +231,7 @@ class TypeSupport:
     def __init__(self, idl_type, type_annotations=None, member_annotations=None):
         self.type = idl_type
         self.c_type = create_ctype_from_dataclass(idl_type)
+        self.c_type_ptr = ctypes.POINTER(self.c_type)
         self._plugin_dynamic_type = create_dynamic_type_from_dataclass(
             idl_type, self.c_type, type_annotations, member_annotations)
 
@@ -243,9 +244,12 @@ class TypeSupport:
         copy_to_c_sample(sample, c_sample)
         return c_sample
 
+    def _cast_c_sample(self, c_sample_ptr):
+        return ctypes.cast(c_sample_ptr, self.c_type_ptr)[0]
+
     def _create_py_sample(self, c_sample_ptr):
         py_sample = self.type()
-        c_sample = ctypes.cast(c_sample_ptr, ctypes.POINTER(self.c_type))[0]
+        c_sample = self._cast_c_sample(c_sample_ptr)
         copy_from_c_sample(py_sample, c_sample)
         return py_sample
 

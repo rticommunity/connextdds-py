@@ -48,6 +48,7 @@ def test_participant_creation_w_qos():
     )
 
 
+@pytest.mark.skip("PY-26: use test qos")
 def test_participant_creation_w_listener():
     l = dds.NoOpDomainParticipantListener()
     p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), l)
@@ -61,9 +62,9 @@ def test_participant_creation_failure():
     with pytest.raises(dds.Error):
         dds.DomainParticipant(0, qos)
 
-
 def test_set_get_qos():
-    p = utils.create_participant()
+    # Use PY-26: participant fixture from
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     qos = p.qos
     assert qos.entity_factory.autoenable_created_entities
     qos << dds.EntityFactory.manually_enable
@@ -78,6 +79,7 @@ def test_set_get_qos():
     assert retrieved_qos.entity_factory.autoenable_created_entities
 
 
+@pytest.mark.skip("PY-26: use test qos")
 def test_set_qos_exception():
     p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
     qos = p.qos
@@ -89,6 +91,7 @@ def test_set_qos_exception():
         p.qos = qos
 
 
+@pytest.mark.skip("PY-26: reset default qos")
 def test_set_get_default_qos():
     set_qos = dds.DomainParticipant.default_participant_qos
     set_qos << dds.UserData([33, 33])
@@ -99,6 +102,7 @@ def test_set_get_default_qos():
     assert get_qos.user_data == dds.UserData([33, 33])
 
 
+@pytest.mark.skip("PY-26: reset default qos")
 def test_set_get_factory_qos():
     default_qos = dds.DomainParticipantFactoryQos()
     set_qos = dds.DomainParticipantFactoryQos()
@@ -115,7 +119,7 @@ def test_set_get_factory_qos():
 
 
 def test_set_get_listener():
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     assert p.listener == None
     l = dds.NoOpDomainParticipantListener()
     p.bind_listener(l, dds.StatusMask.ALL)
@@ -127,7 +131,7 @@ def test_set_get_listener():
 def test_find():
     id1 = DOMAIN_ID
     id2 = DOMAIN_ID + 1
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     found_p = dds.DomainParticipant.find(id1)
     not_found_p = dds.DomainParticipant.find(id2)
     assert found_p == p
@@ -136,14 +140,14 @@ def test_find():
 
 def test_close():
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     assert dds.DomainParticipant.find(DOMAIN_ID) == p
     p.close()
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
 
 
 def test_already_closed_exception():
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     p.close()
     with pytest.raises(dds.AlreadyClosedError):
         p.contains_entity(dds.InstanceHandle())
@@ -181,6 +185,7 @@ def test_already_closed_exception():
         p.default_datawriter_qos = dds.DataWriterQos()
 
 
+@pytest.mark.skip("PY-26: use test qos")
 def test_retain():
     id1 = DOMAIN_ID
     id2 = DOMAIN_ID + 1
@@ -209,14 +214,14 @@ def test_retain():
 
 
 def test_current_time():
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     t = p.current_time
     assert t != dds.Time.invalid
     assert t > dds.Time(1, 0)
 
 
 def test_assert_liveliness():
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     p.assert_liveliness()
 
 
@@ -227,14 +232,14 @@ def test_ignore():
 
 
 def test_add_peer():
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     p.add_peer("udpv4://")
     with pytest.raises(dds.InvalidArgumentError):
         p.add_peer("")
 
 
 def test_remove_peer():
-    p = utils.create_participant()
+    p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     p.remove_peer("udpv4://")
     with pytest.raises(dds.InvalidArgumentError):
         p.remove_peer("")
@@ -268,6 +273,7 @@ def test_domain_participant_config_params():
     )
 
 
+@pytest.mark.skip("PY-26: use test qos")
 def test_find_extensions():
     p_qos = dds.DomainParticipantQos()
     p_qos << dds.EntityName("MyParticipant1")
@@ -284,11 +290,12 @@ def test_find_extensions():
     assert dds.DomainParticipant.find("MyParticipant3") == None
 
 
+@pytest.mark.skip("PY-26: use test qos")
 @pytest.mark.parametrize("set_after", [True, False])
 def test_retain_for_listener(set_after):
     listener = dds.NoOpDomainParticipantListener()
     if set_after:
-        p = utils.create_participant()
+        p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
         p.bind_listener(listener, dds.StatusMask.NONE)
     else:
         p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), listener)
@@ -301,7 +308,8 @@ def test_retain_for_listener(set_after):
     inner()
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
 
-
+# PY-26: does this need to be added back?
+#
 # def test_discovered_participants():
 # qos = dds.DomainParticipantQos()
 # p1 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p1"))
