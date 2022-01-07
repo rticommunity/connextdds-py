@@ -276,6 +276,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/domain/DomainParticipant.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/domain/DomainParticipantListener.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/DDSNamespace.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core_utils/core_utils.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/connextdds.cpp"
 )
 

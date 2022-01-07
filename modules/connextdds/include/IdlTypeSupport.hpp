@@ -80,6 +80,13 @@ inline static rti::topic::cdr::CTypePlugin* get_type_plugin_from_type_support(
     PluginDynamicTypeHolder type_plugin_holder =
             py::cast<PluginDynamicTypeHolder>(py_type_plugin_holder);
 
+#ifndef NDEBUG
+    if (type_plugin_holder.type_plugin == nullptr) {
+        throw py::type_error(
+                "Invalid type_support: type_plugin is not set");
+    }
+#endif
+
     return type_plugin_holder.type_plugin;
 }
 

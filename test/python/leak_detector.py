@@ -12,6 +12,7 @@
 import pytest
 import rti.connextdds.heap_monitoring as heap_monitoring
 import rti.connextdds as dds
+import rti.idl as idl
 import os
 
 #
@@ -34,7 +35,7 @@ def check_leaks() -> None:
 
     # Finalize global state
 
-    dds._GenericTypePluginFactory.delete_instance()
+    idl.finalize_globals()
     dds.DomainParticipant.finalize_participant_factory()
 
     # Take snapshot when all native heap memory should've been freed

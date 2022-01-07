@@ -51,6 +51,14 @@ static void validate_cdr_buffer_type(const py::buffer_info& info)
 template<>
 void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
 {
+    // Get the DynamicType without making a copy; this type includes all
+    // the access sample info. This is used internally only.
+    cls.def(
+            "get_dynamic_type_ref",
+            [](const PluginDynamicTypeHolder& self) { return self.type; },
+            py::return_value_policy::reference);
+
+    // Return a copy without the sample access info.
     cls.def("clone", [](const PluginDynamicTypeHolder& self) {
         rti::core::xtypes::DynamicTypeImpl copy = *self.type;
         return py_cast_type(copy);
@@ -95,6 +103,31 @@ void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
             },
             py::arg("c_sample"),
             py::arg("buffer"),
+            py::call_guard<py::gil_scoped_acquire>());
+
+    cls.def(
+            "initialize_sample",
+            [](const PluginDynamicTypeHolder& self,
+               py::object c_sample) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+
+                py::gil_scoped_release release;
+                CSampleWrapper sample_wrapper = c_sample_buffer;
+                self.type_plugin->initialize_sample(sample_wrapper);
+            },
+            py::arg("c_sample"),
+            py::call_guard<py::gil_scoped_acquire>());
+
+    cls.def(
+            "finalize_sample",
+            [](const PluginDynamicTypeHolder& self, py::object c_sample) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+
+                py::gil_scoped_release release;
+                CSampleWrapper sample_wrapper = c_sample_buffer;
+                self.type_plugin->finalize_sample(sample_wrapper);
+            },
+            py::arg("c_sample"),
             py::call_guard<py::gil_scoped_acquire>());
 }
 
@@ -158,6 +191,18 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
 
     list.push_back([module] {
         return ([module]() mutable {
+
+            // TODO PY-18: This is temporary while some functions are not
+            // yet updated to take python sample so that the stub generation
+            // doesn't complain about not knowing what CSampleWrapper is.
+            py::class_<CSampleWrapper> sample_wrapper_cls(
+                    module,
+                    "CSampleWrapper");
+
+            sample_wrapper_cls.def("get_ptr", [](CSampleWrapper& self) {
+                return reinterpret_cast<size_t>(self.sample);
+            });
+
             IdlITopicDescriptionPyClass itd(module, "ITopicDescription");
             IdlTopicDescriptionPyClass td(module, "TopicDescription");
             IdlTopicPyClass t(module, "Topic");

@@ -224,6 +224,10 @@ class CMakeBuild(build_ext):
         python_cmd = sys.executable
         stubgen = os.path.join(get_script_dir(), 'resources', 'scripts', 'stubgen.py')
         stubgen_args = ['--split-overload-docs', '--no-setup-py', '--root-module-suffix', '']
+
+        # TODO PY-17: remove this workaround when CSampleWrapper signatures
+        # are fixed.
+        stubgen_args += ['--ignore-invalid', 'signature']
         extdirs = set()
         for ext in self.extensions:
             extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))

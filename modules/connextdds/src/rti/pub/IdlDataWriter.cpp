@@ -38,6 +38,19 @@ static PyCTypesBuffer convert_sample(
     return PyCTypesBuffer(create_c_sample_func(sample));
 }
 
+static void finalize_sample(
+    dds::pub::DataWriter<CSampleWrapper>& writer,
+    PyCTypesBuffer &c_sample)
+{
+    // TODO PY-17: Temporary function until we use a scratchpad sample instead
+    // of creating one for every write.
+    auto type_support = get_py_type_support_from_topic(writer.topic());
+    auto plugin = py::cast<PluginDynamicTypeHolder>(
+        type_support.attr("_plugin_dynamic_type"));
+
+    CSampleWrapper wrapper(c_sample);
+    plugin.type_plugin->finalize_sample(wrapper);
+}
 
 struct IdlWriteImpl {
 
@@ -60,15 +73,22 @@ struct IdlWriteImpl {
             const py_sample& sample,
             ExtraArgs&&... extra_args)
     {
+        // TODO PY-17: Use a scratchpad sample instead of creating a new one
+        // every time. Use it within the writer lock.
         PyCTypesBuffer c_sample = convert_sample(writer, sample);
 
         // release the GIL for the native write operation.
-        py::gil_scoped_release release;
+        {
+            py::gil_scoped_release release;
+            // Call the appropriate dds::pub::DataWriter::write overload
+            writer.extensions().write(
+                    c_sample,
+                    std::forward<ExtraArgs>(extra_args)...);
+        }
 
-        // Call the appropriate dds::pub::DataWriter::write overload
-        writer.extensions().write(
-                c_sample,
-                std::forward<ExtraArgs>(extra_args)...);
+        // TODO PY-17: this is not exception-safe at the moment, but it should
+        // be replaced when the scratchpad is implemented.
+        finalize_sample(writer, c_sample);
 
         // c_sample's destructor releases resources acquired by convert();
     }
@@ -97,11 +117,14 @@ struct IdlWriteImpl {
         PyCTypesBuffer cpp_sample = convert_sample(writer, sample);
 
         // release the GIL for the native write operation.
-        py::gil_scoped_release release;
+        {
+            py::gil_scoped_release release;
+            return writer.extensions().register_instance(
+                    cpp_sample,
+                    std::forward<ExtraArgs>(extra_args)...);
+        }
 
-        return writer.extensions().register_instance(
-                cpp_sample,
-                std::forward<ExtraArgs>(extra_args)...);
+        finalize_sample(writer, cpp_sample);
     }
 };
 

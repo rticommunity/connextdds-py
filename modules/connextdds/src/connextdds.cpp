@@ -11,6 +11,7 @@
 
 #include "PyConnext.hpp"
 #include "PyNamespaces.hpp"
+#include "PyCoreUtils.hpp"
 
 
 PYBIND11_MODULE(connextdds, m)
@@ -52,4 +53,9 @@ PYBIND11_MODULE(connextdds, m)
     for (auto func : late_init_funcs) {
         func();
     }
+
+    auto core_utils_module = m.def_submodule(
+            "core_utils",
+            "Utilities from the RTI Connext DDS C implementation");
+    init_core_utils(core_utils_module);
 }

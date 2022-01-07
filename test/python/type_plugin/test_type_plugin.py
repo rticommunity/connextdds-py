@@ -10,31 +10,31 @@
 #
 
 import ctypes
+
 import pytest
 
 import rti.connextdds as dds
 import rti.idl as idl
 
 from test_utils import fixtures
-
-@idl.struct
-class Point:
-    x: int = 0
-    y: int = 0
+from common_types import Point
 
 def test_type_plugin_basic():
     assert hasattr(Point, "type_support")
-    assert Point.type_support is not None
+    type_support = idl.get_type_support(Point)
+    assert type_support is not None
 
-    assert Point.type_support.type is Point
-    assert isinstance(Point.type_support.c_type(), ctypes.Structure)
+    assert type_support.type is Point
+    assert isinstance(type_support.c_type(), ctypes.Structure)
 
-    dynamic_type = Point.type_support.dynamic_type
+    dynamic_type = type_support.dynamic_type
     assert dynamic_type is not None
     assert dynamic_type.name == "Point"
     assert len(dynamic_type.members()) == 2
     assert dynamic_type["x"].name == "x"
-    assert dynamic_type["x"].type == dds.Int32Type()
+    assert dynamic_type["x"].type == dds.Int64Type()
+    assert dynamic_type["x"].id == 0
+    assert dynamic_type["y"].id == 1
 
 def test_idl_topic():
     participant = fixtures.create_participant()
@@ -42,7 +42,7 @@ def test_idl_topic():
 
     assert topic.name == "MyPoint"
     assert topic.type_name == "Point"
-    assert topic.type_support is Point.type_support
+    assert topic.type_support is idl.get_type_support(Point)
     assert topic.type is Point
 
 
@@ -55,7 +55,7 @@ def test_idl_topic_with_qos():
 
     assert topic.name == "MyPoint"
     assert topic.type_name == "Point"
-    assert topic.type_support is Point.type_support
+    assert topic.type_support is idl.get_type_support(Point)
     assert topic.type is Point
 
     assert topic.qos.history.kind == dds.HistoryKind.KEEP_LAST
@@ -68,11 +68,11 @@ def test_idl_any_topic():
 
     as_any_topic = dds.AnyTopic(topic)
     assert as_any_topic.name == "MyPoint"
-    assert dds.Topic(as_any_topic).type_support is Point.type_support
+    assert dds.Topic(as_any_topic).type_support is idl.get_type_support(Point)
 
 
 def test_serialization():
-    ts = Point.type_support
+    ts = idl.get_type_support(Point)
     sample = Point(x=33, y=24)
     assert sample == ts.deserialize(ts.serialize(sample))
 
@@ -81,18 +81,19 @@ class NotAPoint:
     a: int = 0
 
 def test_serialization_fails_with_bad_sample_type():
+    ts = idl.get_type_support(Point)
     with pytest.raises(TypeError):
-        Point.type_support.serialize(NotAPoint(2))
+        ts.serialize(NotAPoint(2))
 
     with pytest.raises(TypeError):
-        Point.type_support.serialize(3.14)
+        ts.serialize(3.14)
 
     with pytest.raises(TypeError):
-        Point.type_support.serialize(None)
+        ts.serialize(None)
 
 
 def test_deserialization_fails_with_bad_buffer_type():
-    ts = Point.type_support
+    ts = idl.get_type_support(Point)
 
     with pytest.raises(TypeError):
         ts.deserialize([1, 2, 3])
@@ -124,16 +125,12 @@ def test_nested_type():
         a: Point = Point()
         b: Point = Point()
 
-    ts = Rectangle.type_support
+    ts = idl.get_type_support(Rectangle)
     assert ts.type is Rectangle
-    assert type(ts.c_type().a) is Point.type_support.c_type
-    assert ts.dynamic_type["a"].type == Point.type_support.dynamic_type
+
+    point_ts = idl.get_type_support(Point)
+    assert type(ts.c_type().a) is point_ts.c_type
+    assert ts.dynamic_type["a"].type == point_ts.dynamic_type
 
     orig_sample = Rectangle(a=Point(x=1, y=2), b=Point(x=3, y=4))
-    c_sample = ts._create_c_sample(orig_sample)
-    assert (c_sample.a.x, c_sample.a.y) == (1, 2)
-    assert (c_sample.b.x, c_sample.b.y) == (3, 4)
-
-    py_sample = ts._create_py_sample_no_ptr(c_sample)
-    assert orig_sample == py_sample
-
+    assert orig_sample == ts.deserialize(ts.serialize(orig_sample))
