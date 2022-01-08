@@ -88,6 +88,7 @@ class PrimitiveArrayFactory:
 # --- C/Python type conversions -----------------------------------------------
 
 TYPE_TO_CTYPES_MAP = {
+    bool: ctypes.c_int8,
     int8: ctypes.c_int8,
     int16: ctypes.c_int16,
     uint16: ctypes.c_uint16,
@@ -167,13 +168,9 @@ def create_ctype_from_dataclass(py_type):
 def bounded_string():
     return dds.StringType(128)
 
-py_to_dynamic_type_map = {
-    int: dds.Int32Type(),
-    float: dds.Float64Type(),
-    bool: dds.BoolType()
-}
 
 PY_TYPE_TO_DYNAMIC_TYPE_MAP = {
+    bool: dds.BoolType(),
     int8: dds.Int8Type(),
     int16: dds.Int16Type(),
     uint16: dds.Uint16Type(),

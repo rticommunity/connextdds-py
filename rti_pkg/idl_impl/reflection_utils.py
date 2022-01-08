@@ -48,6 +48,7 @@ def is_primitive(t: type):
     return t in _PRIMITIVE_TYPES
 
 _TYPE_TO_ARRAY_TYPE_MAP: typing.Dict[type, str] = {
+    bool: 'b',
     int8: 'b',
     int16: 'h',
     uint16: 'H',

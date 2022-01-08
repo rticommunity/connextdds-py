@@ -18,8 +18,21 @@ import rti.connextdds.heap_monitoring as heap_monitoring
 
 heap_monitoring.enable()
 
-# This fixture ensures that at the end of the last test we run
-# leak_detector.check_leaks
-@pytest.fixture(scope="session", autouse=True)
-def leak_detection_fixture(request):
-    request.addfinalizer(leak_detector.check_leaks)
+def pytest_sessionfinish(session, exitstatus):
+    # Disable heap monitoring after all tests run
+    #
+    # Note: running this as a pytest hook instead of a fixture ensures that
+    # the leak detector runs after all other fixtures have been deleted.
+    if exitstatus == 1: # Test failures
+        try:
+            leak_detector.check_leaks()
+        except Exception as e:
+            # If a test has already failed and there is also a leak, print the
+            # leak error message, but don't throw an exception that makes the
+            # output confusing
+            print(f"\n{e}\n")
+    else:
+        # If tests have been succesful, let check_leaks() throw an exception to
+        # make the process fail
+        leak_detector.check_leaks()
+

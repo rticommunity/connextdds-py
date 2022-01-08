@@ -34,7 +34,6 @@ def check_leaks() -> None:
     """fail if any are found."""
 
     # Finalize global state
-
     idl.finalize_globals()
     dds.DomainParticipant.finalize_participant_factory()
 
@@ -42,8 +41,8 @@ def check_leaks() -> None:
     heap_monitoring.take_snapshot(HEAP_USAGE_FILENAME, print_details=True)
     heap_usage = get_heap_usage_from_heap_snapshot(HEAP_USAGE_FILENAME)
     if heap_usage > 0:
-        pytest.fail(
-            f"MEMORY LEAK detected: heap usage after last test is {heap_usage} - see {HEAP_USAGE_FILENAME}")
+        raise Exception(
+            f"*** MEMORY LEAK detected *** heap usage after last test is {heap_usage} - see {HEAP_USAGE_FILENAME}")
 
     # Delete the snapshot file if there're no leaks
     os.remove(HEAP_USAGE_FILENAME)

@@ -9,7 +9,7 @@
 # damages arising out of the use or inability to use the software.
 #
 
-import typing
+from typing import *
 from dataclasses import field
 
 import rti.connextdds as dds
@@ -29,7 +29,7 @@ from test_utils.fixtures import *
     }
 )
 class AnnotationsTest:
-    my_seq: typing.Sequence[Point] = field(default_factory=list)
+    my_seq: Sequence[Point] = field(default_factory=list)
     my_key: int = 0
     my_int8: idl.int8 = 0
     my_int16: idl.int16 = 0
@@ -40,10 +40,16 @@ class AnnotationsTest:
     my_float32: idl.float32 = 0.0
     my_float64: idl.float64 = 0.0
     my_float64_2: float = 0.0
+    my_bool: bool = False
+    my_optional_int32: Optional[idl.int32] = None
+    my_optional_float64: Optional[float] = None
+    my_optional_seq: Optional[Sequence[Point]] = None
+
 
 @pytest.fixture(scope="module")
 def dt():
     return idl.get_type_support(AnnotationsTest).dynamic_type
+
 
 def test_mutable_annotation(dt):
     assert dt.extensibility_kind == dds.ExtensibilityKind.MUTABLE
@@ -78,9 +84,15 @@ def test_primitive_types(dt):
     assert dt["my_float32"].type == dds.Float32Type()
     assert dt["my_float64"].type == dds.Float64Type()
     assert dt["my_float64_2"].type == dds.Float64Type()
+    assert dt["my_bool"].type == dds.BoolType()
+    assert dt["my_optional_int32"].type == dds.Int32Type()
+    assert dt["my_optional_float64"].type == dds.Float64Type()
 
 
-# Adding a final test without a fixture seems to ensure that the fixtures are
-# properly cleaned up
-def test_pass():
-    pass
+def test_optional_annotation(dt):
+    assert dt["my_optional_int32"].optional
+    assert dt["my_optional_float64"].optional
+    assert dt["my_optional_seq"].optional
+    assert not dt["my_int32"].optional
+    assert not dt["my_float64"].optional
+

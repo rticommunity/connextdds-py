@@ -28,6 +28,7 @@ class SequenceTest:
     vertices: typing.Sequence[Point] = field(default_factory=list)
     weights: typing.Sequence[int] = field(default_factory=list)
     prices: typing.Sequence[float] = field(default_factory=list)
+    ready: typing.Sequence[bool] = field(default_factory=list)
 
     # These are IDL sequences, but use array instead of list in py for better
     # performance. Our mapping supports both for primitive types.
@@ -35,6 +36,8 @@ class SequenceTest:
         default_factory=idl.array_factory(idl.int32))
     prices_array: typing.Sequence[float] = field(
         default_factory=idl.array_factory(float))
+    ready_array: typing.Sequence[bool] = field(
+        default_factory=idl.array_factory(bool))
 
 @pytest.fixture
 def sequence_sample():
@@ -42,8 +45,10 @@ def sequence_sample():
         vertices=[Point(10, 20), Point(30, 40)],
         weights=[1, 2, 3],
         prices=[1.5, 2.5, 3.5, 4.5],
+        ready=[True, False, True, True],
         weights_array=array('i', [111, 222]),
-        prices_array=array('d', [11.5, 22.5, 33.5]))
+        prices_array=array('d', [11.5, 22.5, 33.5]),
+        ready_array=array('b', [False, True]))
 
 
 def test_sequence_plugin():
@@ -52,7 +57,7 @@ def test_sequence_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "SequenceTest"
-    assert len(dt.members()) == 5
+    assert len(dt.members()) == 7
 
     point_ts = idl.get_type_support(Point)
     assert dt["vertices"].type == dds.SequenceType(
@@ -61,10 +66,14 @@ def test_sequence_plugin():
         dds.Int64Type(), 100)  # TODO: unbounded
     assert dt["prices"].type == dds.SequenceType(
         dds.Float64Type(), 4)
+    assert dt["ready"].type == dds.SequenceType(
+        dds.BoolType(), 100)  # TODO: unbounded
     assert dt["weights_array"].type == dds.SequenceType(
         dds.Int32Type(), 100)  # TODO: unbounded
     assert dt["prices_array"].type == dds.SequenceType(
         dds.Float64Type(), 100)  # TODO: unbounded
+    assert dt["ready_array"].type == dds.SequenceType(
+        dds.BoolType(), 100)  # TODO: unbounded
 
 
 def test_sequence_serialization(sequence_sample):
@@ -77,8 +86,10 @@ def test_sequence_serialization(sequence_sample):
 def test_sequence_pubsub(shared_participant, sequence_sample):
     fixture = PubSubFixture(shared_participant, SequenceTest)
     fixture.writer.write(sequence_sample)
-    # wait.for_data(fixture.reader)
-    # assert fixture.reader.take_data() == [sequence_sample]
+    wait.for_data(fixture.reader)
+    fixture.writer.write(SequenceTest())
+    wait.for_data(fixture.reader)
+    assert fixture.reader.take_data() == [sequence_sample, SequenceTest()]
 
 
 def test_sequence_serialization_fails_when_out_of_bounds():
