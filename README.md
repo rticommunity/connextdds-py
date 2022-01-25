@@ -93,7 +93,7 @@ $ pip install .
 ## Building for development
 To build for development (i.e. modifying the code for the Python API
 itself), you must have the `wheel` package installed. You also need
-all of the enviornment variables that you need for the regular install.
+all of the environment variables required for the regular install.
 If you already have an install of any form, run
 `pip3 uninstall rti -y`
 
