@@ -91,25 +91,41 @@ $ pip install .
 ```
 
 ## Building for development
-To build for development, you must have the `wheel` package installed.
-You also need all of the enviornment variables that you need for the
-regular install. If you already have an install of any form, run
+To build for development (i.e. modifying the code for the Python API
+itself), you must have the `wheel` package installed. You also need
+all of the enviornment variables that you need for the regular install.
+If you already have an install of any form, run
 `pip3 uninstall rti -y`
 
+To perpare the Python installation for a development build:
 ```shell
 $ pip3 install wheel
 $ pip3 install setuptools
 $ pip3 install cmake
 $ pip3 install patchelf-wrapper # Linux builds only
 $ pip3 install delocate         # macOS builds only
-$ pip3 install pybind11==2.7.1
+$ pip3 install pybind11==2.8.1
+```
+
+To build for development on Windows:
+```shell
+$ py -3 setup.py bdist_wheel
+$ pip3 install --find-links=./dist rti==0.1.4
+```
+
+To build for development on Linux/macOS:
+```shell
 $ python3 setup.py bdist_wheel
-$ pip3 install dist/*
+$ pip3 install --find-links=./dist rti==0.1.4
 ```
 
 ## Running the tests
 To run the tests, first install pytest using pip.
+```shell
+$ pip3 install pytest
+```
 
+Then run the following to execute the basic tests
 ```shell
 $ pytest test/
 ```
