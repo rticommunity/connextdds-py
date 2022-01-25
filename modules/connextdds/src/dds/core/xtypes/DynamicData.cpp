@@ -422,7 +422,7 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values)
     initialization when the vector template type is a primitive.
  */
 template<typename T>
-static void resize_no_init(std::vector<T>& v, ssize_t newSize) {
+static void resize_no_init(std::vector<T>& v, py::ssize_t newSize) {
     /*
         A continguous array of this struct must have the same memory layout
         as a type T array or this optimization will not work (and the assert
@@ -648,7 +648,7 @@ static bool validate_buffer_type(const py::buffer_info& info) {
     /*
         If this buffer is incompatible, throw a type exception.
     */
-    if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T)))
+    if (info.ndim != 1 || info.strides[0] % static_cast<py::ssize_t>(sizeof(T)))
         throw py::type_error("Only valid 1D buffers are allowed");
     if (!py::detail::compare_buffer_info<T>::compare(info))
         throw py::type_error("Format mismatch (Python: " + info.format + " C++: " + py::format_descriptor<T>::format() + ")");
@@ -657,7 +657,7 @@ static bool validate_buffer_type(const py::buffer_info& info) {
         that is greater than 1, fall back to the default pybind11 stl_bind 
         conversion.
     */
-    return (info.strides[0] / static_cast<ssize_t>(sizeof(T))) == 1;
+    return (info.strides[0] / static_cast<py::ssize_t>(sizeof(T))) == 1;
 }
 
 

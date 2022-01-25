@@ -44,12 +44,12 @@ static void init_dds_vector_defs(
                  ("Get the length of the " + name + ".").c_str())
             .def(
                     "__getitem__",
-                    [](dds::core::vector<T>& v, ssize_t i) -> T& { return v[i]; },
+                    [](dds::core::vector<T>& v, py::ssize_t i) -> T& { return v[i]; },
                     py::return_value_policy::reference_internal,
                     "Get the value at the specified index.")
             .def(
                     "__setitem__",
-                    [](dds::core::vector<T>& v, ssize_t i, const T& b) {
+                    [](dds::core::vector<T>& v, py::ssize_t i, const T& b) {
                         v[i] = b;
                     },
                     "Set the value at the specified index.")
@@ -102,7 +102,7 @@ static void init_dds_vector_buffer_defs(
             .def_buffer([](dds::core::vector<T>& v) {
                 return py::buffer_info(
                         &*v.begin(),
-                        { static_cast<ssize_t>(v.size()) },
+                        { static_cast<py::ssize_t>(v.size()) },
                         { 1 });
             });
 
