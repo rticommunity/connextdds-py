@@ -24,8 +24,8 @@ template<>
 void process_inits<DataReaderInstanceRemovalKind>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<
-            DataReaderInstanceRemovalKind_def>(m, "DataReaderInstanceRemovalKind ", [](py::object& o) {
-        py::enum_<DataReaderInstanceRemovalKind::type>(o, "DataReaderInstanceRemovalKind ")
+            DataReaderInstanceRemovalKind_def>(m, "DataReaderInstanceRemovalKind", [](py::object& o) {
+        py::enum_<DataReaderInstanceRemovalKind::type>(o, "DataReaderInstanceRemovalKind")
                 .value("NO_INSTANCE",
                        DataReaderInstanceRemovalKind::type::NO_INSTANCE,
                        "No instance can be removed.")
