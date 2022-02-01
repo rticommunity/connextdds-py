@@ -102,7 +102,7 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "DomainParticipant.")
             .def_property_readonly(
                     "transport_info",
-                    [](const ParticipantBuiltinTopicData& p) -> const std::vector<rti::core::TransportInfo>& {
+                    [](const ParticipantBuiltinTopicData& p) -> const dds::core::vector<rti::core::TransportInfo> {
                         return p->transport_info();
                     },
                     "Get the sequence of TransportInfo containing information "

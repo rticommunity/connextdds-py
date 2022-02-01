@@ -302,11 +302,11 @@ class StubsGenerator(object):
                     signatures.append(FunctionSignature(name, args, rtype))
 
             # strip module name if provided
-            if module_name:
-                for sig in signatures:
-                    regex = r"{}\.(\w+)".format(module_name.replace(".", r"\."))
-                    sig.args = re.sub(regex, r"\g<1>", sig.args)
-                    sig.rtype = re.sub(regex, r"\g<1>", sig.rtype)
+            #if module_name:
+            #    for sig in signatures:
+            #        regex = r"{}\.(\w+)".format(module_name.replace(".", r"\."))
+            #        sig.args = re.sub(regex, r"\g<1>", sig.args)
+            #        sig.rtype = re.sub(regex, r"\g<1>", sig.rtype)
 
             for sig in signatures:
                 sig.args = StubsGenerator.apply_classname_replacements(sig.args)
@@ -880,7 +880,7 @@ class ModuleStubsGenerator(StubsGenerator):
         if used_modules:
             for mod in used_modules:
                 #check to see if this is a class instead of a module
-                if not [cls for cls in self.classes if cls.klass.__name__ == mod]:
+                if not [cls for cls in self.classes if ''.join([self.module.__name__, '.', cls.klass.__name__]) == mod or cls.klass.__name__ == mod]:
                     result.append("import {}".format(mod))
 
         if "numpy" in used_modules and not BARE_NUPMY_NDARRAY:
@@ -892,9 +892,9 @@ class ModuleStubsGenerator(StubsGenerator):
         result += [""]
 
         globals_ = {}
-        exec("from {} import *".format(self.module.__name__), globals_)
-        all_ = set(globals_.keys()) - {"__builtins__"}
-        result.append("__all__ = [\n    " + ",\n    ".join(map(lambda s: '"%s"' % s, sorted(all_))) + "\n]\n\n")
+        #exec("from {} import *".format(self.module.__name__), globals_)
+        #all_ = set(globals_.keys()) - {"__builtins__"}
+        #result.append("__all__ = [\n    " + ",\n    ".join(map(lambda s: '"%s"' % s, sorted(all_))) + "\n]\n\n")
 
         for x in itertools.chain(self.classes,
                                  self.free_functions,

@@ -422,7 +422,7 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values)
     initialization when the vector template type is a primitive.
  */
 template<typename T>
-static void resize_no_init(std::vector<T>& v, ssize_t newSize) {
+static void resize_no_init(std::vector<T>& v, py::ssize_t newSize) {
     /*
         A continguous array of this struct must have the same memory layout
         as a type T array or this optimization will not work (and the assert
@@ -648,7 +648,7 @@ static bool validate_buffer_type(const py::buffer_info& info) {
     /*
         If this buffer is incompatible, throw a type exception.
     */
-    if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T)))
+    if (info.ndim != 1 || info.strides[0] % static_cast<py::ssize_t>(sizeof(T)))
         throw py::type_error("Only valid 1D buffers are allowed");
     if (!py::detail::compare_buffer_info<T>::compare(info))
         throw py::type_error("Format mismatch (Python: " + info.format + " C++: " + py::format_descriptor<T>::format() + ")");
@@ -657,7 +657,7 @@ static bool validate_buffer_type(const py::buffer_info& info) {
         that is greater than 1, fall back to the default pybind11 stl_bind 
         conversion.
     */
-    return (info.strides[0] / static_cast<ssize_t>(sizeof(T))) == 1;
+    return (info.strides[0] / static_cast<py::ssize_t>(sizeof(T))) == 1;
 }
 
 
@@ -1684,15 +1684,28 @@ void add_field_type_collection(
 template<>
 void init_class_defs(py::class_<DynamicData>& dd_class)
 {
-    dd_class.def(py::init<const DynamicType&>())
+    dd_class.def(py::init<const DynamicType&>(), 
+                py::arg("dynamic_type"),
+                "Create a DynamicData object from a DynamicType.")
             .def(py::init<
                     const DynamicType&,
-                    const rti::core::xtypes::DynamicDataProperty&>())
+                    const rti::core::xtypes::DynamicDataProperty&>(),
+                py::arg("dynamic_type"),
+                py::arg("property"),
+                "Create a DynamicData object from a DynamicType with "
+                "properties.")
             .def(py::init([](const DynamicType& dt, py::dict& data) {
-                DynamicData dd(dt);
-                update_dynamicdata_object(dd, data);
-                return dd;
-            }))
+                    DynamicData dd(dt);
+                    update_dynamicdata_object(dd, data);
+                    return dd;
+                }),
+                py::arg("dynamic_type"),
+                py::arg("data"),
+                "Create a DynamicData object from a DynamicType with "
+                "a dict to initialize the fields")
+            .def(py::init<DynamicData&>(),
+                py::arg("other"),
+                "Create a copy of a DynamicData object.")
             .def(py::self == py::self, "Test for equality.")
             .def(
                     "__eq__",

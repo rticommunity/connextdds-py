@@ -32,6 +32,7 @@ void init_loaned_samples_defs(
                             throw py::index_error();
                         return ls[index];
                     },
+                    py::return_value_policy::reference_internal,
                     "Access a LoanedSample object in an array-like syntax")
             .def("__len__",
                     &dds::sub::LoanedSamples<T>::length,
