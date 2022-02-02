@@ -13,7 +13,7 @@ Requirements
 
 - Windows® (requires Visual Studio® 2015 or newer), macOS®, or Linux®
 - Python® 2.7 or Python3.x with pip or pip3 respectively
-- *Connext DDS* 5.3.1, 6.0.0, or 6.0.1
+- *Connext DDS* 5.3.1, 6.0.0, 6.0.1, or 6.1.0
 - `patchelf <https://github.com/NixOS/patchelf>`_ (Python 2.7.x on Linux)
 
 .. note::
@@ -129,18 +129,18 @@ If you want to cache the build files, you can use wheels.
 .. code-block:: shell
     :caption: Windows
 
-    $ pip install setuptools wheel cmake pybind11==2.7.1
+    $ pip install setuptools wheel cmake pybind11==2.8.1
 
 .. code-block:: shell
     :caption: Linux
 
-    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.7.1
+    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.8.1
 
 
 .. code-block:: shell
     :caption: macOS
 
-    $ pip install setuptools wheel cmake delocate pybind11==2.7.1
+    $ pip install setuptools wheel cmake delocate pybind11==2.8.1
 
 2. Clone the repository and submodules, and enter the directory.
 
@@ -165,7 +165,7 @@ If you want to cache the build files, you can use wheels.
 
 .. code-block:: shell
 
-    $ pip install dist/*
+    $ pip install --find-links=./dist rti==0.1.5
 
 
 Cross Compilation
@@ -182,7 +182,7 @@ compiled version of Python for the target.
 .. code-block:: shell
     :caption: Linux
 
-    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.7.1
+    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.8.1
 
 2. Clone the repository and enter the directory.
 

@@ -110,13 +110,13 @@ $ pip3 install pybind11==2.8.1
 To build for development on Windows:
 ```shell
 $ py -3 setup.py bdist_wheel
-$ pip3 install --find-links=./dist rti==0.1.4
+$ pip3 install --find-links=./dist rti==0.1.5
 ```
 
 To build for development on Linux/macOS:
 ```shell
 $ python3 setup.py bdist_wheel
-$ pip3 install --find-links=./dist rti==0.1.4
+$ pip3 install --find-links=./dist rti==0.1.5
 ```
 
 ## Running the tests
