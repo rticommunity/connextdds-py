@@ -63,7 +63,7 @@ def _create_writer(topic, type, writer_qos):
 
 
 class PubSubFixture:
-    def __init__(self, participant, data_type, create_writer=True, create_reader=True):
+    def __init__(self, participant, data_type, create_writer=True, create_reader=True, reader_policies=[]):
         self.data_type = data_type
 
         if participant is None:
@@ -82,10 +82,17 @@ class PubSubFixture:
             reader_qos = self.participant.implicit_subscriber.default_datareader_qos
             reader_qos << dds.Reliability.reliable()
             reader_qos << dds.History.keep_all
+            for policy in reader_policies:
+                reader_qos << policy
             self.reader = _create_reader(self.topic, data_type, reader_qos)
 
         if create_reader and create_writer:
             wait.for_discovery(self.reader, self.writer)
+
+    def send_and_check(self, data):
+        self.writer.write(data)
+        wait.for_data(self.reader)
+        assert self.reader.take_data() == [data]
 
 
 # Provides a participant exclusively for the current test

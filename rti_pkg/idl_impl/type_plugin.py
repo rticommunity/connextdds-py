@@ -9,17 +9,18 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from dataclasses import InitVar, dataclass, fields
-from typing import Union, List, ClassVar, get_origin, get_args
+from dataclasses import dataclass, fields
+from typing import List
 import itertools
 import array
-import atexit
 import ctypes
 import rti.connextdds as dds
 import rti.idl_impl.sample_interpreter as sample_interpreter
 import rti.idl_impl.csequence as csequence
 import rti.idl_impl.reflection_utils as reflection_utils
-from rti.idl_impl.type_hints import *
+
+import rti.idl_impl.type_hints as type_hints
+import rti.idl_impl.annotations as annotations
 
 #
 # This module contains the implementation details of the IDL Type Support
@@ -27,43 +28,12 @@ from rti.idl_impl.type_hints import *
 
 _type_factory = dds._GenericTypePluginFactory.instance
 
+
 def finalize_type_plugin_factory() -> None:
     """Release the native memory used by _type_factory"""
     global _type_factory
     _type_factory = None
     dds._GenericTypePluginFactory.delete_instance()
-
-# --- Annotation classes ------------------------------------------------------
-
-@dataclass
-class KeyAnnotation:
-    value: bool = False
-
-
-AUTO_ID = 0x7FFFFFFF
-
-@dataclass
-class IdAnnotation:
-    value: int = AUTO_ID
-
-@dataclass
-class ExtensibilityAnnotation:
-    value: dds.ExtensibilityKind = dds.ExtensibilityKind.EXTENSIBLE
-
-UNBOUNDED = 0xFFFFFFFF
-
-@dataclass
-class BoundAnnotation:
-    value: int = 100 # TODO PY-18: make default unbounded
-
-def find_annotation(annotations, cls, default=None):
-    if default is None:
-        default = cls()
-
-    for annotation in annotations:
-        if isinstance(annotation, cls):
-            return annotation
-    return default
 
 
 @dataclass
@@ -87,18 +57,25 @@ class PrimitiveArrayFactory:
 
 # --- C/Python type conversions -----------------------------------------------
 
-TYPE_TO_CTYPES_MAP = {
+
+PRIMITIVE_TO_CTYPES_MAP = {
     bool: ctypes.c_int8,
-    int8: ctypes.c_int8,
-    int16: ctypes.c_int16,
-    uint16: ctypes.c_uint16,
-    int32: ctypes.c_int32,
-    uint32: ctypes.c_uint32,
-    int64: ctypes.c_int64,
-    uint64: ctypes.c_uint64,
-    float32: ctypes.c_float,
-    float64: ctypes.c_double,
+    type_hints.int8: ctypes.c_int8,
+    type_hints.int16: ctypes.c_int16,
+    type_hints.uint16: ctypes.c_uint16,
+    type_hints.int32: ctypes.c_int32,
+    type_hints.uint32: ctypes.c_uint32,
+    type_hints.int64: ctypes.c_int64,
+    type_hints.uint64: ctypes.c_uint64,
+    type_hints.float32: ctypes.c_float,
+    type_hints.float64: ctypes.c_double,
 }
+
+STR_ENCODING_TO_CTYPES_MAP = {
+    annotations.CharEncoding.UTF8: ctypes.c_void_p,
+    annotations.CharEncoding.UTF16: ctypes.c_void_p
+}
+
 
 def get_offsets(type: ctypes.Structure) -> List[int]:
     """
@@ -119,7 +96,8 @@ def get_size(type: ctypes.Structure) -> int:
 def _get_member_ctype(py_type, member_annotations):
     if reflection_utils.is_optional_type(py_type):
         underlying_type = reflection_utils.get_underlying_type(py_type)
-        underlying_ctype = _get_member_ctype(underlying_type, member_annotations)
+        underlying_ctype = _get_member_ctype(
+            underlying_type, member_annotations)
         if reflection_utils.is_constructed_type(underlying_ctype):
             # Optimization: constructed types cache their pointer type, saving
             # the creation of a new ctypes.POINTER type.
@@ -127,9 +105,17 @@ def _get_member_ctype(py_type, member_annotations):
         else:
             return ctypes.POINTER(underlying_ctype)
 
-    basic_type = TYPE_TO_CTYPES_MAP.get(py_type, None)
+    basic_type = PRIMITIVE_TO_CTYPES_MAP.get(py_type, None)
     if basic_type is not None:
         return basic_type
+
+    if py_type is str:
+        encoding = annotations.find_annotation(
+            member_annotations, annotations.CharEncodingAnnotation)
+        c_str_type = STR_ENCODING_TO_CTYPES_MAP.get(encoding.value, None)
+        if c_str_type is None:
+            raise TypeError(f'Unsupported char encoding {encoding.value}')
+        return c_str_type
 
     if reflection_utils.is_sequence_type(py_type):
         element_ctype = _get_member_ctype(reflection_utils.get_underlying_type(py_type),
@@ -145,13 +131,15 @@ def _get_member_ctype(py_type, member_annotations):
 
     raise TypeError(f'Unsupported member type {py_type}')
 
-def create_ctype_from_dataclass(py_type):
+
+def create_ctype_from_dataclass(py_type, member_annotations):
     """Given a user-level dataclass, return an equivalent ctypes type that """
     """can be used by the C interpreter"""
 
     c_fields = []
     for field in fields(py_type):
-        member_type = _get_member_ctype(field.type, None)
+        current_annotations = member_annotations.get(field.name, {})
+        member_type = _get_member_ctype(field.type, current_annotations)
         c_fields.append((field.name, member_type))
 
     return type(
@@ -165,22 +153,24 @@ def create_ctype_from_dataclass(py_type):
 
 # --- Dynamic type creation ---------------------------------------------------
 
+
 def bounded_string():
     return dds.StringType(128)
 
 
 PY_TYPE_TO_DYNAMIC_TYPE_MAP = {
     bool: dds.BoolType(),
-    int8: dds.Int8Type(),
-    int16: dds.Int16Type(),
-    uint16: dds.Uint16Type(),
-    int32: dds.Int32Type(),
-    uint32: dds.Uint32Type(),
-    int64: dds.Int64Type(),
-    uint64: dds.Uint64Type(),
-    float32: dds.Float32Type(),
-    float64: dds.Float64Type(),
+    type_hints.int8: dds.Int8Type(),
+    type_hints.int16: dds.Int16Type(),
+    type_hints.uint16: dds.Uint16Type(),
+    type_hints.int32: dds.Int32Type(),
+    type_hints.uint32: dds.Uint32Type(),
+    type_hints.int64: dds.Int64Type(),
+    type_hints.uint64: dds.Uint64Type(),
+    type_hints.float32: dds.Float32Type(),
+    type_hints.float64: dds.Float64Type(),
 }
+
 
 def _get_member_dynamic_type(py_type, member_annotations):
     if reflection_utils.is_optional_type(py_type):
@@ -191,10 +181,26 @@ def _get_member_dynamic_type(py_type, member_annotations):
     if basic_type is not None:
         return basic_type
 
+    if py_type is str:
+        encoding = annotations.find_annotation(
+            member_annotations, annotations.CharEncodingAnnotation)
+        bound = annotations.find_annotation(
+            member_annotations, annotations.BoundAnnotation)
+        if encoding.value == annotations.CharEncoding.UTF8:
+            return dds.StringType(bound.value)
+        elif encoding.value == annotations.CharEncoding.UTF16:
+            return dds.WStringType(bound.value)
+        else:
+            raise TypeError(f'Unsupported char encoding {encoding.value}')
+
     if reflection_utils.is_sequence_type(py_type):
         member_type = reflection_utils.get_underlying_type(py_type)
-        member_dynamic_type = _get_member_dynamic_type(member_type, member_annotations)
-        bound = find_annotation(member_annotations, cls=BoundAnnotation)
+        element_annotations = annotations.find_annotation(
+            member_annotations, annotations.ElementAnnotations)
+        member_dynamic_type = _get_member_dynamic_type(
+            member_type, element_annotations.value)
+        bound = annotations.find_annotation(
+            member_annotations, cls=annotations.BoundAnnotation)
         return _type_factory.create_sequence(member_dynamic_type, bound.value)
 
     if reflection_utils.is_constructed_type(py_type):
@@ -202,23 +208,27 @@ def _get_member_dynamic_type(py_type, member_annotations):
 
     raise TypeError(f'Unsupported member type {py_type}')
 
+
 def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=None, member_annotations=None):
     """Given an IDL-derived dataclass, return the DynamicType that describes """
     """the IDL type"""
 
-    extensibility = find_annotation(type_annotations, ExtensibilityAnnotation)
+    extensibility = annotations.find_annotation(
+        type_annotations, annotations.ExtensibilityAnnotation)
 
     if member_annotations is None:
         member_annotations = {}
 
     member_args = []
     for field in fields(py_type):
-        annotations = member_annotations.get(field.name, {})
+        current_annotations = member_annotations.get(field.name, {})
         is_optional = reflection_utils.is_optional_type(field.type)
-        member_type = _get_member_dynamic_type(field.type, annotations)
+        member_type = _get_member_dynamic_type(field.type, current_annotations)
 
-        is_key = find_annotation(annotations, cls=KeyAnnotation)
-        member_id = find_annotation(annotations, cls=IdAnnotation)
+        is_key = annotations.find_annotation(
+            current_annotations, cls=annotations.KeyAnnotation)
+        member_id = annotations.find_annotation(
+            current_annotations, cls=annotations.IdAnnotation)
 
         member_args.append(
             (field.name, member_type, member_id.value, is_key.value, is_optional, False))
@@ -293,25 +303,35 @@ class TypeSupport:
     """Support and utility methods for the usage of an IDL type"""
 
     def __init__(self, idl_type, type_annotations=None, member_annotations=None):
+        # Python dataclass
         self.type = idl_type
-        self.c_type = create_ctype_from_dataclass(idl_type)
+
+        # C type and related types (pointer and sequence types)
+        self.c_type = create_ctype_from_dataclass(idl_type, member_annotations)
         self.c_type_ptr = ctypes.POINTER(self.c_type)
         self.c_type_seq = csequence.create_sequence_type(self.c_type)
+
+        # Plugin and dynamic type
         self._plugin_dynamic_type = create_dynamic_type_from_dataclass(
             idl_type, self.c_type, type_annotations, member_annotations)
 
-        self.sample_programs = sample_interpreter.SamplePrograms(
-            self.type, self.c_type)
+        # Python/C sample conversion programs
+        self._sample_programs = sample_interpreter.SamplePrograms(
+            self.type,
+            self.c_type,
+            self._plugin_dynamic_type,
+            member_annotations)
 
     def _create_c_sample(self, sample):
-        if (type(sample) is not self.type):
+        if type(sample) is not self.type:
             raise TypeError(
                 f'Expected type {self.type}, got {type(sample)}')
 
         c_sample = self.c_type()
         self._plugin_dynamic_type.initialize_sample(c_sample)
         try:
-            self.sample_programs.py_to_c_program.execute(src=sample, dst=c_sample)
+            self._sample_programs.py_to_c_program.execute(
+                src=sample, dst=c_sample)
         except:
             self._plugin_dynamic_type.finalize_sample(c_sample)
             raise
@@ -323,13 +343,13 @@ class TypeSupport:
     def _create_py_sample(self, c_sample_ptr):
         py_sample = self.type()
         c_sample = self._cast_c_sample(c_sample_ptr)
-        self.sample_programs.c_to_py_program.execute(
+        self._sample_programs.c_to_py_program.execute(
             src=c_sample, dst=py_sample)
         return py_sample
 
     def _create_py_sample_no_ptr(self, c_sample):
         py_sample = self.type()
-        self.sample_programs.c_to_py_program.execute(
+        self._sample_programs.c_to_py_program.execute(
             src=c_sample, dst=py_sample)
         return py_sample
 
@@ -343,9 +363,9 @@ class TypeSupport:
             self._plugin_dynamic_type.finalize_sample(c_sample)
 
     def deserialize(self, buffer):
+        """Create a data sample for the data type for this TypeSupport by
+        deserializing a cdr byte buffer
         """
-        Create a data sample for the data type for this TypeSupport by
-        deserializing a cdr byte buffer"""
 
         c_sample = self.c_type()
         self._plugin_dynamic_type.initialize_sample(c_sample)
@@ -361,4 +381,4 @@ class TypeSupport:
 
     @property
     def dynamic_type(self):
-        return self._plugin_dynamic_type.clone()
+        return self._plugin_dynamic_type.clone_type()

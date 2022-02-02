@@ -35,4 +35,3 @@ def pytest_sessionfinish(session, exitstatus):
         # If tests have been succesful, let check_leaks() throw an exception to
         # make the process fail
         leak_detector.check_leaks()
-

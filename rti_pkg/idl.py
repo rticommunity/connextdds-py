@@ -10,8 +10,11 @@
 #
 
 import dataclasses
+from typing import List, Any
 import rti.idl_impl.type_plugin as idl_impl
+import rti.idl_impl.annotations as annotations
 import rti.idl_impl.type_hints as type_hints
+import rti.idl_impl.sample_interpreter as sample_interpreter
 import rti.connextdds
 
 #
@@ -44,26 +47,36 @@ float64 = type_hints.float64
 
 # --- Member annotations ------------------------------------------------------
 
-key = idl_impl.KeyAnnotation(True)
+key = annotations.KeyAnnotation(True)
 
 
-def id(value: int) -> idl_impl.IdAnnotation:
-    return idl_impl.IdAnnotation(value)
+def id(value: int) -> annotations.IdAnnotation:
+    "Sets a explicit member ID. By default they're assigned automatically"
+    return annotations.IdAnnotation(value)
 
 
 def bound(value: int):
-    return idl_impl.BoundAnnotation(value)
+    """Sets the maximum size for a sequence or a string member"""
+    return annotations.BoundAnnotation(value)
 
 
-unbouned = bound(idl_impl.UNBOUNDED)
+unbounded = bound(annotations.UNBOUNDED)
+
+
+utf8 = annotations.CharEncodingAnnotation(annotations.CharEncoding.UTF8)
+utf16 = annotations.CharEncodingAnnotation(annotations.CharEncoding.UTF16)
+
+def element_annotations(value: List[Any]):
+    """Provides annotations for the element of a sequence, array, etc."""
+    return annotations.ElementAnnotations(value)
 
 # --- Type annotations --------------------------------------------------------
 
-extensible = idl_impl.ExtensibilityAnnotation(
+extensible = annotations.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.EXTENSIBLE)
-mutable = idl_impl.ExtensibilityAnnotation(
+mutable = annotations.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.MUTABLE)
-final = idl_impl.ExtensibilityAnnotation(
+final = annotations.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.FINAL)
 
 # --- Dataclass extensions ----------------------------------------------------
@@ -71,6 +84,11 @@ final = idl_impl.ExtensibilityAnnotation(
 
 def array_factory(element_type: type, size: int = 0):
     return idl_impl.PrimitiveArrayFactory(element_type, size)
+
+
+# --- Exceptions --------------------------------------------------------------
+
+FieldSerializationError = sample_interpreter.FieldSerializationError
 
 # --- Decorators --------------------------------------------------------------
 

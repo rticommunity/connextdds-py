@@ -21,7 +21,7 @@ namespace pyrti {
 // a GenericTypePluginFactory. This struct is used to pass around these pointers
 // between Python and C++. The pointers are owned by the factory and are valid
 // until the factory is destroyed.
-struct PluginDynamicTypeHolder {
+struct TypePlugin {
     rti::core::xtypes::DynamicTypeImpl* type;
     rti::topic::cdr::CTypePlugin* type_plugin;
 };
@@ -77,8 +77,8 @@ inline static rti::topic::cdr::CTypePlugin* get_type_plugin_from_type_support(
     auto py_type_plugin_holder = type_support.attr("_plugin_dynamic_type");
 
     // pybind11 magic allows casting the python object to the C++ one
-    PluginDynamicTypeHolder type_plugin_holder =
-            py::cast<PluginDynamicTypeHolder>(py_type_plugin_holder);
+    TypePlugin type_plugin_holder =
+            py::cast<TypePlugin>(py_type_plugin_holder);
 
 #ifndef NDEBUG
     if (type_plugin_holder.type_plugin == nullptr) {

@@ -31,7 +31,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                dds::core::xtypes::ExtensibilityKind extensibility,
                uint32_t type_size,
                const std::vector<uint32_t>& member_offsets) {
-                return PluginDynamicTypeHolder { self.create_struct(
+                return TypePlugin { self.create_struct(
                                                          name,
                                                          extensibility,
                                                          type_size,
@@ -43,7 +43,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
             [](GenericTypePluginFactory& self,
                const dds::core::xtypes::DynamicType& element_type,
                uint32_t bound) {
-                return PluginDynamicTypeHolder {
+                return TypePlugin {
                     self.create_sequence(element_type, bound),
                     nullptr
                 };
@@ -62,7 +62,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
     cls.def(
             "add_member",
             [](GenericTypePluginFactory& factory,
-               PluginDynamicTypeHolder& type_holder,
+               TypePlugin& type_holder,
                const std::string& name,
                const dds::core::xtypes::DynamicType& member_type,
                int32_t id,
@@ -89,9 +89,9 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
     cls.def(
             "add_member",
             [](GenericTypePluginFactory& factory,
-               PluginDynamicTypeHolder& type_holder,
+               TypePlugin& type_holder,
                const std::string& name,
-               const PluginDynamicTypeHolder& member_type_holder,
+               const TypePlugin& member_type_holder,
                int32_t id,
                bool is_key,
                bool is_optional,
@@ -116,7 +116,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
     cls.def(
             "create_type_plugin",
             [](GenericTypePluginFactory& factory,
-               PluginDynamicTypeHolder& type_holder) {
+               TypePlugin& type_holder) {
                 CTypePlugin& plugin =
                         factory.create_type_plugin(*type_holder.type);
                 type_holder.type_plugin = &plugin;
@@ -146,9 +146,9 @@ void process_inits<GenericTypePluginFactory>(py::module& m, ClassInitList& l)
     });
 
     l.push_back([m]() mutable {
-        return init_class<PluginDynamicTypeHolder>(
+        return init_class<TypePlugin>(
                 m,
-                "_TypePluginDynamicTypeHolder");
+                "_TypePlugin");
     });
 }
 

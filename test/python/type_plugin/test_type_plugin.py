@@ -76,6 +76,10 @@ def test_serialization():
     sample = Point(x=33, y=24)
     assert sample == ts.deserialize(ts.serialize(sample))
 
+def test_pubsub():
+    fixture = fixtures.PubSubFixture(fixtures.create_participant(), Point)
+    fixture.send_and_check(Point(3, 4))
+
 @idl.struct
 class NotAPoint:
     a: int = 0

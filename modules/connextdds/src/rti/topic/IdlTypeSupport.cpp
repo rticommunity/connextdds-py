@@ -21,6 +21,8 @@
 #include "IdlDataWriter.hpp"
 #include "IdlDataReader.hpp"
 
+#include "dds_c/dds_c_interpreter.h"
+
 using namespace dds::core::xtypes;
 using namespace dds::topic;
 using namespace rti::topic::cdr;
@@ -46,29 +48,100 @@ static void validate_cdr_buffer_type(const py::buffer_info& info)
     }
 }
 
+// Uses the C interpreter to resize a sequence of complex types, initializing
+// or finalizing elements as needed.
+//
+// - member_plugin is the plugin for the sequence's type
+// - c_sample is the ctypes sample containing the sequence member
+// - member_offset is the offset to the sequence member
+// - element_count is the new element count
+//
+// This function is used as part of the idl_impl.sample_interpreter package
+// to convert unbounded Python sequences to C.
+static void resize_c_sequence(
+        py::object& c_sample,
+        const DynamicType& member_dynamic_type,
+        size_t member_offset,
+        size_t element_count)
+{
+    RTIXCdrBoolean failure = RTI_XCDR_FALSE;
+    // RTIXCdrTypeCodeMember member_info;
+    PyCTypesBuffer c_sample_buffer(c_sample);
+    DDS_Sequence_set_member_element_count(
+            &failure,
+            c_sample_buffer.py_buffer.buf, // sample
+            (RTIXCdrUnsignedLong) element_count,
+            (RTIXCdrUnsignedLong) member_offset,
+            reinterpret_cast<const RTIXCdrTypeCode*>(
+                    &member_dynamic_type.native()), // memberInfo
+            nullptr, // TODO CORE-11838: this has to be passed in to support optionals
+            RTI_XCDR_TRUE, // allocateMemberIfNull
+            RTI_XCDR_TRUE, // trimToSize
+            RTI_XCDR_TRUE, // initializeElement
+            nullptr); // programData
+
+    if (failure) {
+        throw dds::core::Error("Failed to resize sequence");
+    }
+}
+
 // This class and methods are internally used (in Python code) by the
 // TypeSupport class
 template<>
-void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
+void init_class_defs(py::class_<TypePlugin>& cls)
 {
     // Get the DynamicType without making a copy; this type includes all
     // the access sample info. This is used internally only.
     cls.def(
             "get_dynamic_type_ref",
-            [](const PluginDynamicTypeHolder& self) { return self.type; },
+            [](const TypePlugin& self) { return self.type; },
+            py::return_value_policy::reference);
+
+    // This function serves two purposes:
+    //
+    // 1) It allows to polymorphically get the dynamic type of a member, which
+    // the C++ API currently doesn't allow (it requires knowing whether it's a
+    // struct or a union), and
+    //
+    // 2) it uses py::return_value_policy::reference to
+    // avoid making a copy and preserving the sampleAccessInfo. This is safe
+    // because the lifecycle of the type and access info is tied to the type
+    // plugin factory.
+    cls.def(
+            "get_member_dynamic_type_ref",
+            [](const TypePlugin& self,
+               const std::string& member_name) {
+                DDS_ExceptionCode_t ex;
+                auto index = DDS_TypeCode_find_member_by_name(
+                        &self.type->native(),
+                        member_name.c_str(),
+                        &ex);
+                rti::core::check_tc_ex_code(
+                        ex,
+                        "failed to find member by name");
+
+                DDS_TypeCode *member_type = DDS_TypeCode_member_type(
+                        &self.type->native(),
+                        index,
+                        &ex);
+                rti::core::check_tc_ex_code(
+                        ex,
+                        "failed to get member type");
+
+                return reinterpret_cast<dds::core::xtypes::DynamicType*>(member_type);
+            },
             py::return_value_policy::reference);
 
     // Return a copy without the sample access info.
-    cls.def("clone", [](const PluginDynamicTypeHolder& self) {
-        rti::core::xtypes::DynamicTypeImpl copy = *self.type;
-        return py_cast_type(copy);
-    });
+    cls.def(
+            "clone_type",
+            [](const TypePlugin& self) { return py_cast_type(*self.type); });
 
     // Used by TypeSupport.serialize, expects a sample that has already been
     // converted to C
     cls.def(
             "serialize",
-            [](const PluginDynamicTypeHolder& self, py::object c_sample) {
+            [](const TypePlugin& self, py::object c_sample) {
                 PyCTypesBuffer c_sample_buffer(c_sample);
                 std::vector<uint8_t> cdr_buffer;
                 self.type_plugin->serialize_to_cdr_buffer(
@@ -84,7 +157,7 @@ void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
     // converted to C
     cls.def(
             "deserialize",
-            [](const PluginDynamicTypeHolder& self,
+            [](const TypePlugin& self,
                py::object c_sample,
                py::buffer buffer) {
                 // TODO PY-25: Add support for an input buffer type that is not
@@ -107,7 +180,7 @@ void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
 
     cls.def(
             "initialize_sample",
-            [](const PluginDynamicTypeHolder& self,
+            [](const TypePlugin& self,
                py::object c_sample) {
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
@@ -120,7 +193,7 @@ void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
 
     cls.def(
             "finalize_sample",
-            [](const PluginDynamicTypeHolder& self, py::object c_sample) {
+            [](const TypePlugin& self, py::object c_sample) {
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
                 py::gil_scoped_release release;
@@ -129,6 +202,11 @@ void init_class_defs(py::class_<PluginDynamicTypeHolder>& cls)
             },
             py::arg("c_sample"),
             py::call_guard<py::gil_scoped_acquire>());
+
+    cls.def_static(
+            "resize_sequence",
+            resize_c_sequence,
+            py::call_guard<py::gil_scoped_release>());
 }
 
 template<>

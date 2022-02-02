@@ -15,7 +15,12 @@ import time
 
 
 class WaitError(Exception):
-    pass
+    def __init__():
+        super().__init__("Wait timeout")
+
+
+    def __init__(message: str):
+        super().__init__("Wait timeout: " + message)
 
 
 def until(predicate) -> None:
@@ -26,7 +31,7 @@ def until(predicate) -> None:
         max_wait -= sleep_time
 
     if max_wait <= 0:
-        raise WaitError("Predicate still false")
+        raise WaitError()
 
 
 def until_equal(expected_value, function) -> None:
@@ -41,5 +46,11 @@ def for_discovery(reader: dds.DataReader, writer: dds.DataWriter) -> None:
     until(lambda: reader.instance_handle in writer.matched_subscriptions)
 
 
-def for_data(reader: dds.DataReader, count: int = 1) -> None:
-    until_equal(count, lambda: reader.datareader_cache_status.sample_count)
+def for_data(reader: dds.DataReader, count: int = -1) -> None:
+    if count < 0:
+        # Wait for one or more samples
+        until(lambda: reader.datareader_cache_status.sample_count > 0)
+    else:
+        # Wait for a specific number
+        until_equal(count, lambda: reader.datareader_cache_status.sample_count)
+

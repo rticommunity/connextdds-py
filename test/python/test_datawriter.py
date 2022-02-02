@@ -35,7 +35,7 @@ def check_data_and_get_info(reader: dds.DataReader, expected_samples: list):
     assert same_elements([data for (data, _) in samples], expected_samples)
     return [info for (_, info) in samples]
 
-@idl.struct(member_annotations={'x': [idl.key]})
+@idl.struct # TODO PY-17: (member_annotations={'x': [idl.key]})
 class Point:
     x: int = 0
     y: int = 0
@@ -82,6 +82,8 @@ def test_write_with_timestamp(pubsub):
 
     assert info[0].source_timestamp == dds.Time(123)
 
+
+@pytest.mark.skip(reason="keys not supported yet")
 def test_write_with_instance_handle(pubsub):
     sample = Point(x=11, y=22)
     instance_handle = pubsub.writer.register_instance(sample)
@@ -93,6 +95,7 @@ def test_write_with_instance_handle(pubsub):
     assert info[0].instance_handle == instance_handle
 
 
+@pytest.mark.skip(reason="keys not supported yet")
 def test_write_with_instance_handle_and_timestamp(pubsub):
     sample = Point(x=11, y=22)
     instance_handle = pubsub.writer.register_instance(sample)
@@ -105,6 +108,7 @@ def test_write_with_instance_handle_and_timestamp(pubsub):
     assert info[0].source_timestamp == dds.Time(123)
 
 
+@pytest.mark.skip(reason="keys not supported yet")
 def test_write_w_params(pubsub):
     sample = Point(x=11, y=22)
     params = dds.WriteParams()
@@ -153,6 +157,7 @@ def test_write_list_of_pairs_with_shift_operator(pubsub):
 
 # --- Instance tests ----------------------------------------------------------
 
+@pytest.mark.skip(reason="keys not supported yet")
 def test_register_dispose_unregister_instance(pub):
     sample = Point(x=11, y=22)
     instance_handle = pub.writer.register_instance(sample)
@@ -163,6 +168,7 @@ def test_register_dispose_unregister_instance(pub):
     pub.writer.unregister_instance(instance_handle)
 
 
+@pytest.mark.skip(reason="keys not supported yet")
 def test_register_dispose_unregister_instance_with_timestamp(pub):
     sample = Point(x=11, y=22)
     instance_handle = pub.writer.register_instance(sample, dds.Time(123))
@@ -173,6 +179,7 @@ def test_register_dispose_unregister_instance_with_timestamp(pub):
     pub.writer.unregister_instance(instance_handle, dds.Time(125))
 
 
+@pytest.mark.skip(reason="keys not supported yet")
 def test_register_dispose_unregister_instance_with_params(pub):
     sample = Point(x=11, y=22)
     params = dds.WriteParams()

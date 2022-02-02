@@ -24,6 +24,10 @@ void init_class_defs(
     cls.def(py::init<uint32_t>(),
             py::arg("bounds"),
             "Creates a bounded wide string.")
+            .def(py::init([]() {
+                return WStringType(UnidimensionalCollectionTypeImpl::UNBOUNDED);
+            }),
+            "Creates an unbounded wide string.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

@@ -38,7 +38,7 @@ py::object py_cast_type(dds::core::xtypes::DynamicType& dt)
     case dds::core::xtypes::TypeKind::STRING_TYPE:
         return py::cast(static_cast<dds::core::xtypes::StringType&>(dt));
     case dds::core::xtypes::TypeKind::WSTRING_TYPE:
-        return py::cast(static_cast<dds::core::xtypes::StringType&>(dt));
+        return py::cast(static_cast<dds::core::xtypes::WStringType&>(dt));
     case dds::core::xtypes::TypeKind::BOOLEAN_TYPE:
         return py::cast(
                 static_cast<dds::core::xtypes::PrimitiveType<bool>&>(dt));

@@ -45,13 +45,15 @@ static void finalize_sample(
     // TODO PY-17: Temporary function until we use a scratchpad sample instead
     // of creating one for every write.
     auto type_support = get_py_type_support_from_topic(writer.topic());
-    auto plugin = py::cast<PluginDynamicTypeHolder>(
+    auto plugin = py::cast<TypePlugin>(
         type_support.attr("_plugin_dynamic_type"));
 
     CSampleWrapper wrapper(c_sample);
     plugin.type_plugin->finalize_sample(wrapper);
 }
 
+// The Write implementation for IDL writers converts Python samples to C
+// before calling the actual write operation.
 struct IdlWriteImpl {
 
     using py_sample = py::object;
