@@ -104,7 +104,10 @@ static PyPointer string_realloc(PyPointer str, size_t new_size)
 static PyPointer wstring_realloc(PyPointer str, size_t new_size)
 {
     RTIXCdrWchar* str_ptr = reinterpret_cast<RTIXCdrWchar*>(str);
-    RTIOsapiHeap_reallocateArray(&str_ptr, new_size, RTIXCdrWchar);
+    RTIOsapiHeap_reallocateArray(
+            &str_ptr,
+            new_size + sizeof(RTIXCdrWchar),
+            RTIXCdrWchar);
     if (str_ptr == nullptr) {
         throw std::bad_alloc();
     }
