@@ -53,7 +53,7 @@ def test_sequence_plugin():
     assert dt["sequences_b"].type == dds.SequenceType(element_ts.dynamic_type, 3)
 
 
-def test_sequence_serialization2(sequence_sample):
+def test_sequence_serialization(sequence_sample):
     ts = idl.get_type_support(SequenceTest)
     buffer = ts.serialize(sequence_sample)
     deserialized_sample = ts.deserialize(buffer)
@@ -73,28 +73,30 @@ def test_sequence_memory_is_managed_pubsub(shared_participant):
     fixture.send_and_check(create_sequence_sample(3))
 
 
-def test_sequence_pubsub25(shared_participant, sequence_sample: SequenceTest):
-    fixture = PubSubFixture(shared_participant, SequenceTest, create_reader=False, reader_policies=[
+def test_sequence_variable_lengths_pubsub(
+    shared_participant: dds.DomainParticipant,
+    sequence_sample: SequenceTest
+):
+    fixture = PubSubFixture(shared_participant, SequenceTest, reader_policies=[
                             dds.ResourceLimits(1, 1, 1)])
-    fixture.writer.write(create_sequence_sample(2))
-    fixture.writer.write(create_sequence_sample(3))
-    # wait.for_data(fixture.reader)
-    # assert fixture.reader.take_data() == [sequence_sample]
-    # fixture.writer.write(SequenceTest())
-    # wait.for_data(fixture.reader)
-    # assert fixture.reader.take_data() == [SequenceTest()]
+    fixture.writer.write(sequence_sample)
+    wait.for_data(fixture.reader)
+    assert fixture.reader.take_data() == [sequence_sample]
+    fixture.writer.write(SequenceTest())
+    wait.for_data(fixture.reader)
+    assert fixture.reader.take_data() == [SequenceTest()]
 
-    # del sequence_sample.sequences_u[1].prices[1]
-    # sequence_sample.sequences_u[1].vertices.append(
-    #     sequence_sample.sequences_u[1].vertices[0])
-    # sequence_sample.sequences_u[1].vertices_bounded.append(
-    #     sequence_sample.sequences_u[1].vertices_bounded[0])
+    del sequence_sample.sequences_u[1].prices[1]
+    sequence_sample.sequences_u[1].vertices.append(
+        sequence_sample.sequences_u[1].vertices[0])
+    sequence_sample.sequences_u[1].vertices_bounded.append(
+        sequence_sample.sequences_u[1].vertices_bounded[0])
 
-    # del sequence_sample.sequences_b[1].prices[1]
-    # sequence_sample.sequences_b[1].vertices.append(
-    #     sequence_sample.sequences_b[1].vertices[0])
-    # sequence_sample.sequences_b[1].vertices_bounded.append(
-    #     sequence_sample.sequences_b[1].vertices_bounded[0])
-    # fixture.writer.write(sequence_sample)
-    # wait.for_data(fixture.reader)
-    # assert fixture.reader.take_data() == [sequence_sample]
+    del sequence_sample.sequences_b[1].prices[1]
+    sequence_sample.sequences_b[1].vertices.append(
+        sequence_sample.sequences_b[1].vertices[0])
+    sequence_sample.sequences_b[1].vertices_bounded.append(
+        sequence_sample.sequences_b[1].vertices_bounded[0])
+    fixture.writer.write(sequence_sample)
+    wait.for_data(fixture.reader)
+    assert fixture.reader.take_data() == [sequence_sample]

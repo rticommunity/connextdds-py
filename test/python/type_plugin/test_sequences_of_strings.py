@@ -85,7 +85,6 @@ def test_sequence_serialization(sequence_sample):
     buffer = ts.serialize(sequence_sample)
     deserialized_sample = ts.deserialize(buffer)
     assert sequence_sample == deserialized_sample
-    print(deserialized_sample)
 
 
 def test_sequence_pubsub(shared_participant, sequence_sample):
@@ -110,8 +109,5 @@ def test_sequence_serialization_fails_when_out_of_bounds():
     sample = SequenceTest(b_b=["hello!!"])
     with pytest.raises(Exception) as ex:
         ts.serialize(sample)
-    print()
-    print(ex.value)
-    print()
     assert "Error processing field 'b_b'" in str(ex.value)
 
