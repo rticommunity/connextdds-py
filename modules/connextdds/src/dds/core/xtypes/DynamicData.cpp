@@ -2254,12 +2254,24 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
             .def(
                     "from_cdr_buffer",
                     [](dds::core::xtypes::DynamicData& sample,
+                       const std::vector<uint8_t>& buffer) {
+                        auto& signed_buffer = reinterpret_cast<const std::vector<char>&>(buffer);
+                        return rti::core::xtypes::from_cdr_buffer(
+                                sample,
+                                signed_buffer);
+                    },
+                    py::arg("buffer"),
+                    "Populates a DynamicData sample by deserializing a CDR "
+                    "buffer.")
+            .def(
+                    "from_cdr_buffer",
+                    [](dds::core::xtypes::DynamicData& sample,
                        const std::vector<char>& buffer) {
                         return rti::core::xtypes::from_cdr_buffer(
                                 sample,
                                 buffer);
                     },
-                    py::arg("buffer"),
+                    py::arg("signed_buffer"),
                     "Populates a DynamicData sample by deserializing a CDR "
                     "buffer.")
             .def("fields",
