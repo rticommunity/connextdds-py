@@ -49,6 +49,35 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                 };
             });
 
+    cls.def("create_array",
+            [](GenericTypePluginFactory& self,
+               const dds::core::xtypes::DynamicType& element_type,
+               uint32_t dimension) {
+                return TypePlugin { self.create_array(element_type, dimension),
+                                    nullptr };
+            });
+
+    cls.def("create_array",
+            [](GenericTypePluginFactory& self,
+               TypePlugin& type_holder,
+               uint32_t dimension) {
+                return TypePlugin {
+                    self.create_array(*type_holder.type, dimension),
+                    nullptr
+                };
+            });
+
+    cls.def("create_enum",
+            [](GenericTypePluginFactory& self,
+               const std::string& name,
+               dds::core::xtypes::ExtensibilityKind extensibility,
+               const std::vector<dds::core::xtypes::EnumMember>& members) {
+                return TypePlugin {
+                    self.create_enum(name, extensibility, members),
+                    nullptr
+                };
+            });
+
     cls.def("add_member_previous",
             &GenericTypePluginFactory::add_member,
             py::arg("type"),

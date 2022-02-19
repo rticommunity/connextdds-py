@@ -110,6 +110,10 @@ class Sequence(ctypes.Structure):
 def create_sequence_type(element_ctype):
     """Creates a concrete sequence type given the element type"""
 
+    if issubclass(element_ctype, Sequence):
+        raise TypeError(
+            f'Sequences of sequences are not supported: wrap the inner sequence in a @idl.alias or @idl.struct')
+
     # The element_type is set as a class field (it's not an instance field,
     # since the type needs to maintain its exact C memory layout)
     return type(

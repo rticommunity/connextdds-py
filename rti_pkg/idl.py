@@ -10,11 +10,12 @@
 #
 
 import dataclasses
-from typing import List, Any
+from typing import List, Union, Any
 import rti.idl_impl.type_plugin as idl_impl
 import rti.idl_impl.annotations as annotations
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.sample_interpreter as sample_interpreter
+import rti.idl_impl.reflection_utils as reflection_utils
 import rti.connextdds
 
 #
@@ -63,6 +64,10 @@ def bound(value: int):
 unbounded = bound(annotations.UNBOUNDED)
 
 
+def array(dimensions: Union[None, int, List[int]]):
+    return annotations.ArrayAnnotation(dimensions)
+
+
 utf8 = annotations.CharEncodingAnnotation(annotations.CharEncoding.UTF8)
 utf16 = annotations.CharEncodingAnnotation(annotations.CharEncoding.UTF16)
 
@@ -84,6 +89,14 @@ final = annotations.ExtensibilityAnnotation(
 
 def array_factory(element_type: type, size: int = 0):
     return idl_impl.PrimitiveArrayFactory(element_type, size)
+
+def list_factory(element_type_or_value: Any, size: int):
+    if type(element_type_or_value) is type:
+        # If we pass a type, the factory instantiates new objects of that type
+        return idl_impl.ListFactory(element_type_or_value, size)
+    else:
+        # If we pass a value, the factory returns a list with the same value
+        return idl_impl.ValueListFactory(element_type_or_value, size)
 
 
 # --- Exceptions --------------------------------------------------------------
@@ -112,6 +125,28 @@ def struct(cls=None, *, type_annotations={}, member_annotations={}):
         # Decorator used without arguments:
         #  @idl.struct
         #  class Foo:
+        return wrapper(cls)
+
+
+def enum(cls=None, *, type_annotations={}):
+    """This decorator makes a Python IntEnum usable as IDL enum"""
+
+    def wrapper(cls):
+        if not reflection_utils.is_enum(cls):
+            raise TypeError(f"{cls} is not an IntEnum")
+
+        cls.type_support = idl_impl.TypeSupport(
+            cls, type_annotations)
+        return cls
+    if cls is None:
+        # Decorator used with arguments:
+        #  @idl.enum(type_annotations={...}, ...)
+        #  class Foo(IntEnum):
+        return wrapper
+    else:
+        # Decorator used without arguments:
+        #  @idl.enum
+        #  class Foo(IntEnum):
         return wrapper(cls)
 
 

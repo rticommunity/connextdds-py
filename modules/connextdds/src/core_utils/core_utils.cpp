@@ -65,6 +65,21 @@ static void memcpy_to_buffer_object(py::buffer dst, PyPointer src, size_t size)
     memcpy(dst_info.py_buffer.buf, src_ptr, size);
 }
 
+static void memcpy_buffer_objects(py::buffer dst, py::buffer src)
+{
+    pyrti::PyCTypesBuffer dst_info(dst);
+    pyrti::PyCTypesBuffer src_info(src);
+
+    if (dst_info.py_buffer.len != src_info.py_buffer.len) {
+        throw dds::core::IllegalOperationError(
+                "Source buffer size doesn't match destination buffer size");
+    }
+
+    memcpy(dst_info.py_buffer.buf,
+           src_info.py_buffer.buf,
+           dst_info.py_buffer.len);
+}
+
 static size_t strcpy_from_buffer_object_no_null_char(char* dst, py::buffer src)
 {
     auto src_info = src.request();
@@ -158,6 +173,7 @@ void init_core_utils(py::module& m)
     m.def("memcpy_from_buffer_object", memcpy_from_buffer_object);
     m.def("memcpy_to_buffer_object_slow", memcpy_to_buffer_object_slow);
     m.def("memcpy_to_buffer_object", memcpy_to_buffer_object);
+    m.def("memcpy_buffer_objects", memcpy_buffer_objects);
     m.def("strcpy_from_buffer_object", strcpy_from_buffer_object);
     m.def("wstrcpy_from_buffer_object", wstrcpy_from_buffer_object);
     m.def("get_memoryview_from_string", get_memoryview_from_string);

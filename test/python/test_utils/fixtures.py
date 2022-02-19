@@ -105,7 +105,14 @@ def participant():
 # Provides a participant that is shared among all the tests in a module that
 # request this fixture
 @pytest.fixture(scope="module")
-def shared_participant():
+def shared_participant_no_cleanup():
     participant = create_participant()
     yield participant
     participant.close()
+
+# Provides the above participant but it delete its contained entities after each
+# test
+@pytest.fixture
+def shared_participant(shared_participant_no_cleanup):
+    yield shared_participant_no_cleanup
+    shared_participant_no_cleanup.close_contained_entities()

@@ -19,6 +19,7 @@
 """
 
 from typing import Any, List, Tuple, Sequence
+from dataclasses import fields
 import itertools
 import abc
 
@@ -61,6 +62,35 @@ class CopyPrimitiveInstruction(Instruction):
 
     def execute(self, dst: Any, src: Any) -> None:
         setattr(dst, self.field_name, getattr(src, self.field_name))
+
+
+# --- Enums  ------------------------------------------------------------------
+
+class CopyIntEnumToInt32(Instruction):
+    """Python to C: copy an enum into an int32 member"""
+
+    def execute(self, dst: Any, src: Any) -> None:
+        setattr(dst, self.field_name, getattr(src, self.field_name))
+
+
+class CopyInt32ToIntEnum(Instruction):
+    """C to Python: copy an int32 into an enum member"""
+
+    def __init__(self, field_name: str, enum_type: type):
+        super().__init__(field_name)
+        self.enum_type = enum_type
+
+    def execute(self, dst: Any, src: Any) -> None:
+        int_value = getattr(src, self.field_name)
+        try:
+            enum_value = self.enum_type(int_value)
+        except:
+            # Allow unknown enumerators as integers. Note that a DataReader may
+            # forbid unknown enumerators; in that case the sample is dropped in
+            # before getting here.
+            enum_value = int_value
+
+        setattr(dst, self.field_name, enum_value)
 
 # --- Structs  ----------------------------------------------------------------
 
@@ -262,8 +292,6 @@ class CopyPrimitiveSequenceToBufferInstruction(Instruction):
                 py_member, elements_ptr, c_member._element_size * length)
 
 
-# TODO PY-17: Add Py-to-C optimized implementation when Py supports buffer
-# protocol (we already have that impl in the other direction)
 class CopyPrimitiveListToBoundedSequenceInstruction(Instruction):
     """Primitive sequence: Python to C
 
@@ -281,6 +309,23 @@ class CopyPrimitiveListToBoundedSequenceInstruction(Instruction):
         for i in range(length):
             c_elements[i] = py_member[i]
 
+
+class CopyBufferToBoundedSequenceInstruction(Instruction):
+    """Primitive sequence: Python to C
+
+    Instruction to copy a bounded sequence of primitive types using buffer
+    protocol
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(src, field_name)
+        c_member = getattr(dst, field_name)
+        length = len(py_member)
+        c_member.set_length(length)
+        elements_ptr = c_member.get_elements_raw_ptr()
+        core_utils.memcpy_from_buffer_object(
+            elements_ptr, py_member, c_member._element_size * length)
 
 class CopyPrimitiveListToUnboundedSequenceInstruction(Instruction):
     """Primitive sequence: Python to C
@@ -479,6 +524,177 @@ class CopyUnboundedStrListToSequenceInstruction(Instruction):
                 dst=c_member, src=py_member, index=i)
             i += 1
 
+# --- Arrays ------------------------------------------------------------------
+
+# Note that the following instructions duplicate significant ammounts of code
+# from the sequence instructions. However, every function call that can be
+# avoided goes a long way in improving performance.
+
+
+class CopyPrimitiveArrayToListInstruction(Instruction):
+    """Primitive array: C to Python
+
+    Instruction to copy a sequence of primitive types from a C Array
+    to a list-like python object (one that supports expand()).
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(dst, field_name)
+        c_member = getattr(src, field_name)
+        length = len(c_member)
+
+        # py_member is expected to have the required number of elements
+        for i in range(length):
+            py_member[i] = c_member[i]
+
+
+class CopyPrimitiveArrayToBufferInstruction(Instruction):
+    """Primitive array: C to Python
+
+    Instruction to copy an array of primitive types from a C array
+    to a python object supporting the buffer protocol, using a memcpy
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(dst, field_name)
+        c_member = getattr(src, field_name)
+
+        # The py_member should have been created with the right element
+        # count. If not, the memcpy call will fail with an exception.
+        core_utils.memcpy_buffer_objects(py_member, c_member)
+
+
+class CopyPrimitiveListToArrayInstruction(Instruction):
+    """Primitive array: Python to C
+
+    Instruction to copy an array primitive types
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(src, field_name)
+        c_member = getattr(dst, field_name)
+        length = len(c_member)
+        if len(py_member) != length:
+            raise ValueError(
+                f"Expected array length of {length} but got {len(py_member)}")
+
+        for i in range(length):
+            c_member[i] = py_member[i]
+
+
+class CopyBufferToArrayInstruction(Instruction):
+    """Primitive sequence: Python to C
+
+    Instruction to copy an array of primitive types using buffer protocol
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(src, field_name)
+        c_member = getattr(dst, field_name)
+        length = len(c_member)
+        if len(py_member) != length:
+            raise ValueError(
+                f"Expected array length of {length} but got {len(py_member)}")
+
+        core_utils.memcpy_buffer_objects(c_member, py_member)
+
+
+class CopyConstructedArrayToListInstruction(Instruction):
+    """Complex sequence: C to Python
+
+    Instruction to copy an bounded or unbounded sequence of constructed types
+    into a Python list.
+    """
+
+    def __init__(self, field_name: str, py_element_factory, element_program: 'SampleProgram'):
+        super().__init__(field_name)
+        self.py_element_factory = py_element_factory
+        self.element_program = element_program
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(dst, field_name)
+        c_member = getattr(src, field_name)
+
+        # py_member is expected to have the required number of elements
+        for i in range(len(c_member)):
+            self.element_program.execute(dst=py_member[i], src=c_member[i])
+
+
+class CopyClassListToArrayInstruction(Instruction):
+    """Complex sequence: Python to C
+
+    Instruction to copy a Python list into a bounded sequence of constructed
+    types.
+    """
+
+    def __init__(self, field_name: str, element_program: 'SampleProgram'):
+        super().__init__(field_name)
+        self.element_program = element_program
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(src, field_name)
+        c_member = getattr(dst, field_name)
+        length = len(c_member)
+
+        if len(py_member) != length:
+            raise ValueError(
+                f"Expected array length of {length} but got {len(py_member)}")
+
+        for i in range(length):
+            self.element_program.execute(dst=c_member[i], src=py_member[i])
+
+class CopyStrArrayToListInstruction(Instruction):
+    """String sequence: C to Python
+
+    Instruction to copy an bounded or unbounded sequence of strings into a
+    Python list.
+    """
+
+    def __init__(self, field_name: str, element_instruction: StringInstruction):
+        super().__init__(field_name)
+        self.element_instruction = element_instruction
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(dst, field_name)
+        c_member = getattr(src, field_name)
+        length = len(c_member)
+
+        # py_member is expected to have the required number of elements
+        for i in range(length):
+            self.element_instruction.execute_on_sequence(
+                dst=py_member, src=c_member, index=i)
+
+
+class CopyStrListToArrayInstruction(Instruction):
+    """String sequence: Python to C
+
+    Instruction to copy a Python list into a bounded sequence of strings.
+    """
+
+    def __init__(self, field_name: str, element_instruction: StringInstruction):
+        super().__init__(field_name)
+        self.element_instruction = element_instruction
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(src, field_name)
+        c_member = getattr(dst, field_name)
+        length = len(c_member)
+
+        i = 0
+        while i < length:
+            self.element_instruction.execute_on_sequence(
+                dst=c_member, src=py_member, index=i)
+            i += 1
+
+
 # --- Program -----------------------------------------------------------------
 
 
@@ -512,21 +728,25 @@ class SamplePrograms:
 
     def __init__(
         self,
-        py_type:
-        type,
+        py_type: type,
         c_type: type,
         type_plugin,
         member_annotations
     ):
-        if not hasattr(py_type, '__dataclass_fields__'):
-            raise TypeError(f"{py_type} is not a dataclass")
-        if not hasattr(c_type, '_fields_'):
-            raise TypeError(f"{c_type} is not a ctype")
+        if reflection_utils.is_enum(py_type):
+            self.c_to_py_program, self.py_to_c_program = self._create_enum_programs(
+                py_type, type_plugin)
+        else:
 
-        self.c_to_py_program, self.py_to_c_program = self._create_programs(
-            py_type, c_type, type_plugin, member_annotations)
+            if not hasattr(py_type, '__dataclass_fields__'):
+                raise TypeError(f"{py_type} is not a dataclass")
+            if not hasattr(c_type, '_fields_'):
+                raise TypeError(f"{c_type} is not a ctype")
 
-    def _create_programs(
+            self.c_to_py_program, self.py_to_c_program = self._create_struct_programs(
+                py_type, c_type, type_plugin, member_annotations)
+
+    def _create_struct_programs(
         self,
         py_type: type,
         c_type: type,
@@ -535,26 +755,37 @@ class SamplePrograms:
     ):
         c_to_py_instructions = []
         py_to_c_instructions = []
-        fields = py_type.__dataclass_fields__
-        for field_name, field_info in fields.items():
-            field_type = field_info.type
+        for field in fields(py_type):
+            field_name = field.name
+            field_type = field.type
             c_to_py_instr = None
             py_to_c_instr = None
             if reflection_utils.is_primitive(field_type):
                 c_to_py_instr = CopyPrimitiveInstruction(field_name)
                 py_to_c_instr = c_to_py_instr  # Same instruction both ways
+            elif reflection_utils.is_enum(field_type):
+                c_to_py_instr = CopyInt32ToIntEnum(field_name, field_type)
+                py_to_c_instr = CopyIntEnumToInt32(field_name)
             elif field_type is str:
                 current_annotations = member_annotations.get(field_name, {})
                 c_to_py_instr, py_to_c_instr = self._create_string_instructions(
                     field_name, current_annotations)
             elif reflection_utils.is_sequence_type(field_type):
+                # In the Python type there is no distinction between an array
+                # and a sequence; the ArrayAnnotation makes it an array.
                 current_annotations = member_annotations.get(field_name, {})
-                c_to_py_instr, py_to_c_instr = self._create_sequence_instructions(
-                    c_type,
-                    type_plugin,
-                    field_info,
-                    field_name,
-                    current_annotations)
+                array_info = annotations.find_annotation(
+                    current_annotations, annotations.ArrayAnnotation)
+                if array_info.is_array:
+                    c_to_py_instr, py_to_c_instr = self._create_array_instructions(
+                        field,
+                        current_annotations)
+                else:
+                    c_to_py_instr, py_to_c_instr = self._create_sequence_instructions(
+                        c_type,
+                        type_plugin,
+                        field,
+                        current_annotations)
             elif reflection_utils.is_constructed_type(field_type):
                 c_to_py_instr = CopyAggregationInstruction(
                     field_name,
@@ -569,6 +800,13 @@ class SamplePrograms:
                 py_to_c_instructions.append(py_to_c_instr)
 
         return SampleProgram(c_to_py_instructions), SampleProgram(py_to_c_instructions)
+
+    def _create_enum_programs(
+        self,
+        py_type: type,
+        type_plugin,
+    ):
+        return SampleProgram([]), SampleProgram([])
 
     def _create_string_instructions(
         self,
@@ -596,16 +834,16 @@ class SamplePrograms:
         container_c_type,
         container_type_plugin,
         field_info,
-        field_name,
         sequence_annotations
     ):
+        field_name = field_info.name
         element_type = reflection_utils.get_underlying_type(field_info.type)
         bound = annotations.find_annotation(
             sequence_annotations, annotations.BoundAnnotation)
 
-        if reflection_utils.is_primitive(element_type):
+        if reflection_utils.is_primitive_or_enum(element_type):
             factory_type = field_info.default_factory
-            if factory_type is not list:
+            if reflection_utils.supports_buffer_protocol(factory_type):
                 c_to_py_instr = CopyPrimitiveSequenceToBufferInstruction(
                     field_name)
             else:
@@ -619,8 +857,12 @@ class SamplePrograms:
                     member_offset=getattr(container_c_type, field_name).offset,
                     member_dynamic_type=member_dynamic_type)
             else:
-                py_to_c_instr = CopyPrimitiveListToBoundedSequenceInstruction(
-                    field_name)
+                if reflection_utils.supports_buffer_protocol(factory_type):
+                    py_to_c_instr = CopyBufferToBoundedSequenceInstruction(
+                        field_name)
+                else:
+                    py_to_c_instr = CopyPrimitiveListToBoundedSequenceInstruction(
+                        field_name)
         elif element_type is str:
             # Get the annotations applied to the element type
             string_annotations = annotations.find_annotation(
@@ -661,5 +903,52 @@ class SamplePrograms:
                 py_to_c_instr = CopyBoundedClassListToSequenceInstruction(
                     field_name,
                     element_ts._sample_programs.py_to_c_program)
+
+        return c_to_py_instr, py_to_c_instr
+
+
+    def _create_array_instructions(
+        self,
+        field,
+        sequence_annotations
+    ):
+        element_type = reflection_utils.get_underlying_type(field.type)
+
+        if reflection_utils.is_primitive_or_enum(element_type):
+                factory_type = field.default_factory
+                if reflection_utils.supports_buffer_protocol(factory_type):
+                    c_to_py_instr = CopyPrimitiveArrayToBufferInstruction(
+                        field.name)
+                    py_to_c_instr = CopyBufferToArrayInstruction(
+                        field.name)
+                else:
+                    c_to_py_instr = CopyPrimitiveArrayToListInstruction(
+                        field.name)
+                    py_to_c_instr = CopyPrimitiveListToArrayInstruction(
+                        field.name)
+
+        elif element_type is str:
+            # Get the annotations applied to the element type
+            string_annotations = annotations.find_annotation(
+                sequence_annotations, annotations.ElementAnnotations)
+            element_instructions = self._create_string_instructions(
+                None,
+                string_annotations.value)
+
+            c_to_py_instr = CopyStrArrayToListInstruction(
+                field.name,
+                element_instructions[0])
+
+            py_to_c_instr = CopyStrListToArrayInstruction(
+                field.name,
+                element_instructions[1])
+        else:
+            element_ts = element_type.type_support
+            c_to_py_instr = CopyConstructedArrayToListInstruction(
+                field.name, element_type, element_ts._sample_programs.c_to_py_program)
+
+            py_to_c_instr = CopyClassListToArrayInstruction(
+                field.name,
+                element_ts._sample_programs.py_to_c_program)
 
         return c_to_py_instr, py_to_c_instr

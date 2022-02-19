@@ -10,7 +10,8 @@
 #
 
 from dataclasses import dataclass, fields
-from typing import List
+from typing import List, Any, ClassVar
+from enum import IntEnum
 import itertools
 import array
 import ctypes
@@ -38,8 +39,13 @@ def finalize_type_plugin_factory() -> None:
 
 @dataclass
 class PrimitiveArrayFactory:
+    """A callable that creates an array for the default_factory of a dataclass
+    field
+    """
+
     element_type: type
     size: int
+    supports_buffer_protocol: ClassVar[bool] = True
 
     def __post_init__(self):
         self.element_type_str = reflection_utils.get_array_type(
@@ -54,6 +60,35 @@ class PrimitiveArrayFactory:
             return array.array(self.element_type_str)
         else:
             return array.array(self.element_type_str, itertools.repeat(0, self.size))
+
+
+@dataclass
+class ListFactory:
+    """A callable that creates a list of a fixed size for the default_factory
+    of a dataclass field
+    """
+
+    element_type: type
+    size: int
+    supports_buffer_protocol: ClassVar[bool] = False
+
+    def __call__(self):
+        return [self.element_type() for _ in range(self.size)]
+
+
+@dataclass
+class ValueListFactory:
+    """A optimization of ListFactory for types types with immutable values"""
+
+    element_value: Any
+    size: int
+    supports_buffer_protocol: ClassVar[bool] = False
+
+    def __call__(self):
+        # Optimization over ListFactory; strings are immutable so we don't need
+        # a new object for each element
+        return [self.element_value] * self.size
+
 
 # --- C/Python type conversions -----------------------------------------------
 
@@ -78,19 +113,26 @@ STR_ENCODING_TO_CTYPES_MAP = {
 
 
 def get_offsets(type: ctypes.Structure) -> List[int]:
-    """
-    Get the in-memory offsets of the fields of a C structure
-    """
+    """Get the in-memory offsets of the fields of a C structure"""
 
     return [getattr(type, field_name).offset for field_name, _ in type._fields_]
 
 
 def get_size(type: ctypes.Structure) -> int:
-    """
-    Get the size of a C structure
-    """
+    """Get the size of a C structure"""
 
     return ctypes.sizeof(type)
+
+
+def _create_array_ctype(element_ctype: type, array_info: annotations.ArrayAnnotation):
+    if not array_info.is_single_dimension:
+        raise TypeError(f'Multi-dimensional arrays are not supported')
+
+    if issubclass(element_ctype, csequence.Sequence):
+        raise TypeError(
+            f'Arrays of sequences are not supported: wrap the sequence in a @idl.alias or @idl.struct')
+
+    return element_ctype * array_info.dimensions
 
 
 def _get_member_ctype(py_type, member_annotations):
@@ -118,9 +160,17 @@ def _get_member_ctype(py_type, member_annotations):
         return c_str_type
 
     if reflection_utils.is_sequence_type(py_type):
+        element_annotations = annotations.find_annotation(
+            member_annotations, annotations.ElementAnnotations)
         element_ctype = _get_member_ctype(reflection_utils.get_underlying_type(py_type),
-                                          member_annotations)
-        if reflection_utils.is_constructed_type(element_ctype):
+                                          element_annotations.value)
+
+        array_info = annotations.find_annotation(
+            member_annotations, annotations.ArrayAnnotation)
+
+        if array_info.is_array:
+            return _create_array_ctype(element_ctype, array_info)
+        elif reflection_utils.is_constructed_type(element_ctype):
             # Optimization: constructed types cache their sequence type
             return py_type.type_support.c_type_seq
         else:
@@ -133,8 +183,12 @@ def _get_member_ctype(py_type, member_annotations):
 
 
 def create_ctype_from_dataclass(py_type, member_annotations):
-    """Given a user-level dataclass, return an equivalent ctypes type that """
-    """can be used by the C interpreter"""
+    """Given a user-level dataclass, return an equivalent ctypes type that
+    can be used by the C interpreter
+    """
+
+    if reflection_utils.is_enum(py_type):
+        return ctypes.c_int32
 
     c_fields = []
     for field in fields(py_type):
@@ -199,9 +253,16 @@ def _get_member_dynamic_type(py_type, member_annotations):
             member_annotations, annotations.ElementAnnotations)
         member_dynamic_type = _get_member_dynamic_type(
             member_type, element_annotations.value)
-        bound = annotations.find_annotation(
-            member_annotations, cls=annotations.BoundAnnotation)
-        return _type_factory.create_sequence(member_dynamic_type, bound.value)
+        array_info = annotations.find_annotation(
+            member_annotations, annotations.ArrayAnnotation)
+        if array_info.is_array:
+            return _type_factory.create_array(
+                member_dynamic_type, array_info.dimensions)
+        else:
+            bound = annotations.find_annotation(
+                member_annotations, cls=annotations.BoundAnnotation)
+            return _type_factory.create_sequence(
+                member_dynamic_type, bound.value)
 
     if reflection_utils.is_constructed_type(py_type):
         return py_type.type_support._dynamic_type_ref
@@ -210,8 +271,9 @@ def _get_member_dynamic_type(py_type, member_annotations):
 
 
 def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=None, member_annotations=None):
-    """Given an IDL-derived dataclass, return the DynamicType that describes """
-    """the IDL type"""
+    """Given an IDL-derived dataclass, return the DynamicType that describes
+    the IDL type
+    """
 
     extensibility = annotations.find_annotation(
         type_annotations, annotations.ExtensibilityAnnotation)
@@ -247,6 +309,20 @@ def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=No
 
     return dynamic_type
 
+
+def create_dynamic_type_from_enum(py_type, type_annotations=None):
+    """Given an IDL-derived enum, return the DynamicType that describes
+    the IDL type
+    """
+
+    extensibility = annotations.find_annotation(
+        type_annotations, annotations.ExtensibilityAnnotation)
+
+    enum_values: List[dds.EnumMember] = []
+    for enum_value in py_type:
+        enum_values.append(dds.EnumMember(enum_value.name, enum_value.value))
+
+    return _type_factory.create_enum(py_type.__name__, extensibility.value, enum_values)
 
 # --- C/Python sample conversion ----------------------------------------------
 
@@ -306,14 +382,20 @@ class TypeSupport:
         # Python dataclass
         self.type = idl_type
 
-        # C type and related types (pointer and sequence types)
-        self.c_type = create_ctype_from_dataclass(idl_type, member_annotations)
+        # C type and plugin and dynamic type
+        if reflection_utils.is_enum(idl_type):
+            self.c_type = ctypes.c_int32
+            self._plugin_dynamic_type = create_dynamic_type_from_enum(
+                idl_type, type_annotations)
+        else:
+            self.c_type = create_ctype_from_dataclass(
+                idl_type, member_annotations)
+            self._plugin_dynamic_type = create_dynamic_type_from_dataclass(
+                idl_type, self.c_type, type_annotations, member_annotations)
+
+        # Pointer and sequence types
         self.c_type_ptr = ctypes.POINTER(self.c_type)
         self.c_type_seq = csequence.create_sequence_type(self.c_type)
-
-        # Plugin and dynamic type
-        self._plugin_dynamic_type = create_dynamic_type_from_dataclass(
-            idl_type, self.c_type, type_annotations, member_annotations)
 
         # Python/C sample conversion programs
         self._sample_programs = sample_interpreter.SamplePrograms(

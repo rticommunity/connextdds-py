@@ -25,6 +25,7 @@ from test_utils.fixtures import *
 @idl.struct(
     member_annotations={
         'prices': [idl.bound(4)],
+        'prices_array': [idl.bound(4)],
         'vertices_bounded': [idl.bound(2)]
     }
 )
@@ -77,7 +78,7 @@ def test_sequence_plugin():
     assert dt["prices"].type == dds.SequenceType(dds.Float64Type(), 4)
     assert dt["ready"].type == dds.SequenceType(dds.BoolType())
     assert dt["weights_array"].type == dds.SequenceType(dds.Int16Type())
-    assert dt["prices_array"].type == dds.SequenceType(dds.Float64Type())
+    assert dt["prices_array"].type == dds.SequenceType(dds.Float64Type(), 4)
     assert dt["ready_array"].type == dds.SequenceType(dds.BoolType())
     assert dt["vertices_bounded"].type == dds.SequenceType(point_ts.dynamic_type, 2)
 
@@ -149,3 +150,10 @@ def test_sequence_publication_fails_when_out_of_bounds(shared_participant):
     assert "Error processing field 'prices'" in str(ex.value)
 
 
+def test_sequence_of_sequence_not_supported():
+    with pytest.raises(TypeError) as ex:
+        @idl.struct
+        class SeqOfSeq:
+            s: Sequence[Sequence[Point]]
+
+    assert "Sequences of sequences are not supported" in str(ex.value)

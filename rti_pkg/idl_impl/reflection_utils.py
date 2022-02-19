@@ -11,6 +11,7 @@
 
 import sys
 import typing
+from enum import EnumMeta
 import collections.abc as collections
 from rti.idl_impl.type_hints import *
 
@@ -43,7 +44,8 @@ def get_underlying_type(t):
 _PRIMITIVE_TYPES = (bool, int8, int16, uint16, int32,
                     uint32, int64, uint64, float32, float64)
 
-def is_primitive(t: type):
+
+def is_primitive(t: type) -> bool:
     """Returns True if the type is a primitive type"""
     return t in _PRIMITIVE_TYPES
 
@@ -60,8 +62,39 @@ _TYPE_TO_ARRAY_TYPE_MAP: typing.Dict[type, str] = {
     float64: 'd',
 }
 
+
+def is_enum(t) -> bool:
+    return type(t) is EnumMeta
+
+
+def is_primitive_or_enum(t: type) -> bool:
+    """Returns True if the type is a primitive type or an enum"""
+    return is_primitive(t) or is_enum(t)
+
+
 def get_array_type(t: type) -> str:
     """Translates from an IDL primitive type to the string used by Python's
     array.array
     """
     return _TYPE_TO_ARRAY_TYPE_MAP.get(t)
+
+
+def supports_buffer_protocol(factory_type: type) -> bool:
+    """Returns True if the type supports the buffer protocol"""
+
+    # lists don't support the buffer protocol
+    if factory_type is list:
+        return False
+
+    # RTI-defined factories indicate support with a class attribute
+    if hasattr(factory_type, 'supports_buffer_protocol'):
+        return factory_type.supports_buffer_protocol
+
+    # Finally try the least-efficient method, which requires creating an object
+    # to check if memoryview is supported. This is included to support users
+    # that provide their own factories.
+    try:
+        memoryview(factory_type())
+        return True
+    except TypeError:
+        return False

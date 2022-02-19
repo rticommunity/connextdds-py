@@ -12,7 +12,7 @@
 
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List, Any
+from typing import List, Union, Any
 import rti.connextdds as dds
 
 # --- Annotation classes ------------------------------------------------------
@@ -42,6 +42,18 @@ UNBOUNDED = 0x7FFFFFFF
 class BoundAnnotation:
     value: int = UNBOUNDED
 
+
+@dataclass
+class ArrayAnnotation:
+    dimensions: Union[None, int, List[int]] = None
+
+    @property
+    def is_array(self) -> bool:
+        return self.dimensions is not None
+
+    @property
+    def is_single_dimension(self) -> bool:
+        return isinstance(self.dimensions, int)
 
 class CharEncoding(IntEnum):
     UTF8 = 0
