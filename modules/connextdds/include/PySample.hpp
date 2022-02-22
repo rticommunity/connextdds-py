@@ -30,21 +30,13 @@ void init_dds_typed_sample_base_template(py::class_<dds::sub::Sample<T>>& cls)
                  py::arg("sample"),
                  "Copy constructor.")
             .def(
-                    "__getitem__",
-                    [](dds::sub::Sample<T>& s, int index) -> py::object {
-                        switch (index) {
-                        case 0:
-                            if (s.info().valid()) {
-                                return py::cast(s.data());
-                            }
-                            return py::none();
-                        case 1:
-                            return py::cast(s.info());
-                        default:
-                            throw py::index_error("Invalid Sample item index.");
-                        }
-                    },
-                    py::keep_alive<0, 1>())
+                    "__iter__",
+                    [](dds::sub::Sample<T>& s) {
+                        auto py_s = py::cast(s);
+                        auto data = s.info().valid() ? py::cast(s.data(), py::return_value_policy::reference_internal, py_s) : py::none();
+                        auto info = py::cast(s.info(), py::return_value_policy::reference_internal, py_s);
+                        return py::make_tuple(data, info).attr("__iter__")();
+                    })
             .def_property(
                     "data",
                     (const T& (dds::sub::Sample<T>::*) () const)

@@ -44,14 +44,20 @@ void init_class_defs(
                  "Gets a member by its name.")
             .def("__getitem__",
                  [](const AbstractConstructedType<EnumMember>& act,
-                    const std::string& name) -> const EnumMember& { 
-                            return act.member(name); 
+                    const std::string& name) -> const EnumMember& {
+                            return act.member(name);
                  },
                  py::return_value_policy::reference_internal)
             .def("__getitem__",
                  [](const AbstractConstructedType<EnumMember>& act,
-                    uint32_t index) -> const EnumMember& { 
-                            return act.member(index); 
+                    uint32_t index) -> const EnumMember& {
+                            return act.member(index);
+                 },
+                 py::return_value_policy::reference_internal)
+            .def("__getattr__",
+                 [](const AbstractConstructedType<EnumMember>& act,
+                    const std::string& name) -> const EnumMember& {
+                            return act.member(name);
                  },
                  py::return_value_policy::reference_internal)
             .def("find_member_by_name",

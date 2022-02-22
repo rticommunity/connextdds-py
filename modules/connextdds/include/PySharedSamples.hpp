@@ -20,7 +20,10 @@ namespace py = pybind11;
 namespace pyrti {
 
 template<typename T>
-void init_shared_samples_defs(py::class_<dds::sub::SharedSamples<T>>& cls)
+void init_shared_samples_defs(
+    py::class_<
+        dds::sub::SharedSamples<T>,
+        std::unique_ptr<dds::sub::SharedSamples<T>, no_gil_delete<dds::sub::SharedSamples<T>>>>& cls)
 {
     cls.def(py::init<dds::sub::LoanedSamples<T>&>(),
             py::arg("loaned_samples"),
@@ -36,6 +39,7 @@ void init_shared_samples_defs(py::class_<dds::sub::SharedSamples<T>>& cls)
                             throw py::index_error();
                         return samples[index];
                     },
+                    py::return_value_policy::reference_internal,
                     "Get the sample at the specified index.")
             .def(
                     "__iter__",
@@ -45,20 +49,14 @@ void init_shared_samples_defs(py::class_<dds::sub::SharedSamples<T>>& cls)
                                 samples.end());
                     },
                     py::keep_alive<0, 1>(),
-                    "Make a sample iterator")
-#if rti_connext_version_gte(6, 0, 0, 0)
-            .def(
-                    "unpack",
-                    [](dds::sub::SharedSamples<T>& samples) {
-                        return rti::sub::unpack(samples);
-                    },
-                    "Unpacks all samples into a list.")
-#endif
-            ;
+                    "Make a sample iterator");
 }
 
 template<typename T>
-void init_shared_samples(py::class_<dds::sub::SharedSamples<T>>& ss)
+void init_shared_samples(
+    py::class_<
+        dds::sub::SharedSamples<T>,
+        std::unique_ptr<dds::sub::SharedSamples<T>, no_gil_delete<dds::sub::SharedSamples<T>>>>& ss)
 {
     init_shared_samples_defs(ss);
 }

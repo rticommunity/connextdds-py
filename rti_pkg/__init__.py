@@ -9,6 +9,10 @@
 # damages arising out of the use or inability to use the software.
 #
 
-#
-# Empty file to make this directory a Python package.
-#
+import platform
+
+if platform.system() == "Windows":
+    import os
+    pkg_dir = os.path.dirname(os.path.realpath(__file__))
+    os.environ.setdefault("PATH","")
+    os.environ["PATH"] = pkg_dir + os.pathsep + os.environ["PATH"]

@@ -16,6 +16,7 @@ import filecmp
 import re
 import shutil
 import ast
+import xml.etree.ElementTree as etree
 try:
     import configparser
 except ImportError:
@@ -62,7 +63,33 @@ def file_type(value):
         raise FileNotFoundError('rti: {} is not a valid file'.format(value))
 
 
-def get_openssl_libs(arch, arch_dir, openssl_dir, is_debug):
+def get_version(nddshome):
+    tree = etree.parse(os.path.join(nddshome, 'rti_versions.xml'))
+    root = tree.getroot()
+    host = root.find('host')
+    assert host is not None
+    base_version = host.find('base_version')
+    version = base_version.text.split('.')
+    major, minor, release = version[0:3]
+    return int(major), int(minor), int(release)
+
+
+def get_openssl_lib_set(version, is_win):
+    if is_win:
+        if version[0] > 6 or (version[0] == 6 and version[1] >= 1):
+            return ['libcrypto-1_1-x64']
+        elif version [0] == 6 and version [1] == 1:
+            return ['libcrypto-1_1-x64', 'libssl-1_1-x64']
+        else:
+            return ['libeay32', 'libssl32']
+    else:
+        if version[0] > 6 or (version[0] == 6 and version[1] >= 1):
+            return ['crypto']
+        else:
+            return ['crypto', 'ssl']
+
+
+def get_openssl_libs(version, arch, arch_dir, openssl_dir, is_debug):
     openssl_libs = []
     if 'Win' in arch:
         lib_ends = rti_platform_ends['Windows']
@@ -71,9 +98,9 @@ def get_openssl_libs(arch, arch_dir, openssl_dir, is_debug):
                             lib_name +
                             get_debug_suffix(is_debug) +
                             lib_ends.suffix)
-                            for lib_name in ['libeay32', 'libssl32']]
+                            for lib_name in get_openssl_lib_set(version, True)]
     else:
-        libs = ['ssl', 'crypto']
+        libs = get_openssl_lib_set(version, False)
         if 'Linux' in arch:
             lib_ends = rti_platform_ends['Linux']
         elif 'Darwin' in arch:
@@ -89,7 +116,10 @@ def get_openssl_libs(arch, arch_dir, openssl_dir, is_debug):
         with open(secure_lib, 'rb') as lib_file:
             content = lib_file.read()
             for lib in libs:
-                expression = lib_ends.prefix + lib + r'(\.\d+\.\d+(\.\d+)?)?' + lib_ends.suffix
+                if version[0] > 6 or (version[0] == 6 and (version[1] >= 1 or version[2] >= 1)):
+                    expression = lib_ends.prefix + lib + lib_ends.suffix + r'(\.\d+\.\d+(\.\d+)?)?'
+                else:
+                    expression = lib_ends.prefix + lib + r'(\.\d+\.\d+(\.\d+)?)?' + lib_ends.suffix
                 match = re.search(expression.encode(), content)
                 if not match:
                     raise RuntimeError(
@@ -121,7 +151,7 @@ def check_lib(name, arch, lib_ends, src_dir, dst_dir, is_debug):
     return valid_lib_pair(original_lib, dst_lib)
 
 
-def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins, openssl_lib_dir, is_debug):
+def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins, openssl_lib_dir, version, is_debug):
     if 'Linux' in arch:
         lib_ends = rti_platform_ends['Linux']
     elif 'Win' in arch:
@@ -175,7 +205,7 @@ def copy_arch_libs(arch, required_libs, plugins, platform_lib_dir, user_plugins,
             # needs to also get openssl libs
             if not openssl_lib_dir:
                 openssl_lib_dir = platform_lib_dir
-            openssl_libs = get_openssl_libs(arch, platform_lib_dir, openssl_lib_dir, is_debug)
+            openssl_libs = get_openssl_libs(version, arch, platform_lib_dir, openssl_lib_dir, is_debug)
             for lib in openssl_libs:
                 plugin_list.append(os.path.basename(lib))
                 copy_libs.append(valid_lib_pair(lib, os.path.join(dst_dir, os.path.basename(lib))))
@@ -358,6 +388,8 @@ def main():
 
     lib_dir = resolve_lib_dir(nddshome, platform)
 
+    version = get_version(nddshome)
+
     plugins = get_wheel_plugins(args)
 
     user_plugins = args.plugin if args.plugin is not None else []
@@ -369,6 +401,7 @@ def main():
                             lib_dir,
                             user_plugins,
                             args.openssl,
+                            version,
                             debug)
 
     update_config(

@@ -37,22 +37,13 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls)
                     &rti::sub::LoanedSample<T>::info,
                     "Get the info associated with the sample.")
             .def(
-                    "__getitem__",
-                    [](rti::sub::LoanedSample<T>& ls, int index) -> py::object {
-                        switch (index) {
-                        case 0:
-                            if (ls.info().valid()) {
-                                return py::cast(ls.data());
-                            }
-                            return py::none();
-                        case 1:
-                            return py::cast(ls.info());
-                        default:
-                            throw py::index_error(
-                                    "Invalid LoanedSample item index.");
-                        }
-                    },
-                    py::keep_alive<0, 1>())
+                    "__iter__",
+                    [](rti::sub::LoanedSample<T>& ls) {
+                        auto py_ls = py::cast(ls, py::return_value_policy::reference);
+                        auto data = ls.info().valid() ? py::cast(ls.data(), py::return_value_policy::reference_internal, py_ls) : py::none();
+                        auto info = py::cast(ls.info(), py::return_value_policy::reference_internal, py_ls);
+                        return py::make_tuple(data, info).attr("__iter__")();
+                    })
             .def(py::self == py::self, "Check if two samples are equivalent")
             .def(py::self != py::self,
                  "Check if two samples are not equivalent.");

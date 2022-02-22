@@ -52,19 +52,20 @@ def subscriber_main(domain_id, sample_count, participant_auth):
         count += 1
 
 
-parser = argparse.ArgumentParser(
-    description="RTI Connext DDS Example: Using Builtin Topics (Subscriber)"
-)
-parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
-parser.add_argument(
-    "-c", "--count", type=int, default=0, help="Number of samples to send"
-)
-parser.add_argument(
-    "-a", "--auth", type=str, default="password", help="Default authorization string"
-)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="RTI Connext DDS Example: Using Builtin Topics (Subscriber)"
+    )
+    parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
+    parser.add_argument(
+        "-c", "--count", type=int, default=0, help="Number of samples to send"
+    )
+    parser.add_argument(
+        "-a", "--auth", type=str, default="password", help="Default authorization string"
+    )
 
-args = parser.parse_args()
-# assert(0 <= args.domain < 233)
-# assert(args.count >= 0)
+    args = parser.parse_args()
+    # assert(0 <= args.domain < 233)
+    # assert(args.count >= 0)
 
-subscriber_main(args.domain, args.count, args.auth)
+    subscriber_main(args.domain, args.count, args.auth)

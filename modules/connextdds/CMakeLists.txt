@@ -129,6 +129,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/CoherentSetInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/QosPrintFormat.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/DataReaderResourceLimitsInstanceReplacementSettings.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/core/PyThreadContext.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/ConfigNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/Logger.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/config/ActivityContext.cpp"

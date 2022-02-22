@@ -43,7 +43,7 @@ void init_class_defs(
                              rti::sub::cond::create_read_condition_ex(
                                      dr.get_any_datareader(),
                                      ds,
-                                     [&func](dds::core::cond::Condition c) {
+                                     [func](dds::core::cond::Condition c) {
                                          py::gil_scoped_acquire acquire;
                                          auto py_c =
                                                  dds::core::polymorphic_cast<
@@ -76,7 +76,7 @@ void init_class_defs(
                              rti::sub::cond::create_read_condition_ex(
                                      dr.get_any_datareader(),
                                      ds,
-                                     [&func](dds::core::cond::Condition c) {
+                                     [func](dds::core::cond::Condition c) {
                                          py::gil_scoped_acquire acquire;
                                          auto py_c =
                                                  dds::core::polymorphic_cast<

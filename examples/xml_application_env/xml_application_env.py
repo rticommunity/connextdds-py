@@ -42,22 +42,23 @@ def publish_env(id, writer, kvp_type, env):
         writer.write(sample)
 
 
-qos_provider = dds.QosProvider(QOS_URL)
+if __name__ == "__main__":
+    qos_provider = dds.QosProvider(QOS_URL)
 
-participant = qos_provider.create_participant_from_config(PARTICIPANT_NAME)
+    participant = qos_provider.create_participant_from_config(PARTICIPANT_NAME)
 
-my_type = qos_provider.type(qos_provider.type_libraries[0], KVP_TYPE_NAME)
+    my_type = qos_provider.type(qos_provider.type_libraries[0], KVP_TYPE_NAME)
 
-writer = dds.DynamicData.DataWriter.find_by_name(participant, WRITER_NAME)
+    writer = dds.DynamicData.DataWriter.find_by_name(participant, WRITER_NAME)
 
-reader = dds.DynamicData.DataReader.find_by_name(participant, READER_NAME)
-reader.bind_listener(MyDataReaderListener(), dds.StatusMask.DATA_AVAILABLE)
+    reader = dds.DynamicData.DataReader.find_by_name(participant, READER_NAME)
+    reader.bind_listener(MyDataReaderListener(), dds.StatusMask.DATA_AVAILABLE)
 
-participant.ignore_participant(participant.instance_handle)
+    participant.ignore_participant(participant.instance_handle)
 
-id = random.randint(0, 2147483647)
+    id = random.randint(0, 2147483647)
 
-while True:
-    print("Publishing Environment")
-    publish_env(id, writer, my_type, os.environ)
-    time.sleep(2)
+    while True:
+        print("Publishing Environment")
+        publish_env(id, writer, my_type, os.environ)
+        time.sleep(2)

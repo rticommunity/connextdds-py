@@ -11,12 +11,27 @@
 
 #include "PyConnext.hpp"
 #include "PyNamespaces.hpp"
+#include "PyThreadContext.hpp"
 #include <rti/rti.hpp>
+#if rti_connext_version_gte(6, 0, 0, 0)
+#include <rti/core/thread.hpp>
+#endif
 
 using namespace rti::core;
 
 void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
 {
+#if rti_connext_version_gte(6, 0, 0, 0)
+    v.push_back(
+        [m]() mutable {
+            m.def("unregister_thread",
+                &rti::core::unregister_thread,
+                py::call_guard<py::gil_scoped_release>(),
+                "Unregister a thread with the middleware");
+        }
+    );
+#endif
+
     pyrti::process_inits<pyrti::PyBuiltinProfiles>(m, l);
     pyrti::process_inits<AllocationSettings>(m, l);
     pyrti::process_inits<ChannelSettings>(m, l);
@@ -38,6 +53,9 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l, pyrti::DefI
     pyrti::process_inits<TransportInfo>(m, l);
     pyrti::process_inits<TransportMulticastSettings>(m, l);
     pyrti::process_inits<VendorId>(m, l);
+#if rti_connext_version_gte(6, 0, 0, 0)
+    pyrti::process_inits<pyrti::PyThreadContext>(m, l);
+#endif
 #if rti_connext_version_gte(6, 1, 0, 0)
 #ifndef _MSC_VER
     pyrti::process_inits<DataReaderResourceLimitsInstanceReplacementSettings>(m, l);

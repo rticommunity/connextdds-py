@@ -70,7 +70,7 @@ def requester_main(domain_id, n, primes_per_reply):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="RTI Connext DDS Example: Using Coherent Presentation (Publisher)"
+        description="RTI Connext DDS Example: Request-Reply (Requester)"
     )
     parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID (default: 0)")
     parser.add_argument(

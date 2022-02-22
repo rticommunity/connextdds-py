@@ -51,7 +51,8 @@ void init_class_defs(
                  [](const AbstractConstructedType<Member>& act,
                     uint32_t index) -> const Member& { 
                             return act.member(index); 
-                 })
+                 },
+                 py::return_value_policy::reference_internal)
             .def("find_member_by_name",
                  &AbstractConstructedType<Member>::find_member_by_name,
                  "Obtains the member index from its name.")

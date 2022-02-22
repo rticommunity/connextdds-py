@@ -35,16 +35,17 @@ def publisher_main(domain_id, sample_count):
         count += 1
 
 
-parser = argparse.ArgumentParser(
-    description="RTI Connext DDS Example: Using String Filters (Publisher)"
-)
-parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
-parser.add_argument(
-    "-c", "--count", type=int, default=0, help="Number of samples to send"
-)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="RTI Connext DDS Example: Using String Filters (Publisher)"
+    )
+    parser.add_argument("-d", "--domain", type=int, default=0, help="DDS Domain ID")
+    parser.add_argument(
+        "-c", "--count", type=int, default=0, help="Number of samples to send"
+    )
 
-args = parser.parse_args()
-assert 0 <= args.domain < 233
-assert args.count >= 0
+    args = parser.parse_args()
+    assert 0 <= args.domain < 233
+    assert args.count >= 0
 
-publisher_main(args.domain, args.count)
+    publisher_main(args.domain, args.count)
