@@ -33,6 +33,13 @@ void init_class_defs(
                  }),
                  py::arg("type"),
                  "Cast a DynamicType to an EnumType.")
+            .def_property(
+                    "extensibility_kind",
+                    (ExtensibilityKind(EnumType::*)() const)
+                            & EnumType::extensibility_kind,
+                    (EnumType & (EnumType::*) (ExtensibilityKind))
+                            & EnumType::extensibility_kind,
+                    "Enum's extensibility kind.")
             .def("find_member_by_ordinal",
                  &EnumType::find_member_by_ordinal,
                  py::arg("ordinal"),

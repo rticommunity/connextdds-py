@@ -13,6 +13,7 @@ from dataclasses import field
 import ctypes
 from typing import Sequence
 from enum import IntEnum, auto
+from test_utils import log_capture
 
 import pytest
 
@@ -29,7 +30,7 @@ class Color(IntEnum):
     BLUE = auto()
 
 
-@idl.enum
+@idl.enum(type_annotations=[idl.mutable])
 class Shape(IntEnum):
     CIRCLE = 3
     SQUARE = 5
@@ -66,6 +67,7 @@ def test_enum_plugin():
     assert color_ts.type is Color
     assert color_ts.c_type is ctypes.c_int32
     color_dt: dds.EnumType = color_ts.dynamic_type
+    assert color_dt.extensibility_kind == dds.ExtensibilityKind.EXTENSIBLE
     assert len(color_dt.members()) == 3
     assert color_dt["RED"].ordinal == 1
     assert color_dt["GREEN"].ordinal == 2
@@ -75,6 +77,7 @@ def test_enum_plugin():
     assert shape_ts.type is Shape
     assert shape_ts.c_type is ctypes.c_int32
     shape_dt: dds.EnumType = shape_ts.dynamic_type
+    assert shape_dt.extensibility_kind == dds.ExtensibilityKind.MUTABLE
     assert len(shape_dt.members()) == 2
     assert shape_dt["CIRCLE"].ordinal == 3
     assert shape_dt["SQUARE"].ordinal == 5
@@ -109,8 +112,13 @@ def test_enum_pubsub(shared_participant, enum_sample):
 def test_enum_serialization_with_unknown_enumerator_fails(enum_sample):
     ts = idl.get_type_support(EnumTest)
     enum_sample.color = 777
-    with pytest.raises(dds.Error):
+
+    with log_capture.expected_exception(dds.Error) as errinfo:
         ts.serialize(enum_sample)
+    # This error causes the Core to print a log message
+    assert "Invalid enumerator value 777" in errinfo.logs
+    # And also raises an exception
+    assert "Error serializing data" in errinfo.exception_msg
 
 
 def test_enum_deserialization_with_unknown_enumerator_succeeds():

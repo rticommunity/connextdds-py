@@ -78,6 +78,24 @@ void init_class_defs(py::class_<Logger>& cls)
                             "LENGTH_UNLIMITED"),
                     "Set the name of the file to which the logged output is "
                     "redirected.");
+
+    cls.def(
+            "output_handler",
+            [](Logger& l, py::object callable) {
+                l.output_handler(
+                        [callable](const rti::config::LogMessage& log_msg) {
+                            py::gil_scoped_acquire acquire;
+                            callable(py::str(log_msg.text));
+                        });
+            },
+            py::arg("callable_handler"),
+            "Assigns a callable to which log messages (strings) are directed");
+
+    cls.def(
+            "reset_output_handler",
+            [](Logger& l) { l.reset_output_handler(); },
+            "Removes the current log handler and sends logging back to the "
+            "standard output.");
 }
 
 template<>
