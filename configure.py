@@ -64,14 +64,17 @@ def file_type(value):
 
 
 def get_version(nddshome):
-    tree = etree.parse(os.path.join(nddshome, 'rti_versions.xml'))
-    root = tree.getroot()
-    host = root.find('host')
-    assert host is not None
-    base_version = host.find('base_version')
-    version = base_version.text.split('.')
-    major, minor, release = version[0:3]
-    return int(major), int(minor), int(release)
+    try:
+        tree = etree.parse(os.path.join(nddshome, 'rti_versions.xml'))
+        root = tree.getroot()
+        host = root.find('host')
+        assert host is not None
+        base_version = host.find('base_version')
+        version = base_version.text.split('.')
+        major, minor, release = version[0:3]
+        return int(major), int(minor), int(release)
+    except:
+        return None
 
 
 def get_openssl_lib_set(version, is_win):
