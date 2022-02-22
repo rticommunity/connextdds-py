@@ -80,6 +80,8 @@ def get_cpu(arch):
         cpu = 'x64'
     elif 'i86' in arch:
         cpu = 'Win32'
+    elif 'arm64' in arch:
+        cpu = 'arm64'
     else:
         raise RuntimeError('Unsupported CPU in arch')
     return cpu

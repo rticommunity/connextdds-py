@@ -1016,7 +1016,11 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
     # we need to be able to consider connextdds_host_arch with both names
     # "darwin" and the more natural "x64Darwin". Consequently, we assign a
     # list of names to CONNEXT_HOST_ARCH in the case of darwin.
-    set(connextdds_host_arch ${connextdds_host_arch} "darwin" "x64Darwin")
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64")
+        set(connextdds_host_arch ${connextdds_host_arch} "darwin" "arm64Darwin")
+    else()
+        set(connextdds_host_arch ${connextdds_host_arch} "darwin" "x64Darwin")
+    endif()
 elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86")
         set(connextdds_host_arch ${connextdds_host_arch} "i86Win32")
