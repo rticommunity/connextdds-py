@@ -144,8 +144,11 @@ def _get_member_ctype(py_type, member_annotations):
             # Optimization: constructed types cache their pointer type, saving
             # the creation of a new ctypes.POINTER type.
             return py_type.type_support.c_type_ptr
-        else:
+        elif underlying_type is not str:
             return ctypes.POINTER(underlying_ctype)
+        else:
+            # strings are already pointers; continue as if it wasn't optional
+            py_type = underlying_type
 
     basic_type = PRIMITIVE_TO_CTYPES_MAP.get(py_type, None)
     if basic_type is not None:
@@ -381,6 +384,7 @@ class TypeSupport:
     def __init__(self, idl_type, type_annotations=None, member_annotations=None):
         # Python dataclass
         self.type = idl_type
+        self.allow_duck_typing = False
 
         # C type and plugin and dynamic type
         if reflection_utils.is_enum(idl_type):
@@ -405,7 +409,7 @@ class TypeSupport:
             member_annotations)
 
     def _create_c_sample(self, sample):
-        if type(sample) is not self.type:
+        if not self.allow_duck_typing and type(sample) is not self.type:
             raise TypeError(
                 f'Expected type {self.type}, got {type(sample)}')
 

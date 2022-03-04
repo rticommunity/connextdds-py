@@ -16,7 +16,7 @@ strings:
    (string, wstring)
 """
 
-import typing
+from typing import Sequence, Optional
 from dataclasses import field
 
 import pytest
@@ -39,19 +39,42 @@ from test_utils.fixtures import *
     }
 )
 class SequenceTest:
-    b_b: typing.Sequence[str] = field(default_factory=list)
-    b_unb: typing.Sequence[str] = field(default_factory=list)
-    unb_b: typing.Sequence[str] = field(default_factory=list)
-    unb_unb: typing.Sequence[str] = field(default_factory=list)
+    b_b: Sequence[str] = field(default_factory=list)
+    b_unb: Sequence[str] = field(default_factory=list)
+    unb_b: Sequence[str] = field(default_factory=list)
+    unb_unb: Sequence[str] = field(default_factory=list)
 
-    w_b_b: typing.Sequence[str] = field(default_factory=list)
-    w_b_unb: typing.Sequence[str] = field(default_factory=list)
-    w_unb_b: typing.Sequence[str] = field(default_factory=list)
-    w_unb_unb: typing.Sequence[str] = field(default_factory=list)
+    w_b_b: Sequence[str] = field(default_factory=list)
+    w_b_unb: Sequence[str] = field(default_factory=list)
+    w_unb_b: Sequence[str] = field(default_factory=list)
+    w_unb_unb: Sequence[str] = field(default_factory=list)
 
-@pytest.fixture
-def sequence_sample():
-    return SequenceTest(
+
+@idl.struct(
+    member_annotations={
+        'b_b': [idl.bound(3), idl.element_annotations([idl.bound(6)])],
+        'b_unb': [idl.bound(4)],
+        'unb_b': [idl.element_annotations([idl.bound(10)])],
+        'w_b_b': [idl.bound(3), idl.element_annotations([idl.bound(6), idl.utf16])],
+        'w_b_unb': [idl.bound(4), idl.element_annotations([idl.utf16])],
+        'w_unb_b': [idl.element_annotations([idl.bound(10), idl.utf16])],
+        'w_unb_unb': [idl.element_annotations([idl.utf16])]
+    }
+)
+class OptionalSequenceTest:
+    b_b: Optional[Sequence[str]] = None
+    b_unb: Optional[Sequence[str]] = None
+    unb_b: Optional[Sequence[str]] = None
+    unb_unb: Optional[Sequence[str]] = None
+
+    w_b_b: Optional[Sequence[str]] = None
+    w_b_unb: Optional[Sequence[str]] = None
+    w_unb_b: Optional[Sequence[str]] = None
+    w_unb_unb: Optional[Sequence[str]] = None
+
+
+def create_sample(SequenceType):
+    return SequenceType(
         b_b=["hello", ",", "world!"],
         b_unb=["a" * 10, "b" * 20],
         unb_b=["hello", ",", "world!"] * 3,
@@ -61,6 +84,14 @@ def sequence_sample():
         w_unb_b=["hello", ",", "world!"] * 3,
         w_unb_unb=["a" * 10, "b" * 20] * 10)
 
+@pytest.fixture
+def sequence_sample():
+    return create_sample(SequenceTest)
+
+
+@pytest.fixture
+def optional_sequence_sample():
+    return create_sample(OptionalSequenceTest)
 
 def test_sequence_plugin():
     ts = idl.get_type_support(SequenceTest)
@@ -87,27 +118,35 @@ def test_sequence_serialization(sequence_sample):
     assert sequence_sample == deserialized_sample
 
 
+def test_optional_sequence_serialization33(optional_sequence_sample):
+    ts = idl.get_type_support(OptionalSequenceTest)
+    buffer = ts.serialize(optional_sequence_sample)
+    deserialized_sample = ts.deserialize(buffer)
+    assert optional_sequence_sample == deserialized_sample
+
+
 def test_sequence_pubsub(shared_participant, sequence_sample):
     fixture = PubSubFixture(shared_participant, SequenceTest)
-    fixture.writer.write(sequence_sample)
-    wait.for_data(fixture.reader)
-    fixture.writer.write(SequenceTest())
-    wait.for_data(fixture.reader)
-    assert fixture.reader.take_data() == [sequence_sample, SequenceTest()]
+    fixture.send_and_check([sequence_sample, SequenceTest()])
 
 
-def test_sequence_serialization_fails_when_out_of_bounds():
-    ts = idl.get_type_support(SequenceTest)
+def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
+    fixture = PubSubFixture(shared_participant, OptionalSequenceTest)
+    fixture.send_and_check([optional_sequence_sample, OptionalSequenceTest()])
 
-    sample = SequenceTest(b_b=["hello!"] * 3)
+
+@pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
+def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
+    ts = idl.get_type_support(SequenceTestType)
+
+    sample = SequenceTestType(b_b=["hello!"] * 3)
     ts.serialize(sample)
     sample.b_b += "world!"
     with pytest.raises(Exception) as ex:
         ts.serialize(sample)
     assert "Error processing field 'b_b'" in str(ex.value)
 
-    sample = SequenceTest(b_b=["hello!!"])
+    sample = SequenceTestType(b_b=["hello!!"])
     with pytest.raises(Exception) as ex:
         ts.serialize(sample)
     assert "Error processing field 'b_b'" in str(ex.value)
-

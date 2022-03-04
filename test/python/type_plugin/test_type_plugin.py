@@ -10,6 +10,7 @@
 #
 
 import ctypes
+from collections import namedtuple
 
 import pytest
 
@@ -17,7 +18,9 @@ import rti.connextdds as dds
 import rti.idl as idl
 
 from test_utils import fixtures
+from test_utils.helpers import type_support_with_duck_typing
 from common_types import Point
+from test_utils.fixtures import *
 
 def test_type_plugin_basic():
     assert hasattr(Point, "type_support")
@@ -36,9 +39,8 @@ def test_type_plugin_basic():
     assert dynamic_type["x"].id == 0
     assert dynamic_type["y"].id == 1
 
-def test_idl_topic():
-    participant = fixtures.create_participant()
-    topic = dds.Topic(participant, "MyPoint", Point)
+def test_idl_topic(shared_participant):
+    topic = dds.Topic(shared_participant, "MyPoint", Point)
 
     assert topic.name == "MyPoint"
     assert topic.type_name == "Point"
@@ -46,12 +48,11 @@ def test_idl_topic():
     assert topic.type is Point
 
 
-def test_idl_topic_with_qos():
-    participant = fixtures.create_participant()
+def test_idl_topic_with_qos(shared_participant):
     qos = dds.TopicQos()
     qos.history.kind = dds.HistoryKind.KEEP_LAST
     qos.history.depth = 13
-    topic = dds.Topic(participant, "MyPoint", Point, qos)
+    topic = dds.Topic(shared_participant, "MyPoint", Point, qos)
 
     assert topic.name == "MyPoint"
     assert topic.type_name == "Point"
@@ -62,9 +63,8 @@ def test_idl_topic_with_qos():
     assert topic.qos.history.depth == 13
 
 
-def test_idl_any_topic():
-    participant = fixtures.create_participant()
-    topic = dds.Topic(participant, "MyPoint", Point)
+def test_idl_any_topic(shared_participant):
+    topic = dds.Topic(shared_participant, "MyPoint", Point)
 
     as_any_topic = dds.AnyTopic(topic)
     assert as_any_topic.name == "MyPoint"
@@ -76,8 +76,8 @@ def test_serialization():
     sample = Point(x=33, y=24)
     assert sample == ts.deserialize(ts.serialize(sample))
 
-def test_pubsub():
-    fixture = fixtures.PubSubFixture(fixtures.create_participant(), Point)
+def test_pubsub(shared_participant):
+    fixture = fixtures.PubSubFixture(shared_participant, Point)
     fixture.send_and_check(Point(3, 4))
 
 @idl.struct
@@ -86,13 +86,16 @@ class NotAPoint:
 
 def test_serialization_fails_with_bad_sample_type():
     ts = idl.get_type_support(Point)
-    with pytest.raises(TypeError):
+
+    ExceptionType = TypeError if not ts.allow_duck_typing else idl.FieldSerializationError
+
+    with pytest.raises(ExceptionType):
         ts.serialize(NotAPoint(2))
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ExceptionType):
         ts.serialize(3.14)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ExceptionType):
         ts.serialize(None)
 
 
@@ -114,13 +117,16 @@ def test_idl_writer_fails_with_bad_sample_type():
     topic = dds.Topic(participant, "MyPoint", Point)
     writer = dds.DataWriter(participant.implicit_publisher, topic)
 
-    with pytest.raises(TypeError):
+    ts = idl.get_type_support(Point)
+    ExceptionType = TypeError if not ts.allow_duck_typing else idl.FieldSerializationError
+
+    with pytest.raises(ExceptionType):
         writer.write(NotAPoint())
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ExceptionType):
         writer.write(4)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ExceptionType):
         writer.write(None)
 
 def test_nested_type():
@@ -138,3 +144,31 @@ def test_nested_type():
 
     orig_sample = Rectangle(a=Point(x=1, y=2), b=Point(x=3, y=4))
     assert orig_sample == ts.deserialize(ts.serialize(orig_sample))
+
+
+def test_serialization_with_duck_typing():
+
+    # We'll publish a sample of a different type that has at least the same
+    # fields as Point
+    Point3D = namedtuple("Point3D", ["x", "y", "z"])
+    sample = Point3D(x=33, y=24, z=5)
+
+    with type_support_with_duck_typing(Point) as ts:
+        assert Point(33, 24) == ts.deserialize(ts.serialize(sample))
+
+
+def test_pubsub_with_duck_typing(shared_participant):
+    fixture = fixtures.PubSubFixture(shared_participant, Point)
+
+    class Point3D:
+        def __init__(self):
+            self.z = 5
+            self.y = 4
+            self.x = 3
+
+    sample = Point3D()
+
+    with type_support_with_duck_typing(Point):
+        fixture.writer.write(sample)
+    wait.for_data(fixture.reader)
+    assert fixture.reader.take_data() == [Point(3, 4)]

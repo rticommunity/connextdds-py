@@ -91,8 +91,14 @@ class PubSubFixture:
 
     def send_and_check(self, data):
         self.writer.write(data)
-        wait.for_data(self.reader)
-        assert self.reader.take_data() == [data]
+
+        if type(data) is not list:
+            data = [data]
+
+        wait.for_data(self.reader, count=len(data))
+        received_data = self.reader.take_data()
+        assert len(received_data) == len(data)
+        assert all(d in received_data for d in data)
 
 
 # Provides a participant exclusively for the current test

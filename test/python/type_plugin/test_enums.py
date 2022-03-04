@@ -102,11 +102,7 @@ def test_enum_serialization(enum_sample):
 
 def test_enum_pubsub(shared_participant, enum_sample):
     fixture = PubSubFixture(shared_participant, EnumTest)
-    fixture.writer.write(enum_sample)
-    wait.for_data(fixture.reader)
-    fixture.writer.write(EnumTest())
-    wait.for_data(fixture.reader)
-    assert fixture.reader.take_data() == [enum_sample, EnumTest()]
+    fixture.send_and_check([enum_sample, EnumTest()])
 
 
 def test_enum_serialization_with_unknown_enumerator_fails(enum_sample):

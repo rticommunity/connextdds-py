@@ -9,7 +9,7 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from typing import Sequence
+from typing import Sequence, Optional
 from dataclasses import field
 from array import array
 
@@ -47,6 +47,24 @@ class SequenceTest:
     vertices_bounded: Sequence[Point] = field(default_factory=list)
 
 
+@idl.struct(
+    member_annotations={
+        'prices': [idl.bound(4)],
+        'prices_array': [idl.bound(4)],
+        'vertices_bounded': [idl.bound(2)]
+    }
+)
+class OptionalSequenceTest:
+    vertices: Optional[Sequence[Point]] = None
+    weights: Optional[Sequence[int]] = None
+    prices: Optional[Sequence[float]] = None
+    ready: Optional[Sequence[bool]] = None
+    weights_array: Optional[Sequence[idl.int16]] = None
+    prices_array: Optional[Sequence[float]] = None
+    ready_array: Optional[Sequence[bool]] = None
+    vertices_bounded: Optional[Sequence[Point]] = None
+
+
 def create_sequence_sample():
     return SequenceTest(
         vertices=[Point(10, 20), Point(30, 40)],
@@ -59,9 +77,26 @@ def create_sequence_sample():
         vertices_bounded=[Point(100, 200)])
 
 
+def create_optional_sequence_sample():
+    return OptionalSequenceTest(
+        vertices=[Point(10, 20), Point(30, 40)],
+        weights=[1, 2, 3],
+        prices=[1.5, 2.5, 3.5, 4.5],
+        ready=[True, False, True, True],
+        weights_array=[111, 222],
+        prices_array=[11.5, 22.5, 33.5],
+        ready_array=[False, True],
+        vertices_bounded=[Point(100, 200)])
+
+
 @pytest.fixture
 def sequence_sample():
     return create_sequence_sample()
+
+
+@pytest.fixture
+def optional_sequence_sample():
+    return create_optional_sequence_sample()
 
 
 def test_sequence_plugin():
@@ -90,6 +125,15 @@ def test_sequence_serialization(sequence_sample):
     assert sequence_sample == deserialized_sample
 
 
+@pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
+def test_empty_sequence_serialization(SequenceTestType):
+    ts = idl.get_type_support(SequenceTestType)
+    print(SequenceTestType())
+    buffer = ts.serialize(SequenceTestType())
+    deserialized_sample = ts.deserialize(buffer)
+    assert SequenceTestType() == deserialized_sample
+
+
 def test_sequence_pubsub(shared_participant, sequence_sample):
     fixture = PubSubFixture(shared_participant, SequenceTest)
     fixture.writer.write(sequence_sample)
@@ -99,43 +143,61 @@ def test_sequence_pubsub(shared_participant, sequence_sample):
     assert fixture.reader.take_data() == [sequence_sample, SequenceTest()]
 
 
-def test_sequence_serialization_fails_when_out_of_bounds():
-    ts = idl.get_type_support(SequenceTest)
+def test_optional_sequence_serialization(optional_sequence_sample):
+    ts = idl.get_type_support(OptionalSequenceTest)
+    buffer = ts.serialize(optional_sequence_sample)
+    deserialized_sample = ts.deserialize(buffer)
+    assert optional_sequence_sample == deserialized_sample
 
-    sample = SequenceTest(prices=[1.5, 2.5, 3.5, 4.5])
+def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
+    fixture = PubSubFixture(shared_participant, OptionalSequenceTest)
+    fixture.writer.write(optional_sequence_sample)
+    wait.for_data(fixture.reader)
+    fixture.writer.write(OptionalSequenceTest())
+    wait.for_data(fixture.reader)
+    assert fixture.reader.take_data() == [optional_sequence_sample, OptionalSequenceTest()]
+
+@pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
+def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
+    ts = idl.get_type_support(SequenceTestType)
+
+    sample = SequenceTestType(prices=[1.5, 2.5, 3.5, 4.5])
     ts.serialize(sample)
     sample.prices += [5.5]
     with pytest.raises(idl.FieldSerializationError) as ex:
         ts.serialize(sample)
     assert "Error processing field 'prices'" in str(ex.value)
 
-    sample = SequenceTest(vertices_bounded=[Point(1, 2), Point(3, 4)])
+    sample = SequenceTestType(vertices_bounded=[Point(1, 2), Point(3, 4)])
     ts.serialize(sample)
     sample.vertices_bounded += [Point(5, 6)]
     with pytest.raises(idl.FieldSerializationError) as ex:
         ts.serialize(sample)
     assert "Error processing field 'vertices_bounded'" in str(ex.value)
 
-def test_sequence_serialization_fails_with_incorrect_element_type():
-    ts = idl.get_type_support(SequenceTest)
 
-    sample = SequenceTest(prices=[1.5, "hello"])
+@pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
+def test_sequence_serialization_fails_with_incorrect_element_type(SequenceTestType):
+    ts = idl.get_type_support(SequenceTestType)
+
+    sample = SequenceTestType(prices=[1.5, "hello"])
     with pytest.raises(idl.FieldSerializationError) as ex:
         ts.serialize(sample)
     assert "Error processing field 'prices'" in str(ex.value)
 
-    sample = SequenceTest(vertices=[Point(1,2), 3])
+    sample = SequenceTestType(vertices=[Point(1, 2), 3])
     with pytest.raises(idl.FieldSerializationError) as ex:
         ts.serialize(sample)
     assert "Error processing field 'vertices'" in str(ex.value)
 
 
+@pytest.mark.skip("Enable once a buffer-like field can be serialized as a list")
 def test_sequence_serialization_with_int_element_out_of_range_is_safe():
     ts = idl.get_type_support(SequenceTest)
 
     # The current implementation doesn't enforce int sizes, but elements within
     # the correct range will be correctly serialized an deserialized
-    sample = SequenceTest(weights_array=[2**15 - 1, 2**15, 4])
+    sample = SequenceTest(weights_array=array([2**15 - 1, 2**15, 4]))
     deserialized_sample = ts.deserialize(ts.serialize(sample))
 
     assert deserialized_sample.weights_array[0] == sample.weights_array[0]
@@ -143,10 +205,11 @@ def test_sequence_serialization_with_int_element_out_of_range_is_safe():
     assert deserialized_sample.weights_array[2] == sample.weights_array[2]
 
 
-def test_sequence_publication_fails_when_out_of_bounds(shared_participant):
-    fixture = PubSubFixture(shared_participant, SequenceTest)
+@pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
+def test_sequence_publication_fails_when_out_of_bounds(shared_participant, SequenceTestType):
+    fixture = PubSubFixture(shared_participant, SequenceTestType)
     with pytest.raises(idl.FieldSerializationError) as ex:
-        fixture.writer.write(SequenceTest(prices=[1.1] * 5))
+        fixture.writer.write(SequenceTestType(prices=[1.1] * 5))
     assert "Error processing field 'prices'" in str(ex.value)
 
 

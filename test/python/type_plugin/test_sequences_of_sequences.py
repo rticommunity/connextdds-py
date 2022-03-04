@@ -9,7 +9,7 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from typing import Sequence
+from typing import Sequence, Optional
 from dataclasses import field
 
 import pytest
@@ -22,17 +22,26 @@ import test_sequences
 
 InnerSeqTest = test_sequences.SequenceTest
 
-@idl.struct(member_annotations={"sequences_b": [idl.bound(3)]})
-# @idl.struct
+# Tests a sequence of a type that contains more sequences. This is important
+# to test that the inner sequences are properly initialized
+@idl.struct(member_annotations={
+        "sequences_b": [idl.bound(3)],
+        "sequences_b_o": [idl.bound(3)]
+    }
+)
 class SequenceTest:
     sequences_u: Sequence[InnerSeqTest] = field(default_factory=list)
     sequences_b: Sequence[InnerSeqTest] = field(default_factory=list)
+    sequences_u_o: Optional[Sequence[InnerSeqTest]] = None
+    sequences_b_o: Optional[Sequence[InnerSeqTest]] = None
 
 
 def create_sequence_sample(seq_length: int = 3):
     return SequenceTest(
         sequences_u=[test_sequences.create_sequence_sample()] * seq_length,
-        sequences_b=[test_sequences.create_sequence_sample()] * seq_length)
+        sequences_b=[test_sequences.create_sequence_sample()] * seq_length,
+        sequences_u_o=[test_sequences.create_sequence_sample()] * seq_length,
+        sequences_b_o=[test_sequences.create_sequence_sample()] * seq_length)
 
 
 @pytest.fixture
@@ -46,11 +55,18 @@ def test_sequence_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "SequenceTest"
-    assert len(dt.members()) == 2
+    assert len(dt.members()) == 4
 
     element_ts = idl.get_type_support(test_sequences.SequenceTest)
     assert dt["sequences_u"].type == dds.SequenceType(element_ts.dynamic_type)
     assert dt["sequences_b"].type == dds.SequenceType(element_ts.dynamic_type, 3)
+    assert dt["sequences_u_o"].type == dds.SequenceType(
+        element_ts.dynamic_type)
+    assert dt["sequences_b_o"].type == dds.SequenceType(
+        element_ts.dynamic_type, 3)
+
+    assert dt["sequences_u_o"].optional
+    assert dt["sequences_b_o"].optional
 
 
 def test_sequence_serialization(sequence_sample):
@@ -60,10 +76,16 @@ def test_sequence_serialization(sequence_sample):
     assert sequence_sample == deserialized_sample
 
 
+def test_empty_sequence_serialization():
+    ts = idl.get_type_support(SequenceTest)
+    buffer = ts.serialize(SequenceTest())
+    deserialized_sample = ts.deserialize(buffer)
+    assert SequenceTest() == deserialized_sample
+
+
 def test_sequence_pubsub_basic(shared_participant, sequence_sample: SequenceTest):
     fixture = PubSubFixture(shared_participant, SequenceTest)
     fixture.send_and_check(sequence_sample)
-    # fixture.send_and_check(SequenceTest())
 
 
 def test_sequence_memory_is_managed_pubsub(shared_participant):
@@ -97,6 +119,8 @@ def test_sequence_variable_lengths_pubsub(
         sequence_sample.sequences_b[1].vertices[0])
     sequence_sample.sequences_b[1].vertices_bounded.append(
         sequence_sample.sequences_b[1].vertices_bounded[0])
+    sequence_sample.sequences_b_o = None
+    sequence_sample.sequences_u_o = None
     fixture.writer.write(sequence_sample)
     wait.for_data(fixture.reader)
     assert fixture.reader.take_data() == [sequence_sample]

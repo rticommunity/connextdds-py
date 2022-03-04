@@ -48,43 +48,6 @@ static void validate_cdr_buffer_type(const py::buffer_info& info)
     }
 }
 
-// Uses the C interpreter to resize a sequence of complex types, initializing
-// or finalizing elements as needed.
-//
-// - member_plugin is the plugin for the sequence's type
-// - c_sample is the ctypes sample containing the sequence member
-// - member_offset is the offset to the sequence member
-// - element_count is the new element count
-//
-// This function is used as part of the idl_impl.sample_interpreter package
-// to convert unbounded Python sequences to C.
-static void resize_c_sequence(
-        py::object& c_sample,
-        const DynamicType& member_dynamic_type,
-        size_t member_offset,
-        size_t element_count)
-{
-    RTIXCdrBoolean failure = RTI_XCDR_FALSE;
-    // RTIXCdrTypeCodeMember member_info;
-    PyCTypesBuffer c_sample_buffer(c_sample);
-    DDS_Sequence_set_member_element_count(
-            &failure,
-            c_sample_buffer.py_buffer.buf, // sample
-            (RTIXCdrUnsignedLong) element_count,
-            (RTIXCdrUnsignedLong) member_offset,
-            reinterpret_cast<const RTIXCdrTypeCode*>(
-                    &member_dynamic_type.native()), // memberInfo
-            nullptr, // TODO CORE-11838: this has to be passed in to support optionals
-            RTI_XCDR_TRUE, // allocateMemberIfNull
-            RTI_XCDR_TRUE, // trimToSize
-            RTI_XCDR_TRUE, // initializeElement
-            nullptr); // programData
-
-    if (failure) {
-        throw dds::core::Error("Failed to resize sequence");
-    }
-}
-
 // This class and methods are internally used (in Python code) by the
 // TypeSupport class
 template<>
@@ -203,10 +166,42 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             py::arg("c_sample"),
             py::call_guard<py::gil_scoped_acquire>());
 
-    cls.def_static(
-            "resize_sequence",
-            resize_c_sequence,
-            py::call_guard<py::gil_scoped_release>());
+    cls.def(
+            "initialize_member",
+            [](const TypePlugin& self,
+               py::object c_sample,
+               uint32_t member_index) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+
+                py::gil_scoped_release release;
+                CSampleWrapper sample_wrapper = c_sample_buffer;
+                self.type_plugin->initialize_member(
+                        sample_wrapper,
+                        member_index);
+            },
+            py::arg("c_sample"),
+            py::arg("member_index"),
+            py::call_guard<py::gil_scoped_acquire>());
+
+    cls.def(
+            "resize_member",
+            [](const TypePlugin& self,
+               py::object c_sample,
+               uint32_t member_index,
+               uint32_t new_size) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+
+                py::gil_scoped_release release;
+                CSampleWrapper sample_wrapper = c_sample_buffer;
+                self.type_plugin->resize_member(
+                        sample_wrapper,
+                        member_index,
+                        new_size);
+            },
+            py::arg("c_sample"),
+            py::arg("member_index"),
+            py::arg("new_size"),
+            py::call_guard<py::gil_scoped_acquire>());
 }
 
 template<>

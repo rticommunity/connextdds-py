@@ -18,8 +18,8 @@
    - Execution phase: the compiled program is executed to convert each object.
 """
 
-from typing import Any, List, Tuple, Sequence
-from dataclasses import fields
+from typing import Any, List, Tuple, Sequence, Callable
+from dataclasses import fields, MISSING
 import itertools
 import abc
 
@@ -45,23 +45,62 @@ def as_int_ptr(c_ptr):
 class Instruction(metaclass=abc.ABCMeta):
     """Base class for instructions that can be executed by the interpreter"""
 
-    def __init__(self, field_name: str, is_primitive: bool = False):
+    def __init__(
+        self,
+        field_name: str,
+        is_primitive: bool = False,
+        field_index: int = -1,
+        field_factory: Any = None,
+        is_optional: bool = False
+    ) -> None:
         self.field_name = field_name
-        self.is_primitive = is_primitive
+        self.is_primitive = is_primitive and not is_optional
+        self.field_index = field_index
+        if is_optional:
+            self.is_optional = True
+            self.get_c_attr = self._get_optional
+            self.set_c_attr = self._set_optional
+            self.field_factory = field_factory
+        else:
+            self.is_optional = False
+            self.get_c_attr = getattr
+            self.set_c_attr = setattr
 
     @abc.abstractmethod
     def execute(self, dst: Any, src: Any) -> None:
         """Executes the instruction, copying src int dst"""
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.field_name})"
 
-class CopyPrimitiveInstruction(Instruction):
+    def _get_optional(self, csample: Any, field_name: str) -> Any:
+        value = getattr(csample, field_name)
+        return value[0]
+
+    def _set_optional(self, csample: Any, field_name: str, value: Any) -> None:
+        getattr(csample, field_name)[0] = value
+
+
+class CopyPrimitiveToPyInstruction(Instruction):
     """Instruction to copy a primitive type from one object to another."""
 
-    def __init__(self, field_name: str):
-        super().__init__(field_name, is_primitive=True)
+    def __init__(self, field_name: str, is_optional: bool = False, field_index: int = -1):
+        super().__init__(field_name, is_primitive=True, is_optional=is_optional, field_index=field_index)
 
     def execute(self, dst: Any, src: Any) -> None:
-        setattr(dst, self.field_name, getattr(src, self.field_name))
+        setattr(dst, self.field_name, self.get_c_attr(src, self.field_name))
+
+
+class CopyPrimitiveToCInstruction(Instruction):
+    """Instruction to copy a primitive type from one object to another."""
+
+    def __init__(self, field_name: str, is_optional: bool = False, field_index: int = -1):
+        super().__init__(field_name, is_primitive=True,
+                         is_optional=is_optional, field_index=field_index)
+
+    def execute(self, dst: Any, src: Any) -> None:
+        self.set_c_attr(dst, self.field_name, getattr(src, self.field_name))
+
 
 
 # --- Enums  ------------------------------------------------------------------
@@ -95,21 +134,36 @@ class CopyInt32ToIntEnum(Instruction):
 # --- Structs  ----------------------------------------------------------------
 
 
-class CopyAggregationInstruction(Instruction):
+class CopyAggregationToPyInstruction(Instruction):
     """An instruction to recursively copy an aggregation type from one object
     to another.
     """
 
-    def __init__(self, field_name: str, sample_program: 'SampleProgram'):
-        super().__init__(field_name)
+    def __init__(self, field_name: str, is_optional: bool, field_factory: Any, sample_program: 'SampleProgram'):
+        super().__init__(field_name, is_optional=is_optional, field_factory=field_factory)
         self.sample_program = sample_program
 
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         dst_member = getattr(dst, field_name)
-        src_member = getattr(src, field_name)
+        src_member = self.get_c_attr(src, field_name)
         self.sample_program.execute(dst=dst_member, src=src_member)
 
+
+class CopyAggregationToCInstruction(Instruction):
+    """An instruction to recursively copy an aggregation type from one object
+    to another.
+    """
+
+    def __init__(self, field_name: str, field_index: int, is_optional: bool, sample_program: 'SampleProgram'):
+        super().__init__(field_name, field_index=field_index, is_optional=is_optional)
+        self.sample_program = sample_program
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        dst_member = self.get_c_attr(dst, field_name)
+        src_member = getattr(src, field_name)
+        self.sample_program.execute(dst=dst_member, src=src_member)
 
 # --- String instructions -----------------------------------------------------
 
@@ -158,19 +212,19 @@ class CopyBytesToStrInstructionMixin(StringInstruction):
         field_name = self.field_name
         c_member = getattr(src, field_name)
 
-        # Get the C string as a memoryview (pointer, length) and decode it
-        # from UTF-8 or UTF-16 to create the Python string.
-        byte_array = self.get_memoryview_func(c_member)
+        if c_member != None:
+            # Get the C string as a memoryview (pointer, length) and decode it
+            # from UTF-8 or UTF-16 to create the Python string.
+            byte_array = self.get_memoryview_func(c_member)
 
-        # Python strings are immutable; we need to create a new one every time.
-        setattr(dst, field_name, str(byte_array, self.encoding))
-
+            # Python strings are immutable; we need to create a new one every time.
+            setattr(dst, field_name, str(byte_array, self.encoding))
 
 class CopyStrToBytesInstructionMixin(StringInstruction):
     """Copy a Python string into a C string or wstring"""
 
-    def __init__(self, field_name: str, bound: int):
-        super().__init__(field_name)
+    def __init__(self, field_name: str, field_index: int, is_optional: bool, bound: int):
+        super().__init__(field_name, field_index=field_index, is_optional=is_optional)
         self.bound = bound
 
     def execute_on_sequence(self, dst, src: Sequence[str], index: int) -> None:
@@ -254,6 +308,26 @@ class CopyWStrToBytesInstruction(WideStringConstantsMixin, CopyStrToBytesInstruc
 
 # --- Sequence instructions ---------------------------------------------------
 
+# All Python-to-C sequences may need to be resized, which requires access to the
+# type plugin's resize_nember method.
+class CopyListToCInstruction(Instruction):
+    def __init__(
+        self,
+        field_name: str,
+        field_index: int,
+        is_optional: bool,
+        container_type_plugin: dds._TypePlugin
+    ) -> None:
+        super().__init__(field_name, field_index=field_index, is_optional=is_optional)
+        self.container_type_plugin = container_type_plugin
+
+    def resize_sequence_member(self, c_sample, c_sequence, new_size: int) -> None:
+        if c_sequence.capacity == 0:
+            self.container_type_plugin.resize_member(
+                c_sample, self.field_index, new_size)
+        else:
+            c_sequence.set_length(new_size)
+
 class CopyPrimitiveSequenceToListInstruction(Instruction):
     """Primitive sequence: C to Python
 
@@ -264,7 +338,7 @@ class CopyPrimitiveSequenceToListInstruction(Instruction):
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(dst, field_name)
-        c_member = getattr(src, field_name)
+        c_member = self.get_c_attr(src, field_name)
         c_elements = c_member.get_elements_ptr()
         length = len(c_member)
 
@@ -272,6 +346,7 @@ class CopyPrimitiveSequenceToListInstruction(Instruction):
         py_member.extend([0] * length)
         for i in range(length):
             py_member[i] = c_elements[i]
+
 
 class CopyPrimitiveSequenceToBufferInstruction(Instruction):
     """Primitive sequence: C to Python
@@ -283,7 +358,7 @@ class CopyPrimitiveSequenceToBufferInstruction(Instruction):
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(dst, field_name)
-        c_member = getattr(src, field_name)
+        c_member = self.get_c_attr(src, field_name)
         length = len(c_member)
         if length > 0:
             elements_ptr = c_member.get_elements_raw_ptr()
@@ -292,7 +367,7 @@ class CopyPrimitiveSequenceToBufferInstruction(Instruction):
                 py_member, elements_ptr, c_member._element_size * length)
 
 
-class CopyPrimitiveListToBoundedSequenceInstruction(Instruction):
+class CopyPrimitiveListToSequenceInstruction(CopyListToCInstruction):
     """Primitive sequence: Python to C
 
     Instruction to copy a bounded sequence of primitive types
@@ -301,16 +376,15 @@ class CopyPrimitiveListToBoundedSequenceInstruction(Instruction):
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
+        c_member = self.get_c_attr(dst, field_name)
         length = len(py_member)
-        c_member.set_length(length)
-
+        self.resize_sequence_member(dst, c_member, length)
         c_elements = c_member.get_elements_ptr()
         for i in range(length):
             c_elements[i] = py_member[i]
 
 
-class CopyBufferToBoundedSequenceInstruction(Instruction):
+class CopyBufferToSequenceInstruction(CopyListToCInstruction):
     """Primitive sequence: Python to C
 
     Instruction to copy a bounded sequence of primitive types using buffer
@@ -320,41 +394,14 @@ class CopyBufferToBoundedSequenceInstruction(Instruction):
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
+        c_member = self.get_c_attr(dst, field_name)
         length = len(py_member)
-        c_member.set_length(length)
-        elements_ptr = c_member.get_elements_raw_ptr()
-        core_utils.memcpy_from_buffer_object(
-            elements_ptr, py_member, c_member._element_size * length)
+        self.resize_sequence_member(dst, c_member, length)
 
-class CopyPrimitiveListToUnboundedSequenceInstruction(Instruction):
-    """Primitive sequence: Python to C
-
-    Instruction to copy an ubounded sequence of primitive types
-    """
-
-    def __init__(
-        self,
-        field_name: str,
-        member_offset: int,
-        member_dynamic_type: dds.DynamicType
-    ):
-        super().__init__(field_name)
-        self.member_offset = member_offset
-        self.member_dynamic_type = member_dynamic_type
-
-    def execute(self, dst: Any, src: Any) -> None:
-        field_name = self.field_name
-        py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
-        length = len(py_member)
-
-        dds._TypePlugin.resize_sequence(
-            dst, self.member_dynamic_type, self.member_offset, length)
-
-        c_elements = c_member.get_elements_ptr()
-        for i in range(length):
-            c_elements[i] = py_member[i]
+        if length > 0:
+            elements_ptr = c_member.get_elements_raw_ptr()
+            core_utils.memcpy_from_buffer_object(
+                elements_ptr, py_member, c_member._element_size * length)
 
 
 class CopyConstructedSequenceToListInstruction(Instruction):
@@ -364,77 +411,57 @@ class CopyConstructedSequenceToListInstruction(Instruction):
     into a Python list.
     """
 
-    def __init__(self, field_name: str, py_element_factory, element_program: 'SampleProgram'):
-        super().__init__(field_name)
-        self.py_element_factory = py_element_factory
+    def __init__(
+        self,
+        field_name: str,
+        field_index: int,
+        field_factory: Any,
+        element_factory: Any,
+        is_optional: bool,
+        element_program: 'SampleProgram'
+    ) -> None:
+        super().__init__(field_name, field_index=field_index,
+                         field_factory=field_factory, is_optional=is_optional)
+        self.element_factory = element_factory
         self.element_program = element_program
 
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(dst, field_name)
-        c_member = getattr(src, field_name)
+        c_member = self.get_c_attr(src, field_name)
         c_elements = c_member.get_elements_ptr()
         for i in range(len(c_member)):
-            element = self.py_element_factory()
+            element = self.element_factory()
             self.element_program.execute(dst=element, src=c_elements[i])
             py_member.append(element)
 
 
-class CopyBoundedClassListToSequenceInstruction(Instruction):
+class CopyClassListToSequenceInstruction(CopyListToCInstruction):
     """Complex sequence: Python to C
 
     Instruction to copy a Python list into a bounded sequence of constructed
     types.
     """
 
-    def __init__(self, field_name: str, element_program: 'SampleProgram'):
-        super().__init__(field_name)
-        self.element_program = element_program
-
-    def execute(self, dst: Any, src: Any) -> None:
-        field_name = self.field_name
-        py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
-        length = len(py_member)
-
-        # Bounded sequences are pre-initialized to the maximum, so we can
-        # just set the length
-        c_member.set_length(length)
-
-        c_elements = c_member.get_elements_ptr()
-        for i in range(length):
-            self.element_program.execute(dst=c_elements[i], src=py_member[i])
-
-
-class CopyUnboundedClassListToSequenceInstruction(Instruction):
-    """Complex sequence: Python to C
-
-    Instruction to copy a Python list into a unbounded sequence of constructed
-    types.
-    """
-
     def __init__(
         self,
         field_name: str,
-        member_offset: int,
-        member_dynamic_type: dds.DynamicType,
+        field_index: int,
+        is_optional: bool,
+        container_type_plugin: dds._TypePlugin,
         element_program: 'SampleProgram'
-    ):
-        super().__init__(field_name)
+    ) -> None:
+        super().__init__(field_name, field_index=field_index,
+                         is_optional=is_optional, container_type_plugin=container_type_plugin)
         self.element_program = element_program
-        self.member_offset = member_offset
-        self.member_dynamic_type = member_dynamic_type
 
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
+        c_member = self.get_c_attr(dst, field_name)
         length = len(py_member)
+        self.resize_sequence_member(dst, c_member, length)
 
-        # Unbounded sequences are not pre-initialized, so we need to use the
-        # C interpreter to allocate and initialize the elements
-        dds._TypePlugin.resize_sequence(
-            dst, self.member_dynamic_type, self.member_offset, length)
         c_elements = c_member.get_elements_ptr()
         for i in range(length):
             self.element_program.execute(dst=c_elements[i], src=py_member[i])
@@ -447,14 +474,21 @@ class CopyStrSequenceToListInstruction(Instruction):
     Python list.
     """
 
-    def __init__(self, field_name: str, element_instruction: StringInstruction):
-        super().__init__(field_name)
+    def __init__(
+        self, field_name: str,
+        field_index: int,
+        field_factory: Any,
+        is_optional: bool,
+        element_instruction: StringInstruction
+    ) -> None:
+        super().__init__(field_name, field_index=field_index,
+                         field_factory=field_factory, is_optional=is_optional)
         self.element_instruction = element_instruction
 
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(dst, field_name)
-        c_member = getattr(src, field_name)
+        c_member = self.get_c_attr(src, field_name)
         length = len(c_member)
         py_member.extend(itertools.repeat(None, length))
         for i in range(length):
@@ -462,67 +496,37 @@ class CopyStrSequenceToListInstruction(Instruction):
                 dst=py_member, src=c_member, index=i)
 
 
-class CopyBoundedStrListToSequenceInstruction(Instruction):
+class CopyStrListToSequenceInstruction(CopyListToCInstruction):
     """String sequence: Python to C
 
-    Instruction to copy a Python list into a bounded sequence of strings.
-    """
-
-    def __init__(self, field_name: str, element_instruction: StringInstruction):
-        super().__init__(field_name)
-        self.element_instruction = element_instruction
-
-    def execute(self, dst: Any, src: Any) -> None:
-        field_name = self.field_name
-        py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
-        length = len(py_member)
-
-        # Bounded sequences are pre-initialized to the maximum, so we can
-        # just set the length
-        c_member.set_length(length)
-
-        i = 0
-        while i < length:
-            self.element_instruction.execute_on_sequence(
-                dst=c_member, src=py_member, index=i)
-            i += 1
-
-
-class CopyUnboundedStrListToSequenceInstruction(Instruction):
-    """String sequence: Python to C
-
-    Instruction to copy a Python list into a unbounded sequence of strings.
+    Instruction to copy a Python list into a sequence of strings.
     """
 
     def __init__(
         self,
         field_name: str,
-        member_offset: int,
-        member_dynamic_type: dds.DynamicType,
+        field_index: int,
+        is_optional: bool,
+        container_type_plugin: dds._TypePlugin,
         element_instruction: StringInstruction
-    ):
-        super().__init__(field_name)
+    ) -> None:
+        super().__init__(field_name, field_index=field_index,
+                         is_optional=is_optional, container_type_plugin=container_type_plugin)
         self.element_instruction = element_instruction
-        self.member_offset = member_offset
-        self.member_dynamic_type = member_dynamic_type
 
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         py_member = getattr(src, field_name)
-        c_member = getattr(dst, field_name)
+        c_member = self.get_c_attr(dst, field_name)
         length = len(py_member)
-
-        # Unbounded sequences are not pre-initialized, so we need to use the
-        # C interpreter to allocate and initialize the elements
-        dds._TypePlugin.resize_sequence(
-            dst, self.member_dynamic_type, self.member_offset, length)
+        self.resize_sequence_member(dst, c_member, length)
 
         i = 0
         while i < length:
             self.element_instruction.execute_on_sequence(
                 dst=c_member, src=py_member, index=i)
             i += 1
+
 
 # --- Arrays ------------------------------------------------------------------
 
@@ -586,7 +590,7 @@ class CopyPrimitiveListToArrayInstruction(Instruction):
 
 
 class CopyBufferToArrayInstruction(Instruction):
-    """Primitive sequence: Python to C
+    """Primitive array: Python to C
 
     Instruction to copy an array of primitive types using buffer protocol
     """
@@ -604,10 +608,9 @@ class CopyBufferToArrayInstruction(Instruction):
 
 
 class CopyConstructedArrayToListInstruction(Instruction):
-    """Complex sequence: C to Python
+    """Complex array: C to Python
 
-    Instruction to copy an bounded or unbounded sequence of constructed types
-    into a Python list.
+    Instruction to an array of constructed types into a Python list.
     """
 
     def __init__(self, field_name: str, py_element_factory, element_program: 'SampleProgram'):
@@ -626,10 +629,9 @@ class CopyConstructedArrayToListInstruction(Instruction):
 
 
 class CopyClassListToArrayInstruction(Instruction):
-    """Complex sequence: Python to C
+    """Complex array: Python to C
 
-    Instruction to copy a Python list into a bounded sequence of constructed
-    types.
+    Instruction to copy a Python list into an array of constructed types.
     """
 
     def __init__(self, field_name: str, element_program: 'SampleProgram'):
@@ -650,10 +652,9 @@ class CopyClassListToArrayInstruction(Instruction):
             self.element_program.execute(dst=c_member[i], src=py_member[i])
 
 class CopyStrArrayToListInstruction(Instruction):
-    """String sequence: C to Python
+    """String array: C to Python
 
-    Instruction to copy an bounded or unbounded sequence of strings into a
-    Python list.
+    Instruction to copy an array of strings into a Python list.
     """
 
     def __init__(self, field_name: str, element_instruction: StringInstruction):
@@ -673,9 +674,9 @@ class CopyStrArrayToListInstruction(Instruction):
 
 
 class CopyStrListToArrayInstruction(Instruction):
-    """String sequence: Python to C
+    """String array: Python to C
 
-    Instruction to copy a Python list into a bounded sequence of strings.
+    Instruction to copy a Python list into an array of strings.
     """
 
     def __init__(self, field_name: str, element_instruction: StringInstruction):
@@ -703,8 +704,9 @@ class SampleProgram:
     another
     """
 
-    def __init__(self, instructions: List[Instruction]) -> None:
+    def __init__(self, instructions: List[Instruction], type_plugin: dds._TypePlugin = None) -> None:
         self.instructions: List[Instruction] = instructions
+        self.type_plugin = type_plugin
 
     def execute(self, dst, src):
         """Runs all the instructions of this program"""
@@ -716,7 +718,27 @@ class SampleProgram:
                     setattr(dst, instruction.field_name,
                             getattr(src, instruction.field_name))
                 else:
-                    instruction.execute(dst=dst, src=src)
+                    if instruction.is_optional:
+                        try:
+                            src_member_value = getattr(src, instruction.field_name)
+                        except AttributeError:
+                            # For optional members we are able to handle not
+                            # just None, but even a non-existent member.
+                            continue
+
+                        if src_member_value:
+                            if self.type_plugin is not None:
+                                # Allocate the optional member in the C sample
+                                self.type_plugin.initialize_member(
+                                    dst, instruction.field_index)
+                            elif instruction.field_factory is not None:
+                                # Create the optional member in the Python sample
+                                setattr(dst, instruction.field_name,
+                                        instruction.field_factory())
+
+                            instruction.execute(dst=dst, src=src)
+                    else:
+                        instruction.execute(dst=dst, src=src)
             except Exception as ex:
                 raise FieldSerializationError(instruction.field_name) from ex
 
@@ -744,62 +766,82 @@ class SamplePrograms:
                 raise TypeError(f"{c_type} is not a ctype")
 
             self.c_to_py_program, self.py_to_c_program = self._create_struct_programs(
-                py_type, c_type, type_plugin, member_annotations)
+                py_type, type_plugin, member_annotations)
 
     def _create_struct_programs(
         self,
         py_type: type,
-        c_type: type,
         type_plugin,
         member_annotations
     ):
         c_to_py_instructions = []
         py_to_c_instructions = []
+        i = 0
         for field in fields(py_type):
             field_name = field.name
             field_type = field.type
+            current_annotations = member_annotations.get(field_name, {})
+            field_factory = self._get_field_factory(field, current_annotations)
+            is_optional = False
+            if reflection_utils.is_optional_type(field_type):
+                field_type = reflection_utils.get_underlying_type(field_type)
+                is_optional = True
+
             c_to_py_instr = None
             py_to_c_instr = None
             if reflection_utils.is_primitive(field_type):
-                c_to_py_instr = CopyPrimitiveInstruction(field_name)
-                py_to_c_instr = c_to_py_instr  # Same instruction both ways
+                c_to_py_instr = CopyPrimitiveToPyInstruction(
+                    field_name, is_optional=is_optional, field_index=i)
+                py_to_c_instr = CopyPrimitiveToCInstruction(
+                    field_name, is_optional=is_optional, field_index=i)
             elif reflection_utils.is_enum(field_type):
                 c_to_py_instr = CopyInt32ToIntEnum(field_name, field_type)
                 py_to_c_instr = CopyIntEnumToInt32(field_name)
             elif field_type is str:
-                current_annotations = member_annotations.get(field_name, {})
                 c_to_py_instr, py_to_c_instr = self._create_string_instructions(
-                    field_name, current_annotations)
+                    field_name,
+                    field_index=i,
+                    is_optional=is_optional,
+                    field_factory=field_factory,
+                    string_annotations=current_annotations)
             elif reflection_utils.is_sequence_type(field_type):
                 # In the Python type there is no distinction between an array
                 # and a sequence; the ArrayAnnotation makes it an array.
-                current_annotations = member_annotations.get(field_name, {})
                 array_info = annotations.find_annotation(
                     current_annotations, annotations.ArrayAnnotation)
                 if array_info.is_array:
                     c_to_py_instr, py_to_c_instr = self._create_array_instructions(
                         field,
-                        current_annotations)
+                        is_optional=is_optional,
+                        sequence_annotations=current_annotations)
                 else:
                     c_to_py_instr, py_to_c_instr = self._create_sequence_instructions(
-                        c_type,
                         type_plugin,
                         field,
-                        current_annotations)
+                        field_index=i,
+                        is_optional=is_optional,
+                        field_factory=field_factory,
+                        sequence_annotations=current_annotations)
             elif reflection_utils.is_constructed_type(field_type):
-                c_to_py_instr = CopyAggregationInstruction(
+                c_to_py_instr = CopyAggregationToPyInstruction(
                     field_name,
-                    field_type.type_support._sample_programs.c_to_py_program)
-                py_to_c_instr = CopyAggregationInstruction(
+                    is_optional=is_optional,
+                    field_factory=field_factory,
+                    sample_program=field_type.type_support._sample_programs.c_to_py_program)
+                py_to_c_instr = CopyAggregationToCInstruction(
                     field_name,
-                    field_type.type_support._sample_programs.py_to_c_program)
+                    field_index=i,
+                    is_optional=is_optional,
+                    sample_program=field_type.type_support._sample_programs.py_to_c_program)
 
             if c_to_py_instr is not None:
                 c_to_py_instructions.append(c_to_py_instr)
             if py_to_c_instr is not None:
                 py_to_c_instructions.append(py_to_c_instr)
 
-        return SampleProgram(c_to_py_instructions), SampleProgram(py_to_c_instructions)
+            i += 1
+
+        return SampleProgram(c_to_py_instructions), SampleProgram(py_to_c_instructions, type_plugin)
 
     def _create_enum_programs(
         self,
@@ -811,6 +853,9 @@ class SamplePrograms:
     def _create_string_instructions(
         self,
         field_name: str,
+        field_index: int,
+        is_optional: bool,
+        field_factory,
         string_annotations,
     ) -> Tuple[StringInstruction, StringInstruction]:
 
@@ -820,89 +865,99 @@ class SamplePrograms:
             string_annotations, annotations.CharEncodingAnnotation)
 
         if encoding.value == annotations.CharEncoding.UTF16:
-            c_to_py_instr = CopyBytesToWStrInstruction(field_name)
-            py_to_c_instr = CopyWStrToBytesInstruction(field_name, bound.value)
+            c_to_py_instr = CopyBytesToWStrInstruction(
+                field_name, field_factory=field_factory)
+            py_to_c_instr = CopyWStrToBytesInstruction(
+                field_name, field_index=field_index, is_optional=is_optional, bound=bound.value)
         else:
-            c_to_py_instr = CopyBytesToStrInstruction(field_name)
-            py_to_c_instr = CopyStrToBytesInstruction(field_name, bound.value)
+            c_to_py_instr = CopyBytesToStrInstruction(
+                field_name, field_factory=field_factory)
+            py_to_c_instr = CopyStrToBytesInstruction(
+                field_name, field_index=field_index, is_optional=is_optional, bound=bound.value)
 
         return c_to_py_instr, py_to_c_instr
 
 
     def _create_sequence_instructions(
         self,
-        container_c_type,
         container_type_plugin,
         field_info,
+        field_index: int,
+        is_optional: bool,
+        field_factory,
         sequence_annotations
     ):
         field_name = field_info.name
-        element_type = reflection_utils.get_underlying_type(field_info.type)
+        element_type = field_info.type
+        if reflection_utils.is_optional_type(element_type):
+            # E.g. from Optional[Sequence[int]] get Sequence[int]
+            element_type = reflection_utils.get_underlying_type(element_type)
+        # E.g. from Sequence[int] get int
+        element_type = reflection_utils.get_underlying_type(element_type)
         bound = annotations.find_annotation(
             sequence_annotations, annotations.BoundAnnotation)
 
         if reflection_utils.is_primitive_or_enum(element_type):
-            factory_type = field_info.default_factory
-            if reflection_utils.supports_buffer_protocol(factory_type):
+            if reflection_utils.supports_buffer_protocol(field_factory) and not is_optional:
                 c_to_py_instr = CopyPrimitiveSequenceToBufferInstruction(
-                    field_name)
+                    field_name,
+                    field_index=field_index,
+                    is_optional=is_optional,
+                    field_factory=field_factory)
+                py_to_c_instr = CopyBufferToSequenceInstruction(
+                    field_name,
+                    field_index=field_index,
+                    is_optional=is_optional,
+                    container_type_plugin=container_type_plugin)
             else:
                 c_to_py_instr = CopyPrimitiveSequenceToListInstruction(
-                    field_name)
-            if bound.value == annotations.UNBOUNDED:
-                member_dynamic_type = container_type_plugin.get_member_dynamic_type_ref(
-                    field_name)
-                py_to_c_instr = CopyPrimitiveListToUnboundedSequenceInstruction(
                     field_name,
-                    member_offset=getattr(container_c_type, field_name).offset,
-                    member_dynamic_type=member_dynamic_type)
-            else:
-                if reflection_utils.supports_buffer_protocol(factory_type):
-                    py_to_c_instr = CopyBufferToBoundedSequenceInstruction(
-                        field_name)
-                else:
-                    py_to_c_instr = CopyPrimitiveListToBoundedSequenceInstruction(
-                        field_name)
+                    field_index=field_index,
+                    is_optional=is_optional,
+                    field_factory=field_factory)
+                py_to_c_instr = CopyPrimitiveListToSequenceInstruction(
+                    field_name,
+                    field_index=field_index,
+                    is_optional=is_optional,
+                    container_type_plugin=container_type_plugin)
         elif element_type is str:
             # Get the annotations applied to the element type
             string_annotations = annotations.find_annotation(
                 sequence_annotations, annotations.ElementAnnotations)
             element_instructions =  self._create_string_instructions(
-                None,
-                string_annotations.value)
+                field_name=None,
+                field_index=-1,
+                is_optional=False,
+                field_factory=None,
+                string_annotations=string_annotations.value)
 
             c_to_py_instr = CopyStrSequenceToListInstruction(
                 field_name,
-                element_instructions[0])
-
-            if bound.value == annotations.UNBOUNDED:
-                member_dynamic_type = container_type_plugin.get_member_dynamic_type_ref(
-                    field_name)
-                py_to_c_instr = CopyUnboundedStrListToSequenceInstruction(
-                    field_name,
-                    member_offset=getattr(container_c_type, field_name).offset,
-                    member_dynamic_type=member_dynamic_type,
-                    element_instruction=element_instructions[1])
-            else:
-                py_to_c_instr = CopyBoundedStrListToSequenceInstruction(
-                    field_name,
-                    element_instructions[1])
+                field_index=field_index,
+                is_optional=is_optional,
+                field_factory=field_factory,
+                element_instruction=element_instructions[0])
+            py_to_c_instr = CopyStrListToSequenceInstruction(
+                field_name,
+                field_index=field_index,
+                is_optional=is_optional,
+                container_type_plugin=container_type_plugin,
+                element_instruction=element_instructions[1])
         else:
             element_ts = element_type.type_support
             c_to_py_instr = CopyConstructedSequenceToListInstruction(
-                field_name, element_type, element_ts._sample_programs.c_to_py_program)
-            if bound.value == annotations.UNBOUNDED:
-                member_dynamic_type = container_type_plugin.get_member_dynamic_type_ref(
-                    field_name)
-                py_to_c_instr = CopyUnboundedClassListToSequenceInstruction(
-                    field_name,
-                    member_offset=getattr(container_c_type, field_name).offset,
-                    member_dynamic_type=member_dynamic_type,
-                    element_program=element_ts._sample_programs.py_to_c_program)
-            else:
-                py_to_c_instr = CopyBoundedClassListToSequenceInstruction(
-                    field_name,
-                    element_ts._sample_programs.py_to_c_program)
+                field_name,
+                field_index=field_index,
+                is_optional=is_optional,
+                field_factory=field_factory,
+                element_factory=element_type,
+                element_program=element_ts._sample_programs.c_to_py_program)
+            py_to_c_instr = CopyClassListToSequenceInstruction(
+                field_name,
+                field_index=field_index,
+                is_optional=is_optional,
+                container_type_plugin=container_type_plugin,
+                element_program=element_ts._sample_programs.py_to_c_program)
 
         return c_to_py_instr, py_to_c_instr
 
@@ -910,8 +965,12 @@ class SamplePrograms:
     def _create_array_instructions(
         self,
         field,
+        is_optional: bool,
         sequence_annotations
     ):
+        if is_optional:
+            raise TypeError('Optional arrays are not supported')
+
         element_type = reflection_utils.get_underlying_type(field.type)
 
         if reflection_utils.is_primitive_or_enum(element_type):
@@ -932,8 +991,11 @@ class SamplePrograms:
             string_annotations = annotations.find_annotation(
                 sequence_annotations, annotations.ElementAnnotations)
             element_instructions = self._create_string_instructions(
-                None,
-                string_annotations.value)
+                field_name=None,
+                field_index=-1,
+                is_optional=False,
+                field_factory=None,
+                string_annotations=string_annotations.value)
 
             c_to_py_instr = CopyStrArrayToListInstruction(
                 field.name,
@@ -952,3 +1014,35 @@ class SamplePrograms:
                 element_ts._sample_programs.py_to_c_program)
 
         return c_to_py_instr, py_to_c_instr
+
+    def _get_field_factory(self, field, member_annotations) -> Callable[[], Any]:
+        if field.default_factory is not MISSING:
+            return field.default_factory
+
+        field_type = field.type
+        if reflection_utils.is_optional_type(field_type):
+            field_type = reflection_utils.get_underlying_type(field_type)
+
+        if reflection_utils.is_primitive_or_enum(field_type):
+            return None
+
+        if field_type is str:
+            return None
+
+        if reflection_utils.is_sequence_type(field_type):
+            # In the Python type there is no distinction between an array
+            # and a sequence; the ArrayAnnotation makes it an array.
+            array_info = annotations.find_annotation(
+                member_annotations, annotations.ArrayAnnotation)
+            element_type = reflection_utils.get_underlying_type(field_type)
+            if array_info.is_array:
+                return None # TODO
+            else:
+                return list
+                # if reflection_utils.is_primitive_or_enum(element_type):
+                #     return idl.array_factory(element_type)
+                # else:
+                #     return list
+
+        if reflection_utils.is_constructed_type(field_type):
+            return field_type
