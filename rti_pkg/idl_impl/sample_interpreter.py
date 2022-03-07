@@ -726,17 +726,25 @@ class SampleProgram:
                             # just None, but even a non-existent member.
                             continue
 
-                        if src_member_value:
-                            if self.type_plugin is not None:
-                                # Allocate the optional member in the C sample
+                        if self.type_plugin is not None:
+                            # src is the Python sample and dst is the C sample
+                            if src_member_value is not None:
+                                # Python optional member is set: allocate the
+                                # optional member in the C sample
                                 self.type_plugin.initialize_member(
                                     dst, instruction.field_index)
-                            elif instruction.field_factory is not None:
-                                # Create the optional member in the Python sample
-                                setattr(dst, instruction.field_name,
-                                        instruction.field_factory())
 
-                            instruction.execute(dst=dst, src=src)
+                                instruction.execute(dst=dst, src=src)
+                        else:
+                            # src is the C sample and dst is the Python sample.
+                            if src_member_value: # check for non-NULL C pointer
+                                if instruction.field_factory is not None:
+                                    # C optional member is set: construct the
+                                    # Python member if needed
+                                    setattr(dst, instruction.field_name,
+                                            instruction.field_factory())
+
+                                instruction.execute(dst=dst, src=src)
                     else:
                         instruction.execute(dst=dst, src=src)
             except Exception as ex:

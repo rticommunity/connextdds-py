@@ -24,12 +24,7 @@ from test_utils.fixtures import *
 from test_sequences import SequenceTest, create_sequence_sample
 
 
-@idl.struct(
-    member_annotations={
-        "opt_primitive_b_sequence": [idl.bound(4)],
-        "opt_complex_b_sequence": [idl.bound(3)]
-    }
-)
+@idl.struct
 class OptionalsTest:
     opt_primitive: Optional[float] = None
     opt_simple_struct: Optional[Point] = None
@@ -48,16 +43,6 @@ def create_optionals_sample():
 def optionals_sample():
     return create_optionals_sample()
 
-
-def test_optionals_plugin():
-    ts = idl.get_type_support(OptionalsTest)
-    assert ts.type is OptionalsTest
-
-    # c_sample = ts.c_type()
-    # assert c_sample.price is None
-
-    dt = ts.dynamic_type
-    assert dt.name == "OptionalsTest"
 
 
 def test_optionals_default_value_serialization():
@@ -92,6 +77,7 @@ def test_optionals_variable_length_pubsub(shared_participant, optionals_sample: 
                             dds.ResourceLimits(1, 1, 1)])
     fixture.send_and_check(optionals_sample) # all optionals are set
     fixture.send_and_check(OptionalsTest()) # all optionals are unset
+    optionals_sample.opt_primitive = 0.0
     fixture.send_and_check(optionals_sample) # all optionals are set again
 
 

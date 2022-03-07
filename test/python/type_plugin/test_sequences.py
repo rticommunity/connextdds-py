@@ -134,13 +134,9 @@ def test_empty_sequence_serialization(SequenceTestType):
     assert SequenceTestType() == deserialized_sample
 
 
-def test_sequence_pubsub(shared_participant, sequence_sample):
+def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
     fixture = PubSubFixture(shared_participant, SequenceTest)
-    fixture.writer.write(sequence_sample)
-    wait.for_data(fixture.reader)
-    fixture.writer.write(SequenceTest())
-    wait.for_data(fixture.reader)
-    assert fixture.reader.take_data() == [sequence_sample, SequenceTest()]
+    fixture.send_and_check([optional_sequence_sample, SequenceTest()])
 
 
 def test_optional_sequence_serialization(optional_sequence_sample):
@@ -149,13 +145,10 @@ def test_optional_sequence_serialization(optional_sequence_sample):
     deserialized_sample = ts.deserialize(buffer)
     assert optional_sequence_sample == deserialized_sample
 
+
 def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
     fixture = PubSubFixture(shared_participant, OptionalSequenceTest)
-    fixture.writer.write(optional_sequence_sample)
-    wait.for_data(fixture.reader)
-    fixture.writer.write(OptionalSequenceTest())
-    wait.for_data(fixture.reader)
-    assert fixture.reader.take_data() == [optional_sequence_sample, OptionalSequenceTest()]
+    fixture.send_and_check([optional_sequence_sample, OptionalSequenceTest()])
 
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
