@@ -25,19 +25,13 @@ namespace pyrti {
 
 auto get_create_py_sample_function(PyDataReader<CSampleWrapper> &dr)
 {
-    // TODO PY-17: support CFT
-    auto topic = dds::core::polymorphic_cast<dds::topic::Topic<CSampleWrapper>>(
-            dr.topic_description());
-    auto type_support = get_py_type_support_from_topic(topic);
+    auto type_support = get_py_type_support_from_topic(dr.topic_description());
     return type_support.attr("_create_py_sample");
 }
 
 auto get_cast_c_sample_function(PyDataReader<CSampleWrapper>& dr)
 {
-    // TODO PY-17: support CFT
-    auto topic = dds::core::polymorphic_cast<dds::topic::Topic<CSampleWrapper>>(
-            dr.topic_description());
-    auto type_support = get_py_type_support_from_topic(topic);
+    auto type_support = get_py_type_support_from_topic(dr.topic_description());
     return type_support.attr("_cast_c_sample");
 }
 

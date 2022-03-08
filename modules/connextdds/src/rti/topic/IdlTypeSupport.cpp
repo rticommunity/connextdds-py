@@ -18,6 +18,7 @@
 #include "PyInitOpaqueTypeContainers.hpp"
 
 #include "IdlTopic.hpp"
+#include "IdlContentFilteredTopic.hpp"
 #include "IdlDataWriter.hpp"
 #include "IdlDataReader.hpp"
 
@@ -38,7 +39,7 @@ static void validate_cdr_buffer_type(const py::buffer_info& info)
                 "Bad buffer type: only valid 1D buffers are allowed");
     }
 
-    if (!py::detail::compare_buffer_info<T>::compare(info)) {
+    if (info.itemsize != 1) {
         throw py::type_error("Bad buffer element type");
     }
 
@@ -100,8 +101,26 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             "clone_type",
             [](const TypePlugin& self) { return py_cast_type(*self.type); });
 
-    // Used by TypeSupport.serialize, expects a sample that has already been
-    // converted to C
+    // Gets the serialized sample size of a given sample
+    cls.def(
+            "serialized_sample_size",
+            [](const TypePlugin& self, py::object c_sample) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+                return self.type_plugin->serialized_sample_size(c_sample_buffer);
+            },
+            py::arg("c_sample"),
+            py::call_guard<py::gil_scoped_release>());
+
+    // Gets the maximum serialized sample size of a type
+    cls.def(
+            "max_serialized_sample_size",
+            [](const TypePlugin& self) {
+                return self.type_plugin->serialized_sample_max_size();
+            },
+            py::call_guard<py::gil_scoped_release>());
+
+    // Used by TypeSupport.serialize, expects a sample that has already
+    // been converted to C
     cls.def(
             "serialize",
             [](const TypePlugin& self, py::object c_sample) {
@@ -279,12 +298,21 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
             IdlITopicDescriptionPyClass itd(module, "ITopicDescription");
             IdlTopicDescriptionPyClass td(module, "TopicDescription");
             IdlTopicPyClass t(module, "Topic");
+            IdlContentFilteredTopicPyClass cft(module, "ContentFilteredTopic");
 
             pyrti::bind_vector<PyTopic<CSampleWrapper>>(module, "TopicSeq");
             py::implicitly_convertible<
                     py::iterable,
                     std::vector<PyTopic<CSampleWrapper>>>();
             init_topic<CSampleWrapper>(itd, td, t);
+
+            pyrti::bind_vector<PyContentFilteredTopic<CSampleWrapper>>(
+                    module,
+                    "ContentFilteredTopicSeq");
+            py::implicitly_convertible<
+                    py::iterable,
+                    std::vector<PyContentFilteredTopic<CSampleWrapper>>>();
+            init_content_filtered_topic<CSampleWrapper>(cft);
 
             IdlDataWriterPyClass dw(module, "DataWriter");
 

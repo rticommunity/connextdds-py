@@ -15,12 +15,11 @@ import time
 
 
 class WaitError(Exception):
-    def __init__():
-        super().__init__("Wait timeout")
-
-
-    def __init__(message: str):
-        super().__init__("Wait timeout: " + message)
+    def __init__(self, message: str = None):
+        if message is None:
+            super().__init__("Wait timeout")
+        else:
+            super().__init__("Wait timeout: " + str(message))
 
 
 def until(predicate) -> None:

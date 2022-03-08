@@ -14,6 +14,7 @@ import rti.connextdds.heap_monitoring as heap_monitoring
 import rti.connextdds as dds
 import rti.idl as idl
 import os
+import gc
 
 #
 # This module is ran by conftest.py to detect leaks after all tests run
@@ -30,9 +31,18 @@ def get_heap_usage_from_heap_snapshot(file: str) -> int:
                 return int(line.split(":")[1].strip())
 
 def check_leaks() -> None:
-    """Finalize all global memory and check for leaks; make the tests """
-    """fail if any are found."""
+    """Finalize all global memory and check for leaks
+    
+    Make the tests fail if any are found.
+    """
 
+    # Here we must manually invoke the gc so that we ensure everything is tidy
+    # before taking the heap snapshot. While in most cases Python reclaims 
+    # objects immediately after they become unreachable (similarly to a C++ 
+    # shared_ptr), the GC still has to periodically check for objects that could
+    # be part of a reference cycle. If one of those outstanding objects is a 
+    # native C DDS object, the leak checker would report a leak.
+    gc.collect()
     # Finalize global state
     idl.finalize_globals()
     dds.DomainParticipant.finalize_participant_factory()

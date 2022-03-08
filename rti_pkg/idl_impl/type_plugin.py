@@ -461,6 +461,28 @@ class TypeSupport:
         finally:
             self._plugin_dynamic_type.finalize_sample(c_sample)
 
+    def get_serialized_sample_size(self, sample):
+        """Returns the serialized size of a given sample
+        """
+        c_sample = self._create_c_sample(sample)
+        try:
+            return self._plugin_dynamic_type.serialized_sample_size(c_sample)
+        finally:
+            self._plugin_dynamic_type.finalize_sample(c_sample)
+    
+    @property
+    def max_serialized_sample_size(self):
+        """Returns the max serialized size of a given type"""
+        return self._plugin_dynamic_type.max_serialized_sample_size()
+
+    def to_dynamic_data(self, sample: Any) -> dds.DynamicData:
+        """Converts a given idl sample to dynamic data"""
+        return dds.DynamicData(self.dynamic_type).from_cdr_buffer(self.serialize(sample))
+
+    def from_dynamic_data(self, sample: dds.DynamicData) -> Any:
+        """Converts a given dynamic data sample to an idl type"""
+        return self.deserialize(sample.to_cdr_buffer())
+
     @property
     def _dynamic_type_ref(self):
         return self._plugin_dynamic_type.get_dynamic_type_ref()

@@ -13,7 +13,12 @@ import pytest
 import os
 import rti.connextdds as dds
 from . import wait
+import rti.idl as idl
+from typing import Final
 
+# We subtract 1024 from the max serialized size because the core does some 
+# operations on the returned result that may end up adding some additional byte
+MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES = 1024
 
 def get_test_domain():
     return int(os.environ.get('TEST_DOMAIN', 0))
@@ -31,7 +36,6 @@ def create_participant():
 
 def create_topic(participant: dds.DomainParticipant, type: type):
     topic_name = f'Example {type}'
-
     # TODO PY-21: these helpers wouldn't be necessary if all topics were
     # unified under dds.Topic.
 
@@ -46,7 +50,7 @@ def create_topic(participant: dds.DomainParticipant, type: type):
 # it returns the dds package; for the rest it returns the type, e.g. if
 # type is a StringTopicType, it returns dds.StringTopicType.
 def _get_topic_namespace(topic, type):
-    if isinstance(topic, dds.Topic):
+    if isinstance(topic, dds.Topic) or isinstance(topic, dds.ContentFilteredTopic):
         return dds
     else:
         return type
@@ -63,9 +67,16 @@ def _create_writer(topic, type, writer_qos):
 
 
 class PubSubFixture:
-    def __init__(self, participant, data_type, create_writer=True, create_reader=True, reader_policies=[]):
+    def __init__(self, participant, data_type, create_writer=True, create_reader=True, reader_policies=[], content_filter=None):
         self.data_type = data_type
 
+        # Figure out if the type has an unbounded value in it
+        if "dds." in str(data_type):
+            has_unbound_member = False
+        else:
+            has_unbound_member = (idl.unbounded.value-MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES <= idl.get_type_support(
+                data_type).max_serialized_sample_size)
+        
         if participant is None:
             self.participant = create_participant()
         else:
@@ -76,6 +87,9 @@ class PubSubFixture:
             writer_qos = self.participant.implicit_publisher.default_datawriter_qos
             writer_qos << dds.Reliability.reliable()
             writer_qos << dds.History.keep_all
+            if has_unbound_member:
+                writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = str(
+                    1000)
             self.writer = _create_writer(self.topic, data_type, writer_qos)
 
         if create_reader:
@@ -84,7 +98,20 @@ class PubSubFixture:
             reader_qos << dds.History.keep_all
             for policy in reader_policies:
                 reader_qos << policy
-            self.reader = _create_reader(self.topic, data_type, reader_qos)
+            if content_filter is not None:
+                cft_name = "Filtered " + self.topic.name
+                if type(content_filter) == str:
+                    cft = dds.ContentFilteredTopic(
+                        self.topic, cft_name, dds.Filter(content_filter))
+                elif type(content_filter) == tuple:
+                    cft = dds.ContentFilteredTopic(
+                        self.topic, cft_name, dds.Filter(*content_filter))
+                else:
+                    raise TypeError(f"Expected str or tuple, given {type(content_filter)}")
+                self.reader = _create_reader(cft, data_type, reader_qos)
+            else:
+                self.reader = _create_reader(self.topic, data_type, reader_qos)
+
 
         if create_reader and create_writer:
             wait.for_discovery(self.reader, self.writer)
