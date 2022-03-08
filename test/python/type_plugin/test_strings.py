@@ -85,14 +85,7 @@ def test_string_serialization(str_sample):
 
 def test_string_pubsub(shared_participant, str_sample):
     fixture = PubSubFixture(shared_participant, StringTest)
-    fixture.writer.write(str_sample)
-    wait.for_data(fixture.reader)
-    fixture.writer.write(StringTest())
-    wait.for_data(fixture.reader)
-    fixture.writer.write(str_sample)
-    wait.for_data(fixture.reader)
-    assert fixture.reader.take_data() == [str_sample, StringTest(), str_sample]
-
+    fixture.send_and_check([str_sample, StringTest(), str_sample])
 
 def test_string_serialization_fails_when_out_of_bounds():
     ts = idl.get_type_support(StringTest)
