@@ -10,17 +10,16 @@
 #
 
 import typing
-from dataclasses import fields
 import pytest
-import common_types
+
 import rti.idl as idl
-import rti.idl_impl.reflection_utils as reflection_utils
-from rti.idl_impl.type_plugin import PrimitiveArrayFactory
-from test_utils.fixtures import *
 import rti.connextdds as rti
-import test_utils.wait as wait
 from rti.idl_impl.test_utils import *
 
+import test_utils.wait as wait
+from test_utils.fixtures import *
+
+import common_types
 
 def same_elements(a, b):
     return len(a) == len(b) and all(x in b for x in a)
@@ -180,7 +179,7 @@ def test_cannot_deserialize_sample_with_out_of_bounds_string():
         ts.deserialize(ts.serialize(bound_string))
 
 
-def test_IdlTypePlugin_serialization_routines(type_fixture: IdlTypeFixture):
+def test_serialization_routines(type_fixture: IdlTypeFixture):
     value = type_fixture.default_value
     ts = idl.get_type_support(type_fixture.sample_type)
     buffer = ts.serialize(value)
@@ -189,7 +188,7 @@ def test_IdlTypePlugin_serialization_routines(type_fixture: IdlTypeFixture):
         value) <= ts.max_serialized_sample_size
 
 
-def test_IdlTypePlugin_serialized_sizes(type_size_fixture: typing.Tuple[IdlTypeFixture, int]):
+def test_serialized_sizes(type_size_fixture: typing.Tuple[IdlTypeFixture, int]):
     expected_size = type_size_fixture[1]
     type_fixture = type_size_fixture[0]
     ts = idl.get_type_support(type_fixture.sample_type)
@@ -201,16 +200,14 @@ def test_IdlTypePlugin_serialized_sizes(type_size_fixture: typing.Tuple[IdlTypeF
 
 def test_pub_and_sub_communicate_using_idl_types_default(type_fixture: IdlTypeFixture, shared_participant):
     pubsub = type_fixture.create_pubsub_fixture(shared_participant)
-    pubsub.writer << type_fixture.default_value
-    check_expected_data(pubsub.reader, [type_fixture.default_value])
+    pubsub.send_and_check(type_fixture.default_value)
 
 
 def test_pub_and_sub_communicate_using_idl_types_seeded_value(type_fixture: IdlTypeFixture, shared_participant):
     pubsub = type_fixture.create_pubsub_fixture(shared_participant)
     for seed in seeds:
         value = type_fixture.create_test_data(seed=seed)
-        pubsub.writer << value
-        check_expected_data(pubsub.reader, [value])
+        pubsub.send_and_check(value)
 
 
 def test_pub_and_sub_communicate_using_idl_types_with_cft(type_fixture: IdlTypeFixture, shared_participant):
@@ -218,8 +215,7 @@ def test_pub_and_sub_communicate_using_idl_types_with_cft(type_fixture: IdlTypeF
         shared_participant, content_filter="1=1")
     for seed in seeds:
         value = type_fixture.create_test_data(seed=seed)
-        pubsub.writer.write(value)
-        check_expected_data(pubsub.reader, [value])
+        pubsub.send_and_check(value)
 
 
 @pytest.mark.skip("TODO: CFT bug")
@@ -284,7 +280,7 @@ def test_get_key_value_returns_keys_for_registered_instance(type_fixture: IdlTyp
 
 
 @pytest.mark.skip(reason="to be implemented")
-def test_Idl_types_generate_same_keyhashes_as_dynamicdata(type_fixture: IdlTypeFixture):
+def test_idl_types_generate_same_keyhashes_as_dynamicdata(type_fixture: IdlTypeFixture):
     ts = idl.get_type_support(type_fixture.sample_type)
 
     idl_topic = 1
