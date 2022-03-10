@@ -172,3 +172,9 @@ def test_pubsub_with_duck_typing(shared_participant):
         fixture.writer.write(sample)
     wait.for_data(fixture.reader)
     assert fixture.reader.take_data() == [Point(3, 4)]
+
+
+def test_cft(shared_participant):
+    pubsub = PubSubFixture(shared_participant, Point, content_filter="x >= 0")
+    pubsub.writer.write(Point(-1, 1))
+    pubsub.send_and_check(Point(1, 1))  # only this sample is received

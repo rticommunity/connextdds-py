@@ -48,8 +48,7 @@ static void finalize_sample(
     auto plugin = py::cast<TypePlugin>(
         type_support.attr("_plugin_dynamic_type"));
 
-    CSampleWrapper wrapper(c_sample);
-    plugin.type_plugin->finalize_sample(wrapper);
+    plugin.type_plugin->finalize_sample(c_sample);
 }
 
 // The Write implementation for IDL writers converts Python samples to C

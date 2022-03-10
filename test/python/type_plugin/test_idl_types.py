@@ -218,18 +218,6 @@ def test_pub_and_sub_communicate_using_idl_types_with_cft(type_fixture: IdlTypeF
         pubsub.send_and_check(value)
 
 
-@pytest.mark.skip("TODO: CFT bug")
-def test_pub_sub_with_wrong_cft(shared_participant):
-    fixture = IdlTypeFixture(common_types.Point)
-    pubsub = fixture.create_pubsub_fixture(
-        shared_participant, content_filter="x >= 0")
-    valid_point = common_types.Point(1, 1)
-    invalid_point = common_types.Point(-2, -2)
-    pubsub.writer.write(invalid_point)
-    pubsub.writer.write(valid_point)
-    check_expected_data(pubsub.reader, [valid_point])
-
-
 def test_idl_types_interoperate_with_dynamic_data(type_fixture: IdlTypeFixture, shared_participant):
     pubsub = type_fixture.create_pubsub_fixture(shared_participant)
     ts = idl.get_type_support(type_fixture.sample_type)
