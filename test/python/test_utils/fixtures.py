@@ -71,9 +71,11 @@ class PubSubFixture:
         self,
         participant,
         data_type,
+        topic=None,
         topic_name=None,
         create_writer=True,
         create_reader=True,
+        writer_policies=[],
         reader_policies=[],
         content_filter=None
     ):
@@ -91,12 +93,15 @@ class PubSubFixture:
             self.participant = create_participant()
         else:
             self.participant = participant
-        self.topic = create_topic(self.participant, data_type, topic_name)
+        self.participant = participant or create_participant()
+        self.topic = topic or create_topic(self.participant, data_type, topic_name)
 
         if create_writer:
             writer_qos = self.participant.implicit_publisher.default_datawriter_qos
             writer_qos << dds.Reliability.reliable()
             writer_qos << dds.History.keep_all
+            for policy in writer_policies:
+                writer_qos << policy
             if has_unbound_member:
                 writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = str(
                     1000)
@@ -128,7 +133,9 @@ class PubSubFixture:
 
     def send_and_check(self, data):
         self.writer.write(data)
+        self.check_data(data)
 
+    def check_data(self, data):
         if type(data) is not list:
             data = [data]
 

@@ -17,7 +17,7 @@ import rti.idl as idl
 
 from test_utils.fixtures import *
 from test_sequences import SequenceTest, create_sequence_sample
-
+from test_enums import Shape
 
 @idl.struct(type_annotations=[idl.mutable])
 class BigType:
@@ -25,6 +25,7 @@ class BigType:
     extended_primitive: int = 0
     extended_optional: Optional[int] = None
     extended_complex: SequenceTest = field(default_factory=SequenceTest)
+    extended_enum: Shape = Shape.CIRCLE # Note that the default value is not 0
 
 
 @idl.struct(type_annotations=[idl.mutable])
@@ -44,7 +45,8 @@ def test_big_sub_receives_correct_default_values_from_small_pub(shared_participa
 
     big_sample = BigType(common_member=5, extended_primitive=10,
                          extended_optional=20,
-                         extended_complex=create_sequence_sample())
+                         extended_complex=create_sequence_sample(),
+                         extended_enum=Shape.SQUARE)
     big_fx.send_and_check(big_sample)
 
     small_sample = SmallType(common_member=44)
@@ -52,8 +54,13 @@ def test_big_sub_receives_correct_default_values_from_small_pub(shared_participa
     wait.for_data(big_fx.reader)
     received_sample = big_fx.reader.take_data()[0]
 
+    # This is the only data that was actually published
     assert received_sample.common_member == small_sample.common_member
+
+    # All members that are not defined in SmallType are initialized to their
+    # expected default values
     assert received_sample.extended_primitive == 0
     assert received_sample.extended_optional is None
     assert received_sample.extended_complex == SequenceTest()
+    assert received_sample.extended_enum == Shape.CIRCLE
 

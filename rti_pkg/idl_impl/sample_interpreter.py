@@ -71,7 +71,7 @@ class Instruction(metaclass=abc.ABCMeta):
         """Executes the instruction, copying src int dst"""
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.field_name})"
+        return f"{self.__class__.__name__}({self.field_name}, is_optional={self.is_optional})"
 
     def _get_optional(self, csample: Any, field_name: str) -> Any:
         value = getattr(csample, field_name)
@@ -105,22 +105,22 @@ class CopyPrimitiveToCInstruction(Instruction):
 
 # --- Enums  ------------------------------------------------------------------
 
-class CopyIntEnumToInt32(Instruction):
+class CopyIntEnumToInt32Instruction(Instruction):
     """Python to C: copy an enum into an int32 member"""
 
     def execute(self, dst: Any, src: Any) -> None:
-        setattr(dst, self.field_name, getattr(src, self.field_name))
+        self.set_c_attr(dst, self.field_name, getattr(src, self.field_name))
 
 
-class CopyInt32ToIntEnum(Instruction):
+class CopyInt32ToIntEnumInstruction(Instruction):
     """C to Python: copy an int32 into an enum member"""
 
-    def __init__(self, field_name: str, enum_type: type):
-        super().__init__(field_name)
+    def __init__(self, field_name: str, enum_type: type, is_optional: bool):
+        super().__init__(field_name, is_optional=is_optional)
         self.enum_type = enum_type
 
     def execute(self, dst: Any, src: Any) -> None:
-        int_value = getattr(src, self.field_name)
+        int_value = self.get_c_attr(src, self.field_name)
         try:
             enum_value = self.enum_type(int_value)
         except:
@@ -750,6 +750,14 @@ class SampleProgram:
             except Exception as ex:
                 raise FieldSerializationError(instruction.field_name) from ex
 
+    def __repr__(self) -> str:
+        str_builder = [f"SampleProgram {{"]
+        for instruction in self.instructions:
+            str_builder.append(str(instruction))
+        str_builder.append("}")
+
+        return "\n".join(str_builder)
+
 
 class SamplePrograms:
     """Contains the programs to copy a dataclass object to a ctypes object and
@@ -803,8 +811,10 @@ class SamplePrograms:
                 py_to_c_instr = CopyPrimitiveToCInstruction(
                     field_name, is_optional=is_optional, field_index=i)
             elif reflection_utils.is_enum(field_type):
-                c_to_py_instr = CopyInt32ToIntEnum(field_name, field_type)
-                py_to_c_instr = CopyIntEnumToInt32(field_name)
+                c_to_py_instr = CopyInt32ToIntEnumInstruction(
+                    field_name, enum_type=field_type, is_optional=is_optional)
+                py_to_c_instr = CopyIntEnumToInt32Instruction(
+                    field_name, field_index=i, is_optional=is_optional)
             elif field_type is str:
                 c_to_py_instr, py_to_c_instr = self._create_string_instructions(
                     field_name,
@@ -850,6 +860,9 @@ class SamplePrograms:
             i += 1
 
         return SampleProgram(c_to_py_instructions), SampleProgram(py_to_c_instructions, type_plugin)
+
+    def __repr__(self) -> str:
+        return f"SamplePrograms:\nc_to_py: {self.c_to_py_program}\npy_to_c: {self.py_to_c_program})"
 
     def _create_enum_programs(
         self,

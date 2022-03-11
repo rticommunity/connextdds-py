@@ -47,6 +47,7 @@ class EnumTest:
     shape: Shape = Shape.CIRCLE
     shape_sequence: Sequence[Shape] = field(default_factory=list)
     color_array: Sequence[Color] = field(default_factory=idl.list_factory(Color.RED, 2))
+    opt_enum: Optional[Shape] = None
 
 
 def create_enum_sample():
@@ -54,7 +55,8 @@ def create_enum_sample():
         Color.GREEN,
         Shape.SQUARE,
         [Shape.CIRCLE, Shape.SQUARE, Shape.CIRCLE],
-        [Color.RED, Color.BLUE])
+        [Color.RED, Color.BLUE],
+        Shape.SQUARE)
 
 
 @pytest.fixture
@@ -86,12 +88,19 @@ def test_enum_plugin():
     assert ts.type is EnumTest
     dt = ts.dynamic_type
     assert dt.name == "EnumTest"
-    assert len(dt.members()) == 4
+    assert len(dt.members()) == 5
     assert dt["color"].type == color_ts.dynamic_type
     assert dt["shape"].type == shape_ts.dynamic_type
     assert dt["shape_sequence"].type == dds.SequenceType(shape_ts.dynamic_type, 3)
     assert dt["color_array"].type == dds.ArrayType(color_ts.dynamic_type, 2)
+    assert dt["opt_enum"].optional
 
+
+def test_enum_default_serialization():
+    ts = idl.get_type_support(EnumTest)
+    buffer = ts.serialize(EnumTest())
+    deserialized_sample = ts.deserialize(buffer)
+    assert EnumTest() == deserialized_sample
 
 def test_enum_serialization(enum_sample):
     ts = idl.get_type_support(EnumTest)
