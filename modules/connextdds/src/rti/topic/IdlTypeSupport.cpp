@@ -19,6 +19,7 @@
 
 #include "IdlTopic.hpp"
 #include "IdlContentFilteredTopic.hpp"
+#include "IdlTopicListener.hpp"
 #include "IdlDataWriter.hpp"
 #include "IdlDataReader.hpp"
 
@@ -255,7 +256,31 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
             "Create a Topic for an @idl.struct or @idl.union type with specific "
             "QoS");
 
-    // TODO PY-17: add the rest of constructors (with listener)
+    cls.def(py::init([](PyDomainParticipant& participant,
+                        const std::string& topic_name,
+                        py::object& type,
+                        const dds::topic::qos::TopicQos& qos,
+                        PyTopicListenerPtr<CSampleWrapper> listener,
+                        const dds::core::status::StatusMask& mask) {
+                return create_idl_py_topic(
+                    participant, 
+                    topic_name, 
+                    type, 
+                    &qos,
+                    listener,
+                    mask);
+            }),
+            py::arg("participant"),
+            py::arg("topic_name"),
+            py::arg("type"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            "Create a Topic for an @idl.struct or @idl.union type with "
+            "specific QoS, listener, and/or mask");
 
     cls.def_property_readonly(
             "type_support",
@@ -313,6 +338,11 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     py::iterable,
                     std::vector<PyContentFilteredTopic<CSampleWrapper>>>();
             init_content_filtered_topic<CSampleWrapper>(cft);
+
+            IdlTopicListenerPyClass l(module, "TopicListener");
+            IdlNoOpTopicListenerPyClass notl(module, "NoOpTopicListener");
+
+            init_topic_listener<CSampleWrapper>(l, notl);
 
             IdlDataWriterPyClass dw(module, "DataWriter");
 

@@ -115,4 +115,50 @@ inline PyIdlTopic create_idl_py_topic(
     return topic;
 }
 
+inline PyIdlTopic create_idl_py_topic(
+        PyDomainParticipant& participant,
+        const ::std::string& topic_name,
+        py::object& type,
+        const dds::topic::qos::TopicQos* qos,
+        PyTopicListenerPtr<rti::topic::cdr::CSampleWrapper> listener,
+        const dds::core::status::StatusMask& mask)
+{
+    // Get the type support created in python
+    py::object type_support = get_type_support_from_idl_type(type);
+
+    // Get the Type Plugin based on a DynamicType that was created
+    // reflectively in python by inspecting the IDL-derived
+    // dataclass
+    rti::topic::cdr::CTypePlugin* plugin =
+            get_type_plugin_from_type_support(type_support);
+
+    // Register the plugin with this Topic's participant
+    plugin->register_type(participant);
+
+    std::shared_ptr<dds::topic::TopicListener<rti::topic::cdr::CSampleWrapper>>
+            l = std::dynamic_pointer_cast<
+                    dds::topic::TopicListener<rti::topic::cdr::CSampleWrapper>>(
+                    listener);
+
+    auto topic = PyIdlTopic(
+            dds::core::construct_from_native_tag_t(),
+            new rti::topic::TopicImpl<rti::topic::cdr::CSampleWrapper>(
+                    rti::topic::detail::no_register_tag_t(),
+                    participant,
+                    topic_name,
+                    plugin->type_name().c_str(),
+                    qos,
+                    listener,
+                    mask));
+
+    topic->set_user_data_(type_support.ptr());
+    
+    if (listener != nullptr) {
+        py::gil_scoped_acquire acquire;
+        py::cast(listener).inc_ref();
+    }
+    
+    return topic;
+}
+
 }  // namespace pyrti

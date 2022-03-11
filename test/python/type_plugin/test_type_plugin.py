@@ -172,3 +172,6 @@ def test_pubsub_with_duck_typing(shared_participant):
         fixture.writer.write(sample)
     wait.for_data(fixture.reader)
     assert fixture.reader.take_data() == [Point(3, 4)]
+
+
+# TODO ADD HERE basic one that listener can be set

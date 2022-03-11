@@ -237,7 +237,7 @@ def test_pub_sub_with_wrong_cft(shared_participant):
 def test_idl_types_interoperate_with_dynamic_data(type_fixture: IdlTypeFixture, shared_participant):
     pubsub = type_fixture.create_pubsub_fixture(shared_participant)
     ts = idl.get_type_support(type_fixture.sample_type)
-    dd_participant = dds.DomainParticipant(0)
+    dd_participant = create_participant()
 
     dd_topic = dds.DynamicData.Topic(
         dd_participant, f"Example {type_fixture.sample_type}", type_fixture.dynamic_type)
