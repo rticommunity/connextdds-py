@@ -174,4 +174,10 @@ def test_pubsub_with_duck_typing(shared_participant):
     assert fixture.reader.take_data() == [Point(3, 4)]
 
 
-# TODO ADD HERE basic one that listener can be set
+def test_topic_listener_can_be_set(shared_participant):
+    class PointListener(dds.TopicListener):
+        def on_inconsistent_topic(self, arg0: dds.AnyTopic, arg1: dds.InconsistentTopicStatus) -> None:
+            pass
+    listener = PointListener()
+    topic = dds.Topic(shared_participant, "point_topic", Point, dds.TopicQos(), listener)
+    assert topic.listener == listener
