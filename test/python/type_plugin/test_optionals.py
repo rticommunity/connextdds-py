@@ -99,6 +99,29 @@ def test_optionals_member_can_be_undefined_with_duck_typing_enabled(shared_parti
     assert fixture.reader.take_data() == [OptionalsTest(opt_primitive=5.5)]
 
 
+# When the writer refilters samples for late joiners, it has to deserialize
+# samples in its queue using a scratchpad sample, which requires calling the
+# type plugin's finalize_optional_members function.
+def test_writer_side_late_joiner_cft_with_optionals(shared_participant):
+    pub = PubSubFixture(shared_participant, OptionalsTest, writer_policies=[
+                        dds.Durability.transient_local], create_reader=False)
+
+    pub.writer.write(OptionalsTest(opt_primitive=3)) # Pass
+    # This sample shouldn't pass the filter. The writer will have to finalize
+    # the optional members before evaluating this sample, otherwise the optional
+    # value set in the previous sample will still be set.
+    pub.writer.write(OptionalsTest())
+    pub.writer.write(OptionalsTest(opt_primitive=2))
+    pub.writer.write(OptionalsTest(opt_primitive=3))
+
+    # We want to trigger the "refilter" path, so we create a late-joining reader
+    sub = PubSubFixture(shared_participant, OptionalsTest, topic=pub.topic, reader_policies=[
+                        dds.Durability.transient_local], create_writer=False,
+                        content_filter="opt_primitive = 3.0")
+    sub.check_data([OptionalsTest(opt_primitive=3.0)] * 2)
+
+    # We expect all filtering to happen on the writer side
+    assert sub.reader.datareader_cache_status.content_filter_dropped_sample_count == 0
 
 def test_optional_arrays_not_supported():
     with pytest.raises(TypeError) as ex:
