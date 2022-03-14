@@ -14,7 +14,7 @@ import os
 import rti.connextdds as dds
 from . import wait
 import rti.idl as idl
-from typing import Final
+from typing import Optional
 
 # We subtract 1024 from the max serialized size because the core does some 
 # operations on the returned result that may end up adding some additional byte
@@ -34,17 +34,17 @@ def create_participant():
     return dds.DomainParticipant(get_test_domain(), get_test_participant_qos())
 
 
-def create_topic(participant: dds.DomainParticipant, type: type):
-    topic_name = f'Example {type}'
+def create_topic(participant: dds.DomainParticipant, type: type, topic_name: Optional[str] = None):
+    name = f'Example {type}' if topic_name is None else topic_name
     # TODO PY-21: these helpers wouldn't be necessary if all topics were
     # unified under dds.Topic.
 
     # For non-IDL types, such as dds.StringTopicType, dds.DynamicData:
     if "dds." in str(type):
-        return type.Topic(participant, topic_name)
+        return type.Topic(participant, name)
     # For IDL types:
     else:
-        return dds.Topic(participant, topic_name, type)
+        return dds.Topic(participant, name, type)
 
 # Gets the "namespace" that contains this topic. When type is an IDL type,
 # it returns the dds package; for the rest it returns the type, e.g. if
@@ -67,26 +67,41 @@ def _create_writer(topic, type, writer_qos):
 
 
 class PubSubFixture:
-    def __init__(self, participant, data_type, create_writer=True, create_reader=True, reader_policies=[], content_filter=None):
+    def __init__(
+        self,
+        participant,
+        data_type,
+        topic=None,
+        topic_name=None,
+        create_writer=True,
+        create_reader=True,
+        writer_policies=[],
+        reader_policies=[],
+        content_filter=None
+    ):
         self.data_type = data_type
 
         # Figure out if the type has an unbounded value in it
         if "dds." in str(data_type):
             has_unbound_member = False
         else:
-            has_unbound_member = (idl.unbounded.value-MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES <= idl.get_type_support(
-                data_type).max_serialized_sample_size)
-        
+            UNBOUNDED_LENGTH = idl.unbounded.value - MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES
+            type_support = idl.get_type_support(data_type)
+            has_unbound_member = UNBOUNDED_LENGTH <= type_support.max_serialized_sample_size
+
         if participant is None:
             self.participant = create_participant()
         else:
             self.participant = participant
-        self.topic = create_topic(self.participant, data_type)
+        self.participant = participant or create_participant()
+        self.topic = topic or create_topic(self.participant, data_type, topic_name)
 
         if create_writer:
             writer_qos = self.participant.implicit_publisher.default_datawriter_qos
             writer_qos << dds.Reliability.reliable()
             writer_qos << dds.History.keep_all
+            for policy in writer_policies:
+                writer_qos << policy
             if has_unbound_member:
                 writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = str(
                     1000)
@@ -118,7 +133,9 @@ class PubSubFixture:
 
     def send_and_check(self, data):
         self.writer.write(data)
+        self.check_data(data)
 
+    def check_data(self, data):
         if type(data) is not list:
             data = [data]
 

@@ -151,9 +151,8 @@ void init_class_defs(py::class_<TypePlugin>& cls)
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
                 py::gil_scoped_release release;
-                CSampleWrapper sample_wrapper = c_sample_buffer;
                 self.type_plugin->deserialize_from_cdr_buffer(
-                        sample_wrapper,
+                        c_sample_buffer,
                         reinterpret_cast<char*>(buffer_info.ptr),
                         buffer_info.size);
             },
@@ -168,8 +167,7 @@ void init_class_defs(py::class_<TypePlugin>& cls)
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
                 py::gil_scoped_release release;
-                CSampleWrapper sample_wrapper = c_sample_buffer;
-                self.type_plugin->initialize_sample(sample_wrapper);
+                self.type_plugin->initialize_sample(c_sample_buffer);
             },
             py::arg("c_sample"),
             py::call_guard<py::gil_scoped_acquire>());
@@ -180,8 +178,7 @@ void init_class_defs(py::class_<TypePlugin>& cls)
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
                 py::gil_scoped_release release;
-                CSampleWrapper sample_wrapper = c_sample_buffer;
-                self.type_plugin->finalize_sample(sample_wrapper);
+                self.type_plugin->finalize_sample(c_sample_buffer);
             },
             py::arg("c_sample"),
             py::call_guard<py::gil_scoped_acquire>());
@@ -194,9 +191,8 @@ void init_class_defs(py::class_<TypePlugin>& cls)
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
                 py::gil_scoped_release release;
-                CSampleWrapper sample_wrapper = c_sample_buffer;
                 self.type_plugin->initialize_member(
-                        sample_wrapper,
+                        c_sample_buffer,
                         member_index);
             },
             py::arg("c_sample"),
@@ -212,9 +208,8 @@ void init_class_defs(py::class_<TypePlugin>& cls)
                 PyCTypesBuffer c_sample_buffer(c_sample);
 
                 py::gil_scoped_release release;
-                CSampleWrapper sample_wrapper = c_sample_buffer;
                 self.type_plugin->resize_member(
-                        sample_wrapper,
+                        c_sample_buffer,
                         member_index,
                         new_size);
             },
@@ -317,7 +312,7 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     "CSampleWrapper");
 
             sample_wrapper_cls.def("get_ptr", [](CSampleWrapper& self) {
-                return reinterpret_cast<size_t>(self.sample);
+                return reinterpret_cast<size_t>(self.sample());
             });
 
             IdlITopicDescriptionPyClass itd(module, "ITopicDescription");

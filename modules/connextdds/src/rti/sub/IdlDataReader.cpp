@@ -42,7 +42,7 @@ py::object invoke_py_sample_function(
 {
     // We pass the pointer to the python function as an integer,
     // because that's what ctypes.cast expects.
-    size_t sample_ptr = reinterpret_cast<size_t>(sample.sample);
+    size_t sample_ptr = reinterpret_cast<size_t>(sample.sample());
     return py_function(sample_ptr);
 }
 
@@ -149,7 +149,7 @@ static std::vector<size_t> get_native_ptrs(
     size_t i = 0;
     for (auto& sample : valid_samples) {
         // py_samples.append(
-        py_samples[i++] = reinterpret_cast<size_t>(sample.data().sample);
+        py_samples[i++] = reinterpret_cast<size_t>(sample.data().sample());
     }
 
     return py_samples;
@@ -190,14 +190,11 @@ static void test_native_reads(PyDataReader<CSampleWrapper>& dr, size_t read_coun
     };
     auto samples = rti::sub::valid_data(dr.read());
     for (auto& sample : samples) {
-         if (sample.data().sample == nullptr) {
-             throw std::runtime_error("Sample is null");
-         } else {
-            auto point = reinterpret_cast<Point*>(sample.data().sample);
-            if (point->x != point->y) {
-                throw std::runtime_error("Sample is not correct");
-            }
-         }
+        auto point = reinterpret_cast<const Point*>(sample.data().sample());
+        if (point->x != point->y) {
+            throw std::runtime_error("Sample is not correct");
+        }
+
     }
 }
 

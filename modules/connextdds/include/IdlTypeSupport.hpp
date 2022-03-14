@@ -119,9 +119,10 @@ struct PyCTypesBuffer {
 
     // Obtain the actual buffer as a CSampleWrapper, as required by
     // PyDataWriter::py_write
-    operator rti::topic::cdr::CSampleWrapper()
+    operator rti::topic::cdr::CSampleWrapper&()
     {
-        return { py_buffer.buf };
+        return *reinterpret_cast<rti::topic::cdr::CSampleWrapper*>(
+                py_buffer.buf);
     }
 };
 

@@ -179,5 +179,12 @@ def test_topic_listener_can_be_set(shared_participant):
         def on_inconsistent_topic(self, arg0: dds.AnyTopic, arg1: dds.InconsistentTopicStatus) -> None:
             pass
     listener = PointListener()
-    topic = dds.Topic(shared_participant, "point_topic", Point, dds.TopicQos(), listener)
+    topic = dds.Topic(shared_participant, "point_topic",
+                      Point, dds.TopicQos(), listener)
     assert topic.listener == listener
+
+
+def test_cft(shared_participant):
+    pubsub = PubSubFixture(shared_participant, Point, content_filter="x >= 0")
+    pubsub.writer.write(Point(-1, 1))
+    pubsub.send_and_check(Point(1, 1))  # only this sample is received
