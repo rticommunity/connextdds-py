@@ -106,7 +106,7 @@ FieldSerializationError = sample_interpreter.FieldSerializationError
 # --- Decorators --------------------------------------------------------------
 
 
-def struct(cls=None, *, type_annotations={}, member_annotations={}):
+def struct(cls=None, *, type_annotations=[], member_annotations={}):
     """This decorator makes a Python class usable as DDS topic-type defined as
     an IDL struct.
     """
@@ -128,7 +128,7 @@ def struct(cls=None, *, type_annotations={}, member_annotations={}):
         return wrapper(cls)
 
 
-def enum(cls=None, *, type_annotations={}):
+def enum(cls=None, *, type_annotations=[]):
     """This decorator makes a Python IntEnum usable as IDL enum"""
 
     def wrapper(cls):

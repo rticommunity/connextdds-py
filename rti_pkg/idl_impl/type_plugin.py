@@ -10,8 +10,7 @@
 #
 
 from dataclasses import dataclass, fields
-from typing import List, Any, ClassVar
-from enum import IntEnum
+from typing import List, Any, ClassVar, Optional
 import itertools
 import array
 import ctypes
@@ -228,6 +227,9 @@ PY_TYPE_TO_DYNAMIC_TYPE_MAP = {
     type_hints.float64: dds.Float64Type(),
 }
 
+def get_idl_base_type(idl_type: type) -> Optional[bool]:
+    base = idl_type.__bases__[0] # will be object if no explicit base
+    return base if hasattr(base, 'type_support') else None
 
 def _get_member_dynamic_type(py_type, member_annotations):
     if reflection_utils.is_optional_type(py_type):
@@ -284,8 +286,21 @@ def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=No
     if member_annotations is None:
         member_annotations = {}
 
+    # The DynamicType does not include the fields of the base type.
+    #
+    # We only check if the first base is an IDL type; we ignore other base types
+    # for flexibility in the type definition. If the type has a base but it's
+    # not an IDL type we don't split the DynamicType; we process all the fields.
+    actual_fields = fields(py_type)
+    c_type_offsets = get_offsets(c_type)
+    base_type = get_idl_base_type(py_type)
+    if base_type is not None:
+        base_field_count = len(fields(base_type))
+        actual_fields = actual_fields[base_field_count:]
+        c_type_offsets = c_type_offsets[base_field_count:]
+
     member_args = []
-    for field in fields(py_type):
+    for field in actual_fields:
         current_annotations = member_annotations.get(field.name, {})
         is_optional = reflection_utils.is_optional_type(field.type)
         member_type = _get_member_dynamic_type(field.type, current_annotations)
@@ -300,8 +315,12 @@ def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=No
 
     # Create the struct type only after all the members have been parsed. The
     # type_factory requires that dependent types are created first
-    dynamic_type = _type_factory.create_struct(
-        py_type.__name__, extensibility.value, get_size(c_type), get_offsets(c_type))
+    if base_type is None:
+        dynamic_type = _type_factory.create_struct(
+            py_type.__name__, extensibility.value, get_size(c_type), c_type_offsets)
+    else:
+        dynamic_type = _type_factory.create_struct(
+            py_type.__name__, base_type.type_support._dynamic_type_ref, extensibility.value, get_size(c_type), c_type_offsets)
 
     for member_arg in member_args:
         _type_factory.add_member(dynamic_type, *member_arg)
@@ -382,9 +401,17 @@ class TypeSupport:
     """Support and utility methods for the usage of an IDL type"""
 
     def __init__(self, idl_type, type_annotations=None, member_annotations=None):
-        # Python dataclass
         self.type = idl_type
         self.allow_duck_typing = False
+        base_type = get_idl_base_type(idl_type)
+        if base_type is not None:
+            type_annotations = annotations.inherit_type_annotations(
+                base_type.type_support.type_annotations, type_annotations)
+            member_annotations = annotations.inherit_member_annotations(
+                base_type.type_support.member_annotations, member_annotations)
+
+        self.type_annotations = type_annotations
+        self.member_annotations = member_annotations
 
         # C type and plugin and dynamic type
         if reflection_utils.is_enum(idl_type):

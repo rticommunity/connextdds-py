@@ -25,23 +25,45 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
 {
+    using namespace dds::core::xtypes;
+
     cls.def("create_struct",
             [](GenericTypePluginFactory& self,
                const std::string& name,
-               dds::core::xtypes::ExtensibilityKind extensibility,
+               ExtensibilityKind extensibility,
                uint32_t type_size,
                const std::vector<uint32_t>& member_offsets) {
                 return TypePlugin { self.create_struct(
-                                                         name,
-                                                         extensibility,
-                                                         type_size,
-                                                         member_offsets),
-                                                 nullptr };
+                                            name,
+                                            extensibility,
+                                            type_size,
+                                            member_offsets),
+                                    nullptr };
+            });
+
+    cls.def("create_struct",
+            [](GenericTypePluginFactory& self,
+               const std::string& name,
+               const DynamicType& parent,
+               ExtensibilityKind extensibility,
+               uint32_t type_size,
+               const std::vector<uint32_t>& member_offsets) {
+                if (parent.kind() != TypeKind::STRUCTURE_TYPE) {
+                    throw py::value_error("base type must be an idl.struct type");
+                }
+                return TypePlugin { self.create_struct(
+                                            name,
+                                            static_cast<const StructType&>(
+                                                    parent),
+                                            extensibility,
+                                            type_size,
+                                            member_offsets),
+                                    nullptr };
             });
 
     cls.def("create_sequence",
             [](GenericTypePluginFactory& self,
-               const dds::core::xtypes::DynamicType& element_type,
+               const DynamicType& element_type,
                uint32_t bound) {
                 return TypePlugin {
                     self.create_sequence(element_type, bound),
@@ -51,7 +73,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
 
     cls.def("create_array",
             [](GenericTypePluginFactory& self,
-               const dds::core::xtypes::DynamicType& element_type,
+               const DynamicType& element_type,
                uint32_t dimension) {
                 return TypePlugin { self.create_array(element_type, dimension),
                                     nullptr };
@@ -70,8 +92,8 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
     cls.def("create_enum",
             [](GenericTypePluginFactory& self,
                const std::string& name,
-               dds::core::xtypes::ExtensibilityKind extensibility,
-               const std::vector<dds::core::xtypes::EnumMember>& members) {
+               ExtensibilityKind extensibility,
+               const std::vector<EnumMember>& members) {
                 return TypePlugin {
                     self.create_enum(name, extensibility, members),
                     nullptr
@@ -83,7 +105,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
             py::arg("type"),
             py::arg("name"),
             py::arg("member_type"),
-            py::arg("id") = dds::core::xtypes::Member::INVALID_ID,
+            py::arg("id") = Member::INVALID_ID,
             py::arg("is_key") = false,
             py::arg("is_optional") = false,
             py::arg("is_external") = false);
@@ -93,7 +115,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
             [](GenericTypePluginFactory& factory,
                TypePlugin& type_holder,
                const std::string& name,
-               const dds::core::xtypes::DynamicType& member_type,
+               const DynamicType& member_type,
                int32_t id,
                bool is_key,
                bool is_optional,
@@ -110,7 +132,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
             py::arg("type"),
             py::arg("name"),
             py::arg("member_type"),
-            py::arg("id") = dds::core::xtypes::Member::INVALID_ID,
+            py::arg("id") = Member::INVALID_ID,
             py::arg("is_key") = false,
             py::arg("is_optional") = false,
             py::arg("is_external") = false);
@@ -137,7 +159,7 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
             py::arg("type"),
             py::arg("name"),
             py::arg("member_type"),
-            py::arg("id") = dds::core::xtypes::Member::INVALID_ID,
+            py::arg("id") = Member::INVALID_ID,
             py::arg("is_key") = false,
             py::arg("is_optional") = false,
             py::arg("is_external") = false);

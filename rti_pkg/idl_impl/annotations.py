@@ -76,3 +76,26 @@ def find_annotation(annotations, cls, default=None):
         if isinstance(annotation, cls):
             return annotation
     return default
+
+
+def inherit_type_annotations(base_annotations: list, derived_annotations: list) -> list:
+    """Combines the annotations of a base class and a derived class, throwing
+    an exception if they are inconsistent
+    """
+
+    result = base_annotations.copy()
+    for annotation in derived_annotations:
+        base_annotation = find_annotation(base_annotations, type(annotation), default="")
+        if base_annotation != "":
+            if base_annotation != annotation:
+                raise ValueError(
+                    f"Inconsistent annotation in base class (base class: {base_annotation}, derived class: {annotation})")
+        else:
+            result.append(annotation)
+
+    return result
+
+def inherit_member_annotations(base_annotations: dict, derived_annotations: dict) -> dict:
+    """Combines the two dictionaries of member annotations"""
+
+    return {**base_annotations, **derived_annotations}
