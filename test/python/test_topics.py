@@ -15,8 +15,6 @@ import rti.idl as idl
 import rti.connextdds as dds
 from time import sleep
 
-PersonListener_called = False
-
 
 @idl.struct
 class Point:
@@ -25,10 +23,14 @@ class Point:
 
 
 class PointListener(dds.TopicListener):
-	PointListener_called = False
+	listener_called = False
 
-	def on_inconsistent_topic(self, arg0: dds.AnyTopic, arg1: dds.InconsistentTopicStatus) -> None:
-		self.PointListener_called = True
+	def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
+		assert topic.type_name == "Point"
+		assert topic.name == "shared_topic_name"
+		assert status.total_count == 1
+		assert status.total_count_change == 1
+		PointListener.listener_called = True
 
 
 @idl.struct(member_annotations={'name': [idl.bound(10)]})
@@ -36,7 +38,7 @@ class Person:
 	name: str = ""
 
 
-def test_two_topics_with_same_name(shared_participant):
+def test_inconsistent_topic(shared_participant):
 
 	person_participant = create_participant()
 	person_topic = dds.Topic(person_participant, "shared_topic_name", Person)
@@ -48,13 +50,6 @@ def test_two_topics_with_same_name(shared_participant):
 	w = dds.DataWriter(person_participant.implicit_publisher, person_topic)
 	r = dds.DataReader(shared_participant.implicit_subscriber, point_topic)
 
-	listener_called = False
-	for i in range(0, 30):
-		if point_listener.PointListener_called:
-			listener_called = True
-			break
-		sleep(.1)
-
-	assert listener_called
+	wait.until(lambda: PointListener.listener_called)
 
 	person_participant.close()

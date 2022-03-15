@@ -238,18 +238,6 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
             "Create a Topic for an @idl.struct or @idl.union type with default "
             "QoS");
 
-    cls.def(py::init([](PyDomainParticipant& participant,
-                        const ::std::string& topic_name,
-                        py::object& type,
-                        const dds::topic::qos::TopicQos& qos) {
-                return create_idl_py_topic(participant, topic_name, type, &qos);
-            }),
-            py::arg("participant"),
-            py::arg("topic_name"),
-            py::arg("type"),
-            py::arg("qos"),
-            "Create a Topic for an @idl.struct or @idl.union type with specific "
-            "QoS");
 
     cls.def(py::init([](PyDomainParticipant& participant,
                         const std::string& topic_name,
@@ -275,7 +263,7 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
                     dds::core::status::StatusMask::all(),
                     "StatusMask.ALL"),
             "Create a Topic for an @idl.struct or @idl.union type with "
-            "specific QoS, listener, and/or mask");
+            "specific QoS, listener, and mask");
 
     cls.def_property_readonly(
             "type_support",
