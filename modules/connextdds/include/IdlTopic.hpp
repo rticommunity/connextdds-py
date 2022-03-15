@@ -135,11 +135,6 @@ inline PyIdlTopic create_idl_py_topic(
     // Register the plugin with this Topic's participant
     plugin->register_type(participant);
 
-    std::shared_ptr<dds::topic::TopicListener<rti::topic::cdr::CSampleWrapper>>
-            l = std::dynamic_pointer_cast<
-                    dds::topic::TopicListener<rti::topic::cdr::CSampleWrapper>>(
-                    listener);
-
     auto topic = PyIdlTopic(
             dds::core::construct_from_native_tag_t(),
             new rti::topic::TopicImpl<rti::topic::cdr::CSampleWrapper>(
