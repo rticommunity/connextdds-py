@@ -273,7 +273,7 @@ void init_dds_typed_datareader_base_template(
                              const PyTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
                              dds::core::optional<PyDataReaderListenerPtr<T>> l,
-                            const dds::core::status::StatusMask& m) {
+                             const dds::core::status::StatusMask& m) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
                  }),
@@ -329,7 +329,8 @@ void init_dds_typed_datareader_base_template(
                  "Create a typed DataReader from an Entity.")
             .def_property(
                     "default_filter_state",
-                    [](PyDataReader<T>& dr) -> const dds::sub::status::DataState& {
+                    [](PyDataReader<T>& dr)
+                            -> const dds::sub::status::DataState& {
                         py::gil_scoped_release guard;
                         return dr.default_filter_state();
                     },
@@ -340,14 +341,12 @@ void init_dds_typed_datareader_base_template(
                         return dr;
                     },
                     "Returns the filter state for the read/take operations.")
-            .def(
-                    py::self == py::self,
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Test for equality.")
-            .def(
-                    py::self != py::self,
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Test for inequality.")
+            .def(py::self == py::self,
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Test for equality.")
+            .def(py::self != py::self,
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Test for inequality.")
             .def_property_readonly(
                     "topic_description",
                     [](const PyDataReader<T>& dr) {
@@ -363,29 +362,42 @@ void init_dds_typed_datareader_base_template(
                         return dr.py_subscriber();
                     },
                     "Returns the parent Subscriber of the DataReader.")
-            .def_property_readonly(
+            .def_property(
                     "listener",
                     [](PyDataReader<T>& dr) {
                         py::gil_scoped_release guard;
                         dds::core::optional<PyDataReaderListenerPtr<T>> l;
-                        auto ptr = downcast_dr_listener_ptr(get_dr_listener(dr));
+                        auto ptr =
+                                downcast_dr_listener_ptr(get_dr_listener(dr));
                         if (nullptr != ptr)
                             l = ptr;
                         return l;
                     },
-                    "Get the listener object.")
-            .def(
-                    "bind_listener",
                     [](PyDataReader<T>& dr,
-                        dds::core::optional<PyDataReaderListenerPtr<T>> l,
-                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
+                       PyDataReaderListenerPtr<T> l) {
+                        if (nullptr != l) {
                             py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
+                            py::cast(l).inc_ref();
                         }
                         auto old_listener = get_dr_listener(dr);
-                        set_dr_listener(dr, listener, m);
+                        set_dr_listener(dr, l);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
+                    },
+                    "Get the listener object.")
+            .def(
+                    "set_listener",
+                    [](PyDataReader<T>& dr,
+                       PyDataReaderListenerPtr<T> l,
+                       const dds::core::status::StatusMask& m) {
+                        if (nullptr != l) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(l).inc_ref();
+                        }
+                        auto old_listener = get_dr_listener(dr);
+                        set_dr_listener(dr, l, m);
                         if (nullptr != old_listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(old_listener).dec_ref();
@@ -395,32 +407,14 @@ void init_dds_typed_datareader_base_template(
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and associated event mask.")
-            .def(
-                    "bind_listener",
-                    [](PyDataReader<T>& dr,
-                        dds::core::optional<PyDataReaderListenerPtr<T>> l) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
-                        }
-                        auto old_listener = get_dr_listener(dr);
-                        set_dr_listener(dr, listener);
-                        if (nullptr != old_listener){
-                            py::gil_scoped_acquire acquire;
-                            py::cast(old_listener).dec_ref();
-                        }
-                    },
-                    py::arg("listener"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Set the listener.")
             .def_property(
                     "qos",
                     [](const PyDataReader<T>& dr) {
                         py::gil_scoped_release guard;
                         return dr.qos();
                     },
-                    [](PyDataReader<T>& dr, const dds::sub::qos::DataReaderQos& qos) {
+                    [](PyDataReader<T>& dr,
+                       const dds::sub::qos::DataReaderQos& qos) {
                         py::gil_scoped_release guard;
                         dr.qos(qos);
                     },
@@ -430,7 +424,8 @@ void init_dds_typed_datareader_base_template(
             .def(
                     "__lshift__",
                     [](PyDataReader<T>& dr,
-                       const dds::sub::qos::DataReaderQos& qos) -> PyDataReader<T>& {
+                       const dds::sub::qos::DataReaderQos& qos)
+                            -> PyDataReader<T>& {
                         dr << qos;
                         return dr;
                     },
@@ -439,7 +434,8 @@ void init_dds_typed_datareader_base_template(
                     "Set the DataReaderQos for this DataReader.")
             .def(
                     "__rshift__",
-                    [](PyDataReader<T>& dr, dds::sub::qos::DataReaderQos& qos) -> PyDataReader<T>& {
+                    [](PyDataReader<T>& dr,
+                       dds::sub::qos::DataReaderQos& qos) -> PyDataReader<T>& {
                         dr >> qos;
                         return dr;
                     },
@@ -627,7 +623,8 @@ void init_dds_typed_datareader_base_template(
 #if rti_connext_version_gte(6, 1, 0, 0)
             .def(
                     "is_matched_publication_alive",
-                    [](const PyDataReader<T>& dr, const dds::core::InstanceHandle& h) {
+                    [](const PyDataReader<T>& dr,
+                       const dds::core::InstanceHandle& h) {
                         return rti::sub::is_matched_publication_alive(dr, h);
                     },
                     py::call_guard<py::gil_scoped_release>(),

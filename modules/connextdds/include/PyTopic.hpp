@@ -397,7 +397,7 @@ void init_dds_typed_topic_base_template(
                  py::arg("topic"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Create a typed Topic from an AnyTopic.")
-            .def_property_readonly(
+            .def_property(
                     "listener",
                     [](PyTopic<T>& t) {
                         py::gil_scoped_release guard;
@@ -407,9 +407,21 @@ void init_dds_typed_topic_base_template(
                             l = ptr;
                         return l;
                     },
+                    [](PyTopic<T>& t, PyTopicListenerPtr<T> l) {
+                        if (nullptr != l) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(l).inc_ref();
+                        }
+                        auto old_listener = get_topic_listener(t);
+                        set_topic_listener(t, l);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
+                    },
                     "The listener.")
             .def(
-                    "bind_listener",
+                    "set_listener",
                     [](PyTopic<T>& t,
                        dds::core::optional<PyTopicListenerPtr<T>> l,
                        const dds::core::status::StatusMask& m) {
@@ -429,25 +441,6 @@ void init_dds_typed_topic_base_template(
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and event mask.")
-            .def(
-                    "bind_listener",
-                    [](PyTopic<T>& t,
-                       dds::core::optional<PyTopicListenerPtr<T>> l) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
-                        }
-                        auto old_listener = get_topic_listener(t);
-                        set_topic_listener(t, listener);
-                        if (nullptr != old_listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(old_listener).dec_ref();
-                        }
-                    },
-                    py::arg("listener"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Set the listener.")
             .def_property(
                     "qos",
                     [](const PyTopic<T>& t) {

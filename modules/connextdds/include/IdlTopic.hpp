@@ -85,43 +85,10 @@ inline PyIdlTopic create_idl_py_topic(
         PyDomainParticipant& participant,
         const ::std::string& topic_name,
         py::object& type,
-        const dds::topic::qos::TopicQos* qos = nullptr)
-{
-    // Get the type support created in python
-    py::object type_support = get_type_support_from_idl_type(type);
-
-    // Get the Type Plugin based on a DynamicType that was created
-    // reflectively in python by inspecting the IDL-derived
-    // dataclass
-    rti::topic::cdr::CTypePlugin* plugin =
-            get_type_plugin_from_type_support(type_support);
-
-    // Register the plugin with this Topic's participant
-    plugin->register_type(participant);
-
-    auto topic = PyIdlTopic(
-            dds::core::construct_from_native_tag_t(),
-            new rti::topic::TopicImpl<rti::topic::cdr::CSampleWrapper>(
-                    rti::topic::detail::no_register_tag_t(),
-                    participant,
-                    topic_name,
-                    plugin->type_name().c_str(),
-                    qos,
-                    nullptr,
-                    dds::core::status::StatusMask::none()));
-
-    topic->set_user_data_(type_support.ptr());
-
-    return topic;
-}
-
-inline PyIdlTopic create_idl_py_topic(
-        PyDomainParticipant& participant,
-        const ::std::string& topic_name,
-        py::object& type,
-        const dds::topic::qos::TopicQos* qos,
-        PyTopicListenerPtr<rti::topic::cdr::CSampleWrapper> listener,
-        const dds::core::status::StatusMask& mask)
+        const dds::topic::qos::TopicQos* qos = nullptr,
+        PyTopicListenerPtr<rti::topic::cdr::CSampleWrapper> listener = nullptr,
+        const dds::core::status::StatusMask& mask =
+                dds::core::status::StatusMask::all())
 {
     // Get the type support created in python
     py::object type_support = get_type_support_from_idl_type(type);
@@ -144,7 +111,9 @@ inline PyIdlTopic create_idl_py_topic(
                     plugin->type_name().c_str(),
                     qos,
                     listener,
-                    mask));
+                    listener != nullptr
+                            ? mask
+                            : dds::core::status::StatusMask::none()));
 
     topic->set_user_data_(type_support.ptr());
     

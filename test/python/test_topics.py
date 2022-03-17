@@ -51,5 +51,3 @@ def test_inconsistent_topic(shared_participant):
 	r = dds.DataReader(shared_participant.implicit_subscriber, point_topic)
 
 	wait.until(lambda: PointListener.listener_called)
-
-	person_participant.close()

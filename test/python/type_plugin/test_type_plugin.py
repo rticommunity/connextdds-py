@@ -176,11 +176,24 @@ def test_pubsub_with_duck_typing(shared_participant):
 
 def test_topic_listener_can_be_set(shared_participant):
     class PointListener(dds.TopicListener):
-        def on_inconsistent_topic(self, arg0: dds.AnyTopic, arg1: dds.InconsistentTopicStatus) -> None:
+        def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
             pass
+
+    class OtherPointListener(dds.TopicListener):
+        def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
+            pass
+
     listener = PointListener()
+    other_listener = OtherPointListener()
     topic = dds.Topic(shared_participant, "point_topic",
                       Point, dds.TopicQos(), listener)
+    assert topic.listener == listener
+    
+    topic.listener = other_listener
+    assert topic.listener == other_listener
+    
+    # Test set_listener fn
+    topic.set_listener(listener, dds.StatusMask.ALL)
     assert topic.listener == listener
 
 
