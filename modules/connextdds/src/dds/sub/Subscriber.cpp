@@ -129,7 +129,7 @@ void init_class_defs(
                  "the DataReaderListener objects attached to contained "
                  "DataReader entities with a DATA_AVAILABLE status that is "
                  "considered changed")
-            .def_property_readonly(
+            .def_property(
                     "listener",
                     [](const PySubscriber& sub) {
                         py::gil_scoped_release guard;
@@ -139,9 +139,23 @@ void init_class_defs(
                             l = ptr;
                         return l;
                     },
+                    [](PySubscriber& sub,
+                       dds::core::optional<PySubscriberListenerPtr> l) {
+                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                        if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(listener).inc_ref();
+                        }
+                        auto old_listener = get_subscriber_listener(sub);
+                        set_subscriber_listener(sub, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
+                    },
                     "Get the listener.")
             .def(
-                    "bind_listener",
+                    "set_listener",
                     [](PySubscriber& sub,
                        dds::core::optional<PySubscriberListenerPtr> l,
                        const dds::core::status::StatusMask& m) {
@@ -161,25 +175,6 @@ void init_class_defs(
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener and event mask to the Subscriber.")
-            .def(
-                    "bind_listener",
-                    [](PySubscriber& sub,
-                       dds::core::optional<PySubscriberListenerPtr> l) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
-                        }
-                        auto old_listener = get_subscriber_listener(sub);
-                        set_subscriber_listener(sub, listener);
-                        if (nullptr != old_listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(old_listener).dec_ref();
-                        }
-                    },
-                    py::arg("listener"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Bind the listener to the Subscriber.")
             .def_property(
                     "qos",
                     [](const PySubscriber& sub) {
@@ -225,21 +220,21 @@ void init_class_defs(
                     "Find all DataReaders in the Subscriber.")
             .def(
                     "find_datareaders",
-                    [](const PySubscriber& sub, const dds::sub::status::DataState& ds) {
+                    [](const PySubscriber& sub,
+                       const dds::sub::status::DataState& ds) {
                         std::vector<PyAnyDataReader> v;
                         dds::sub::find(sub, ds, std::back_inserter(v));
                         return v;
                     },
                     py::call_guard<py::gil_scoped_release>(),
-                    "Find all DataReaders that contain samples of the given DataState in the Subscriber.")
-            .def(
-                py::self == py::self,
-                py::call_guard<py::gil_scoped_release>(),
-                "Test for equality.")
-            .def(
-                py::self != py::self,
-                py::call_guard<py::gil_scoped_release>(),
-                "Test for inequality.");
+                    "Find all DataReaders that contain samples of the given "
+                    "DataState in the Subscriber.")
+            .def(py::self == py::self,
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Test for equality.")
+            .def(py::self != py::self,
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Test for inequality.");
 
     py::implicitly_convertible<PyIEntity, PySubscriber>();
 }
