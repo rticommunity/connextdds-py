@@ -21,7 +21,9 @@
 #include "IdlContentFilteredTopic.hpp"
 #include "IdlTopicListener.hpp"
 #include "IdlDataWriter.hpp"
+#include "IdlDataWriterListener.hpp"
 #include "IdlDataReader.hpp"
+#include "IdlDataReaderListener.hpp"
 
 #include "dds_c/dds_c_interpreter.h"
 
@@ -322,10 +324,10 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     std::vector<PyContentFilteredTopic<CSampleWrapper>>>();
             init_content_filtered_topic<CSampleWrapper>(cft);
 
-            IdlTopicListenerPyClass l(module, "TopicListener");
+            IdlTopicListenerPyClass tl(module, "TopicListener");
             IdlNoOpTopicListenerPyClass notl(module, "NoOpTopicListener");
 
-            init_topic_listener<CSampleWrapper>(l, notl);
+            init_topic_listener<CSampleWrapper>(tl, notl);
 
             IdlDataWriterPyClass dw(module, "DataWriter");
 
@@ -338,6 +340,12 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
 
             init_datawriter(dw);
 
+            IdlDataWriterListenerPyClass dwl(module, "DataWriterListener");
+            IdlNoOpDataWriterListenerPyClass nodwl(
+                    module,
+                    "NoOpDataWriterListener");
+            init_datawriter_listener(dwl, nodwl);
+
             IdlDataReaderPyClass dr(module, "DataReader");
 
             pyrti::bind_vector<PyDataReader<CSampleWrapper>>(
@@ -348,6 +356,13 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     std::vector<PyDataReader<CSampleWrapper>>>();
 
             init_datareader<CSampleWrapper>(dr);
+
+            IdlDataReaderListenerPyClass drl(module, "DataReaderListener");
+            IdlNoOpDataReaderListenerPyClass nodrl(
+                    module,
+                    "NoOpDataReaderListener");
+            init_datareader_listener(drl, nodrl);
+            
         });
     });
 }

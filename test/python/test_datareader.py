@@ -128,6 +128,33 @@ def test_write_list_of_pairs_with_shift_operator(pubsub):
     check_expected_data(pubsub.reader, samples)
 
 
+def test_datareader_listener_can_be_set(pubsub):
+    class PointListener(dds.NoOpDataReaderListener):
+        def on_data_available(self, reader):
+            pass
+
+    class OtherPointListener(dds.NoOpDataReaderListener):
+        def on_data_available(self, reader):
+            pass
+
+
+    listener = PointListener()
+    other_listener = OtherPointListener()
+
+    assert pubsub.reader.listener == None
+
+    pubsub.reader.listener = listener
+    assert pubsub.reader.listener == listener
+
+    # Test set_listener fn
+    pubsub.reader.set_listener(other_listener, dds.StatusMask.ALL)
+    assert pubsub.reader.listener == other_listener
+
+    # Test it can be set to none
+    pubsub.reader.listener = None
+    assert pubsub.reader.listener == None
+
+
 # --- Instance tests ----------------------------------------------------------
 
 @pytest.mark.skip(reason="keys not supported yet")

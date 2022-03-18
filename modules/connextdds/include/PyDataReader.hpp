@@ -374,30 +374,30 @@ void init_dds_typed_datareader_base_template(
                         return l;
                     },
                     [](PyDataReader<T>& dr,
-                       PyDataReaderListenerPtr<T> l) {
-                        if (nullptr != l) {
+                       PyDataReaderListenerPtr<T> listener) {
+                        if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
-                            py::cast(l).inc_ref();
+                            py::cast(listener).inc_ref();
                         }
                         auto old_listener = get_dr_listener(dr);
-                        set_dr_listener(dr, l);
+                        set_dr_listener(dr, listener);
                         if (nullptr != old_listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(old_listener).dec_ref();
                         }
                     },
-                    "Get the listener object.")
+                    "Gets or sets the listener with StatusMask.ALL")
             .def(
                     "set_listener",
                     [](PyDataReader<T>& dr,
-                       PyDataReaderListenerPtr<T> l,
+                       PyDataReaderListenerPtr<T> listener,
                        const dds::core::status::StatusMask& m) {
-                        if (nullptr != l) {
+                        if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
-                            py::cast(l).inc_ref();
+                            py::cast(listener).inc_ref();
                         }
                         auto old_listener = get_dr_listener(dr);
-                        set_dr_listener(dr, l, m);
+                        set_dr_listener(dr, listener, m);
                         if (nullptr != old_listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(old_listener).dec_ref();

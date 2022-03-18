@@ -111,9 +111,7 @@ inline PyIdlTopic create_idl_py_topic(
                     plugin->type_name().c_str(),
                     qos,
                     listener,
-                    listener != nullptr
-                            ? mask
-                            : dds::core::status::StatusMask::none()));
+                    mask));
 
     topic->set_user_data_(type_support.ptr());
     

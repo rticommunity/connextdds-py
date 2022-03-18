@@ -174,29 +174,6 @@ def test_pubsub_with_duck_typing(shared_participant):
     assert fixture.reader.take_data() == [Point(3, 4)]
 
 
-def test_topic_listener_can_be_set(shared_participant):
-    class PointListener(dds.TopicListener):
-        def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
-            pass
-
-    class OtherPointListener(dds.TopicListener):
-        def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
-            pass
-
-    listener = PointListener()
-    other_listener = OtherPointListener()
-    topic = dds.Topic(shared_participant, "point_topic",
-                      Point, dds.TopicQos(), listener)
-    assert topic.listener == listener
-    
-    topic.listener = other_listener
-    assert topic.listener == other_listener
-    
-    # Test set_listener fn
-    topic.set_listener(listener, dds.StatusMask.ALL)
-    assert topic.listener == listener
-
-
 def test_cft(shared_participant):
     pubsub = PubSubFixture(shared_participant, Point, content_filter="x >= 0")
     pubsub.writer.write(Point(-1, 1))

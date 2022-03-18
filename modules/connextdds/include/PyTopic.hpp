@@ -407,13 +407,13 @@ void init_dds_typed_topic_base_template(
                             l = ptr;
                         return l;
                     },
-                    [](PyTopic<T>& t, PyTopicListenerPtr<T> l) {
-                        if (nullptr != l) {
+                    [](PyTopic<T>& t, PyTopicListenerPtr<T> listener) {
+                        if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
-                            py::cast(l).inc_ref();
+                            py::cast(listener).inc_ref();
                         }
                         auto old_listener = get_topic_listener(t);
-                        set_topic_listener(t, l);
+                        set_topic_listener(t, listener);
                         if (nullptr != old_listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(old_listener).dec_ref();
@@ -423,9 +423,8 @@ void init_dds_typed_topic_base_template(
             .def(
                     "set_listener",
                     [](PyTopic<T>& t,
-                       dds::core::optional<PyTopicListenerPtr<T>> l,
+                       PyTopicListenerPtr<T> listener,
                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();

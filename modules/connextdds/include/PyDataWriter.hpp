@@ -348,13 +348,13 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
                 }
                 return l;
             },
-            [](PyDataWriter& dw, PyDataWriterListenerPtr<T> l) {
-                if (nullptr != l) {
+            [](PyDataWriter& dw, PyDataWriterListenerPtr<T> listener) {
+                if (nullptr != listener) {
                     py::gil_scoped_acquire acquire;
-                    py::cast(l).inc_ref();
+                    py::cast(listener).inc_ref();
                 }
                 auto old_listener = get_dw_listener(dw);
-                set_dw_listener(dw, l);
+                set_dw_listener(dw, listener);
                 if (nullptr != get_dw_listener(dw)) {
                     py::gil_scoped_acquire acquire;
                     py::cast(old_listener).dec_ref();
@@ -366,14 +366,14 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
     cls.def(
             "set_listener",
             [](PyDataWriter& dw,
-               PyDataWriterListenerPtr<T> l,
+               PyDataWriterListenerPtr<T> listener,
                const dds::core::status::StatusMask& m) {
-                if (nullptr != l) {
+                if (nullptr != listener) {
                     py::gil_scoped_acquire acquire;
-                    py::cast(l).inc_ref();
+                    py::cast(listener).inc_ref();
                 }
                 auto old_listener = get_dw_listener(dw);
-                set_dw_listener(dw, l, m);
+                set_dw_listener(dw, listener, m);
                 if (nullptr != old_listener) {
                     py::gil_scoped_acquire acquire;
                     py::cast(old_listener).dec_ref();

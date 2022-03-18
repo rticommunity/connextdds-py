@@ -38,6 +38,33 @@ class Person:
 	name: str = ""
 
 
+def test_topic_listener_can_be_set(shared_participant):
+    class PointListener(dds.TopicListener):
+        def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
+            pass
+
+    class OtherPointListener(dds.TopicListener):
+        def on_inconsistent_topic(self, topic: dds.AnyTopic, status: dds.InconsistentTopicStatus) -> None:
+            pass
+
+    listener = PointListener()
+    other_listener = OtherPointListener()
+    topic = dds.Topic(shared_participant, "point_topic",
+                      Point, dds.TopicQos(), listener)
+    assert topic.listener == listener
+
+    topic.listener = other_listener
+    assert topic.listener == other_listener
+
+    # Test set_listener fn
+    topic.set_listener(listener, dds.StatusMask.ALL)
+    assert topic.listener == listener
+    
+    # Test it can be set to none
+    topic.listener = None
+    assert topic.listener == None
+
+
 def test_inconsistent_topic(shared_participant):
 
 	person_participant = create_participant()
