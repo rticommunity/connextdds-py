@@ -219,6 +219,7 @@ void init_class_defs(
                     },
                     [](PyDomainParticipant& dp,
                        dds::core::optional<PyDomainParticipantListenerPtr> l) {
+                        py::gil_scoped_release guard;
                         auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;

@@ -375,6 +375,7 @@ void init_dds_typed_datareader_base_template(
                     },
                     [](PyDataReader<T>& dr,
                        PyDataReaderListenerPtr<T> listener) {
+                        py::gil_scoped_release guard;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();

@@ -408,6 +408,7 @@ void init_dds_typed_topic_base_template(
                         return l;
                     },
                     [](PyTopic<T>& t, PyTopicListenerPtr<T> listener) {
+                        py::gil_scoped_release guard;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();

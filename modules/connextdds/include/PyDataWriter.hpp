@@ -349,6 +349,7 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
                 return l;
             },
             [](PyDataWriter& dw, PyDataWriterListenerPtr<T> listener) {
+                py::gil_scoped_release guard;
                 if (nullptr != listener) {
                     py::gil_scoped_acquire acquire;
                     py::cast(listener).inc_ref();
