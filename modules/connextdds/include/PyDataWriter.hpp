@@ -355,7 +355,7 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
                 }
                 auto old_listener = get_dw_listener(dw);
                 set_dw_listener(dw, listener);
-                if (nullptr != get_dw_listener(dw)) {
+                if (nullptr != old_listener) {
                     py::gil_scoped_acquire acquire;
                     py::cast(old_listener).dec_ref();
                 }
