@@ -10,7 +10,7 @@
 #
 
 from dataclasses import dataclass, fields
-from typing import List, Any, ClassVar, Optional
+from typing import List, Any, ClassVar, Optional, Dict
 import itertools
 import array
 import ctypes
@@ -275,7 +275,12 @@ def _get_member_dynamic_type(py_type, member_annotations):
     raise TypeError(f'Unsupported member type {py_type}')
 
 
-def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=None, member_annotations=None):
+def create_dynamic_type_from_dataclass(
+    py_type: type,
+    c_type: ctypes.Structure,
+    type_annotations: List[Any],
+    member_annotations: Dict[str, Any]
+) -> dds._TypePlugin:
     """Given an IDL-derived dataclass, return the DynamicType that describes
     the IDL type
     """
@@ -324,6 +329,42 @@ def create_dynamic_type_from_dataclass(py_type, c_type=None, type_annotations=No
 
     for member_arg in member_args:
         _type_factory.add_member(dynamic_type, *member_arg)
+
+    # Once finalized the type creation, this creates the plugin and assigns it
+    # to dynamic_type
+    _type_factory.create_type_plugin(dynamic_type)
+
+    return dynamic_type
+
+def create_dynamic_type_from_alias_dataclass(
+    py_type: type,
+    c_type: ctypes.Structure,
+    member_annotations: Dict[str, Any]
+) -> dds._TypePlugin:
+    """Given an @idl.alias-decorated dataclass, return the DynamicType that
+    describes the IDL type
+    """
+
+    if member_annotations is None:
+        member_annotations = {}
+
+    type_fields = fields(py_type)
+    if len(type_fields) != 1:
+        raise TypeError(
+            f'An @idl.alias must have exactly one field, but {py_type} has {len(type_fields)}')
+
+    field = type_fields[0]
+    current_annotations = member_annotations.get(field.name, {})
+    is_key = annotations.find_annotation(
+        current_annotations, cls=annotations.KeyAnnotation)
+    if is_key.value:
+        raise TypeError(f'An @idl.alias cannot be a key')
+    if reflection_utils.is_optional_type(field.type):
+        raise TypeError(f'An @idl.alias cannot be optional')
+
+    member_type = _get_member_dynamic_type(field.type, current_annotations)
+    dynamic_type = _type_factory.create_alias(
+        py_type.__name__, member_type, get_size(c_type))
 
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type
@@ -400,7 +441,7 @@ def copy_from_c_sample(sample, c_sample):
 class TypeSupport:
     """Support and utility methods for the usage of an IDL type"""
 
-    def __init__(self, idl_type, type_annotations=None, member_annotations=None):
+    def __init__(self, idl_type, type_annotations=None, member_annotations=None, is_alias=False):
         self.type = idl_type
         self.allow_duck_typing = False
         base_type = get_idl_base_type(idl_type)
@@ -418,6 +459,11 @@ class TypeSupport:
             self.c_type = ctypes.c_int32
             self._plugin_dynamic_type = create_dynamic_type_from_enum(
                 idl_type, type_annotations)
+        elif is_alias:
+            self.c_type = create_ctype_from_dataclass(
+                idl_type, member_annotations)
+            self._plugin_dynamic_type = create_dynamic_type_from_alias_dataclass(
+                idl_type, self.c_type, member_annotations)
         else:
             self.c_type = create_ctype_from_dataclass(
                 idl_type, member_annotations)

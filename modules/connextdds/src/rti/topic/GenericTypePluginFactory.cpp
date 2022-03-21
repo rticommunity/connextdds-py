@@ -61,6 +61,30 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                                     nullptr };
             });
 
+    cls.def("create_alias",
+            [](GenericTypePluginFactory& self,
+               const std::string& name,
+               const DynamicType& related_type,
+               uint32_t type_size) {
+                return TypePlugin { self.create_alias(
+                                            name,
+                                            related_type,
+                                            type_size),
+                                    nullptr };
+            });
+
+    cls.def("create_alias",
+            [](GenericTypePluginFactory& self,
+               const std::string& name,
+               const TypePlugin& related_type_holder,
+               uint32_t type_size) {
+                return TypePlugin { self.create_alias(
+                                            name,
+                                            *related_type_holder.type,
+                                            type_size),
+                                    nullptr };
+            });
+
     cls.def("create_sequence",
             [](GenericTypePluginFactory& self,
                const DynamicType& element_type,

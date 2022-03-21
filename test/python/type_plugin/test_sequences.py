@@ -128,7 +128,6 @@ def test_sequence_serialization(sequence_sample):
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_empty_sequence_serialization(SequenceTestType):
     ts = idl.get_type_support(SequenceTestType)
-    print(SequenceTestType())
     buffer = ts.serialize(SequenceTestType())
     deserialized_sample = ts.deserialize(buffer)
     assert SequenceTestType() == deserialized_sample

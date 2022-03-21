@@ -134,3 +134,30 @@ def test_optional_arrays_not_supported():
             vertices: Optional[Sequence[Point]] = None
 
     assert "Optional arrays are not supported" in str(ex.value)
+
+
+def test_nested_optional_sequence_pubsub(shared_participant):
+    # This test exercises a specific code path in the XCDR interpreter
+
+    @idl.struct(
+        member_annotations={
+            "req_seq": [idl.bound(100)]
+        }
+    )
+    class Foo:
+        req_seq: Sequence[Point] = field(default_factory=list)
+        opt_seq: Optional[Sequence[Point]] = None
+
+    @idl.struct
+    class Bar:
+        opt_foo: Optional[Foo] = None
+        req_foo: Foo = field(default_factory=Foo)
+
+    fixture = PubSubFixture(shared_participant, Bar, reader_policies=[dds.ResourceLimits(1, 1, 1)])
+    bar = Bar(
+        opt_foo=Foo(req_seq=[Point(1, 2)]),
+        req_foo=Foo(req_seq=[Point(5, 6)]))
+    fixture.send_and_check(bar)
+    fixture.send_and_check(Bar())
+    fixture.send_and_check(bar)
+

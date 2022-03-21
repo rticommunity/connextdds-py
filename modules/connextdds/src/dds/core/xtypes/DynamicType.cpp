@@ -20,12 +20,16 @@ using namespace dds::core::xtypes;
 
 namespace pyrti {
 
-py::object py_cast_type(dds::core::xtypes::DynamicType& dt)
+py::object py_cast_type(dds::core::xtypes::DynamicType& dt, bool resolve_alias)
 {
     switch (dt.kind().underlying()) {
     case dds::core::xtypes::TypeKind::inner_enum::ALIAS_TYPE: {
-        auto resolved = rti::core::xtypes::resolve_alias(dt);
-        return py_cast_type(resolved);
+        if (resolve_alias) {
+            auto resolved = rti::core::xtypes::resolve_alias(dt);
+            return py_cast_type(resolved);
+        } else {
+            return py::cast(static_cast<dds::core::xtypes::AliasType&>(dt));
+        }
     }
     case dds::core::xtypes::TypeKind::ARRAY_TYPE:
         return py::cast(static_cast<dds::core::xtypes::ArrayType&>(dt));

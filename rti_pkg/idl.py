@@ -128,6 +128,29 @@ def struct(cls=None, *, type_annotations=[], member_annotations={}):
         return wrapper(cls)
 
 
+def alias(cls=None, *, annotations=[]):
+    """This decorator maps a Python class with a single field to an IDL alias;
+    the type of the field refers to the aliased type.
+    """
+
+    def wrapper(cls):
+        actual_cls = dataclasses.dataclass(cls)
+        if isinstance(annotations, list):
+            member_annotations = {'value': annotations}
+        else:
+            member_annotations = annotations
+
+        actual_cls.type_support = idl_impl.TypeSupport(
+            actual_cls,
+            type_annotations=None,
+            member_annotations=member_annotations,
+            is_alias=True)
+        return actual_cls
+    if cls is None:
+        return wrapper
+    else:
+        return wrapper(cls)
+
 def enum(cls=None, *, type_annotations=[]):
     """This decorator makes a Python IntEnum usable as IDL enum"""
 

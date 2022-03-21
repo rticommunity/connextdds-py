@@ -97,9 +97,9 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             py::return_value_policy::reference);
 
     // Return a copy without the sample access info.
-    cls.def(
-            "clone_type",
-            [](const TypePlugin& self) { return py_cast_type(*self.type); });
+    cls.def("clone_type", [](const TypePlugin& self) {
+        return py_cast_type(*self.type, false /* resolve_alias */);
+    });
 
     // Gets the serialized sample size of a given sample
     cls.def(

@@ -200,7 +200,9 @@ TPtr downcast_listener_ptr(TBasePtr p) {
 }
 #endif
 
-py::object py_cast_type(dds::core::xtypes::DynamicType&);
+py::object py_cast_type(
+        dds::core::xtypes::DynamicType&,
+        bool resolve_alias = true);
 
 
 // custom holder deleters for released GIL destruction
