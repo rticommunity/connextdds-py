@@ -14,7 +14,7 @@
 
 using namespace dds::core::status;
 
-void init_namespace_dds_core_status(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
+void init_namespace_dds_core_status(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&)
 {
     pyrti::process_inits<InconsistentTopicStatus>(m, l);
     pyrti::process_inits<LivelinessChangedStatus>(m, l);

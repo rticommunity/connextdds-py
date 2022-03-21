@@ -18,7 +18,7 @@ namespace pyrti {
 
 template<>
 void init_class_defs(
-        py::class_<PyIDataReader, PyIEntity, PyIAnyDataReader>& cls)
+        py::class_<PyIDataReader, PyIEntity, PyIAnyDataReader>&)
 {
 }
 
