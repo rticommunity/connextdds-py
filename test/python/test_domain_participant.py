@@ -122,9 +122,9 @@ def test_set_get_listener():
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     assert p.listener == None
     l = dds.NoOpDomainParticipantListener()
-    p.bind_listener(l, dds.StatusMask.ALL)
+    p.set_listener(l, dds.StatusMask.ALL)
     assert p.listener == l
-    p.bind_listener(None, dds.StatusMask.NONE)
+    p.set_listener(None, dds.StatusMask.NONE)
     assert p.listener == None
 
 
@@ -154,7 +154,7 @@ def test_already_closed_exception():
     with pytest.raises(dds.AlreadyClosedError):
         p.listener
     with pytest.raises(dds.AlreadyClosedError):
-        p.bind_listener(None, dds.StatusMask.NONE)
+        p.set_listener(None, dds.StatusMask.NONE)
     with pytest.raises(dds.AlreadyClosedError):
         p.qos
     with pytest.raises(dds.AlreadyClosedError):
@@ -296,14 +296,14 @@ def test_retain_for_listener(set_after):
     listener = dds.NoOpDomainParticipantListener()
     if set_after:
         p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
-        p.bind_listener(listener, dds.StatusMask.NONE)
+        p.set_listener(listener, dds.StatusMask.NONE)
     else:
         p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), listener)
 
     def inner():
         with dds.DomainParticipant.find(DOMAIN_ID) as new_p:
             assert new_p != None
-            new_p.bind_listener(None, dds.StatusMask.NONE)
+            new_p.set_listener(None, dds.StatusMask.NONE)
 
     inner()
     assert dds.DomainParticipant.find(DOMAIN_ID) == None
