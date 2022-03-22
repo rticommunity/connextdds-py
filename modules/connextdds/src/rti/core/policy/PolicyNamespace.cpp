@@ -14,7 +14,7 @@
 
 using namespace rti::core::policy;
 
-void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
+void init_namespace_rti_core_policy(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&)
 {
     pyrti::process_inits<AcknowledgmentKind>(m, l);
     pyrti::process_inits<AsynchronousPublisher>(m, l);

@@ -29,7 +29,7 @@ static void memcpy_from_buffer_object(
 {
     auto dst_ptr = reinterpret_cast<void*>(dst);
     auto src_info = src.request();
-    if (src_info.size * src_info.itemsize != size) {
+    if ((size_t)(src_info.size * src_info.itemsize) != size) {
         throw dds::core::IllegalOperationError(
                 "Source buffer size doesn't match destination buffer size");
     }
@@ -44,7 +44,7 @@ static void memcpy_to_buffer_object_slow(
 {
     auto src_ptr = reinterpret_cast<void*>(src);
     auto dst_info = dst.request();
-    if (dst_info.size * dst_info.itemsize != size) {
+    if ((size_t)(dst_info.size * dst_info.itemsize) != size) {
         throw dds::core::IllegalOperationError(
                 "Source buffer size doesn't match destination buffer size");
     }
@@ -57,7 +57,7 @@ static void memcpy_to_buffer_object(py::buffer dst, PyPointer src, size_t size)
     auto src_ptr = reinterpret_cast<void*>(src);
     // auto dst_info = dst.request();
     pyrti::PyCTypesBuffer dst_info(dst);
-    if (dst_info.py_buffer.len != size) {
+    if ((size_t)dst_info.py_buffer.len != size) {
         throw dds::core::IllegalOperationError(
                 "Source buffer size doesn't match destination buffer size");
     }

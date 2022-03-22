@@ -41,8 +41,8 @@ public:
     using PyTopicListener<T>::on_inconsistent_topic;
 
     void on_inconsistent_topic(
-            PyTopic<T>& topic,
-            const dds::core::status::InconsistentTopicStatus& status) override
+            PyTopic<T>&,
+            const dds::core::status::InconsistentTopicStatus&) override
     {
     }
 };

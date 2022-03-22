@@ -14,7 +14,7 @@
 
 using namespace rti::domain;
 
-void init_namespace_rti_domain(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
+void init_namespace_rti_domain(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&)
 {
     pyrti::process_inits<DomainParticipantConfigParams>(m, l);
 }

@@ -21,7 +21,7 @@ using namespace rti::core::policy;
 namespace pyrti {
 
 template<>
-void process_inits<DataReaderInstanceRemovalKind>(py::module& m, ClassInitList& l)
+void process_inits<DataReaderInstanceRemovalKind>(py::module& m, ClassInitList&)
 {
     init_dds_safe_enum<
             DataReaderInstanceRemovalKind_def>(m, "DataReaderInstanceRemovalKind", [](py::object& o) {

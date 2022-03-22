@@ -23,7 +23,7 @@ void init_class_defs(
         py::class_<
             PyEntity,
             PyIEntity,
-            std::unique_ptr<PyEntity, no_gil_delete<PyEntity>>>& cls)
+            std::unique_ptr<PyEntity, no_gil_delete<PyEntity>>>&)
 {
 }
 

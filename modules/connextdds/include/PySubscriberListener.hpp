@@ -48,7 +48,7 @@ public:
 
     using PySubscriberListener::on_data_on_readers;
 
-    void on_data_on_readers(PySubscriber& sub) override
+    void on_data_on_readers(PySubscriber&) override
     {
     }
 

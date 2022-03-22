@@ -18,7 +18,7 @@ using namespace rti::core::policy;
 namespace pyrti {
 
 template<>
-void process_inits<AcknowledgmentKind>(py::module& m, ClassInitList& l)
+void process_inits<AcknowledgmentKind>(py::module& m, ClassInitList&)
 {
     init_dds_safe_enum<
             AcknowledgmentKind_def>(m, "AcknowledgmentKind", [](py::object& o) {

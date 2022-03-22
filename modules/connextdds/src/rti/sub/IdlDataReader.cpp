@@ -92,51 +92,8 @@ static DataAndInfoVector convert_data_w_info(
     return py_samples;
 }
 
-static py::list convert_data_py(
-        PyDataReader<CSampleWrapper>& dr,
-        dds::sub::LoanedSamples<CSampleWrapper>&& samples)
-{
-    size_t max_length = samples.length();
-    auto valid_samples = rti::sub::valid_data(std::move(samples));
-    py::list py_samples(max_length);
-
-    py::gil_scoped_acquire acquire;
-    // This is the type support function that converts from C data
-    // to the user-facing python object.
-    auto create_py_sample = get_create_py_sample_function(dr);
-    size_t i = 0;
-    for (auto& sample : valid_samples) {
-        // py_samples.append(
-        py_samples[i++] =
-                invoke_py_sample_function(create_py_sample, sample.data());
-    }
-
-    return py_samples;
-}
-
-static py::list get_native_data(
-        PyDataReader<CSampleWrapper>& dr,
-        dds::sub::LoanedSamples<CSampleWrapper>&& samples)
-{
-    size_t max_length = samples.length();
-    auto valid_samples = rti::sub::valid_data(std::move(samples));
-    py::list py_samples(max_length);
-
-    py::gil_scoped_acquire acquire;
-    // This is the type support function that converts from C data
-    // to the user-facing python object.
-    auto cast_c_sample = get_cast_c_sample_function(dr);
-    size_t i = 0;
-    for (auto& sample : valid_samples) {
-        py_samples[i++] =
-                invoke_py_sample_function(cast_c_sample, sample.data());
-    }
-
-    return py_samples;
-}
-
 static std::vector<size_t> get_native_ptrs(
-        PyDataReader<CSampleWrapper>& dr,
+        PyDataReader<CSampleWrapper>&,
         dds::sub::LoanedSamples<CSampleWrapper>&& samples)
 {
     size_t max_length = samples.length();
@@ -182,7 +139,7 @@ static auto read_data_native(PyDataReader<CSampleWrapper>& dr)
 }
 
 // For testing purposes only
-static void test_native_reads(PyDataReader<CSampleWrapper>& dr, size_t read_count)
+static void test_native_reads(PyDataReader<CSampleWrapper>& dr)
 {
     struct Point {
         int32_t x;
