@@ -372,7 +372,6 @@ if(MSVC)
 else()
   target_compile_options(connextdds PRIVATE 
         -Wall  
-        -Wclobbered 
         -Wempty-body 
         -Wignored-qualifiers 
         -Wmissing-field-initializers  
