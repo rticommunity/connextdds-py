@@ -112,7 +112,7 @@ def test_deserialization_fails_with_bad_buffer_type():
         ts.deserialize(None)
 
 def test_idl_writer_fails_with_bad_sample_type():
-    participant = fixtures.create_participant()
+    participant = create_participant()
     topic = dds.Topic(participant, "MyPoint", Point)
     writer = dds.DataWriter(participant.implicit_publisher, topic)
 
