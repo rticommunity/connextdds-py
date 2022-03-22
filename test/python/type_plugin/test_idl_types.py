@@ -15,8 +15,6 @@ import pytest
 import rti.idl as idl
 import rti.connextdds as rti
 from rti.idl_impl.test_utils import *
-
-import test_utils.wait as wait
 from test_utils.fixtures import *
 
 import common_types

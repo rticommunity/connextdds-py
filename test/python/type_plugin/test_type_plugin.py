@@ -17,10 +17,9 @@ import pytest
 import rti.connextdds as dds
 import rti.idl as idl
 
-from test_utils import fixtures
 from test_utils.helpers import type_support_with_duck_typing
-from common_types import Point
 from test_utils.fixtures import *
+from common_types import Point
 
 def test_type_plugin_basic():
     assert hasattr(Point, "type_support")
@@ -77,7 +76,7 @@ def test_serialization():
     assert sample == ts.deserialize(ts.serialize(sample))
 
 def test_pubsub(shared_participant):
-    fixture = fixtures.PubSubFixture(shared_participant, Point)
+    fixture = PubSubFixture(shared_participant, Point)
     fixture.send_and_check(Point(3, 4))
 
 @idl.struct
@@ -158,7 +157,7 @@ def test_serialization_with_duck_typing():
 
 
 def test_pubsub_with_duck_typing(shared_participant):
-    fixture = fixtures.PubSubFixture(shared_participant, Point)
+    fixture = PubSubFixture(shared_participant, Point)
 
     class Point3D:
         def __init__(self):

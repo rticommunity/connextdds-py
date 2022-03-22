@@ -11,7 +11,7 @@
 
 from dataclasses import field
 import ctypes
-from typing import Sequence
+from typing import Sequence, Optional
 from enum import IntEnum, auto
 from test_utils import log_capture
 
