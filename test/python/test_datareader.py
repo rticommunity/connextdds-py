@@ -141,7 +141,7 @@ def test_datareader_listener_can_be_set(pubsub):
     listener = PointListener()
     other_listener = OtherPointListener()
 
-    assert pubsub.reader.listener == None
+    assert pubsub.reader.listener is None
 
     pubsub.reader.listener = listener
     assert pubsub.reader.listener == listener
@@ -152,7 +152,10 @@ def test_datareader_listener_can_be_set(pubsub):
 
     # Test it can be set to none
     pubsub.reader.listener = None
-    assert pubsub.reader.listener == None
+    assert pubsub.reader.listener is None
+    
+    pubsub.reader.listener = PointListener()
+    assert type(pubsub.reader.listener) == PointListener 
 
 
 # --- Instance tests ----------------------------------------------------------

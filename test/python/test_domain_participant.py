@@ -120,12 +120,12 @@ def test_set_get_factory_qos():
 
 def test_set_get_listener():
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
-    assert p.listener == None
+    assert p.listener is None
     l = dds.NoOpDomainParticipantListener()
-    p.set_listener(l, dds.StatusMask.ALL)
+    p.listener = l
     assert p.listener == l
     p.set_listener(None, dds.StatusMask.NONE)
-    assert p.listener == None
+    assert p.listener is None
 
 
 def test_find():
@@ -135,15 +135,15 @@ def test_find():
     found_p = dds.DomainParticipant.find(id1)
     not_found_p = dds.DomainParticipant.find(id2)
     assert found_p == p
-    assert not_found_p == None
+    assert not_found_p is None
 
 
 def test_close():
-    assert dds.DomainParticipant.find(DOMAIN_ID) == None
+    assert dds.DomainParticipant.find(DOMAIN_ID) is None
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     assert dds.DomainParticipant.find(DOMAIN_ID) == p
     p.close()
-    assert dds.DomainParticipant.find(DOMAIN_ID) == None
+    assert dds.DomainParticipant.find(DOMAIN_ID) is None
 
 
 def test_already_closed_exception():
@@ -199,7 +199,7 @@ def test_retain():
         p3 = dds.DomainParticipant.find(id1)
         p4 = dds.DomainParticipant.find(id2)
         assert p3 != None
-        assert p4 == None
+        assert p4 is None
         assert p3 == dds.DomainParticipant.find(id1)
 
     def scope_3():
@@ -210,7 +210,7 @@ def test_retain():
     scope_1()
     scope_2()
     scope_3()
-    assert dds.DomainParticipant.find(id1) == None
+    assert dds.DomainParticipant.find(id1) is None
 
 
 def test_current_time():
@@ -287,7 +287,7 @@ def test_find_extensions():
 
     assert dds.DomainParticipant.find("MyParticipant1") == p1
     assert dds.DomainParticipant.find("MyParticipant2") == p2
-    assert dds.DomainParticipant.find("MyParticipant3") == None
+    assert dds.DomainParticipant.find("MyParticipant3") is None
 
 
 @pytest.mark.skip("PY-26: use test qos")
@@ -306,7 +306,7 @@ def test_retain_for_listener(set_after):
             new_p.set_listener(None, dds.StatusMask.NONE)
 
     inner()
-    assert dds.DomainParticipant.find(DOMAIN_ID) == None
+    assert dds.DomainParticipant.find(DOMAIN_ID) is None
 
 # PY-26: does this need to be added back?
 #

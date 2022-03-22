@@ -167,7 +167,7 @@ def test_datawriter_listener_can_be_set(pubsub):
     listener = PointListener()
     other_listener = OtherPointListener()
 
-    assert pubsub.writer.listener == None
+    assert pubsub.writer.listener is None
 
     pubsub.writer.listener = listener
     assert pubsub.writer.listener == listener
@@ -178,7 +178,7 @@ def test_datawriter_listener_can_be_set(pubsub):
 
     # Test it can be set to none
     pubsub.writer.listener = None
-    assert pubsub.writer.listener == None
+    assert pubsub.writer.listener is None
 
 # --- Instance tests ----------------------------------------------------------
 

@@ -62,7 +62,7 @@ def test_topic_listener_can_be_set(shared_participant):
     
     # Test it can be set to none
     topic.listener = None
-    assert topic.listener == None
+    assert topic.listener is None
 
 
 def test_inconsistent_topic(shared_participant):

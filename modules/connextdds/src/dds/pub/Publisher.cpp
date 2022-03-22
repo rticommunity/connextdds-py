@@ -182,9 +182,8 @@ void init_class_defs(
                         return l;
                     },
                     [](PyPublisher& pub,
-                       dds::core::optional<PyPublisherListenerPtr> l) {
+                       PyPublisherListenerPtr listener) {
                         py::gil_scoped_release guard;
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
