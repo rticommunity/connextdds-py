@@ -74,44 +74,44 @@ public:
     using PyDataReaderListener<T>::on_sample_lost;
 
     void on_requested_deadline_missed(
-            PyDataReader<T>& reader,
-            const dds::core::status::RequestedDeadlineMissedStatus& status)
+            PyDataReader<T>&,
+            const dds::core::status::RequestedDeadlineMissedStatus&)
             override
     {
     }
 
     void on_requested_incompatible_qos(
-            PyDataReader<T>& reader,
-            const dds::core::status::RequestedIncompatibleQosStatus& status)
+            PyDataReader<T>&,
+            const dds::core::status::RequestedIncompatibleQosStatus&)
             override
     {
     }
 
     void on_sample_rejected(
-            PyDataReader<T>& reader,
-            const dds::core::status::SampleRejectedStatus& status) override
+            PyDataReader<T>&,
+            const dds::core::status::SampleRejectedStatus&) override
     {
     }
 
     void on_liveliness_changed(
-            PyDataReader<T>& reader,
-            const dds::core::status::LivelinessChangedStatus& status) override
+            PyDataReader<T>&,
+            const dds::core::status::LivelinessChangedStatus&) override
     {
     }
 
-    void on_data_available(PyDataReader<T>& reader) override
+    void on_data_available(PyDataReader<T>&) override
     {
     }
 
     void on_subscription_matched(
-            PyDataReader<T>& reader,
-            const dds::core::status::SubscriptionMatchedStatus& status) override
+            PyDataReader<T>&,
+            const dds::core::status::SubscriptionMatchedStatus&) override
     {
     }
 
     void on_sample_lost(
-            PyDataReader<T>& reader,
-            const dds::core::status::SampleLostStatus& status) override
+            PyDataReader<T>&,
+            const dds::core::status::SampleLostStatus&) override
     {
     }
 };

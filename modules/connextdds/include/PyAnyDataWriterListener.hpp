@@ -89,60 +89,60 @@ public:
     using PyAnyDataWriterListener::on_service_request_accepted;
 
     void on_offered_deadline_missed(
-            PyAnyDataWriter& writer,
-            const dds::core::status::OfferedDeadlineMissedStatus& status)
+            PyAnyDataWriter&,
+            const dds::core::status::OfferedDeadlineMissedStatus&)
             override
     {
     }
 
     void on_offered_incompatible_qos(
-            PyAnyDataWriter& writer,
-            const dds::core::status::OfferedIncompatibleQosStatus& status)
+            PyAnyDataWriter&,
+            const dds::core::status::OfferedIncompatibleQosStatus&)
             override
     {
     }
 
     void on_liveliness_lost(
-            PyAnyDataWriter& writer,
-            const dds::core::status::LivelinessLostStatus& status) override
+            PyAnyDataWriter&,
+            const dds::core::status::LivelinessLostStatus&) override
     {
     }
 
     void on_publication_matched(
-            PyAnyDataWriter& writer,
-            const dds::core::status::PublicationMatchedStatus& status) override
+            PyAnyDataWriter&,
+            const dds::core::status::PublicationMatchedStatus&) override
     {
     }
 
     void on_reliable_writer_cache_changed(
-            PyAnyDataWriter& writer,
-            const rti::core::status::ReliableWriterCacheChangedStatus& status)
+            PyAnyDataWriter&,
+            const rti::core::status::ReliableWriterCacheChangedStatus&)
             override
     {
     }
 
     void on_reliable_reader_activity_changed(
-            PyAnyDataWriter& writer,
-            const rti::core::status::ReliableReaderActivityChangedStatus&
-                    status) override
+            PyAnyDataWriter&,
+            const rti::core::status::ReliableReaderActivityChangedStatus&)
+            override
     {
     }
 
     void on_instance_replaced(
-            PyAnyDataWriter& writer,
-            const dds::core::InstanceHandle& handle) override
+            PyAnyDataWriter&,
+            const dds::core::InstanceHandle&) override
     {
     }
 
     void on_application_acknowledgment(
-            PyAnyDataWriter& writer,
-            const rti::pub::AcknowledgmentInfo& acknowledgment_info) override
+            PyAnyDataWriter&,
+            const rti::pub::AcknowledgmentInfo&) override
     {
     }
 
     void on_service_request_accepted(
-            PyAnyDataWriter& writer,
-            const rti::core::status::ServiceRequestAcceptedStatus& status)
+            PyAnyDataWriter&,
+            const rti::core::status::ServiceRequestAcceptedStatus&)
             override
     {
     }

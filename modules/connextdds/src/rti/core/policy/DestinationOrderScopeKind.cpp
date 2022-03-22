@@ -18,7 +18,7 @@ using namespace rti::core::policy;
 namespace pyrti {
 
 template<>
-void process_inits<DestinationOrderScopeKind>(py::module& m, ClassInitList& l)
+void process_inits<DestinationOrderScopeKind>(py::module& m, ClassInitList&)
 {
     init_dds_safe_enum<DestinationOrderScopeKind_def>(
             m,

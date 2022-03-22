@@ -367,3 +367,17 @@ else()
     )
 endif()
 
+if(MSVC)
+  target_compile_options(connextdds PRIVATE /W4)
+else()
+  target_compile_options(connextdds PRIVATE 
+        -Wall  
+        -Wclobbered 
+        -Wempty-body 
+        -Wignored-qualifiers 
+        -Wmissing-field-initializers  
+        -Wsign-compare  
+        -Wtype-limits  
+        -Wuninitialized  
+        -Wunused-parameter)
+endif()

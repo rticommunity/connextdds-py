@@ -54,7 +54,7 @@ void init_class_defs(
         py::class_<
             PyCondition,
             PyICondition,
-            std::unique_ptr<PyCondition, no_gil_delete<PyCondition>>>& cls)
+            std::unique_ptr<PyCondition, no_gil_delete<PyCondition>>>&)
 {
 }
 

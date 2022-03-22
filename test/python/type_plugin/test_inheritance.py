@@ -10,7 +10,7 @@
 #
 
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Sequence, Optional
 
 import pytest
 

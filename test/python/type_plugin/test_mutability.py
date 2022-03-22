@@ -9,7 +9,7 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from typing import Sequence, Optional
+from typing import Optional
 from dataclasses import field
 
 import rti.connextdds as dds

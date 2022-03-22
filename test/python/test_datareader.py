@@ -13,7 +13,7 @@ import rti.connextdds as dds
 import rti.idl as idl
 
 import pytest
-from test_utils import wait, fixtures
+from rti.idl_impl.test_utils import wait
 from test_utils.fixtures import *
 
 
@@ -41,14 +41,14 @@ def pubsub(request, shared_participant):
        execution, but the contained entities are deleted after each test
        function."""
 
-    fixture = fixtures.PubSubFixture(shared_participant, request.param)
+    fixture = PubSubFixture(shared_participant, request.param)
     yield fixture
     fixture.participant.close_contained_entities()
 
 
 @pytest.fixture(scope="function", params=[Point])  # TODO add built-in types
 def pub(request, shared_participant):
-    fixture = fixtures.PubSubFixture(
+    fixture = PubSubFixture(
         shared_participant, request.param, create_reader=False)
     yield fixture
     fixture.participant.close_contained_entities()

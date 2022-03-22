@@ -14,7 +14,7 @@
 
 using namespace dds::sub::status;
 
-void init_namespace_dds_sub_status(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
+void init_namespace_dds_sub_status(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&)
 {
     pyrti::process_inits<DataState>(m, l);
 }

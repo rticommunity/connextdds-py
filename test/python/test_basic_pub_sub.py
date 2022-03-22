@@ -10,10 +10,10 @@
  #
 
 import rti.connextdds as dds
-from test_utils import wait, fixtures
+from test_utils.fixtures import *
 
 def test_data_reader_writer():
-    fx = fixtures.PubSubFixture(None, dds.StringTopicType)
+    fx = PubSubFixture(None, dds.StringTopicType)
 
     # TODO PY-17: writer.write("Hello") doesn't work at the moment because
     # of the ordering of write functions in init_dds_datawriter_untyped_methods.

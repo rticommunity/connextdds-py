@@ -34,7 +34,7 @@ void init_valid_loaned_samples_def(
                  [](rti::sub::ValidLoanedSamples<T>& ls)
                          -> rti::sub::ValidLoanedSamples<T>& { return ls; })
             .def("__exit__",
-                 [](rti::sub::ValidLoanedSamples<T>& ls,
+                 [](rti::sub::ValidLoanedSamples<T>&,
                     py::object,
                     py::object,
                     py::object) {},

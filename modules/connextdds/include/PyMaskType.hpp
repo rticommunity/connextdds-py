@@ -41,47 +41,34 @@ py::class_<T> init_mask_type_no_int_constructor(
                         mask[index] = value;
                     },
                     "Set individual mask bit")
-            .def(
-                    "__contains__",
-                    [](T& mask, T& other) { 
-                        return (mask & other) == other; 
-                    })
+            .def("__contains__",
+                 [](T& mask, T& other) { return (mask & other) == other; })
             .def(
                     "test",
-                    [](const T& mask, size_t pos) {
-                        return mask.test(pos);
-                    },
+                    [](const T& mask, size_t pos) { return mask.test(pos); },
                     py::arg("pos"),
                     "Test whether the mask bit at postition \"pos\" is set.")
             .def(
                     "test_all",
-                    [](const T& mask, size_t pos) {
+                    [](const T& mask) {
                         return mask.all();
                     },
                     "Test if all bits are set.")
             .def(
                     "test_any",
-                    [](const T& mask) {
-                        return mask.any();
-                    },
+                    [](const T& mask) { return mask.any(); },
                     "Test if any bits are set.")
             .def(
                     "test_none",
-                    [](const T& mask) {
-                        return mask.none();
-                    },
+                    [](const T& mask) { return mask.none(); },
                     "Test if none of the bits are set.")
             .def_property_readonly(
                     "count",
-                    [](const T& mask) {
-                        return mask.count();
-                    },
+                    [](const T& mask) { return mask.count(); },
                     "Returns the number of bits set in the mask.")
             .def_property_readonly(
                     "size",
-                    [](const T& mask) {
-                        return mask.size();
-                    },
+                    [](const T& mask) { return mask.size(); },
                     "Returns the number of bits in the mask type.")
             .def(
                     "set",

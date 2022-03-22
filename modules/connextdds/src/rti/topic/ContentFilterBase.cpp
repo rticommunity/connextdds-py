@@ -18,7 +18,7 @@ namespace pyrti {
 
 
 template<>
-void init_class_defs(py::class_<ContentFilterBase>& cls)
+void init_class_defs(py::class_<ContentFilterBase>&)
 {
 }
 

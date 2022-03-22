@@ -27,7 +27,7 @@ std::vector<T> vector_replicate(std::vector<T>& v, size_t count)
         retval.reserve(v.size() * count);
         auto begin = v.begin();
         auto end = v.end();
-        for (int i = 0; i < count; ++i) {
+        for (size_t i = 0; i < count; ++i) {
             retval.insert(retval.end(), begin, end);
         }
         return retval;
@@ -46,7 +46,7 @@ std::vector<T>& vector_replicate_inplace(std::vector<T>& v, size_t count)
         auto begin = v.begin();
         auto end = v.end();
         // Start at 1 because we already have the first iteration
-        for (int i = 1; i < count; ++i) {
+        for (size_t i = 1; i < count; ++i) {
             v.insert(v.end(), begin, end);
         }
         return v;

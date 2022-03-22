@@ -393,7 +393,7 @@ void init_class_defs(
                         dds::core::smart_ptr_traits<
                                 rti::topic::ContentFilterBase>::ref_type
                                 ptr(cf,
-                                    [](rti::topic::ContentFilterBase* filt) {});
+                                    [](rti::topic::ContentFilterBase*) {});
                         rti::topic::CustomFilter<rti::topic::ContentFilterBase>
                                 custom(ptr);
                         dp->register_contentfilter(custom, fn);

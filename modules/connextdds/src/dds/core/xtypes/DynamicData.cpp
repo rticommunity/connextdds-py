@@ -121,14 +121,14 @@ static int calculate_multidimensional_offset(
     }
 
     int offset = 0;
-    for (int i = 0; i < index.size(); ++i) {
-        auto dim_index = index[i];
+    for (size_t i = 0; i < index.size(); ++i) {
+        uint32_t dim_index = index[i];
         if (dim_index >= array_type.dimension(i)) {
             throw py::index_error("Invalid index for dimension.");
         }
         if (dim_index != 0) {
             int product = dim_index;
-            for (int j = i + 1; j < index.size(); ++j) {
+            for (size_t j = i + 1; j < index.size(); ++j) {
                 product *= array_type.dimension(j);
             }
             offset += product;
@@ -163,7 +163,7 @@ static DynamicData& resolve_collection_member(
     char delimiter;
     std::vector<int> index_list;
     int found_index;
-    int dim_count = get_collection_dim_count(data);
+    uint32_t dim_count = get_collection_dim_count(data);
     DynamicData* current = &data;
 
     enum ParseState {
@@ -260,7 +260,6 @@ static DynamicData& resolve_nested_member(
     for (auto& token : tokens) {
         size_t pos = token.find('[');
         if (pos != std::string::npos) {
-            int index;
             id.loan_list.push_back(
                 current->loan_value(token.substr(0, pos)));
             current = &id.loan_list.back().get();
@@ -273,7 +272,6 @@ static DynamicData& resolve_nested_member(
 
     size_t pos = key_field.find('[');
     if (pos != std::string::npos) {
-        int index;
         id.loan_list.push_back(
             current->loan_value(key_field.substr(0, pos)));
         current = &id.loan_list.back().get();
@@ -508,7 +506,7 @@ static py::object get_collection_member(
         auto& collection_type = static_cast<const CollectionType&>(collection.type());
         auto& enum_type = static_cast<const EnumType&>(collection_type.content_type());
         retval.reserve(collection.member_count());
-        for (int i = 1; i <= collection.member_count(); ++i) {
+        for (uint32_t i = 1; i <= collection.member_count(); ++i) {
             retval.push_back(
                 enum_type.member(
                     enum_type.find_member_by_ordinal(
@@ -533,7 +531,7 @@ static py::object get_collection_member(
         std::vector<rti::core::LongDouble> retval;
         auto loaned_member = dd.loan_value(key);
         DynamicData& member = loaned_member.get();
-        for (int i = 1; i <= member.member_count(); ++i) {
+        for (uint32_t i = 1; i <= member.member_count(); ++i) {
             auto ld = member.value<rti::core::LongDouble>(i);
             retval.push_back(ld);
         }
@@ -555,7 +553,7 @@ static py::object get_collection_member(
         std::vector<std::string> retval;
         auto loaned_member = dd.loan_value(key);
         DynamicData& member = loaned_member.get();
-        for (int i = 1; i <= member.member_count(); ++i) {
+        for (uint32_t i = 1; i <= member.member_count(); ++i) {
             retval.push_back(member.value<std::string>(i));
         }
         return py::cast(retval);
@@ -564,7 +562,7 @@ static py::object get_collection_member(
         std::vector<std::wstring> retval;
         auto loaned_member = dd.loan_value(key);
         DynamicData& member = loaned_member.get();
-        for (int i = 1; i <= member.member_count(); ++i) {
+        for (uint32_t i = 1; i <= member.member_count(); ++i) {
             std::wstring val;
             auto dd_wstr = member.get_values<DDS_Wchar>(i);
             for (auto c : dd_wstr) {
@@ -637,6 +635,7 @@ static py::object get_member(
             return get_collection_member(dd, mi.element_kind().underlying(), key);
         }
     }
+    /* fallthrough */
     default:
         return py::cast(dd.value<DynamicData>(key));
     }
@@ -851,7 +850,7 @@ static void set_collection_member(
         auto v = py::cast<std::vector<std::string>>(values);
         auto loan = dd.loan_value(key);
         DynamicData& member = loan.get();
-        for (int i = 0; i < v.size(); ++i) {
+        for (size_t i = 0; i < v.size(); ++i) {
             member.value<std::string>(i + 1, v[i]);
         }
         break;
@@ -860,7 +859,7 @@ static void set_collection_member(
         auto v = py::cast<std::vector<std::wstring>>(values);
         auto loan = dd.loan_value(key);
         DynamicData& member = loan.get();
-        for (int i = 0; i < v.size(); ++i) {
+        for (size_t i = 0; i < v.size(); ++i) {
             std::vector<DDS_Wchar> str;
             for (auto c : v[i]) {
                 str.push_back(static_cast<DDS_Wchar>(c));
