@@ -140,9 +140,8 @@ void init_class_defs(
                         return l;
                     },
                     [](PySubscriber& sub,
-                       dds::core::optional<PySubscriberListenerPtr> l) {
+                       PySubscriberListenerPtr listener) {
                         py::gil_scoped_release guard;
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
@@ -158,9 +157,8 @@ void init_class_defs(
             .def(
                     "set_listener",
                     [](PySubscriber& sub,
-                       dds::core::optional<PySubscriberListenerPtr> l,
+                       PySubscriberListenerPtr listener,
                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();

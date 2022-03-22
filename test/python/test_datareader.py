@@ -155,7 +155,7 @@ def test_datareader_listener_can_be_set(pubsub):
     assert pubsub.reader.listener is None
     
     pubsub.reader.listener = PointListener()
-    assert type(pubsub.reader.listener) == PointListener 
+    assert type(pubsub.reader.listener) is PointListener 
 
 
 # --- Instance tests ----------------------------------------------------------

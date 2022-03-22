@@ -199,9 +199,8 @@ void init_class_defs(
             .def(
                     "set_listener",
                     [](PyPublisher& pub,
-                       dds::core::optional<PyPublisherListenerPtr> l,
+                       PyPublisherListenerPtr listener,
                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
