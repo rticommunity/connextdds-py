@@ -272,9 +272,8 @@ void init_dds_typed_datareader_base_template(
             .def(py::init([](const PySubscriber& s,
                              const PyTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
-                             dds::core::optional<PyDataReaderListenerPtr<T>> l,
+                             PyDataReaderListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
                  }),
                  py::arg("sub"),
@@ -297,9 +296,8 @@ void init_dds_typed_datareader_base_template(
             .def(py::init([](const PySubscriber& s,
                              const PyContentFilteredTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
-                             dds::core::optional<PyDataReaderListenerPtr<T>> l,
+                             PyDataReaderListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDataReader<T>(s, t, q, listener, m);
                  }),
                  py::arg("sub"),
@@ -366,12 +364,7 @@ void init_dds_typed_datareader_base_template(
                     "listener",
                     [](PyDataReader<T>& dr) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyDataReaderListenerPtr<T>> l;
-                        auto ptr =
-                                downcast_dr_listener_ptr(get_dr_listener(dr));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_dr_listener_ptr(get_dr_listener(dr));
                     },
                     [](PyDataReader<T>& dr,
                        PyDataReaderListenerPtr<T> listener) {

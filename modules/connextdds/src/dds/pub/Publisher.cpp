@@ -103,9 +103,8 @@ void init_class_defs(
                  "Create a publisher.")
             .def(py::init([](const PyDomainParticipant& dp,
                              const qos::PublisherQos& q,
-                             dds::core::optional<PyPublisherListenerPtr> l,
+                             PyPublisherListenerPtr listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyPublisher(dp, q, listener, m);
                  }),
                  py::arg("participant"),
@@ -175,11 +174,7 @@ void init_class_defs(
                     "listener",
                     [](const PyPublisher& pub) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyPublisherListenerPtr> l;
-                        auto ptr = downcast_publisher_listener_ptr(get_publisher_listener(pub));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_publisher_listener_ptr(get_publisher_listener(pub));
                     },
                     [](PyPublisher& pub,
                        PyPublisherListenerPtr listener) {

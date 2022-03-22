@@ -184,10 +184,8 @@ void init_class_defs(
             "Create a new DomainParticipant with default QoS.")
             .def(py::init([](int32_t id,
                              const qos::DomainParticipantQos& q,
-                             dds::core::optional<PyDomainParticipantListenerPtr>
-                                     l,
+                             PyDomainParticipantListenerPtr listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyDomainParticipant(id, q, listener, m);
                  }),
                  py::arg("domain_id"),
@@ -211,16 +209,11 @@ void init_class_defs(
                     "listener",
                     [](const PyDomainParticipant& dp) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyDomainParticipantListenerPtr> l;
-                        auto ptr = downcast_dp_listener_ptr(get_dp_listener(dp));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_dp_listener_ptr(get_dp_listener(dp));
                     },
                     [](PyDomainParticipant& dp,
-                       dds::core::optional<PyDomainParticipantListenerPtr> l) {
+                       PyDomainParticipantListenerPtr listener) {
                         py::gil_scoped_release guard;
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
@@ -235,9 +228,8 @@ void init_class_defs(
             .def(
                     "set_listener",
                     [](PyDomainParticipant& dp,
-                       dds::core::optional<PyDomainParticipantListenerPtr> l,
+                       PyDomainParticipantListenerPtr listener,
                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();

@@ -100,9 +100,8 @@ void init_class_defs(
             "Create a subscriber under a DomainParticipant.")
             .def(py::init([](const PyDomainParticipant& dp,
                              const qos::SubscriberQos& q,
-                             dds::core::optional<PySubscriberListenerPtr> l,
+                             PySubscriberListenerPtr listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PySubscriber(dp, q, listener, m);
                  }),
                  py::arg("participant"),
@@ -133,14 +132,10 @@ void init_class_defs(
                     "listener",
                     [](const PySubscriber& sub) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PySubscriberListenerPtr> l;
-                        auto ptr = downcast_subscriber_listener_ptr(get_subscriber_listener(sub));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_subscriber_listener_ptr(
+                                get_subscriber_listener(sub));
                     },
-                    [](PySubscriber& sub,
-                       PySubscriberListenerPtr listener) {
+                    [](PySubscriber& sub, PySubscriberListenerPtr listener) {
                         py::gil_scoped_release guard;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;

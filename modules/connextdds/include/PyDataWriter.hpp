@@ -226,9 +226,8 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
     cls.def(py::init([](const PyPublisher& p,
                         const PyTopic<T>& t,
                         const dds::pub::qos::DataWriterQos& q,
-                        dds::core::optional<PyDataWriterListenerPtr<T>> l,
+                        PyDataWriterListenerPtr<T> listener,
                         const dds::core::status::StatusMask& m) {
-                auto listener = has_value(l) ? get_value(l) : nullptr;
                 return PyDataWriter(p, t, q, listener, m);
             }),
             py::arg("pub"),
@@ -341,12 +340,7 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
             "listener",
             [](PyDataWriter& dw) {
                 py::gil_scoped_release guard;
-                dds::core::optional<PyDataWriterListenerPtr<T>> l;
-                auto ptr = downcast_dw_listener_ptr(get_dw_listener(dw));
-                if (nullptr != ptr) {
-                    l = ptr;
-                }
-                return l;
+                return downcast_dw_listener_ptr(get_dw_listener(dw));
             },
             [](PyDataWriter& dw, PyDataWriterListenerPtr<T> listener) {
                 py::gil_scoped_release guard;

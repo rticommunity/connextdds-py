@@ -401,11 +401,7 @@ void init_dds_typed_topic_base_template(
                     "listener",
                     [](PyTopic<T>& t) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyTopicListenerPtr<T>> l;
-                        auto ptr = downcast_topic_listener_ptr(get_topic_listener(t));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_topic_listener_ptr(get_topic_listener(t));
                     },
                     [](PyTopic<T>& t, PyTopicListenerPtr<T> listener) {
                         py::gil_scoped_release guard;
@@ -512,9 +508,8 @@ void init_dds_typed_topic_template(
             .def(py::init([](const PyDomainParticipant& dp,
                              const std::string& n,
                              const dds::topic::qos::TopicQos& q,
-                             dds::core::optional<PyTopicListenerPtr<T>> l,
+                             PyTopicListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyTopic<T>(dp, n, q, listener, m);
                  }),
                  py::arg("participant"),
@@ -531,9 +526,8 @@ void init_dds_typed_topic_template(
                              const std::string& n,
                              const std::string& t,
                              const dds::topic::qos::TopicQos& q,
-                             dds::core::optional<PyTopicListenerPtr<T>> l,
+                             PyTopicListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyTopic<T>(dp, n, t, q, listener, m);
                  }),
                  py::arg("participant"),
