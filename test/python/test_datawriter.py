@@ -183,6 +183,12 @@ def test_datawriter_listener_can_be_set(pubsub):
     pubsub.writer.listener = PointListener()
     assert type(pubsub.writer.listener) is PointListener
 
+    # Test constructor
+    new_writer = dds.DataWriter(
+        pubsub.participant, pubsub.topic, dds.DataWriterQos(), listener)
+    assert new_writer.listener == listener
+    new_writer.close()
+
 # --- Instance tests ----------------------------------------------------------
 
 @pytest.mark.skip(reason="keys not supported yet")

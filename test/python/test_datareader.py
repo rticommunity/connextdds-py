@@ -157,6 +157,12 @@ def test_datareader_listener_can_be_set(pubsub):
     pubsub.reader.listener = PointListener()
     assert type(pubsub.reader.listener) is PointListener 
 
+    # Test constructor
+    new_reader = dds.DataReader(
+        pubsub.participant, pubsub.topic, dds.DataReaderQos(), listener)
+    assert new_reader.listener == listener
+    new_reader.close()
+
 
 # --- Instance tests ----------------------------------------------------------
 

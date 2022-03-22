@@ -126,6 +126,8 @@ def test_set_get_listener():
     assert p.listener == l
     p.set_listener(None, dds.StatusMask.NONE)
     assert p.listener is None
+    new_p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), l)
+    assert new_p.listener == l
 
 
 def test_find():

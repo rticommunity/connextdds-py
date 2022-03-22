@@ -13,7 +13,6 @@ import pytest
 from test_utils.fixtures import *
 import rti.idl as idl
 import rti.connextdds as dds
-from time import sleep
 
 
 @idl.struct
