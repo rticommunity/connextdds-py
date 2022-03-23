@@ -18,6 +18,7 @@ from rti.idl_impl.test_utils import *
 from test_utils.fixtures import *
 
 import common_types
+from test_annotations import AnnotationsTest
 
 def same_elements(a, b):
     return len(a) == len(b) and all(x in b for x in a)
@@ -41,7 +42,6 @@ idl_types = [
     common_types.Point,
     common_types.Point3D,
     common_types.Line,
-    common_types.AnnotationsTest,
     common_types.ComplexSequence,
     common_types.SequenceArrayTest,
     common_types.BoundSequenceArrayTest,
@@ -49,6 +49,7 @@ idl_types = [
     common_types.BoundString,
     common_types.UnboundString,
     common_types.OptionalsTest,
+    AnnotationsTest,
 ]
 
 
