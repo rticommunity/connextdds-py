@@ -16,6 +16,8 @@ import rti.idl_impl.test_utils as test_utils
 create_participant = test_utils.create_participant
 PubSubFixture = test_utils.PubSubFixture
 wait = test_utils.wait
+get_test_domain = test_utils.get_test_domain
+get_test_participant_qos = test_utils.get_test_participant_qos
 
 # Provides a participant exclusively for the current test
 @pytest.fixture
