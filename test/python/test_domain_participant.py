@@ -12,8 +12,8 @@
 import rti.connextdds as dds
 import pytest
 import utils
+from test_utils.fixtures import *
 
-DOMAIN_ID = 0
 
 # def test_participant_qos_value_type():
 #    pass
@@ -23,23 +23,23 @@ DOMAIN_ID = 0
 
 
 def test_participant_default_creation():
-    p = dds.DomainParticipant(DOMAIN_ID)
-    assert p.domain_id == DOMAIN_ID
+    p = dds.DomainParticipant(get_test_domain())
+    assert p.domain_id == get_test_domain()
 
 
 def test_participant_creation_w_default_qos():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
-    assert p.domain_id == DOMAIN_ID
+    p = dds.DomainParticipant(get_test_domain(), get_test_participant_qos())
+    assert p.domain_id == get_test_domain()
     event_count = p.qos.event.max_count
     assert event_count == dds.Event().max_count
 
 
 def test_participant_creation_w_qos():
     user_data_values = [10, 11, 12, 13, 14, 15]
-    qos = dds.DomainParticipantQos()
+    qos = get_test_participant_qos()
     qos.user_data.value = user_data_values
     qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(100)
-    p = dds.DomainParticipant(DOMAIN_ID, qos)
+    p = dds.DomainParticipant(get_test_domain(), qos)
     retrieved_qos = p.qos
     assert retrieved_qos.user_data.value == user_data_values
     assert (
@@ -48,16 +48,15 @@ def test_participant_creation_w_qos():
     )
 
 
-@pytest.mark.skip("PY-26: use test qos")
 def test_participant_creation_w_listener():
     l = dds.NoOpDomainParticipantListener()
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), l)
+    p = dds.DomainParticipant(get_test_domain(), get_test_participant_qos(), l)
     assert p.listener == l
     p.close()
 
 
 def test_participant_creation_failure():
-    qos = dds.DomainParticipantQos()
+    qos = get_test_participant_qos()
     qos.resource_limits.type_object_max_serialized_length = -2
     with pytest.raises(dds.Error):
         dds.DomainParticipant(0, qos)
@@ -74,14 +73,14 @@ def test_set_get_qos():
     assert not (qos.entity_factory.autoenable_created_entities)
     qos << dds.EntityFactory.auto_enable
     p << qos
-    retrieved_qos = dds.DomainParticipantQos()
+    retrieved_qos = get_test_participant_qos()
     p >> retrieved_qos
     assert retrieved_qos.entity_factory.autoenable_created_entities
 
 
 @pytest.mark.skip("PY-26: use test qos")
 def test_set_qos_exception():
-    p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos())
+    p = dds.DomainParticipant(get_test_domain(), get_test_participant_qos())
     qos = p.qos
     d = dds.Duration(77)
     db = dds.Database()
@@ -126,13 +125,11 @@ def test_set_get_listener():
     assert p.listener == l
     p.set_listener(None, dds.StatusMask.NONE)
     assert p.listener is None
-    new_p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), l)
-    assert new_p.listener == l
 
 
 def test_find():
-    id1 = DOMAIN_ID
-    id2 = DOMAIN_ID + 1
+    id1 = get_test_domain()
+    id2 = get_test_domain() + 1
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     found_p = dds.DomainParticipant.find(id1)
     not_found_p = dds.DomainParticipant.find(id2)
@@ -141,11 +138,11 @@ def test_find():
 
 
 def test_close():
-    assert dds.DomainParticipant.find(DOMAIN_ID) is None
+    assert dds.DomainParticipant.find(get_test_domain()) is None
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
-    assert dds.DomainParticipant.find(DOMAIN_ID) == p
+    assert dds.DomainParticipant.find(get_test_domain()) == p
     p.close()
-    assert dds.DomainParticipant.find(DOMAIN_ID) is None
+    assert dds.DomainParticipant.find(get_test_domain()) is None
 
 
 def test_already_closed_exception():
@@ -189,12 +186,12 @@ def test_already_closed_exception():
 
 @pytest.mark.skip("PY-26: use test qos")
 def test_retain():
-    id1 = DOMAIN_ID
-    id2 = DOMAIN_ID + 1
+    id1 = get_test_domain()
+    id2 = get_test_domain() + 1
 
     def scope_1():
         p1 = utils.create_participant()
-        p2 = dds.DomainParticipant(id2, dds.DomainParticipantQos())
+        p2 = dds.DomainParticipant(id2, get_test_participant_qos())
         p1.retain()
 
     def scope_2():
@@ -277,15 +274,15 @@ def test_domain_participant_config_params():
 
 @pytest.mark.skip("PY-26: use test qos")
 def test_find_extensions():
-    p_qos = dds.DomainParticipantQos()
+    p_qos = get_test_participant_qos()
     p_qos << dds.EntityName("MyParticipant1")
     assert p_qos.participant_name.name == "MyParticipant1"
 
-    p1 = dds.DomainParticipant(DOMAIN_ID, p_qos)
+    p1 = dds.DomainParticipant(get_test_domain(), p_qos)
     assert p1.qos.participant_name.name == "MyParticipant1"
 
     p_qos << dds.EntityName("MyParticipant2")
-    p2 = dds.DomainParticipant(DOMAIN_ID, p_qos)
+    p2 = dds.DomainParticipant(get_test_domain(), p_qos)
 
     assert dds.DomainParticipant.find("MyParticipant1") == p1
     assert dds.DomainParticipant.find("MyParticipant2") == p2
@@ -300,27 +297,27 @@ def test_retain_for_listener(set_after):
         p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
         p.set_listener(listener, dds.StatusMask.NONE)
     else:
-        p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), listener)
+        p = dds.DomainParticipant(get_test_domain(), get_test_participant_qos(), listener)
 
     def inner():
-        with dds.DomainParticipant.find(DOMAIN_ID) as new_p:
+        with dds.DomainParticipant.find(get_test_domain()) as new_p:
             assert new_p != None
             new_p.set_listener(None, dds.StatusMask.NONE)
 
     inner()
-    assert dds.DomainParticipant.find(DOMAIN_ID) is None
+    assert dds.DomainParticipant.find(get_test_domain()) is None
 
 # PY-26: does this need to be added back?
 #
 # def test_discovered_participants():
-# qos = dds.DomainParticipantQos()
-# p1 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p1"))
-# p2 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p2"))
-# p3 = dds.DomainParticipant(DOMAIN_ID, qos << dds.EntityName("p3"))
+# qos = get_test_participant_qos()
+# p1 = dds.DomainParticipant(get_test_domain(), qos << dds.EntityName("p1"))
+# p2 = dds.DomainParticipant(get_test_domain(), qos << dds.EntityName("p2"))
+# p3 = dds.DomainParticipant(get_test_domain(), qos << dds.EntityName("p3"))
 # time.sleep(3)
 # assert p
 # def test_dns_polling_period():
-# p = dds.DomainParticipant(DOMAIN_ID, dds.DomainParticipantQos(), None)
+# p = dds.DomainParticipant(get_test_domain(), get_test_participant_qos(), None)
 # assert p != None
 # dur = dds.Duration(42, 12)
 # p.
@@ -343,7 +340,7 @@ def test_participant_factory_qos_to_string():
 
 @pytest.mark.skip(reason="to_string not implemented yet")
 def test_domain_participant_qos_to_string():
-    the_qos = dds.DomainParticipantQos()
+    the_qos = get_test_participant_qos()
     assert str(the_qos) != ""
     assert "<participant_qos>" in str(the_qos)
     assert "</participant_qos>" in str(the_qos)

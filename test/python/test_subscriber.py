@@ -9,9 +9,7 @@
 # damages arising out of the use or inability to use the software.
 #
 
-import pytest
 from test_utils.fixtures import *
-import rti.idl as idl
 import rti.connextdds as dds
 
 
