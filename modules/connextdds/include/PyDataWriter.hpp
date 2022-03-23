@@ -226,9 +226,8 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
     cls.def(py::init([](const PyPublisher& p,
                         const PyTopic<T>& t,
                         const dds::pub::qos::DataWriterQos& q,
-                        dds::core::optional<PyDataWriterListenerPtr<T>> l,
+                        PyDataWriterListenerPtr<T> listener,
                         const dds::core::status::StatusMask& m) {
-                auto listener = has_value(l) ? get_value(l) : nullptr;
                 return PyDataWriter(p, t, q, listener, m);
             }),
             py::arg("pub"),
@@ -337,26 +336,33 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
             "Blocks the calling thread until all data written by a reliable "
             "DataWriter is acknowledged or until the timeout expires.");
 
-    cls.def_property_readonly(
+    cls.def_property(
             "listener",
             [](PyDataWriter& dw) {
                 py::gil_scoped_release guard;
-                dds::core::optional<PyDataWriterListenerPtr<T>> l;
-                auto ptr = downcast_dw_listener_ptr(get_dw_listener(dw));
-                if (nullptr != ptr) {
-                    l = ptr;
+                return downcast_dw_listener_ptr(get_dw_listener(dw));
+            },
+            [](PyDataWriter& dw, PyDataWriterListenerPtr<T> listener) {
+                py::gil_scoped_release guard;
+                if (nullptr != listener) {
+                    py::gil_scoped_acquire acquire;
+                    py::cast(listener).inc_ref();
                 }
-                return l;
+                auto old_listener = get_dw_listener(dw);
+                set_dw_listener(dw, listener);
+                if (nullptr != old_listener) {
+                    py::gil_scoped_acquire acquire;
+                    py::cast(old_listener).dec_ref();
+                }
             },
             "Get the listener associated with the DataWriter or set the "
-            "listener and status mask as a tuple.");
+            "listener.");
 
     cls.def(
-            "bind_listener",
+            "set_listener",
             [](PyDataWriter& dw,
-               dds::core::optional<PyDataWriterListenerPtr<T>> l,
+               PyDataWriterListenerPtr<T> listener,
                const dds::core::status::StatusMask& m) {
-                auto listener = has_value(l) ? get_value(l) : nullptr;
                 if (nullptr != listener) {
                     py::gil_scoped_acquire acquire;
                     py::cast(listener).inc_ref();
@@ -372,26 +378,6 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
             py::arg("event_mask"),
             py::call_guard<py::gil_scoped_release>(),
             "Set the listener and event mask for the DataWriter.");
-
-    cls.def(
-            "bind_listener",
-            [](PyDataWriter& dw,
-               dds::core::optional<PyDataWriterListenerPtr<T>> l) {
-                auto listener = has_value(l) ? get_value(l) : nullptr;
-                if (nullptr != listener) {
-                    py::gil_scoped_acquire acquire;
-                    py::cast(listener).inc_ref();
-                }
-                auto old_listener = get_dw_listener(dw);
-                set_dw_listener(dw, listener);
-                if (nullptr != get_dw_listener(dw)) {
-                    py::gil_scoped_acquire acquire;
-                    py::cast(old_listener).dec_ref();
-                }
-            },
-            py::arg("listener"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Set the listener for the DataWriter.");
 
     cls.def_property_readonly(
             "liveliness_lost_status",

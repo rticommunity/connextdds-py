@@ -19,8 +19,11 @@
 
 #include "IdlTopic.hpp"
 #include "IdlContentFilteredTopic.hpp"
+#include "IdlTopicListener.hpp"
 #include "IdlDataWriter.hpp"
+#include "IdlDataWriterListener.hpp"
 #include "IdlDataReader.hpp"
+#include "IdlDataReaderListener.hpp"
 
 #include "dds_c/dds_c_interpreter.h"
 
@@ -237,20 +240,32 @@ void init_dds_typed_topic_template(IdlTopicPyClass &cls)
             "Create a Topic for an @idl.struct or @idl.union type with default "
             "QoS");
 
+
     cls.def(py::init([](PyDomainParticipant& participant,
-                        const ::std::string& topic_name,
+                        const std::string& topic_name,
                         py::object& type,
-                        const dds::topic::qos::TopicQos& qos) {
-                return create_idl_py_topic(participant, topic_name, type, &qos);
+                        const dds::topic::qos::TopicQos& qos,
+                        PyTopicListenerPtr<CSampleWrapper> listener,
+                        const dds::core::status::StatusMask& mask) {
+                return create_idl_py_topic(
+                    participant, 
+                    topic_name, 
+                    type, 
+                    &qos,
+                    listener,
+                    mask);
             }),
             py::arg("participant"),
             py::arg("topic_name"),
             py::arg("type"),
             py::arg("qos"),
-            "Create a Topic for an @idl.struct or @idl.union type with specific "
-            "QoS");
-
-    // TODO PY-17: add the rest of constructors (with listener)
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            "Create a Topic for an @idl.struct or @idl.union type with "
+            "specific QoS, listener, and mask");
 
     cls.def_property_readonly(
             "type_support",
@@ -309,6 +324,11 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     std::vector<PyContentFilteredTopic<CSampleWrapper>>>();
             init_content_filtered_topic<CSampleWrapper>(cft);
 
+            IdlTopicListenerPyClass tl(module, "TopicListener");
+            IdlNoOpTopicListenerPyClass notl(module, "NoOpTopicListener");
+
+            init_topic_listener<CSampleWrapper>(tl, notl);
+
             IdlDataWriterPyClass dw(module, "DataWriter");
 
             pyrti::bind_vector<PyDataWriter<CSampleWrapper>>(
@@ -320,6 +340,12 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
 
             init_datawriter(dw);
 
+            IdlDataWriterListenerPyClass dwl(module, "DataWriterListener");
+            IdlNoOpDataWriterListenerPyClass nodwl(
+                    module,
+                    "NoOpDataWriterListener");
+            init_datawriter_listener(dwl, nodwl);
+
             IdlDataReaderPyClass dr(module, "DataReader");
 
             pyrti::bind_vector<PyDataReader<CSampleWrapper>>(
@@ -330,6 +356,13 @@ void process_inits<rti::topic::cdr::CSampleWrapper>(
                     std::vector<PyDataReader<CSampleWrapper>>>();
 
             init_datareader<CSampleWrapper>(dr);
+
+            IdlDataReaderListenerPyClass drl(module, "DataReaderListener");
+            IdlNoOpDataReaderListenerPyClass nodrl(
+                    module,
+                    "NoOpDataReaderListener");
+            init_datareader_listener(drl, nodrl);
+            
         });
     });
 }

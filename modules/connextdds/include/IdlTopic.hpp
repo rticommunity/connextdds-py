@@ -85,7 +85,10 @@ inline PyIdlTopic create_idl_py_topic(
         PyDomainParticipant& participant,
         const ::std::string& topic_name,
         py::object& type,
-        const dds::topic::qos::TopicQos* qos = nullptr)
+        const dds::topic::qos::TopicQos* qos = nullptr,
+        PyTopicListenerPtr<rti::topic::cdr::CSampleWrapper> listener = nullptr,
+        const dds::core::status::StatusMask& mask =
+                dds::core::status::StatusMask::all())
 {
     // Get the type support created in python
     py::object type_support = get_type_support_from_idl_type(type);
@@ -107,11 +110,16 @@ inline PyIdlTopic create_idl_py_topic(
                     topic_name,
                     plugin->type_name().c_str(),
                     qos,
-                    nullptr,
-                    dds::core::status::StatusMask::none()));
+                    listener,
+                    mask));
 
     topic->set_user_data_(type_support.ptr());
-
+    
+    if (listener != nullptr) {
+        py::gil_scoped_acquire acquire;
+        py::cast(listener).inc_ref();
+    }
+    
     return topic;
 }
 

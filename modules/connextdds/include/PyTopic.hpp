@@ -397,23 +397,31 @@ void init_dds_typed_topic_base_template(
                  py::arg("topic"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Create a typed Topic from an AnyTopic.")
-            .def_property_readonly(
+            .def_property(
                     "listener",
                     [](PyTopic<T>& t) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyTopicListenerPtr<T>> l;
-                        auto ptr = downcast_topic_listener_ptr(get_topic_listener(t));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_topic_listener_ptr(get_topic_listener(t));
+                    },
+                    [](PyTopic<T>& t, PyTopicListenerPtr<T> listener) {
+                        py::gil_scoped_release guard;
+                        if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(listener).inc_ref();
+                        }
+                        auto old_listener = get_topic_listener(t);
+                        set_topic_listener(t, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     "The listener.")
             .def(
-                    "bind_listener",
+                    "set_listener",
                     [](PyTopic<T>& t,
-                       dds::core::optional<PyTopicListenerPtr<T>> l,
+                       PyTopicListenerPtr<T> listener,
                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
@@ -429,25 +437,6 @@ void init_dds_typed_topic_base_template(
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Set the listener and event mask.")
-            .def(
-                    "bind_listener",
-                    [](PyTopic<T>& t,
-                       dds::core::optional<PyTopicListenerPtr<T>> l) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
-                        }
-                        auto old_listener = get_topic_listener(t);
-                        set_topic_listener(t, listener);
-                        if (nullptr != old_listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(old_listener).dec_ref();
-                        }
-                    },
-                    py::arg("listener"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Set the listener.")
             .def_property(
                     "qos",
                     [](const PyTopic<T>& t) {
@@ -519,9 +508,8 @@ void init_dds_typed_topic_template(
             .def(py::init([](const PyDomainParticipant& dp,
                              const std::string& n,
                              const dds::topic::qos::TopicQos& q,
-                             dds::core::optional<PyTopicListenerPtr<T>> l,
+                             PyTopicListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyTopic<T>(dp, n, q, listener, m);
                  }),
                  py::arg("participant"),
@@ -538,9 +526,8 @@ void init_dds_typed_topic_template(
                              const std::string& n,
                              const std::string& t,
                              const dds::topic::qos::TopicQos& q,
-                             dds::core::optional<PyTopicListenerPtr<T>> l,
+                             PyTopicListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyTopic<T>(dp, n, t, q, listener, m);
                  }),
                  py::arg("participant"),

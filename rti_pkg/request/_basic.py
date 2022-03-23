@@ -255,12 +255,12 @@ class Requester(_util.RequestReplyBase):
         # type: (Optional[Callable[[Requester]]]) -> None
         if callback is None:
             self._callback = callback
-            self._reader.bind_listener(None, rti.connextdds.StatusMask.NONE)
+            self._reader.set_listener(None, rti.connextdds.StatusMask.NONE)
         else:
             self.__callback = callback
             listener_cls = _util.get_listener_class(self.__reply_type)
             listener = listener_cls(self, callback)
-            self._reader.bind_listener(listener, rti.connextdds.StatusMask.DATA_AVAILABLE)
+            self._reader.set_listener(listener, rti.connextdds.StatusMask.DATA_AVAILABLE)
 
 
     @classmethod
@@ -498,10 +498,10 @@ class Replier(_util.RequestReplyBase):
     def on_request_available(self, callback):
         # type(Optional[Callable[[Replier]]]) -> None
         if callback is None:
-            self._reader.bind_listener(None, rti.connextdds.StatusMask.NONE)
+            self._reader.set_listener(None, rti.connextdds.StatusMask.NONE)
             self._callback = None
         else:
             self._callback = callback
             listener_cls = _util.get_listener_class(self._reply_type)
             listener = listener_cls(self, callback)
-            self._reader.bind_listener(listener, rti.connextdds.StatusMask.DATA_AVAILABLE)
+            self._reader.set_listener(listener, rti.connextdds.StatusMask.DATA_AVAILABLE)
