@@ -197,6 +197,17 @@ def test_sequence_serialization_with_int_element_out_of_range_is_safe():
     assert deserialized_sample.weights_array[2] == sample.weights_array[2]
 
 
+def test_sequence_iterator_serialization():
+    ts = idl.get_type_support(SequenceTest)
+
+    # The serialization routines support any sequence of elements, including
+    # a lazy iterator such as range()
+    sample = SequenceTest(weights=range(2, 5))
+    buffer = ts.serialize(sample)
+    deserialized_sample = ts.deserialize(buffer)
+    assert deserialized_sample.weights == [2, 3, 4]
+
+
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_sequence_publication_fails_when_out_of_bounds(shared_participant, SequenceTestType):
     fixture = PubSubFixture(shared_participant, SequenceTestType)
