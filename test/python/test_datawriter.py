@@ -151,6 +151,40 @@ def test_write_list_of_pairs_with_shift_operator(pubsub):
     assert all(info.source_timestamp == dds.Time(sample.x) for info, sample in zip(infos, samples))
 
 
+def test_datawriter_listener_can_be_set(pubsub):
+    class PointListener(dds.NoOpDataWriterListener):
+        def on_instance_replaced(self, writer, handle):
+            pass
+
+    class OtherPointListener(dds.NoOpDataWriterListener):
+        def on_instance_replaced(self, writer, handle):
+            pass
+
+    listener = PointListener()
+    other_listener = OtherPointListener()
+
+    assert pubsub.writer.listener is None
+
+    pubsub.writer.listener = listener
+    assert pubsub.writer.listener == listener
+
+    # Test set_listener fn
+    pubsub.writer.set_listener(other_listener, dds.StatusMask.ALL)
+    assert pubsub.writer.listener == other_listener
+
+    # Test it can be set to none
+    pubsub.writer.listener = None
+    assert pubsub.writer.listener is None
+    
+    pubsub.writer.listener = PointListener()
+    assert type(pubsub.writer.listener) is PointListener
+
+    # Test constructor
+    new_writer = dds.DataWriter(
+        pubsub.participant, pubsub.topic, dds.DataWriterQos(), listener)
+    assert new_writer.listener == listener
+    new_writer.close()
+
 # --- Instance tests ----------------------------------------------------------
 
 

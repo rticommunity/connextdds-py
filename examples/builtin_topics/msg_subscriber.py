@@ -44,7 +44,7 @@ def subscriber_main(domain_id, sample_count, participant_auth):
     msg_type = dds.QosProvider("msg.xml").type("builtin_topics_lib", "msg")
     topic = dds.DynamicData.Topic(participant, "Example msg", msg_type)
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic)
-    reader.bind_listener(MsgListener(), dds.StatusMask.DATA_AVAILABLE)
+    reader.set_listener(MsgListener(), dds.StatusMask.DATA_AVAILABLE)
 
     count = 0
     while (sample_count == 0) or (count < sample_count):

@@ -70,11 +70,11 @@ def publisher_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
     # Participant properties give access to the builtin readers
-    participant.participant_reader.bind_listener(
+    participant.participant_reader.set_listener(
         BuiltinParticipantListener(),
         dds.StatusMask.data_available())
 
-    participant.subscription_reader.bind_listener(
+    participant.subscription_reader.set_listener(
         BuiltinSubscriptionListener(),
         dds.StatusMask.data_available())
 
@@ -124,7 +124,7 @@ def subscriber_main(domain_id, sample_count, participant_auth):
     msg_type = dds.QosProvider('msg.xml').type('builtin_topics_lib', 'msg')
     topic = dds.DynamicData.Topic(participant, 'Example msg', msg_type)
     reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic)
-    reader.bind_listener(MsgListener(), dds.StatusMask.data_available())
+    reader.set_listener(MsgListener(), dds.StatusMask.data_available())
 
     count = 0
     while (sample_count == 0) or (count < sample_count):

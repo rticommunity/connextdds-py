@@ -76,11 +76,11 @@ def publisher_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
     # Participant properties give access to the builtin readers
-    participant.participant_reader.bind_listener(
+    participant.participant_reader.set_listener(
         BuiltinParticipantListener(), dds.StatusMask.DATA_AVAILABLE
     )
 
-    participant.subscription_reader.bind_listener(
+    participant.subscription_reader.set_listener(
         BuiltinSubscriptionListener(), dds.StatusMask.DATA_AVAILABLE
     )
 
