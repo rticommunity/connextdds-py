@@ -124,14 +124,11 @@ def get_size(type: ctypes.Structure) -> int:
 
 
 def _create_array_ctype(element_ctype: type, array_info: annotations.ArrayAnnotation):
-    if not array_info.is_single_dimension:
-        raise TypeError(f'Multi-dimensional arrays are not supported')
-
     if issubclass(element_ctype, csequence.Sequence):
         raise TypeError(
             f'Arrays of sequences are not supported: wrap the sequence in a @idl.alias or @idl.struct')
 
-    return element_ctype * array_info.dimensions
+    return element_ctype * array_info.total_size
 
 
 def _get_member_ctype(py_type, member_annotations):
@@ -261,8 +258,9 @@ def _get_member_dynamic_type(py_type, member_annotations):
         array_info = annotations.find_annotation(
             member_annotations, annotations.ArrayAnnotation)
         if array_info.is_array:
+            # TODO PY-17: Use array_info.dimensions
             return _type_factory.create_array(
-                member_dynamic_type, array_info.dimensions)
+                member_dynamic_type, array_info.total_size)
         else:
             bound = annotations.find_annotation(
                 member_annotations, cls=annotations.BoundAnnotation)

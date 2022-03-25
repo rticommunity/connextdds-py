@@ -33,7 +33,8 @@ from test_sequences import SequenceTest, create_sequence_sample
         'custom_factory': [idl.array(3)],
         'strings': [idl.array(3), idl.element_annotations([idl.bound(5)])],
         'wstrings': [idl.array(3), idl.element_annotations([idl.utf16, idl.bound(5)])],
-        'complex': [idl.array(3)]
+        'complex': [idl.array(3)],
+        'multi': [idl.array([2, 3])]
     }
 )
 class ArrayTest:
@@ -44,6 +45,7 @@ class ArrayTest:
     strings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
     wstrings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
     complex: Sequence[SequenceTest] = field(default_factory=idl.list_factory(SequenceTest, 3))
+    multi: Sequence[str] = field(default_factory=idl.list_factory(str, 6))
 
 
 def create_array_sample():
@@ -53,7 +55,8 @@ def create_array_sample():
         prices=[1.5, 2.5, 3.5, 4.5, 5.5],
         strings=["hi", "world", "!"],
         wstrings=["hi", "world", "!"],
-        complex=[create_sequence_sample()] * 2 + [SequenceTest(vertices_bounded=[Point(1, 1)])])
+        complex=[create_sequence_sample()] * 2 + [SequenceTest(vertices_bounded=[Point(1, 1)])],
+        multi=["hello", "world", "!!"] * 2)
 
 
 @pytest.fixture
@@ -67,7 +70,7 @@ def test_array_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "ArrayTest"
-    assert len(dt.members()) == 7
+    assert len(dt.members()) == 8
 
     point_ts = idl.get_type_support(Point)
     assert dt["vertices"].type == dds.ArrayType(point_ts.dynamic_type, 3)
@@ -78,7 +81,13 @@ def test_array_plugin():
     assert dt["wstrings"].type == dds.ArrayType(dds.WStringType(5), 3)
     element_ts = idl.get_type_support(SequenceTest)
     assert dt["complex"].type == dds.ArrayType(element_ts.dynamic_type, 3)
+    assert dt["multi"].type == dds.ArrayType(dds.StringType(), 2 * 3)
 
+
+@pytest.mark.xfail(reason="TODO PY-17: multi-dimensional arrays are created flat for now")
+def test_multi_dim_array_dynamic_type():
+    dt = idl.get_type_support(ArrayTest).dynamic_type
+    assert dt["multi"].type == dds.ArrayType(dds.StringType(), [2, 3])
 
 def test_array_default_creation():
     sample = ArrayTest()
@@ -89,6 +98,7 @@ def test_array_default_creation():
     assert sample.strings == [""] * 3
     assert sample.wstrings == [""] * 3
     assert sample.complex == [SequenceTest()] * 3
+    assert sample.multi == [""] * 6
 
     # The elements are copies
     assert sample.vertices[0] is not sample.vertices[1]

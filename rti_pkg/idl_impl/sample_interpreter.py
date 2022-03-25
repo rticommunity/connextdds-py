@@ -995,17 +995,17 @@ class SamplePrograms:
         element_type = reflection_utils.get_underlying_type(field.type)
 
         if reflection_utils.is_primitive_or_enum(element_type):
-                factory_type = field.default_factory
-                if reflection_utils.supports_buffer_protocol(factory_type):
-                    c_to_py_instr = CopyPrimitiveArrayToBufferInstruction(
-                        field.name)
-                    py_to_c_instr = CopyBufferToArrayInstruction(
-                        field.name)
-                else:
-                    c_to_py_instr = CopyPrimitiveArrayToListInstruction(
-                        field.name)
-                    py_to_c_instr = CopyPrimitiveListToArrayInstruction(
-                        field.name)
+            factory_type = field.default_factory
+            if reflection_utils.supports_buffer_protocol(factory_type):
+                c_to_py_instr = CopyPrimitiveArrayToBufferInstruction(
+                    field.name)
+                py_to_c_instr = CopyBufferToArrayInstruction(
+                    field.name)
+            else:
+                c_to_py_instr = CopyPrimitiveArrayToListInstruction(
+                    field.name)
+                py_to_c_instr = CopyPrimitiveListToArrayInstruction(
+                    field.name)
 
         elif element_type is str:
             # Get the annotations applied to the element type

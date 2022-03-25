@@ -13,6 +13,7 @@
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Union, Any
+from functools import reduce
 import rti.connextdds as dds
 
 # --- Annotation classes ------------------------------------------------------
@@ -54,6 +55,12 @@ class ArrayAnnotation:
     @property
     def is_single_dimension(self) -> bool:
         return isinstance(self.dimensions, int)
+
+    @property
+    def total_size(self) -> int:
+        if self.is_single_dimension:
+            return self.dimensions
+        return reduce(lambda x, y: x * y, self.dimensions)
 
 class CharEncoding(IntEnum):
     UTF8 = 0
