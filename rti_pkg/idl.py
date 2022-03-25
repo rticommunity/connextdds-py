@@ -87,16 +87,23 @@ final = annotations.ExtensibilityAnnotation(
 # --- Dataclass extensions ----------------------------------------------------
 
 
-def array_factory(element_type: type, size: int = 0):
-    return idl_impl.PrimitiveArrayFactory(element_type, size)
+def array_factory(element_type: type, size: Union[int, List[int]] = 0):
+    return idl_impl.PrimitiveArrayFactory(
+        element_type,
+        annotations.get_total_size_from_dimensions(size))
 
-def list_factory(element_type_or_value: Any, size: int):
+
+def list_factory(element_type_or_value: Any, size: Union[int, List[int]]):
     if type(element_type_or_value) is type:
         # If we pass a type, the factory instantiates new objects of that type
-        return idl_impl.ListFactory(element_type_or_value, size)
+        return idl_impl.ListFactory(
+            element_type=element_type_or_value,
+            size=annotations.get_total_size_from_dimensions(size))
     else:
         # If we pass a value, the factory returns a list with the same value
-        return idl_impl.ValueListFactory(element_type_or_value, size)
+        return idl_impl.ValueListFactory(
+            element_value=element_type_or_value,
+            size=annotations.get_total_size_from_dimensions(size))
 
 
 # --- Exceptions --------------------------------------------------------------

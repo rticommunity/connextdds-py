@@ -34,7 +34,8 @@ from test_sequences import SequenceTest, create_sequence_sample
         'strings': [idl.array(3), idl.element_annotations([idl.bound(5)])],
         'wstrings': [idl.array(3), idl.element_annotations([idl.utf16, idl.bound(5)])],
         'complex': [idl.array(3)],
-        'multi': [idl.array([2, 3])]
+        'multi_str': [idl.array([2, 3])],
+        'multi_int': [idl.array([3, 2])]
     }
 )
 class ArrayTest:
@@ -45,7 +46,9 @@ class ArrayTest:
     strings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
     wstrings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
     complex: Sequence[SequenceTest] = field(default_factory=idl.list_factory(SequenceTest, 3))
-    multi: Sequence[str] = field(default_factory=idl.list_factory(str, 6))
+    multi_str: Sequence[str] = field(default_factory=idl.list_factory(str, [2, 3]))
+    multi_int: Sequence[int] = field(
+        default_factory=idl.array_factory(int, [3, 2]))
 
 
 def create_array_sample():
@@ -56,7 +59,8 @@ def create_array_sample():
         strings=["hi", "world", "!"],
         wstrings=["hi", "world", "!"],
         complex=[create_sequence_sample()] * 2 + [SequenceTest(vertices_bounded=[Point(1, 1)])],
-        multi=["hello", "world", "!!"] * 2)
+        multi_str=["hello", "world", "!!"] * 2,
+        multi_int=array('q', [1, 2, 3] * 2))
 
 
 @pytest.fixture
@@ -70,7 +74,7 @@ def test_array_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "ArrayTest"
-    assert len(dt.members()) == 8
+    assert len(dt.members()) == 9
 
     point_ts = idl.get_type_support(Point)
     assert dt["vertices"].type == dds.ArrayType(point_ts.dynamic_type, 3)
@@ -81,13 +85,15 @@ def test_array_plugin():
     assert dt["wstrings"].type == dds.ArrayType(dds.WStringType(5), 3)
     element_ts = idl.get_type_support(SequenceTest)
     assert dt["complex"].type == dds.ArrayType(element_ts.dynamic_type, 3)
-    assert dt["multi"].type == dds.ArrayType(dds.StringType(), 2 * 3)
+    assert dt["multi_str"].type == dds.ArrayType(dds.StringType(), 2 * 3)
+    assert dt["multi_int"].type == dds.ArrayType(dds.Int64Type(), 3 * 2)
 
 
-@pytest.mark.xfail(reason="TODO PY-17: multi-dimensional arrays are created flat for now")
+@pytest.mark.xfail(reason="TODO PY-17: multi_str-dimensional arrays are created flat for now")
 def test_multi_dim_array_dynamic_type():
     dt = idl.get_type_support(ArrayTest).dynamic_type
-    assert dt["multi"].type == dds.ArrayType(dds.StringType(), [2, 3])
+    assert dt["multi_str"].type == dds.ArrayType(dds.StringType(), [2, 3])
+    assert dt["multi_int"].type == dds.ArrayType(dds.Int32Type(), [3, 2])
 
 def test_array_default_creation():
     sample = ArrayTest()
@@ -98,7 +104,8 @@ def test_array_default_creation():
     assert sample.strings == [""] * 3
     assert sample.wstrings == [""] * 3
     assert sample.complex == [SequenceTest()] * 3
-    assert sample.multi == [""] * 6
+    assert sample.multi_str == [""] * 6
+    assert sample.multi_int == array('q', [0] * 6)
 
     # The elements are copies
     assert sample.vertices[0] is not sample.vertices[1]

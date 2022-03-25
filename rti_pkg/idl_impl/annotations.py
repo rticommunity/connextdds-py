@@ -44,6 +44,14 @@ class BoundAnnotation:
     value: int = UNBOUNDED
 
 
+def get_total_size_from_dimensions(dimensions: Union[None, int, List[int]]) -> int:
+    if dimensions is None:
+        return 1
+    elif isinstance(dimensions, int):
+        return dimensions
+    else:
+        return reduce(lambda x, y: x * y, dimensions)
+
 @dataclass
 class ArrayAnnotation:
     dimensions: Union[None, int, List[int]] = None
@@ -53,14 +61,8 @@ class ArrayAnnotation:
         return self.dimensions is not None
 
     @property
-    def is_single_dimension(self) -> bool:
-        return isinstance(self.dimensions, int)
-
-    @property
     def total_size(self) -> int:
-        if self.is_single_dimension:
-            return self.dimensions
-        return reduce(lambda x, y: x * y, self.dimensions)
+        return get_total_size_from_dimensions(self.dimensions)
 
 class CharEncoding(IntEnum):
     UTF8 = 0
