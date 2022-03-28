@@ -534,6 +534,11 @@ class TypeSupport:
 
     def __init__(self, idl_type, kind: TypeSupportKind, type_annotations = None, member_annotations=None):
         self.type = idl_type
+
+        # For all types except unions, the object factory for deserialization
+        # simply invokes the type's constructor with no arguments, which
+        # in the case of a struct initializes each field to its default value.
+        self.default_factory = idl_type
         self.allow_duck_typing = False
         base_type = get_idl_base_type(idl_type)
         if base_type is not None:
@@ -563,6 +568,12 @@ class TypeSupport:
                 idl_type, self.c_type, type_annotations, member_annotations)
         elif kind == TypeSupportKind.UNION:
             is_union = True
+
+            # When creating a union for deserialization, don't set assign a
+            # default object to the "value" field. The deserialization will
+            # do it right after.
+            self.default_factory = lambda: idl_type(0, None)
+
             discriminator = union_discriminator(idl_type)
             cases = union_cases(idl_type)
             self.c_type = create_ctype_from_union_dataclass(
@@ -603,14 +614,14 @@ class TypeSupport:
         return ctypes.cast(c_sample_ptr, self.c_type_ptr)[0]
 
     def _create_py_sample(self, c_sample_ptr):
-        py_sample = self.type()
+        py_sample = self.default_factory()
         c_sample = self._cast_c_sample(c_sample_ptr)
         self._sample_programs.c_to_py_program.execute(
             src=c_sample, dst=py_sample)
         return py_sample
 
     def _create_py_sample_no_ptr(self, c_sample):
-        py_sample = self.type()
+        py_sample = self.default_factory()
         self._sample_programs.c_to_py_program.execute(
             src=c_sample, dst=py_sample)
         return py_sample
