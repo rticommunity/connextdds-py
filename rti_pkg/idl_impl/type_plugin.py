@@ -11,6 +11,7 @@
 
 from dataclasses import dataclass, fields
 from typing import List, Any, ClassVar, Optional, Dict
+from enum import Enum
 import itertools
 import array
 import ctypes
@@ -18,6 +19,7 @@ import rti.connextdds as dds
 import rti.idl_impl.sample_interpreter as sample_interpreter
 import rti.idl_impl.csequence as csequence
 import rti.idl_impl.reflection_utils as reflection_utils
+from rti.idl_impl.unions import Case, union_cases, union_discriminator
 
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.annotations as annotations
@@ -204,6 +206,34 @@ def create_ctype_from_dataclass(py_type, member_annotations):
         }
     )
 
+
+def create_ctype_from_union_dataclass(py_type, discriminator, cases, member_annotations):
+    """Given a user-level dataclass reprenting a union, return an equivalent
+    ctypes type that can be used by the C interpreter
+    """
+
+    # Discriminator
+    current_annotations = member_annotations.get(discriminator.name, {})
+    member_type = _get_member_ctype(discriminator.type, current_annotations)
+    c_fields = [(discriminator.name, member_type)]
+
+    # Cases
+    for field in cases:
+        current_annotations = member_annotations.get(field.name, {})
+        member_type = _get_member_ctype(
+            reflection_utils.get_underlying_type(field.type),
+            current_annotations)
+        c_fields.append((field.name, member_type))
+
+    return type(
+        py_type.__name__ + 'Native',
+        (ctypes.Structure,),
+        {
+            '__doc__': f'Equivalent C type for {py_type.__name__}',
+            '_fields_': c_fields
+        }
+    )
+
 # --- Dynamic type creation ---------------------------------------------------
 
 
@@ -334,6 +364,62 @@ def create_dynamic_type_from_dataclass(
 
     return dynamic_type
 
+
+def create_dynamic_type_from_union_dataclass(
+    py_type: type,
+    c_type: ctypes.Structure,
+    discriminator,
+    cases,
+    type_annotations: List[Any],
+    member_annotations: Dict[str, Any]
+) -> dds._TypePlugin:
+    """Given an IDL-derived dataclass representing a union, return the
+    DynamicType that describes the IDL type
+    """
+
+    extensibility = annotations.find_annotation(
+        type_annotations, annotations.ExtensibilityAnnotation)
+
+    if member_annotations is None:
+        member_annotations = {}
+
+    member_args = []
+    for field in cases:
+        current_annotations = member_annotations.get(field.name, {})
+        member_type = _get_member_dynamic_type(
+            reflection_utils.get_underlying_type(field.type),
+            current_annotations)
+
+        member_id = annotations.find_annotation(
+            current_annotations, cls=annotations.IdAnnotation)
+        case: Case = field.default
+
+        # TODO PY-17: default label not supported yet
+        member_args.append(
+            (field.name, member_type, case.labels, member_id.value, False))
+
+    current_annotations = member_annotations.get(discriminator.name, {})
+    discriminator_type = member_type = _get_member_dynamic_type(
+        discriminator.type, current_annotations)
+
+    # Create the type only after all the members have been parsed. The
+    # type_factory requires that dependent types are created first
+    dynamic_type = _type_factory.create_union(
+        py_type.__name__,
+        discriminator_type,
+        extensibility.value,
+        get_size(c_type),
+        get_offsets(c_type))
+
+    for member_arg in member_args:
+        _type_factory.add_union_member(dynamic_type, *member_arg)
+
+    # Once finalized the type creation, this creates the plugin and assigns it
+    # to dynamic_type
+    _type_factory.create_type_plugin(dynamic_type)
+
+    return dynamic_type
+
 def create_dynamic_type_from_alias_dataclass(
     py_type: type,
     c_type: ctypes.Structure,
@@ -436,10 +522,17 @@ def copy_from_c_sample(sample, c_sample):
 
 # --- Type support ------------------------------------------------------------
 
+class TypeSupportKind(Enum):
+    STRUCT = 1
+    UNION = 2
+    ENUM = 3
+    ALIAS = 4
+
+
 class TypeSupport:
     """Support and utility methods for the usage of an IDL type"""
 
-    def __init__(self, idl_type, type_annotations=None, member_annotations=None, is_alias=False):
+    def __init__(self, idl_type, kind: TypeSupportKind, type_annotations = None, member_annotations=None):
         self.type = idl_type
         self.allow_duck_typing = False
         base_type = get_idl_base_type(idl_type)
@@ -453,20 +546,31 @@ class TypeSupport:
         self.member_annotations = member_annotations
 
         # C type and plugin and dynamic type
-        if reflection_utils.is_enum(idl_type):
+        is_union = False
+        if kind == TypeSupportKind.ENUM:
             self.c_type = ctypes.c_int32
             self._plugin_dynamic_type = create_dynamic_type_from_enum(
                 idl_type, type_annotations)
-        elif is_alias:
+        elif kind == TypeSupportKind.ALIAS:
             self.c_type = create_ctype_from_dataclass(
                 idl_type, member_annotations)
             self._plugin_dynamic_type = create_dynamic_type_from_alias_dataclass(
                 idl_type, self.c_type, member_annotations)
-        else:
+        elif kind == TypeSupportKind.STRUCT:
             self.c_type = create_ctype_from_dataclass(
                 idl_type, member_annotations)
             self._plugin_dynamic_type = create_dynamic_type_from_dataclass(
                 idl_type, self.c_type, type_annotations, member_annotations)
+        elif kind == TypeSupportKind.UNION:
+            is_union = True
+            discriminator = union_discriminator(idl_type)
+            cases = union_cases(idl_type)
+            self.c_type = create_ctype_from_union_dataclass(
+                idl_type, discriminator, cases, member_annotations)
+            self._plugin_dynamic_type = create_dynamic_type_from_union_dataclass(
+                idl_type, self.c_type, discriminator, cases, type_annotations, member_annotations)
+        else:
+            raise ValueError(f'Unknown type kind {kind}')
 
         # Pointer and sequence types
         self.c_type_ptr = ctypes.POINTER(self.c_type)
@@ -474,10 +578,11 @@ class TypeSupport:
 
         # Python/C sample conversion programs
         self._sample_programs = sample_interpreter.SamplePrograms(
-            self.type,
-            self.c_type,
-            self._plugin_dynamic_type,
-            member_annotations)
+            py_type=self.type,
+            c_type=self.c_type,
+            type_plugin=self._plugin_dynamic_type,
+            member_annotations=member_annotations,
+            is_union=is_union)
 
     def _create_c_sample(self, sample):
         if not self.allow_duck_typing and type(sample) is not self.type:

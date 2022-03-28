@@ -61,6 +61,22 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                                     nullptr };
             });
 
+    cls.def("create_union",
+            [](GenericTypePluginFactory& self,
+               const std::string& name,
+               const DynamicType& discriminator,
+               ExtensibilityKind extensibility,
+               uint32_t type_size,
+               const std::vector<uint32_t>& member_offsets) {
+                return TypePlugin { self.create_union(
+                                            name,
+                                            discriminator,
+                                            extensibility,
+                                            type_size,
+                                            member_offsets),
+                                    nullptr };
+            });
+
     cls.def("create_alias",
             [](GenericTypePluginFactory& self,
                const std::string& name,
@@ -124,16 +140,6 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                 };
             });
 
-    cls.def("add_member_previous",
-            &GenericTypePluginFactory::add_member,
-            py::arg("type"),
-            py::arg("name"),
-            py::arg("member_type"),
-            py::arg("id") = Member::INVALID_ID,
-            py::arg("is_key") = false,
-            py::arg("is_optional") = false,
-            py::arg("is_external") = false);
-
     cls.def(
             "add_member",
             [](GenericTypePluginFactory& factory,
@@ -186,6 +192,54 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
             py::arg("id") = Member::INVALID_ID,
             py::arg("is_key") = false,
             py::arg("is_optional") = false,
+            py::arg("is_external") = false);
+
+    cls.def(
+            "add_union_member",
+            [](GenericTypePluginFactory& factory,
+               TypePlugin& type_holder,
+               const std::string& name,
+               const DynamicType& member_type,
+               const UnionMember::LabelSeq& labels,
+               int32_t id,
+               bool is_external) {
+                return factory.add_member(
+                        *static_cast<UnionTypeImpl*>(type_holder.type),
+                        name,
+                        member_type,
+                        labels,
+                        id,
+                        is_external);
+            },
+            py::arg("type"),
+            py::arg("name"),
+            py::arg("member_type"),
+            py::arg("labels"),
+            py::arg("id") = Member::INVALID_ID,
+            py::arg("is_external") = false);
+
+    cls.def(
+            "add_union_member",
+            [](GenericTypePluginFactory& factory,
+               TypePlugin& type_holder,
+               const std::string& name,
+               const TypePlugin& member_type_holder,
+               const UnionMember::LabelSeq& labels,
+               int32_t id,
+               bool is_external) {
+                return factory.add_member(
+                        *static_cast<UnionTypeImpl*>(type_holder.type),
+                        name,
+                        *member_type_holder.type,
+                        labels,
+                        id,
+                        is_external);
+            },
+            py::arg("type"),
+            py::arg("name"),
+            py::arg("member_type"),
+            py::arg("labels"),
+            py::arg("id") = Member::INVALID_ID,
             py::arg("is_external") = false);
 
     cls.def(

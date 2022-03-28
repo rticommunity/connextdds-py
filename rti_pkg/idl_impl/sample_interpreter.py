@@ -18,7 +18,7 @@
    - Execution phase: the compiled program is executed to convert each object.
 """
 
-from typing import Any, List, Tuple, Sequence, Callable
+from typing import Any, List, Dict, Tuple, Sequence, Callable
 from dataclasses import fields, MISSING
 import itertools
 import abc
@@ -27,6 +27,7 @@ import rti.connextdds as dds
 import rti.idl_impl.reflection_utils as reflection_utils
 import rti.idl_impl.annotations as annotations
 import rti.connextdds.core_utils as core_utils
+from rti.idl_impl.unions import union_cases, union_discriminator
 
 
 class FieldSerializationError(RuntimeError):
@@ -56,11 +57,11 @@ class Instruction(metaclass=abc.ABCMeta):
         self.field_name = field_name
         self.is_primitive = is_primitive and not is_optional
         self.field_index = field_index
+        self.field_factory = field_factory
         if is_optional:
             self.is_optional = True
             self.get_c_attr = self._get_optional
             self.set_c_attr = self._set_optional
-            self.field_factory = field_factory
         else:
             self.is_optional = False
             self.get_c_attr = getattr
@@ -705,7 +706,7 @@ class SampleProgram:
     """
 
     def __init__(self, instructions: List[Instruction], type_plugin: dds._TypePlugin = None) -> None:
-        self.instructions: List[Instruction] = instructions
+        self.instructions = instructions
         self.type_plugin = type_plugin
 
     def execute(self, dst, src):
@@ -751,12 +752,51 @@ class SampleProgram:
                 raise FieldSerializationError(instruction.field_name) from ex
 
     def __repr__(self) -> str:
-        str_builder = [f"SampleProgram {{"]
-        for instruction in self.instructions:
-            str_builder.append(str(instruction))
-        str_builder.append("}")
+        return f"SampleProgram({len(self.instructions)})"
 
-        return "\n".join(str_builder)
+
+class UnionSampleProgram:
+    """A union sample program consists of an instruction to obtain the
+    discriminator and a set of instructions to choose one according to the
+    discriminator.
+    """
+
+    def __init__(
+        self,
+        discriminator_instruction: Instruction,
+        instructions: Dict[Any, Instruction],
+        type_plugin: dds._TypePlugin = None
+    ) -> None:
+        self.discriminator_instruction = discriminator_instruction
+        self.instructions = instructions
+        self.type_plugin = type_plugin
+
+    def execute(self, dst, src):
+        """Runs the discriminator instruction followed by the instruction it
+        selects.
+        """
+
+        try:
+            instruction = self.discriminator_instruction
+            discriminator = getattr(src, instruction.field_name)
+            setattr(dst, instruction.field_name, discriminator)
+
+            instruction = self.instructions.get(discriminator)
+
+            if instruction is not None:
+                if self.type_plugin is None:
+                    # src is the C sample and dst is the Python sample.
+                    if instruction.field_factory is not None:
+                        # Construct the python member
+                        setattr(dst, instruction.field_name,
+                                instruction.field_factory())
+
+                instruction.execute(dst=dst, src=src)
+        except Exception as ex:
+            raise FieldSerializationError(instruction.field_name) from ex
+
+    def __repr__(self) -> str:
+        return f"UnionSampleProgram({len(self.instructions)})"
 
 
 class SamplePrograms:
@@ -769,20 +809,24 @@ class SamplePrograms:
         py_type: type,
         c_type: type,
         type_plugin,
-        member_annotations
+        member_annotations,
+        is_union: bool = False
     ):
         if reflection_utils.is_enum(py_type):
             self.c_to_py_program, self.py_to_c_program = self._create_enum_programs(
                 py_type, type_plugin)
         else:
-
             if not hasattr(py_type, '__dataclass_fields__'):
                 raise TypeError(f"{py_type} is not a dataclass")
             if not hasattr(c_type, '_fields_'):
                 raise TypeError(f"{c_type} is not a ctype")
 
-            self.c_to_py_program, self.py_to_c_program = self._create_struct_programs(
-                py_type, type_plugin, member_annotations)
+            if is_union:
+                self.c_to_py_program, self.py_to_c_program = self._create_union_programs(
+                    py_type, type_plugin, member_annotations)
+            else:
+                self.c_to_py_program, self.py_to_c_program = self._create_struct_programs(
+                    py_type, type_plugin, member_annotations)
 
     def _create_struct_programs(
         self,
@@ -790,12 +834,61 @@ class SamplePrograms:
         type_plugin,
         member_annotations
     ):
+        c_to_py_instructions, py_to_c_instructions = self._create_class_instructions(
+            fields(py_type),
+            first_index=0,
+            type_plugin=type_plugin,
+            member_annotations=member_annotations)
+        return SampleProgram(c_to_py_instructions), SampleProgram(py_to_c_instructions, type_plugin)
+
+    def _create_union_programs(
+        self,
+        py_type: type,
+        type_plugin,
+        member_annotations
+    ):
+        discr = union_discriminator(py_type)
+        c_to_py_discr_instructions, py_to_c_discr_instructions = self._create_class_instructions(
+            (discr,),
+            first_index=0,
+            type_plugin=type_plugin,
+            member_annotations=member_annotations)
+
+        cases = union_cases(py_type)
+        c_to_py_instructions, py_to_c_instructions = self._create_class_instructions(
+            cases,
+            first_index=1,
+            type_plugin=type_plugin,
+            member_annotations=member_annotations)
+
+        assert len(cases) == len(py_to_c_instructions)
+        assert len(cases) == len(c_to_py_instructions)
+
+        c_to_py_instruction_map = {}
+        py_to_c_instruction_map = {}
+        for i, case in enumerate(cases):
+            for label in case.default.labels:
+                c_to_py_instruction_map[label] = c_to_py_instructions[i]
+                py_to_c_instruction_map[label] = py_to_c_instructions[i]
+
+        return UnionSampleProgram(
+                c_to_py_discr_instructions[0], c_to_py_instruction_map), \
+            UnionSampleProgram(
+                py_to_c_discr_instructions[0], py_to_c_instruction_map, type_plugin)
+
+    def _create_class_instructions(
+        self,
+        fields,
+        first_index,
+        type_plugin,
+        member_annotations
+    ):
         c_to_py_instructions = []
         py_to_c_instructions = []
-        i = 0
-        for field in fields(py_type):
+        i = first_index
+        for field in fields:
             field_name = field.name
-            field_type = field.type
+            field_type = reflection_utils.remove_classvar(field.type)
             current_annotations = member_annotations.get(field_name, {})
             field_factory = self._get_field_factory(field, current_annotations)
             is_optional = False
@@ -859,10 +952,10 @@ class SamplePrograms:
 
             i += 1
 
-        return SampleProgram(c_to_py_instructions), SampleProgram(py_to_c_instructions, type_plugin)
+        return c_to_py_instructions, py_to_c_instructions
 
     def __repr__(self) -> str:
-        return f"SamplePrograms:\nc_to_py: {self.c_to_py_program}\npy_to_c: {self.py_to_c_program})"
+        return f"SamplePrograms:({len(self.c_to_py_program)})"
 
     def _create_enum_programs(
         self,
@@ -909,7 +1002,7 @@ class SamplePrograms:
         sequence_annotations
     ):
         field_name = field_info.name
-        element_type = field_info.type
+        element_type = reflection_utils.remove_classvar(field_info.type)
         if reflection_utils.is_optional_type(element_type):
             # E.g. from Optional[Sequence[int]] get Sequence[int]
             element_type = reflection_utils.get_underlying_type(element_type)
@@ -992,7 +1085,8 @@ class SamplePrograms:
         if is_optional:
             raise TypeError('Optional arrays are not supported')
 
-        element_type = reflection_utils.get_underlying_type(field.type)
+        field_type = reflection_utils.remove_classvar(field.type)
+        element_type = reflection_utils.get_underlying_type(field_type)
 
         if reflection_utils.is_primitive_or_enum(element_type):
             factory_type = field.default_factory
@@ -1040,7 +1134,7 @@ class SamplePrograms:
         if field.default_factory is not MISSING:
             return field.default_factory
 
-        field_type = field.type
+        field_type = reflection_utils.remove_classvar(field.type)
         if reflection_utils.is_optional_type(field_type):
             field_type = reflection_utils.get_underlying_type(field_type)
 
@@ -1057,7 +1151,7 @@ class SamplePrograms:
                 member_annotations, annotations.ArrayAnnotation)
             element_type = reflection_utils.get_underlying_type(field_type)
             if array_info.is_array:
-                return None # TODO
+                return None # TODO PY-17: support optional and in-union arrays
             else:
                 return list
                 # if reflection_utils.is_primitive_or_enum(element_type):

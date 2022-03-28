@@ -16,6 +16,7 @@ import rti.idl_impl.annotations as annotations
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.sample_interpreter as sample_interpreter
 import rti.idl_impl.reflection_utils as reflection_utils
+from rti.idl_impl.unions import Case, MultiCase, DefaultCase
 import rti.connextdds
 
 #
@@ -84,6 +85,22 @@ mutable = annotations.ExtensibilityAnnotation(
 final = annotations.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.FINAL)
 
+# --- Union cases -------------------------------------------------------------
+
+
+def case(*args):
+    if len(args) == 0:
+        raise ValueError("At least one case label is required")
+
+    if len(args) > 1:
+        return MultiCase(list(args))
+
+    return Case(args[0])
+
+
+def default_case(default_label, excluded_labels):
+    return DefaultCase(default_label, excluded_labels)
+
 # --- Dataclass extensions ----------------------------------------------------
 
 
@@ -121,7 +138,10 @@ def struct(cls=None, *, type_annotations=[], member_annotations={}):
     def wrapper(cls):
         actual_cls = dataclasses.dataclass(cls)
         actual_cls.type_support = idl_impl.TypeSupport(
-            actual_cls, type_annotations, member_annotations)
+            actual_cls,
+            idl_impl.TypeSupportKind.STRUCT,
+            type_annotations,
+            member_annotations)
         return actual_cls
     if cls is None:
         # Decorator used with arguments:
@@ -132,6 +152,28 @@ def struct(cls=None, *, type_annotations=[], member_annotations={}):
         # Decorator used without arguments:
         #  @idl.struct
         #  class Foo:
+        return wrapper(cls)
+
+
+def union(cls=None, *, type_annotations=[], member_annotations={}):
+    """This decorator makes a Python class usable as DDS topic-type defined as
+    an IDL union.
+
+    The class requires two instance members: discriminator and value, plus
+    a class member for each union case.
+    """
+
+    def wrapper(cls):
+        actual_cls = dataclasses.dataclass(cls)
+        actual_cls.type_support = idl_impl.TypeSupport(
+            actual_cls,
+            idl_impl.TypeSupportKind.UNION,
+            type_annotations,
+            member_annotations)
+        return actual_cls
+    if cls is None:
+        return wrapper
+    else:
         return wrapper(cls)
 
 
@@ -149,9 +191,9 @@ def alias(cls=None, *, annotations=[]):
 
         actual_cls.type_support = idl_impl.TypeSupport(
             actual_cls,
+            idl_impl.TypeSupportKind.ALIAS,
             type_annotations=None,
-            member_annotations=member_annotations,
-            is_alias=True)
+            member_annotations=member_annotations)
         return actual_cls
     if cls is None:
         return wrapper
@@ -166,7 +208,9 @@ def enum(cls=None, *, type_annotations=[]):
             raise TypeError(f"{cls} is not an IntEnum")
 
         cls.type_support = idl_impl.TypeSupport(
-            cls, type_annotations)
+            cls,
+            idl_impl.TypeSupportKind.ENUM,
+            type_annotations)
         return cls
     if cls is None:
         # Decorator used with arguments:

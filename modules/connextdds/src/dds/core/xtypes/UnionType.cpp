@@ -39,9 +39,9 @@ void init_class_defs(
                  py::arg("type"),
                  "Cast a DynamicType to a UnionType.")
             .def_property_readonly(
-                    "descriminator",
+                    "discriminator",
                     &UnionType::discriminator,
-                    "The union descriminator type.")
+                    "The union discriminator type.")
             .def(
                     "find_member_by_label",
                     [](const UnionType& u, UnionType::DiscriminatorType d) {

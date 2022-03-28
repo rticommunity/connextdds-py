@@ -41,6 +41,12 @@ def get_underlying_type(t):
     return args[0] if args is not None else None
 
 
+def remove_classvar(t: type) -> type:
+    if get_origin(t) is typing.ClassVar: # for ClassVar[T] return T
+        return get_underlying_type(t)
+    else:
+        return t
+
 _PRIMITIVE_TYPES = (bool, int8, int16, uint16, int32,
                     uint32, int64, uint64, float32, float64)
 

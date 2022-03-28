@@ -39,6 +39,8 @@ py::object py_cast_type(dds::core::xtypes::DynamicType& dt, bool resolve_alias)
         return py::cast(static_cast<dds::core::xtypes::SequenceType&>(dt));
     case dds::core::xtypes::TypeKind::STRUCTURE_TYPE:
         return py::cast(static_cast<dds::core::xtypes::StructType&>(dt));
+    case dds::core::xtypes::TypeKind::UNION_TYPE:
+        return py::cast(static_cast<dds::core::xtypes::UnionType&>(dt));
     case dds::core::xtypes::TypeKind::STRING_TYPE:
         return py::cast(static_cast<dds::core::xtypes::StringType&>(dt));
     case dds::core::xtypes::TypeKind::WSTRING_TYPE:

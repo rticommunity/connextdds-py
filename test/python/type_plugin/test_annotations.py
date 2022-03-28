@@ -46,9 +46,34 @@ class AnnotationsTest:
     my_optional_seq: Optional[Sequence[Point]] = None
 
 
-@pytest.fixture(scope="module")
-def dt():
-    return idl.get_type_support(AnnotationsTest).dynamic_type
+@idl.union(
+    type_annotations=[idl.mutable],
+    member_annotations={
+        'my_seq': [idl.bound(123), idl.id(2)],
+        'my_int32': [idl.id(10)]
+    }
+)
+class UnionAnnotationsTest:
+    discriminator: idl.int16 = 0
+    value: Union[int, str, Point] = 0
+
+    my_seq: ClassVar[Sequence[Point]] = idl.case(0)
+    my_key: ClassVar[int] = idl.case(1)
+    my_int8: ClassVar[idl.int8] = idl.case(2)
+    my_int16: ClassVar[idl.int16] = idl.case(3)
+    my_uint16: ClassVar[idl.uint16] = idl.case(4)
+    my_int32: ClassVar[idl.int32] = idl.case(5)
+    my_uint32: ClassVar[idl.uint32] = idl.case(6)
+    my_uint64: ClassVar[idl.uint64] = idl.case(7)
+    my_float32: ClassVar[idl.float32] = idl.case(8)
+    my_float64: ClassVar[idl.float64] = idl.case(9)
+    my_float64_2: ClassVar[float] = idl.case(10)
+    my_bool: ClassVar[bool] = idl.case(11)
+
+
+@pytest.fixture(scope="module", params=[AnnotationsTest, UnionAnnotationsTest])
+def dt(request):
+    return idl.get_type_support(request.param).dynamic_type
 
 
 def test_mutable_annotation(dt):
@@ -63,7 +88,8 @@ def test_id_annotation(dt):
     assert dt["my_uint32"].id == 11
 
 
-def test_key_annotation(dt):
+def test_key_annotation():
+    dt = idl.get_type_support(AnnotationsTest).dynamic_type
     assert not dt["my_seq"].is_key
     assert dt["my_key"].is_key
     assert not dt["my_int32"].is_key
@@ -85,11 +111,12 @@ def test_primitive_types(dt):
     assert dt["my_float64"].type == dds.Float64Type()
     assert dt["my_float64_2"].type == dds.Float64Type()
     assert dt["my_bool"].type == dds.BoolType()
+
+
+def test_optional_annotation():
+    dt = idl.get_type_support(AnnotationsTest).dynamic_type
     assert dt["my_optional_int32"].type == dds.Int32Type()
     assert dt["my_optional_float64"].type == dds.Float64Type()
-
-
-def test_optional_annotation(dt):
     assert dt["my_optional_int32"].optional
     assert dt["my_optional_float64"].optional
     assert dt["my_optional_seq"].optional
