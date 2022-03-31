@@ -68,6 +68,7 @@ def test_enum_plugin():
     color_ts = idl.get_type_support(Color)
     assert color_ts.type is Color
     assert color_ts.c_type is ctypes.c_int32
+    assert not color_ts.is_valid_topic_type
     color_dt: dds.EnumType = color_ts.dynamic_type
     assert color_dt.extensibility_kind == dds.ExtensibilityKind.EXTENSIBLE
     assert len(color_dt.members()) == 3
@@ -156,3 +157,10 @@ def test_enum_decorator_applied_to_nonenum_fails():
             pass
 
     assert "is not an IntEnum" in str(ex.value)
+
+def test_creating_enum_topic_fails(shared_participant):
+    with pytest.raises(TypeError) as ex:
+        dds.Topic(shared_participant, "Color", Color)
+
+    assert "Incompatible 'type' argument: an @idl.struct or @idl.union is required" in str(
+        ex.value)

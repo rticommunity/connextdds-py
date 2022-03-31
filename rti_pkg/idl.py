@@ -16,7 +16,7 @@ import rti.idl_impl.annotations as annotations
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.sample_interpreter as sample_interpreter
 import rti.idl_impl.reflection_utils as reflection_utils
-from rti.idl_impl.unions import Case, MultiCase, DefaultCase
+import rti.idl_impl.unions as unions
 import rti.connextdds
 
 #
@@ -88,18 +88,17 @@ final = annotations.ExtensibilityAnnotation(
 # --- Union cases -------------------------------------------------------------
 
 
-def case(*args):
+def case(*args, **kwargs):
+    if kwargs.get('is_default', False):
+        return unions.DefaultCase(list(args))
+
     if len(args) == 0:
         raise ValueError("At least one case label is required")
 
     if len(args) > 1:
-        return MultiCase(list(args))
+        return unions.MultiCase(list(args))
 
-    return Case(args[0])
-
-
-def default_case(default_label, excluded_labels):
-    return DefaultCase(default_label, excluded_labels)
+    return unions.Case(args[0])
 
 # --- Dataclass extensions ----------------------------------------------------
 
@@ -164,13 +163,14 @@ def union(cls=None, *, type_annotations=[], member_annotations={}):
     """
 
     def wrapper(cls):
-        actual_cls = dataclasses.dataclass(cls)
-        actual_cls.type_support = idl_impl.TypeSupport(
-            actual_cls,
+        unions.configure_union_class(cls)
+        cls.type_support = idl_impl.TypeSupport(
+            cls,
             idl_impl.TypeSupportKind.UNION,
             type_annotations,
             member_annotations)
-        return actual_cls
+
+        return cls
     if cls is None:
         return wrapper
     else:

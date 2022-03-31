@@ -27,6 +27,7 @@ def test_type_plugin_basic():
     assert type_support is not None
 
     assert type_support.type is Point
+    assert type_support.is_valid_topic_type
     assert isinstance(type_support.c_type(), ctypes.Structure)
 
     dynamic_type = type_support.dynamic_type

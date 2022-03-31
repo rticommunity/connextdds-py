@@ -572,7 +572,7 @@ class TypeSupport:
             # When creating a union for deserialization, don't set assign a
             # default object to the "value" field. The deserialization will
             # do it right after.
-            self.default_factory = lambda: idl_type(0, None)
+            self.default_factory = lambda: idl_type(None)
 
             discriminator = union_discriminator(idl_type)
             cases = union_cases(idl_type)
@@ -677,3 +677,8 @@ class TypeSupport:
     @property
     def dynamic_type(self):
         return self._plugin_dynamic_type.clone_type()
+
+    @property
+    def is_valid_topic_type(self):
+        kind = self._dynamic_type_ref.kind
+        return  kind == dds.TypeKind.STRUCTURE_TYPE or kind == dds.TypeKind.UNION_TYPE

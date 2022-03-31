@@ -10,8 +10,8 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from rti.idl_impl.reflection_utils import get_underlying_type
-from dataclasses import fields
+
+from dataclasses import fields, dataclass, Field, MISSING
 
 class Case:
     """A field descriptor that enforces that the valid discriminator for a union
@@ -35,6 +35,10 @@ class Case:
     @property
     def labels(self):
         return [self.label]
+
+    @property
+    def single_label(self):
+        return self.label
 
 
 class MultiCase(Case):
@@ -64,14 +68,17 @@ class MultiCase(Case):
     def labels(self):
         return self.label
 
+    @property
+    def single_label(self):
+        return self.label[0]
 
-class DefaultCase(Case):
+class DefaultCase(MultiCase):
     """A field descriptor that enforces that the valid discriminator for the
     "default" union case
     """
-    def __init__(self, default_label, excluded_labels):
-        super().__init__(default_label)
-        self.excluded_labels = excluded_labels
+    def __init__(self, label):
+        super().__init__(label)
+        self.excluded_labels = [] # to be set after parsing the whole union
 
     def __get__(self, obj, objtype=None):
         if obj is None:
@@ -89,17 +96,29 @@ class DefaultCase(Case):
             obj.discriminator = value[1]
             obj.value = value[0]
         else:
-            obj.discriminator = self.label
+            obj.discriminator = obj.default_discriminator
             obj.value = value
 
+    @property
+    def labels(self):
+        return self.label + [0x40000001]
 
-def union_discriminator(union_type):
+
+def union_discriminator(union_type) -> Field:
     flds = fields(union_type)
     if len(flds) < 2:
         raise TypeError(
             "Invalid @idl.union type: a discriminator field and a value field are required")
 
     return flds[0]
+
+def union_value_field(union_type) -> Field:
+    flds = fields(union_type)
+    if len(flds) < 2:
+        raise TypeError(
+            "Invalid @idl.union type: a discriminator field and a value field are required")
+
+    return flds[1]
 
 def union_cases(union_type):
     # Filter all dataclass fields whose assigned value is a union Case field
@@ -114,3 +133,79 @@ def union_cases(union_type):
             "Invalid @idl.union type: at least one case is required")
 
     return result
+
+
+def _add_init_method(union_type):
+    """Adds a __init__ method that sets the right discriminator for the value
+    that has been used to create the union.
+    """
+    def init_union(union_instance, *args, **kwargs):
+        if len(args) == 0 and len(kwargs) == 0:
+            t = type(union_instance)
+            union_instance.discriminator = t.default_discriminator
+            union_instance.value = t.default_value()
+            return
+
+        if len(args) == 1 and args[0] is None:
+            union_instance.discriminator = 0
+            union_instance.value = None
+            return
+
+        if len(kwargs) == 1:
+            arg = list(kwargs.items())[0]
+            if not hasattr(union_type, arg[0]):
+                raise TypeError(f"__init__() got an unexpected keyword argument '{arg[0]}'")
+            setattr(union_instance, arg[0], arg[1])
+            return
+
+        raise TypeError(
+            "Union constructor expects either None or a single named argument identifying the union case")
+
+    union_type.__init__ = init_union
+
+
+def _configure_default_case(union_type):
+    cases = union_cases(union_type)
+
+    # Find the default case, if any
+    default_case = None
+    for case in cases:
+        if isinstance(case.default, DefaultCase):
+            if default_case is not None:
+                raise TypeError("Only one default case is allowed per union")
+            default_case = case
+
+    # Gather all labels of the non-default cases in the default case's
+    # excluded_labels
+    if default_case is not None:
+        for case in cases:
+            if case is not default_case:
+                default_case.default.excluded_labels += case.default.labels
+
+    return default_case
+
+def _configure_default_factory(union_type):
+    discr_field = union_discriminator(union_type)
+    if discr_field.default is MISSING:
+        raise TypeError("A default value for the discriminator is required")
+    union_type.default_discriminator = discr_field.default
+
+    value_field = union_value_field(union_type)
+    if value_field.default is not MISSING:
+        union_type.default_value = lambda: value_field.default
+    elif value_field.default_factory is not MISSING:
+        union_type.default_value = value_field.default_factory
+    else:
+        raise TypeError("No default value or factory specified for union value")
+
+def configure_union_class(union_type):
+
+    _add_init_method(union_type)
+    # We need to turn the union into a dataclass after adding the init method
+    # (so that dataclass doesn't add one) and before configuring the default
+    # case (because we iterate over the __dataclass_fields__ dictionary).
+    dataclass(union_type)
+    _configure_default_case(union_type)
+    _configure_default_factory(union_type)
+
+    return union_type

@@ -33,10 +33,16 @@ struct TypePlugin {
 template<typename PyObjectType>
 static void assert_valid_type_support(PyObjectType& type_support)
 {
-    if (!py::hasattr(type_support, "_plugin_dynamic_type")) {
+    if (!py::hasattr(type_support, "is_valid_topic_type")) {
         throw py::type_error(
-                "Incompatible 'type' argument: not a valid an @idl.struct or "
-                "@idl.union");
+                "Incompatible 'type' argument: an @idl.struct or @idl.union is "
+                "required");
+    }
+
+    if (!py::cast<bool>(type_support.attr("is_valid_topic_type"))) {
+        throw py::type_error(
+                "Incompatible 'type' argument: an @idl.struct or @idl.union is "
+                "required");
     }
 }
 
