@@ -12,6 +12,9 @@
 
 
 from dataclasses import fields, dataclass, Field, MISSING
+from typing import ClassVar
+
+DEFAULT_LABEL = 0x40000001
 
 class Case:
     """A field descriptor that enforces that the valid discriminator for a union
@@ -101,22 +104,30 @@ class DefaultCase(MultiCase):
 
     @property
     def labels(self):
-        return self.label + [0x40000001]
+        return self.label + [DEFAULT_LABEL]
 
+
+def _raise_missing_discr_or_value_fields():
+    raise TypeError(
+        "Invalid @idl.union type: a discriminator field and a value field are required")
 
 def union_discriminator(union_type) -> Field:
     flds = fields(union_type)
     if len(flds) < 2:
-        raise TypeError(
-            "Invalid @idl.union type: a discriminator field and a value field are required")
+        _raise_missing_discr_or_value_fields()
+
+    if flds[0].name != 'discriminator':
+        _raise_missing_discr_or_value_fields()
 
     return flds[0]
 
 def union_value_field(union_type) -> Field:
     flds = fields(union_type)
     if len(flds) < 2:
-        raise TypeError(
-            "Invalid @idl.union type: a discriminator field and a value field are required")
+        _raise_missing_discr_or_value_fields()
+
+    if flds[1].name != 'value':
+        _raise_missing_discr_or_value_fields()
 
     return flds[1]
 
@@ -163,6 +174,17 @@ def _add_init_method(union_type):
 
     union_type.__init__ = init_union
 
+def _configure_union_cases(union_type):
+
+    if (len(union_type.__annotations__) < 2):
+        _raise_missing_discr_or_value_fields()
+
+    # skip the first two items (discriminator and value)
+    items = iter(union_type.__annotations__.items())
+    next(items)
+    next(items)
+    for name, type in items:
+        union_type.__annotations__[name] = ClassVar[type]
 
 def _configure_default_case(union_type):
     cases = union_cases(union_type)
@@ -199,13 +221,30 @@ def _configure_default_factory(union_type):
         raise TypeError("No default value or factory specified for union value")
 
 def configure_union_class(union_type):
+    """Processes an @idl.union-decorated class to create the fields and methods
+    that allow using the class as a union, where only one value can be set at
+    a time, and the discriminator identifies the selected case.
+    """
 
+    # Add a init method that can receive the named cases as arguments. By doing
+    # this at the beginning the dataclass() conversion will not add a init
+    # method, which would receive the discriminator and value as arguments.
     _add_init_method(union_type)
-    # We need to turn the union into a dataclass after adding the init method
-    # (so that dataclass doesn't add one) and before configuring the default
-    # case (because we iterate over the __dataclass_fields__ dictionary).
+
+    # Turn all fields after the discriminator and value into ClassVars so that
+    # the dataclass() conversion ignores them
+    _configure_union_cases(union_type)
+
+    # Create the dataclass, which will only take into account the discr and
+    # value fields, but won't add a init method
     dataclass(union_type)
+
+    # Configure the default case setter/getter, if any, taking into account the
+    # rest of cases as invalid discriminators for the default case
     _configure_default_case(union_type)
+
+    # Set two class-level fields: a default_discriminator and a default_value
+    # factory
     _configure_default_factory(union_type)
 
     return union_type

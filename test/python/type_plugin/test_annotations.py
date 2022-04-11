@@ -57,18 +57,18 @@ class UnionAnnotationsTest:
     discriminator: idl.int16 = 0
     value: Union[int, str, Point] = 0
 
-    my_seq: ClassVar[Sequence[Point]] = idl.case(0)
-    my_key: ClassVar[int] = idl.case(1)
-    my_int8: ClassVar[idl.int8] = idl.case(2)
-    my_int16: ClassVar[idl.int16] = idl.case(3)
-    my_uint16: ClassVar[idl.uint16] = idl.case(4)
-    my_int32: ClassVar[idl.int32] = idl.case(5)
-    my_uint32: ClassVar[idl.uint32] = idl.case(6)
-    my_uint64: ClassVar[idl.uint64] = idl.case(7)
-    my_float32: ClassVar[idl.float32] = idl.case(8)
-    my_float64: ClassVar[idl.float64] = idl.case(9)
-    my_float64_2: ClassVar[float] = idl.case(10)
-    my_bool: ClassVar[bool] = idl.case(11)
+    my_seq: Sequence[Point] = idl.case(0)
+    my_key: int = idl.case(1)
+    my_int8: idl.int8 = idl.case(2)
+    my_int16: idl.int16 = idl.case(3)
+    my_uint16: idl.uint16 = idl.case(4)
+    my_int32: idl.int32 = idl.case(5)
+    my_uint32: idl.uint32 = idl.case(6)
+    my_uint64: idl.uint64 = idl.case(7)
+    my_float32: idl.float32 = idl.case(8)
+    my_float64: idl.float64 = idl.case(9)
+    my_float64_2: float = idl.case(10)
+    my_bool: bool = idl.case(11)
 
 
 @pytest.fixture(scope="module", params=[AnnotationsTest, UnionAnnotationsTest])
