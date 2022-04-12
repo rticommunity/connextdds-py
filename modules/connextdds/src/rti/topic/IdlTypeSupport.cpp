@@ -64,41 +64,6 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             [](const TypePlugin& self) { return self.type; },
             py::return_value_policy::reference);
 
-    // This function serves two purposes:
-    //
-    // 1) It allows to polymorphically get the dynamic type of a member, which
-    // the C++ API currently doesn't allow (it requires knowing whether it's a
-    // struct or a union), and
-    //
-    // 2) it uses py::return_value_policy::reference to
-    // avoid making a copy and preserving the sampleAccessInfo. This is safe
-    // because the lifecycle of the type and access info is tied to the type
-    // plugin factory.
-    cls.def(
-            "get_member_dynamic_type_ref",
-            [](const TypePlugin& self,
-               const std::string& member_name) {
-                DDS_ExceptionCode_t ex;
-                auto index = DDS_TypeCode_find_member_by_name(
-                        &self.type->native(),
-                        member_name.c_str(),
-                        &ex);
-                rti::core::check_tc_ex_code(
-                        ex,
-                        "failed to find member by name");
-
-                DDS_TypeCode *member_type = DDS_TypeCode_member_type(
-                        &self.type->native(),
-                        index,
-                        &ex);
-                rti::core::check_tc_ex_code(
-                        ex,
-                        "failed to get member type");
-
-                return reinterpret_cast<dds::core::xtypes::DynamicType*>(member_type);
-            },
-            py::return_value_policy::reference);
-
     // Return a copy without the sample access info.
     cls.def("clone_type", [](const TypePlugin& self) {
         return py_cast_type(*self.type, false /* resolve_alias */);

@@ -53,12 +53,14 @@ key = annotations.KeyAnnotation(True)
 
 
 def id(value: int) -> annotations.IdAnnotation:
-    "Sets a explicit member ID. By default they're assigned automatically"
+    """Annotation that sets a explicit member ID. By default they're assigned
+    automatically
+    """
     return annotations.IdAnnotation(value)
 
 
 def bound(value: int):
-    """Sets the maximum size for a sequence or a string member"""
+    """Annotation that sets the maximum size for a Sequence or a str field"""
     return annotations.BoundAnnotation(value)
 
 
@@ -66,6 +68,9 @@ unbounded = bound(annotations.UNBOUNDED)
 
 
 def array(dimensions: Union[None, int, List[int]]):
+    """Annotation that configures a Sequence field as an array with the given
+    dimensions
+    """
     return annotations.ArrayAnnotation(dimensions)
 
 
@@ -73,7 +78,7 @@ utf8 = annotations.CharEncodingAnnotation(annotations.CharEncoding.UTF8)
 utf16 = annotations.CharEncodingAnnotation(annotations.CharEncoding.UTF16)
 
 def element_annotations(value: List[Any]):
-    """Provides annotations for the element of a sequence, array, etc."""
+    """Sets the annotations for the element type of a sequence or array"""
     return annotations.ElementAnnotations(value)
 
 # --- Type annotations --------------------------------------------------------
@@ -89,16 +94,20 @@ final = annotations.ExtensibilityAnnotation(
 
 
 def case(*args, **kwargs):
+    """Returns a field descriptor that allows getting and setting a union
+    case with the right discriminator
+    """
+
     if kwargs.get('is_default', False):
-        return unions.DefaultCase(list(args))
+        field_descriptor = unions.DefaultCase(list(args))
+    elif len(args) == 0:
+        raise TypeError("At least one case label is required")
+    elif len(args) > 1:
+        field_descriptor = unions.MultiCase(list(args))
+    else:
+        field_descriptor = unions.Case(args[0])
 
-    if len(args) == 0:
-        raise ValueError("At least one case label is required")
-
-    if len(args) > 1:
-        return unions.MultiCase(list(args))
-
-    return unions.Case(args[0])
+    return field_descriptor
 
 # --- Dataclass extensions ----------------------------------------------------
 
@@ -159,7 +168,7 @@ def union(cls=None, *, type_annotations=[], member_annotations={}):
     an IDL union.
 
     The class requires two instance members: discriminator and value, plus
-    a class member for each union case.
+    an idl.case field for each union case.
     """
 
     def wrapper(cls):
@@ -201,7 +210,7 @@ def alias(cls=None, *, annotations=[]):
         return wrapper(cls)
 
 def enum(cls=None, *, type_annotations=[]):
-    """This decorator makes a Python IntEnum usable as IDL enum"""
+    """This decorator makes a Python IntEnum usable as an IDL enum"""
 
     def wrapper(cls):
         if not reflection_utils.is_enum(cls):

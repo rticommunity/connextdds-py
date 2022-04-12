@@ -118,7 +118,7 @@ def test_sequence_serialization(sequence_sample):
     assert sequence_sample == deserialized_sample
 
 
-def test_optional_sequence_serialization33(optional_sequence_sample):
+def test_optional_sequence_serialization(optional_sequence_sample):
     ts = idl.get_type_support(OptionalSequenceTest)
     buffer = ts.serialize(optional_sequence_sample)
     deserialized_sample = ts.deserialize(buffer)
@@ -126,13 +126,21 @@ def test_optional_sequence_serialization33(optional_sequence_sample):
 
 
 def test_sequence_pubsub(shared_participant, sequence_sample):
-    fixture = PubSubFixture(shared_participant, SequenceTest)
-    fixture.send_and_check([sequence_sample, SequenceTest()])
+    fixture = PubSubFixture(shared_participant, SequenceTest, reader_policies=[
+                            dds.ResourceLimits(1, 1, 1)])
+    fixture.send_and_check(SequenceTest(b_b=['a']))
+    fixture.send_and_check(SequenceTest(b_b=['a' * 6]))
+    fixture.send_and_check(sequence_sample)
 
 
 def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
-    fixture = PubSubFixture(shared_participant, OptionalSequenceTest)
-    fixture.send_and_check([optional_sequence_sample, OptionalSequenceTest()])
+    fixture = PubSubFixture(
+        shared_participant,
+        OptionalSequenceTest,
+        reader_policies=[dds.ResourceLimits(1, 1, 1)])
+    fixture.send_and_check(optional_sequence_sample)
+    fixture.send_and_check(OptionalSequenceTest())
+    fixture.send_and_check(optional_sequence_sample)
 
 
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
@@ -150,3 +158,9 @@ def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
     with pytest.raises(Exception) as ex:
         ts.serialize(sample)
     assert "Error processing field 'b_b'" in str(ex.value)
+
+
+def test_to_dynamic_data(sequence_sample):
+    ts = idl.get_type_support(SequenceTest)
+    assert sequence_sample == ts.from_dynamic_data(
+        ts.to_dynamic_data(sequence_sample))

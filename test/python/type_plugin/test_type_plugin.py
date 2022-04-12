@@ -19,7 +19,11 @@ import rti.idl as idl
 
 from test_utils.helpers import type_support_with_duck_typing
 from test_utils.fixtures import *
-from common_types import Point
+
+@idl.struct
+class Point:
+    x: int = 0
+    y: int = 0
 
 def test_type_plugin_basic():
     assert hasattr(Point, "type_support")
@@ -27,6 +31,7 @@ def test_type_plugin_basic():
     assert type_support is not None
 
     assert type_support.type is Point
+    assert type_support._plugin_dynamic_type is not None
     assert type_support.is_valid_topic_type
     assert isinstance(type_support.c_type(), ctypes.Structure)
 

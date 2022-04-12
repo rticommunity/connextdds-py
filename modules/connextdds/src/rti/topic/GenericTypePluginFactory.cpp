@@ -258,6 +258,12 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                 return GenericTypePluginFactory::instance();
             });
 
+    cls.def_property_readonly_static(
+            "public_instance",
+            [](py::object&) -> GenericTypePluginFactory& {
+                return GenericTypePluginFactory::no_accessor_instance();
+            });
+
     cls.def_static("delete_instance", []() {
         GenericTypePluginFactory::delete_instance();
         PyDynamicTypeMap::finalize();

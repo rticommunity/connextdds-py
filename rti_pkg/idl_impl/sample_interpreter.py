@@ -18,7 +18,7 @@
    - Execution phase: the compiled program is executed to convert each object.
 """
 
-from typing import Any, List, Dict, Tuple, Sequence, Callable
+from typing import Any, List, Dict, Tuple, Sequence, Callable, Optional
 from dataclasses import fields, MISSING
 import itertools
 import abc
@@ -27,7 +27,7 @@ import rti.connextdds as dds
 import rti.idl_impl.reflection_utils as reflection_utils
 import rti.idl_impl.annotations as annotations
 import rti.connextdds.core_utils as core_utils
-from rti.idl_impl.unions import union_cases, union_discriminator
+from rti.idl_impl.unions import union_cases, union_discriminator, DEFAULT_LABEL
 
 
 class FieldSerializationError(RuntimeError):
@@ -769,6 +769,8 @@ class UnionSampleProgram:
     ) -> None:
         self.discriminator_instruction = discriminator_instruction
         self.instructions = instructions
+        self.default_instruction: Optional[Instruction] = instructions.get(
+            DEFAULT_LABEL)
         self.type_plugin = type_plugin
 
     def execute(self, dst, src):
@@ -778,10 +780,14 @@ class UnionSampleProgram:
 
         try:
             instruction = self.discriminator_instruction
+
+            # The discriminator is always a primitive or enum so we know
+            # the instruction is always getattr/setattr
             discriminator = getattr(src, instruction.field_name)
             setattr(dst, instruction.field_name, discriminator)
 
-            instruction = self.instructions.get(discriminator)
+            instruction = self.instructions.get(
+                discriminator, self.default_instruction)
 
             if instruction is not None:
                 if self.type_plugin is None:

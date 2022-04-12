@@ -218,3 +218,8 @@ def test_arrays_of_sequences_not_supported():
             s: Sequence[Sequence[Point]]
 
     assert "Arrays of sequences are not supported" in str(ex.value)
+
+def test_to_dynamic_data():
+    array_sample = ArrayTest()
+    ts = idl.get_type_support(ArrayTest)
+    assert array_sample == ts.from_dynamic_data(ts.to_dynamic_data(array_sample))

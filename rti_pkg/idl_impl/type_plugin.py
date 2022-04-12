@@ -28,13 +28,19 @@ import rti.idl_impl.annotations as annotations
 # This module contains the implementation details of the IDL Type Support
 #
 
-_type_factory = dds._GenericTypePluginFactory.instance
+_internal_type_factory = dds._GenericTypePluginFactory.instance
+_public_type_factory = dds._GenericTypePluginFactory.public_instance
+
+def _get_type_factory(is_public: bool) -> dds._GenericTypePluginFactory:
+    return _public_type_factory if is_public else _internal_type_factory
 
 
 def finalize_type_plugin_factory() -> None:
     """Release the native memory used by _type_factory"""
-    global _type_factory
-    _type_factory = None
+    global _internal_type_factory
+    global _public_type_factory
+    _internal_type_factory = None
+    _public_type_factory = None
     dds._GenericTypePluginFactory.delete_instance()
 
 
@@ -221,7 +227,7 @@ def create_ctype_from_union_dataclass(py_type, discriminator, cases, member_anno
     for field in cases:
         current_annotations = member_annotations.get(field.name, {})
         member_type = _get_member_ctype(
-            reflection_utils.get_underlying_type(field.type),
+            reflection_utils.remove_classvar(field.type),
             current_annotations)
         c_fields.append((field.name, member_type))
 
@@ -258,10 +264,10 @@ def get_idl_base_type(idl_type: type) -> Optional[bool]:
     base = idl_type.__bases__[0] # will be object if no explicit base
     return base if hasattr(base, 'type_support') else None
 
-def _get_member_dynamic_type(py_type, member_annotations):
+def _get_member_dynamic_type(py_type, member_annotations, type_factory: dds._GenericTypePluginFactory):
     if reflection_utils.is_optional_type(py_type):
         underlying_type = reflection_utils.get_underlying_type(py_type)
-        return _get_member_dynamic_type(underlying_type, member_annotations)
+        return _get_member_dynamic_type(underlying_type, member_annotations, type_factory)
 
     basic_type = PY_TYPE_TO_DYNAMIC_TYPE_MAP.get(py_type, None)
     if basic_type is not None:
@@ -284,21 +290,24 @@ def _get_member_dynamic_type(py_type, member_annotations):
         element_annotations = annotations.find_annotation(
             member_annotations, annotations.ElementAnnotations)
         member_dynamic_type = _get_member_dynamic_type(
-            member_type, element_annotations.value)
+            member_type, element_annotations.value, type_factory)
         array_info = annotations.find_annotation(
             member_annotations, annotations.ArrayAnnotation)
         if array_info.is_array:
             # TODO PY-17: Use array_info.dimensions
-            return _type_factory.create_array(
+            return type_factory.create_array(
                 member_dynamic_type, array_info.total_size)
         else:
             bound = annotations.find_annotation(
                 member_annotations, cls=annotations.BoundAnnotation)
-            return _type_factory.create_sequence(
+            return type_factory.create_sequence(
                 member_dynamic_type, bound.value)
 
     if reflection_utils.is_constructed_type(py_type):
-        return py_type.type_support._dynamic_type_ref
+        if type_factory is _internal_type_factory:
+            return py_type.type_support._dynamic_type_ref
+        else:
+            return py_type.type_support.dynamic_type
 
     raise TypeError(f'Unsupported member type {py_type}')
 
@@ -307,7 +316,8 @@ def create_dynamic_type_from_dataclass(
     py_type: type,
     c_type: ctypes.Structure,
     type_annotations: List[Any],
-    member_annotations: Dict[str, Any]
+    member_annotations: Dict[str, Any],
+    is_public_type: bool = False
 ) -> dds._TypePlugin:
     """Given an IDL-derived dataclass, return the DynamicType that describes
     the IDL type
@@ -332,11 +342,13 @@ def create_dynamic_type_from_dataclass(
         actual_fields = actual_fields[base_field_count:]
         c_type_offsets = c_type_offsets[base_field_count:]
 
+    type_factory = _get_type_factory(is_public_type)
     member_args = []
     for field in actual_fields:
         current_annotations = member_annotations.get(field.name, {})
         is_optional = reflection_utils.is_optional_type(field.type)
-        member_type = _get_member_dynamic_type(field.type, current_annotations)
+        member_type = _get_member_dynamic_type(
+            field.type, current_annotations, type_factory)
 
         is_key = annotations.find_annotation(
             current_annotations, cls=annotations.KeyAnnotation)
@@ -349,18 +361,20 @@ def create_dynamic_type_from_dataclass(
     # Create the struct type only after all the members have been parsed. The
     # type_factory requires that dependent types are created first
     if base_type is None:
-        dynamic_type = _type_factory.create_struct(
+        dynamic_type = type_factory.create_struct(
             py_type.__name__, extensibility.value, get_size(c_type), c_type_offsets)
     else:
-        dynamic_type = _type_factory.create_struct(
-            py_type.__name__, base_type.type_support._dynamic_type_ref, extensibility.value, get_size(c_type), c_type_offsets)
+        base_type = base_type.type_support._dynamic_type_ref if not is_public_type else base_type.type_support.dynamic_type
+        dynamic_type = type_factory.create_struct(
+            py_type.__name__, base_type, extensibility.value, get_size(c_type), c_type_offsets)
 
     for member_arg in member_args:
-        _type_factory.add_member(dynamic_type, *member_arg)
+        type_factory.add_member(dynamic_type, *member_arg)
 
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type
-    _type_factory.create_type_plugin(dynamic_type)
+    if not is_public_type:
+        type_factory.create_type_plugin(dynamic_type)
 
     return dynamic_type
 
@@ -371,7 +385,8 @@ def create_dynamic_type_from_union_dataclass(
     discriminator,
     cases,
     type_annotations: List[Any],
-    member_annotations: Dict[str, Any]
+    member_annotations: Dict[str, Any],
+    is_public_type: bool = False
 ) -> dds._TypePlugin:
     """Given an IDL-derived dataclass representing a union, return the
     DynamicType that describes the IDL type
@@ -383,12 +398,14 @@ def create_dynamic_type_from_union_dataclass(
     if member_annotations is None:
         member_annotations = {}
 
+    type_factory = _get_type_factory(is_public_type)
     member_args = []
     for field in cases:
         current_annotations = member_annotations.get(field.name, {})
         member_type = _get_member_dynamic_type(
-            reflection_utils.get_underlying_type(field.type),
-            current_annotations)
+            reflection_utils.remove_classvar(field.type),
+            current_annotations,
+            type_factory)
 
         member_id = annotations.find_annotation(
             current_annotations, cls=annotations.IdAnnotation)
@@ -400,11 +417,11 @@ def create_dynamic_type_from_union_dataclass(
 
     current_annotations = member_annotations.get(discriminator.name, {})
     discriminator_type = member_type = _get_member_dynamic_type(
-        discriminator.type, current_annotations)
+        discriminator.type, current_annotations, type_factory)
 
     # Create the type only after all the members have been parsed. The
     # type_factory requires that dependent types are created first
-    dynamic_type = _type_factory.create_union(
+    dynamic_type = type_factory.create_union(
         py_type.__name__,
         discriminator_type,
         extensibility.value,
@@ -412,18 +429,20 @@ def create_dynamic_type_from_union_dataclass(
         get_offsets(c_type))
 
     for member_arg in member_args:
-        _type_factory.add_union_member(dynamic_type, *member_arg)
+        type_factory.add_union_member(dynamic_type, *member_arg)
 
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type
-    _type_factory.create_type_plugin(dynamic_type)
+    if not is_public_type:
+        type_factory.create_type_plugin(dynamic_type)
 
     return dynamic_type
 
 def create_dynamic_type_from_alias_dataclass(
     py_type: type,
     c_type: ctypes.Structure,
-    member_annotations: Dict[str, Any]
+    member_annotations: Dict[str, Any],
+    is_public_type: bool = False
 ) -> dds._TypePlugin:
     """Given an @idl.alias-decorated dataclass, return the DynamicType that
     describes the IDL type
@@ -446,13 +465,16 @@ def create_dynamic_type_from_alias_dataclass(
     if reflection_utils.is_optional_type(field.type):
         raise TypeError(f'An @idl.alias cannot be optional')
 
-    member_type = _get_member_dynamic_type(field.type, current_annotations)
-    dynamic_type = _type_factory.create_alias(
+    type_factory = _get_type_factory(is_public_type)
+    member_type = _get_member_dynamic_type(
+        field.type, current_annotations, type_factory)
+    dynamic_type = type_factory.create_alias(
         py_type.__name__, member_type, get_size(c_type))
 
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type
-    _type_factory.create_type_plugin(dynamic_type)
+    if not is_public_type:
+        type_factory.create_type_plugin(dynamic_type)
 
     return dynamic_type
 
@@ -469,7 +491,7 @@ def create_dynamic_type_from_enum(py_type, type_annotations=None):
     for enum_value in py_type:
         enum_values.append(dds.EnumMember(enum_value.name, enum_value.value))
 
-    return _type_factory.create_enum(py_type.__name__, extensibility.value, enum_values)
+    return _internal_type_factory.create_enum(py_type.__name__, extensibility.value, enum_values)
 
 # --- C/Python sample conversion ----------------------------------------------
 
@@ -538,8 +560,10 @@ class TypeSupport:
         # For all types except unions, the object factory for deserialization
         # simply invokes the type's constructor with no arguments, which
         # in the case of a struct initializes each field to its default value.
+        self.kind = kind
         self.default_factory = idl_type
         self.allow_duck_typing = False
+        self._public_dynamic_type = None # created lazily by property
         base_type = get_idl_base_type(idl_type)
         if base_type is not None:
             type_annotations = annotations.inherit_type_annotations(
@@ -554,18 +578,12 @@ class TypeSupport:
         is_union = False
         if kind == TypeSupportKind.ENUM:
             self.c_type = ctypes.c_int32
-            self._plugin_dynamic_type = create_dynamic_type_from_enum(
-                idl_type, type_annotations)
         elif kind == TypeSupportKind.ALIAS:
             self.c_type = create_ctype_from_dataclass(
                 idl_type, member_annotations)
-            self._plugin_dynamic_type = create_dynamic_type_from_alias_dataclass(
-                idl_type, self.c_type, member_annotations)
         elif kind == TypeSupportKind.STRUCT:
             self.c_type = create_ctype_from_dataclass(
                 idl_type, member_annotations)
-            self._plugin_dynamic_type = create_dynamic_type_from_dataclass(
-                idl_type, self.c_type, type_annotations, member_annotations)
         elif kind == TypeSupportKind.UNION:
             is_union = True
 
@@ -573,15 +591,14 @@ class TypeSupport:
             # default object to the "value" field. The deserialization will
             # do it right after.
             self.default_factory = lambda: idl_type(None)
-
             discriminator = union_discriminator(idl_type)
             cases = union_cases(idl_type)
             self.c_type = create_ctype_from_union_dataclass(
                 idl_type, discriminator, cases, member_annotations)
-            self._plugin_dynamic_type = create_dynamic_type_from_union_dataclass(
-                idl_type, self.c_type, discriminator, cases, type_annotations, member_annotations)
         else:
             raise ValueError(f'Unknown type kind {kind}')
+
+        self._plugin_dynamic_type = self._create_dynamic_type(is_public=False)
 
         # Pointer and sequence types
         self.c_type_ptr = ctypes.POINTER(self.c_type)
@@ -594,6 +611,24 @@ class TypeSupport:
             type_plugin=self._plugin_dynamic_type,
             member_annotations=member_annotations,
             is_union=is_union)
+
+    def _create_dynamic_type(self, is_public: bool):
+        if self.kind == TypeSupportKind.ENUM:
+            return create_dynamic_type_from_enum(
+                self.type, self.type_annotations)
+        elif self.kind == TypeSupportKind.ALIAS:
+            return create_dynamic_type_from_alias_dataclass(
+                self.type, self.c_type, self.member_annotations, is_public)
+        elif self.kind == TypeSupportKind.STRUCT:
+            return create_dynamic_type_from_dataclass(
+                self.type, self.c_type, self.type_annotations, self.member_annotations, is_public)
+        elif self.kind == TypeSupportKind.UNION:
+            discriminator = union_discriminator(self.type)
+            cases = union_cases(self.type)
+            return create_dynamic_type_from_union_dataclass(
+                self.type, self.c_type, discriminator, cases, self.type_annotations, self.member_annotations, is_public)
+        else:
+            raise ValueError(f'Unknown type kind {self.kind}')
 
     def _create_c_sample(self, sample):
         if not self.allow_duck_typing and type(sample) is not self.type:
@@ -635,7 +670,7 @@ class TypeSupport:
         finally:
             self._plugin_dynamic_type.finalize_sample(c_sample)
 
-    def deserialize(self, buffer):
+    def deserialize(self, buffer) -> Any:
         """Create a data sample for the data type for this TypeSupport by
         deserializing a cdr byte buffer
         """
@@ -648,7 +683,7 @@ class TypeSupport:
         finally:
             self._plugin_dynamic_type.finalize_sample(c_sample)
 
-    def get_serialized_sample_size(self, sample):
+    def get_serialized_sample_size(self, sample) -> int:
         """Returns the serialized size of a given sample
         """
         c_sample = self._create_c_sample(sample)
@@ -656,15 +691,16 @@ class TypeSupport:
             return self._plugin_dynamic_type.serialized_sample_size(c_sample)
         finally:
             self._plugin_dynamic_type.finalize_sample(c_sample)
-    
+
     @property
-    def max_serialized_sample_size(self):
+    def max_serialized_sample_size(self) -> int:
         """Returns the max serialized size of a given type"""
         return self._plugin_dynamic_type.max_serialized_sample_size()
 
     def to_dynamic_data(self, sample: Any) -> dds.DynamicData:
         """Converts a given idl sample to dynamic data"""
-        return dds.DynamicData(self.dynamic_type).from_cdr_buffer(self.serialize(sample))
+        dynamic_type = self._get_public_dynamic_type().get_dynamic_type_ref()
+        return dds.DynamicData(dynamic_type).from_cdr_buffer(self.serialize(sample))
 
     def from_dynamic_data(self, sample: dds.DynamicData) -> Any:
         """Converts a given dynamic data sample to an idl type"""
@@ -674,9 +710,17 @@ class TypeSupport:
     def _dynamic_type_ref(self):
         return self._plugin_dynamic_type.get_dynamic_type_ref()
 
+    def _get_public_dynamic_type(self):
+        if self._public_dynamic_type is None:
+            self._public_dynamic_type = self._create_dynamic_type(is_public=True)
+
+        return self._public_dynamic_type
+
     @property
-    def dynamic_type(self):
-        return self._plugin_dynamic_type.clone_type()
+    def dynamic_type(self) -> dds.DynamicType:
+        """Returns a copy of the DynamicType that describes the IDL type"""
+
+        return self._get_public_dynamic_type().clone_type()
 
     @property
     def is_valid_topic_type(self):

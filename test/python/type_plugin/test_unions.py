@@ -284,6 +284,8 @@ def test_union_as_dict_contains_discr_and_value_only():
     u = MyUnion(my_str="hello")
     assert asdict(u) == {"discriminator": 1, "value": "hello"}
 
+
+@pytest.mark.skip("Implementation in progress")
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
 def test_union_serialization(UnionType: type):
     ts = idl.get_type_support(UnionType)
@@ -291,6 +293,7 @@ def test_union_serialization(UnionType: type):
     assert union_sample == ts.deserialize(ts.serialize(union_sample))
 
 
+@pytest.mark.skip("Implementation in progress")
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
 def test_default_union_serialization(UnionType: type):
     ts = idl.get_type_support(UnionType)
@@ -298,6 +301,7 @@ def test_default_union_serialization(UnionType: type):
     assert union_sample == ts.deserialize(ts.serialize(union_sample))
 
 
+@pytest.mark.skip("Implementation in progress")
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
 def test_union_pubsub(shared_participant, UnionType: type):
     fixture = PubSubFixture(shared_participant, UnionType, reader_policies=[
