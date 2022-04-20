@@ -13,9 +13,12 @@ import os
 import time
 from typing import Any, Optional
 from dataclasses import fields
+from enum import IntEnum
+import inspect
 import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
-from rti.idl_impl.type_plugin import PrimitiveArrayFactory
+from rti.idl_impl.type_plugin import ListFactory, PrimitiveArrayFactory, ValueListFactory
+from itertools import islice, cycle
 
 import rti.connextdds as dds
 
@@ -27,18 +30,17 @@ and subscribe to them.
 
 # --- User type test utilities ------------------------------------------------
 
-# Set the maximum length a string can be from the generator
-MAX_BOUNDS = 1000
-
 
 class IdlValueGenerator:
     """Class for creating data samples with test values given an IDL type"""
 
-    def __init__(self, sample_type: type):
+    def __init__(self, sample_type: type, max_string_bounds=1000, max_seq_bounds=10):
         """Creates an IdlValueGenerator for the given type"""
 
         self.sample_type = sample_type
         self.dynamic_type = idl.get_type_support(sample_type).dynamic_type
+        self.max_string_bounds = max_string_bounds
+        self.max_seq_bounds = max_seq_bounds
 
     def create_test_data(self, seed: int = 0) -> Any:
         """Returns an instance of value of the type given to the constructor.
@@ -49,80 +51,154 @@ class IdlValueGenerator:
 
         return self._create_test_data_impl(self.sample_type, seed)
 
-    def _create_test_data_impl(self, sample_type: type = None, seed: int = 0) -> Any:
+    def _get_sequence_type_bounds(self, seq_name: str):
+        """Private member function used to determine a sequences max length"""
+        # You must check that the type is a sequence before calling this
 
+        if self.dynamic_type[seq_name].type.kind == dds.TypeKind.ARRAY_TYPE:
+            return self.dynamic_type[seq_name].type.total_element_count
+        else:
+            return self.dynamic_type[seq_name].type.bounds
+
+    def _get_sequence_type_length(self, seq_name: str, seed: int):
+        """Private member function used to determine the length of a sequence"""
+        bound = self._get_sequence_type_bounds(seq_name)
+        if bound == idl.unbounded.value:
+            return seed % self.max_seq_bounds
+        elif self.dynamic_type[seq_name].type.kind == dds.TypeKind.ARRAY_TYPE:
+            return bound
+        else:
+            return ((seed % bound) + 1) % self.max_seq_bounds
+
+    def _get_str_sequence_type_bounds(self, seq_name: str):
+        """Private member function used to determine a string sequences max length"""
+        # You must check that the type is a str sequence before calling this
+
+        if self.dynamic_type[seq_name].type.kind == dds.TypeKind.ARRAY_TYPE:
+            seq_bounds = self.dynamic_type[seq_name].type.total_element_count
+        else:
+            seq_bounds = self.dynamic_type[seq_name].type.bounds
+
+        str_bounds = self.dynamic_type[seq_name].type.content_type.bounds
+
+        return (seq_bounds, str_bounds)
+
+    def _get_str_sequence_type_length(self, seq_name: str, seed: int):
+        """Private member function used to determine the length of a string sequence"""
+        seq_length = self._get_sequence_type_length(seq_name, seed)
+        str_bound = self.dynamic_type[seq_name].type.content_type.bounds
+
+        # calculate the length of the strings
+        if str_bound == idl.unbounded.value:
+            str_length = seed % self.max_string_bounds
+        else:
+            str_length = (seed % str_bound) % self.max_string_bounds
+
+        return (seq_length, str_length)
+
+    def _generate_string_from_seed(self, bounds: int, seed: int) -> str:
+        """Private local function used to generate string values"""
+
+        if bounds > self.max_string_bounds:
+            bounds = self.max_string_bounds
+
+        if seed % 4 == 0:
+            # return a single character, could be any capital ascii char
+            return chr((seed % 26) + 65)
+        elif seed % 4 == 1 or bounds == 0:
+            return ""
+        elif seed % 4 == 2:
+            return "".join([chr((x % 26) + 65) for x in range(0, bounds)])
+        else:
+            return "".join([chr((x % 26) + 65) for x in range(0, seed % bounds)])
+
+    def _generate_enum_from_seed(self, enum_type: type, seed: int):
+        """Private local function used to generate enum values"""
+        return next(islice(cycle(enum_type), seed, seed + 1))
+
+    def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
+        """Private local function used to generate sequence values"""
+        if field_factory not in [None, list] and type(field_factory) not in [ListFactory, PrimitiveArrayFactory, ValueListFactory]:
+            return field_factory()
+
+        if reflection_utils.get_underlying_type(member_type) is str:
+            return self._generate_str_seq_from_seed(field_name, field_factory, seed)
+
+        length = self._get_sequence_type_length(field_name, seed)
+
+        seq = [self._generate_value_from_seed(sample_type, reflection_utils.get_underlying_type(
+            member_type), field_name, None, seed + x) for x in range(0, length)]
+        return self._make_sequence_from_list(field_factory, seq)
+
+    def _generate_str_seq_from_seed(self, field_name: str, field_factory, seed: int):
+        """Private local function used to generate string sequence values"""
+        seq_length, str_length = self._get_str_sequence_type_length(
+            field_name, seed)
+
+        return self._make_sequence_from_list(
+            field_factory,
+            [self._generate_string_from_seed(str_length, seed + x) for x in range(0, seq_length)])
+
+    def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
+        """Recursive private function used to generate the values given a type"""
+
+        if member_type is bool:
+            return seed % 2 == 0
+        elif reflection_utils.is_primitive(member_type):
+            # return mod 128 so it fits in all types
+            return member_type(seed % 128)
+        elif member_type is str:
+            bound = self._get_sequence_type_bounds(field_name)
+            return self._generate_string_from_seed(bound, seed)
+        elif self._is_enum_type(member_type):
+            return self._generate_enum_from_seed(member_type, seed)
+        elif reflection_utils.is_optional_type(member_type):
+            # If the seed is even we will fill the optional type
+            if seed % 2 == 0:
+                return self._generate_value_from_seed(
+                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed)
+            else:
+                return None
+        elif reflection_utils.is_sequence_type(member_type):
+            return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, seed)
+        elif reflection_utils.is_constructed_type(member_type):
+            return IdlValueGenerator(member_type)._create_test_data_impl(
+                member_type, seed)
+        else:
+            raise TypeError(
+                f"unknown type {str(member_type)} given to generator")
+
+    def _create_test_data_impl(self, sample_type: type = None, seed: int = 0) -> Any:
+        """Private local function used to generate the values given an idl type"""
         if sample_type is None:
             sample_type = self.sample_type
 
-        def _generate_string_from_seed(bounds: int, seed: int) -> str:
-            """Private local function used to generate string values"""
-
-            if bounds > MAX_BOUNDS:
-                bounds = MAX_BOUNDS
-
-            if seed % 4 == 0:
-                # return a single character, could be any printable ascii char
-                return chr((seed % 94) + 33)
-            elif seed % 4 == 1:
-                return ""
-            elif seed % 4 == 2:
-                return "".join([chr((x % 94) + 33) for x in range(0, bounds)])
-            else:
-                return "".join([chr((x % 94) + 33) for x in range(0, seed % bounds)])
-
-        def _generate_value_from_seed(sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
-            """Recursive private function used to generate the values given a type"""
-
-            if member_type is bool:
-                return seed % 2 == 0
-            elif reflection_utils.is_primitive(member_type):
-                # return mod 128 so it fits in all types
-                return member_type(seed % 128)
-            elif member_type is str:
-                bound = self._get_sequence_type_bounds(field_name)
-                return _generate_string_from_seed(bound, seed)
-            elif reflection_utils.is_optional_type(member_type):
-                # If the seed is even we will fill the optional type
-                if seed % 2 == 0:
-                    return _generate_value_from_seed(
-                        sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed)
-                else:
-                    return None
-            elif reflection_utils.is_sequence_type(member_type):
-                # is either a list or primitive array
-                bound = self._get_sequence_type_bounds(field_name)
-                if bound == idl.unbounded.value:
-                    length = seed
-                else:
-                    length = (seed % bound) + 1
-
-                seq = [_generate_value_from_seed(sample_type, reflection_utils.get_underlying_type(
-                    member_type), "", None, seed + x) for x in range(0, length)]
-                if type(field_factory) == PrimitiveArrayFactory:
-                    arr = field_factory()
-                    arr.fromlist(seq)
-                    return arr
-                else:
-                    return seq
-            elif reflection_utils.is_constructed_type(member_type):
-                return self._create_test_data_impl(member_type, seed)
-            else:
-                raise TypeError(
-                    f"unknown type {str(member_type)} given to generator")
+        if self._is_enum_type(sample_type):
+            # Enums are a special case because they do not have a default ctor
+            return self._generate_enum_from_seed(sample_type, seed)
 
         value = sample_type()
 
         for field in fields(sample_type):
-            setattr(value, field.name, _generate_value_from_seed(
+            setattr(value, field.name, self._generate_value_from_seed(
                 sample_type, field.type, field.name, field.default_factory, seed))
             seed += 1
         return value
 
-    def _get_sequence_type_bounds(self, seq_name: str):
-        """Private member function used to determine a sequences max length"""
+    def _make_sequence_from_list(self, field_factory, lst):
+        """Private function used to create a sequence from a list using its factory"""
+        # will return either a list or an array depending on the factory
+        if field_factory is list or type(field_factory) is ListFactory or field_factory is None:
+            return lst
+        else:
+            arr = field_factory()
+            for i in range(0, len(arr)):
+                arr[i] = lst[i]
+            return arr
 
-        # You must check that the type is a sequence before calling this
-        return self.dynamic_type[seq_name].type.bounds
+    def _is_enum_type(self, sample_type: type) -> bool:
+        """Private function used to check if a type is an enum"""
+        return inspect.isclass(sample_type) and issubclass(sample_type, IntEnum)
 
 
 # --- Wait test utilitites -----------------------------------------------------
@@ -162,7 +238,9 @@ class Wait:
             self.until(lambda: reader.datareader_cache_status.sample_count > 0)
         else:
             # Wait for a specific number
-            self.until_equal(count, lambda: reader.datareader_cache_status.sample_count)
+            self.until_equal(
+                count, lambda: reader.datareader_cache_status.sample_count)
+
 
 wait = Wait()
 
@@ -172,6 +250,7 @@ wait = Wait()
 # operations on the returned result that may end up adding some additional byte
 _MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES = 1024
 _UNBOUNDED_LENGTH = idl.unbounded.value - _MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES
+
 
 def get_test_domain():
     return int(os.environ.get('TEST_DOMAIN', 0))
@@ -257,9 +336,9 @@ class PubSubFixture:
             writer_qos << dds.History.keep_all
             for policy in writer_policies:
                 writer_qos << policy
-            if has_unbound_member:
-                writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = str(
-                    1000)
+            if has_unbound_member and \
+                not writer_qos.property.exists('dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'):
+                writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
             self.writer = _create_writer(self.topic, data_type, writer_qos)
 
         if create_reader:
