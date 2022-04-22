@@ -26,6 +26,7 @@ import rti.idl as idl
 
 from test_utils.fixtures import *
 
+import test_strings
 
 @idl.struct(
     member_annotations={
@@ -35,19 +36,25 @@ from test_utils.fixtures import *
         'w_b_b': [idl.bound(3), idl.element_annotations([idl.bound(6), idl.utf16])],
         'w_b_unb': [idl.bound(4), idl.element_annotations([idl.utf16])],
         'w_unb_b': [idl.element_annotations([idl.bound(10), idl.utf16])],
-        'w_unb_unb': [idl.element_annotations([idl.utf16])]
+        'w_unb_unb': [idl.element_annotations([idl.utf16])],
+        'strings': [idl.bound(3)]
     }
 )
 class SequenceTest:
+    # sequences of strings
     b_b: Sequence[str] = field(default_factory=list)
     b_unb: Sequence[str] = field(default_factory=list)
     unb_b: Sequence[str] = field(default_factory=list)
     unb_unb: Sequence[str] = field(default_factory=list)
 
+    # sequences of wide strings
     w_b_b: Sequence[str] = field(default_factory=list)
     w_b_unb: Sequence[str] = field(default_factory=list)
     w_unb_b: Sequence[str] = field(default_factory=list)
     w_unb_unb: Sequence[str] = field(default_factory=list)
+
+    # sequence of struct with strings/wide strings
+    strings: Sequence[test_strings.StringTest] = field(default_factory=list)
 
 
 @idl.struct(
@@ -58,7 +65,8 @@ class SequenceTest:
         'w_b_b': [idl.bound(3), idl.element_annotations([idl.bound(6), idl.utf16])],
         'w_b_unb': [idl.bound(4), idl.element_annotations([idl.utf16])],
         'w_unb_b': [idl.element_annotations([idl.bound(10), idl.utf16])],
-        'w_unb_unb': [idl.element_annotations([idl.utf16])]
+        'w_unb_unb': [idl.element_annotations([idl.utf16])],
+        'strings': [idl.bound(3)]
     }
 )
 class OptionalSequenceTest:
@@ -72,6 +80,8 @@ class OptionalSequenceTest:
     w_unb_b: Optional[Sequence[str]] = None
     w_unb_unb: Optional[Sequence[str]] = None
 
+    strings: Optional[Sequence[test_strings.StringTest]] = None
+
 
 def create_sample(SequenceType):
     return SequenceType(
@@ -82,7 +92,16 @@ def create_sample(SequenceType):
         w_b_b=["hello", ",", "world!"],
         w_b_unb=["a" * 10, "b" * 20],
         w_unb_b=["hello", ",", "world!"] * 3,
-        w_unb_unb=["a" * 10, "b" * 20] * 10)
+        w_unb_unb=["a" * 10, "b" * 20] * 10,
+        strings=[test_strings.StringTest(
+            "hello 1",
+            "hello world 2",
+            "hello 3",
+            "hello world 4",
+            "hello 1",
+            "hello world 2",
+            "hello 3",
+            "hello world 4")] * 3)
 
 @pytest.fixture
 def sequence_sample():
@@ -99,7 +118,7 @@ def test_sequence_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "SequenceTest"
-    assert len(dt.members()) == 8
+    assert len(dt.members()) == 9
 
     assert dt["b_b"].type == dds.SequenceType(dds.StringType(6), 3)
     assert dt["b_unb"].type == dds.SequenceType(dds.StringType(), 4)

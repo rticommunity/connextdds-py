@@ -10,8 +10,7 @@
 #
 
 from dataclasses import field, asdict
-from sre_constants import ASSERT
-from typing import Union, ClassVar
+from typing import Union, Sequence, Optional
 from enum import IntEnum
 import copy
 
@@ -22,7 +21,11 @@ from common_types import Point
 from test_utils.fixtures import *
 
 
-@idl.union
+@idl.union(
+    member_annotations={
+        "my_str": [idl.bound(10)]
+    }
+)
 class MyUnion:
     discriminator: idl.int16 = 0
     value: Union[int, str, Point] = 0
@@ -42,7 +45,11 @@ class UnionWithDefault:
     my_point: Point = idl.case(2, is_default=True)
 
 
-@idl.union
+@idl.union(
+    member_annotations={
+        "my_str": [idl.bound(10)]
+    }
+)
 class UnionWithDefault2:
     discriminator: idl.int16 = 2
     value: Union[int, str, Point] = field(default_factory=Point)
@@ -61,7 +68,11 @@ class Option(IntEnum):
     OPTION9 = 9
 
 
-@idl.union
+@idl.union(
+    member_annotations={
+        "my_str": [idl.bound(10)]
+    }
+)
 class UnionWithEnum:
     discriminator: Option = Option.OPTION2
     value: Union[int, str, Point] = 0
@@ -88,6 +99,9 @@ class UnionWithEnumDefault:
     my_str: str = idl.case(Numbers.ONE)
     my_point: Point = idl.case(is_default=True)
 
+@idl.alias
+class UnionWithEnumDefaultSeq:
+    value: Sequence[UnionWithEnumDefault] = field(default_factory=list)
 
 UNION_TYPES = [MyUnion, UnionWithDefault,
                UnionWithDefault2, UnionWithEnum, UnionWithEnumDefault]
@@ -95,6 +109,82 @@ UNION_TYPES = [MyUnion, UnionWithDefault,
 UNIONS_WITH_DEFAULT = [UnionWithDefault,
                        UnionWithDefault2, UnionWithEnumDefault]
 
+
+def create_union_sample(UnionType, index):
+    if index == 0:
+        return UnionType(my_int=42)
+    elif index == 1:
+        return UnionType(my_str="hello")
+    elif index == 2:
+        return UnionType(my_point=Point(x=1, y=2))
+    else:
+        return UnionType()
+
+@idl.struct(
+    member_annotations={
+        "my_union_with_default_seq": [idl.bound(5)],
+        'my_union_array': [idl.array(3)],
+        'my_union_with_default_array': [idl.array(3)],
+        'my_union_with_enum_array': [idl.array(3)],
+        'my_union_with_enum_default_array': [idl.array(3)]
+    }
+)
+class TypeWithUnions:
+    my_union: MyUnion = MyUnion()
+    my_union_with_default: UnionWithDefault = UnionWithDefault()
+    my_union_with_enum: UnionWithEnum = UnionWithEnum()
+    my_union_with_enum_default: UnionWithEnumDefault = UnionWithEnumDefault()
+
+    # sequences of unions
+    my_union_seq: Sequence[MyUnion] = field(default_factory=list)
+    my_union_with_default_seq: Sequence[UnionWithDefault] = field(default_factory=list)
+    my_union_with_enum_seq: Sequence[UnionWithEnum] = field(default_factory=list)
+    my_union_with_enum_default_seq: Sequence[UnionWithEnumDefault] = field(default_factory=list)
+    my_union_with_enum_default_2seq: Sequence[UnionWithEnumDefaultSeq] = field(default_factory=list)
+
+    # arrays of unions
+    my_union_array: Sequence[MyUnion] = field(
+        default_factory=idl.list_factory(MyUnion, 3))
+    my_union_with_default_array: Sequence[UnionWithDefault] = field(
+        default_factory=idl.list_factory(UnionWithDefault, 3))
+    my_union_with_enum_array: Sequence[UnionWithEnum] = field(
+        default_factory=idl.list_factory(UnionWithEnum, 3))
+    my_union_with_enum_default_array: Sequence[UnionWithEnumDefault] = field(
+        default_factory=idl.list_factory(UnionWithEnumDefault, 3))
+
+    # optional unions
+    my_union_opt: Optional[MyUnion] = None
+    my_union_with_default_opt: Optional[UnionWithDefault] = None
+    my_union_with_enum_opt: Optional[UnionWithEnum] = None
+    my_union_with_enum_default_opt: Optional[UnionWithEnumDefault] = None
+
+
+def create_type_with_unions_sample(index):
+    u = create_union_sample(MyUnion, index)
+    uwd = create_union_sample(UnionWithDefault, index)
+    uwe = create_union_sample(UnionWithEnum, index)
+    uwed = create_union_sample(UnionWithEnumDefault, index)
+
+    return TypeWithUnions(
+        my_union=u,
+        my_union_with_default=uwd,
+        my_union_with_enum=uwe,
+        my_union_with_enum_default=uwed,
+        my_union_seq=[u] * (index + 1),
+        my_union_with_default_seq=[uwd] * (index + 1),
+        my_union_with_enum_seq=[uwe] * (index + 1),
+        my_union_with_enum_default_seq=[uwed] * (index + 1),
+        my_union_with_enum_default_2seq=[
+            UnionWithEnumDefaultSeq([uwed, uwed]), UnionWithEnumDefaultSeq([uwed])],
+        my_union_array=[u] * 3,
+        my_union_with_default_array=[uwd] * 3,
+        my_union_with_enum_array=[uwe] * 3,
+        my_union_with_enum_default_array=[uwed] * 3,
+        my_union_opt=u,
+        my_union_with_default_opt=uwd,
+        my_union_with_enum_opt=uwe,
+        my_union_with_enum_default_opt=uwed
+    )
 
 def test_union_default_values():
     assert MyUnion.default_discriminator == 0
@@ -121,7 +211,7 @@ def test_union_plugin():
     assert dt.discriminator == dds.Int16Type()
     assert dt["my_int"].type == dds.Int64Type()
     assert dt["my_int"].labels == [0]
-    assert dt["my_str"].type == dds.StringType()
+    assert dt["my_str"].type == dds.StringType(10)
     assert dt["my_str"].labels == [1]
     assert dt["my_point"].type == idl.get_type_support(Point).dynamic_type
     assert dt["my_point"].labels == [2, 3]
@@ -285,7 +375,6 @@ def test_union_as_dict_contains_discr_and_value_only():
     assert asdict(u) == {"discriminator": 1, "value": "hello"}
 
 
-@pytest.mark.skip("Implementation in progress")
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
 def test_union_serialization(UnionType: type):
     ts = idl.get_type_support(UnionType)
@@ -293,15 +382,24 @@ def test_union_serialization(UnionType: type):
     assert union_sample == ts.deserialize(ts.serialize(union_sample))
 
 
-@pytest.mark.skip("Implementation in progress")
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
 def test_default_union_serialization(UnionType: type):
     ts = idl.get_type_support(UnionType)
-    union_sample = UnionType()
-    assert union_sample == ts.deserialize(ts.serialize(union_sample))
+    sample = UnionType()
+    assert sample == ts.deserialize(ts.serialize(sample))
 
 
-@pytest.mark.skip("Implementation in progress")
+@pytest.mark.parametrize("UnionType", UNION_TYPES)
+def test_union_serialization(UnionType: type):
+    ts = idl.get_type_support(UnionType)
+    sample = UnionType(my_point=Point(3, 4))
+    assert sample == ts.deserialize(ts.serialize(sample))
+    sample = UnionType(my_str="hello")
+    assert sample == ts.deserialize(ts.serialize(sample))
+    sample = UnionType(my_int=3)
+    assert sample == ts.deserialize(ts.serialize(sample))
+
+
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
 def test_union_pubsub(shared_participant, UnionType: type):
     fixture = PubSubFixture(shared_participant, UnionType, reader_policies=[
@@ -309,6 +407,17 @@ def test_union_pubsub(shared_participant, UnionType: type):
     fixture.send_and_check(UnionType(my_point=Point(3, 4)))
     fixture.send_and_check(UnionType(my_str="hello"))
     fixture.send_and_check(UnionType(my_int=3))
+
+def test_type_with_unions_pubsub(shared_participant):
+    fixture = PubSubFixture(shared_participant, TypeWithUnions, reader_policies=[
+                            dds.ResourceLimits(1, 1, 1)])
+    fixture.send_and_check(create_type_with_unions_sample(1))
+    fixture.send_and_check(create_type_with_unions_sample(0))
+    fixture.send_and_check(create_type_with_unions_sample(2))
+    fixture.send_and_check(TypeWithUnions())
+    fixture.send_and_check(create_type_with_unions_sample(3))
+    fixture.send_and_check(create_type_with_unions_sample(1))
+    fixture.send_and_check(create_type_with_unions_sample(-1))
 
 def test_bad_union():
     with pytest.raises(TypeError):
@@ -368,4 +477,12 @@ def test_union_deepcopy():
     assert u_copy.value is not u.value
     assert u_copy.my_point == u.my_point
     assert u_copy.my_point is not u.my_point
+
+    s = create_type_with_unions_sample(1)
+    s_copy = copy.deepcopy(s)
+    assert s_copy == s
+    assert s_copy is not s
+    assert s_copy.my_union is not s.my_union
+    assert s_copy.my_union_opt is not s.my_union_opt
+    assert s_copy.my_union_seq is not s.my_union_seq
 
