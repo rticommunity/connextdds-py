@@ -11,6 +11,8 @@
 
 import ctypes
 from collections import namedtuple
+from dataclasses import dataclass
+import gc, sys
 
 import pytest
 
@@ -177,3 +179,53 @@ def test_cft(shared_participant):
     pubsub = PubSubFixture(shared_participant, Point, content_filter="x >= 0")
     pubsub.writer.write(Point(-1, 1))
     pubsub.send_and_check(Point(1, 1))  # only this sample is received
+
+
+def test_topic_retains_type_support(shared_participant):
+
+    @idl.struct
+    class Foo:
+        a: int = 0
+
+    ts = idl.get_type_support(Foo)
+    initial_ref_count = sys.getrefcount(ts)
+
+    # A topic object increases the refcount of its type support
+    topic1 = dds.Topic(shared_participant, "MyFooTest", Foo)
+    assert topic1.name == "MyFooTest" # suppress unused warning
+    assert sys.getrefcount(ts) == initial_ref_count + 1
+
+    topic2 = dds.Topic(shared_participant, "MyFooTest2", Foo)
+    assert topic2.name == "MyFooTest2"  # suppress unused warning
+    assert sys.getrefcount(ts) == initial_ref_count + 2
+
+    # The refcount is decremented when the topic is deleted
+    topic1 = None
+    assert sys.getrefcount(ts) == initial_ref_count + 1
+    topic2 = None
+    assert sys.getrefcount(ts) == initial_ref_count
+
+
+def test_use_type_support_after_type(participant):
+    def create_topic():
+        @idl.struct
+        class FooIn:
+            x: int = 0
+
+        ts = idl.get_type_support(FooIn)
+        ts.allow_duck_typing = True # To allow writing FooOut
+
+        return dds.Topic(participant, "MyFooTest", FooIn)
+
+    writer = dds.DataWriter(dds.Publisher(participant), create_topic())
+
+    # force garbage collection to make sure the type support is not kept alive
+    gc.collect()
+
+    @dataclass
+    class FooOut:
+        x: int = 0
+
+    # This verifies that the type support outlived FooIn and can be used as
+    # long as the topic exists
+    writer.write(FooOut(4))

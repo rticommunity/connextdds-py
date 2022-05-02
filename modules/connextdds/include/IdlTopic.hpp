@@ -113,13 +113,20 @@ inline PyIdlTopic create_idl_py_topic(
                     listener,
                     mask));
 
-    topic->set_user_data_(type_support.ptr());
-    
     if (listener != nullptr) {
         py::gil_scoped_acquire acquire;
         py::cast(listener).inc_ref();
     }
-    
+
+    // Store the type support in the user data; increase its reference count
+    // while the topic exists, and decrease it upon destruction.
+    type_support.inc_ref();
+    topic->set_user_data_(type_support.ptr(), [](void* ptr) {
+        py::gil_scoped_acquire acquire;
+        auto py_object = py::handle(static_cast<PyObject*>(ptr));
+        py_object.dec_ref();
+    });
+
     return topic;
 }
 

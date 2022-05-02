@@ -213,11 +213,22 @@ using PyDataWriterClass = py::class_<
         PyDataWriterUniquePtr<T>>;
 
 template<typename T>
-void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
+struct NoOpDataWriterPostInitFunction {
+    void operator()(PyDataWriter<T>&) {}
+};
+
+// PostInitFunc is an optional functor to perform additional initialization
+// after the PyDataWriter is constructed.
+template<typename T, typename PostInitFunc = NoOpDataWriterPostInitFunction<T>>
+void init_dds_datawriter_constructors(PyDataWriterClass<T>& cls)
 {
     using PyDataWriter = PyDataWriter<T>;
 
-    cls.def(py::init<const PyPublisher&, const PyTopic<T>&>(),
+    cls.def(py::init([](const PyPublisher& p, const PyTopic<T>& t) {
+                auto writer = PyDataWriter(p, t);
+                PostInitFunc()(writer);
+                return writer;
+            }),
             py::arg("pub"),
             py::arg("topic"),
             py::call_guard<py::gil_scoped_release>(),
@@ -228,7 +239,9 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
                         const dds::pub::qos::DataWriterQos& q,
                         PyDataWriterListenerPtr<T> listener,
                         const dds::core::status::StatusMask& m) {
-                return PyDataWriter(p, t, q, listener, m);
+                auto writer = PyDataWriter(p, t, q, listener, m);
+                PostInitFunc()(writer);
+                return writer;
             }),
             py::arg("pub"),
             py::arg("topic"),
@@ -255,6 +268,12 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
             py::arg("entity"),
             py::call_guard<py::gil_scoped_release>(),
             "Create a typed DataWriter from an Entity.");
+}
+
+template<typename T>
+void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
+{
+    using PyDataWriter = PyDataWriter<T>;
 
     //
     // Type-independent operations (TODO: add tests)
@@ -1345,6 +1364,7 @@ struct DefaultWriteImpl {
 template<typename T>
 void init_dds_typed_datawriter_template(PyDataWriterClass<T>& cls)
 {
+    init_dds_datawriter_constructors(cls);
     init_dds_datawriter_untyped_methods(cls);
     init_dds_datawriter_write_methods<T, DefaultWriteImpl<T>>(cls);
     init_dds_datawriter_async_write_methods(cls);

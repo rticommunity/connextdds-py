@@ -255,76 +255,111 @@ public:
     }
 };
 
-// Defines the Python methods common to all DataReaders, including IDL,
-// DynamicData, and built-in types.
 template<typename T>
-void init_dds_typed_datareader_base_template(
-        py::class_<
-            PyDataReader<T>,
-            PyIDataReader,
-            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
+using PyDataReaderClass = py::class_<
+        PyDataReader<T>,
+        PyIDataReader,
+        std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>;
+
+
+template<typename T>
+struct NoOpDataReaderPostInitFunction {
+    void operator()(PyDataReader<T>&)
+    {
+    }
+};
+
+
+// PostInitFunc is an optional functor to perform additional initialization
+// after the PyDataReader is constructed.
+template<typename T, typename PostInitFunc = NoOpDataReaderPostInitFunction<T>>
+void init_dds_datareader_constructors(PyDataReaderClass<T>& cls)
 {
-    cls.def(py::init<const PySubscriber&, const PyTopic<T>&>(),
+    cls.def(py::init([](const PySubscriber& s, const PyTopic<T>& t) {
+                auto reader = PyDataReader<T>(s, t);
+                PostInitFunc()(reader);
+                return reader;
+            }),
             py::arg("sub"),
             py::arg("topic"),
             py::call_guard<py::gil_scoped_release>(),
-            "Create a DataReader.")
-            .def(py::init([](const PySubscriber& s,
+            "Create a DataReader.");
+
+    cls.def(py::init([](const PySubscriber& s,
                              const PyTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
                              PyDataReaderListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     return PyDataReader<T>(s, t, q, listener, m);
-                 }),
-                 py::arg("sub"),
-                 py::arg("topic"),
-                 py::arg("qos"),
-                 py::arg("listener") = py::none(),
-                 py::arg_v(
-                         "mask",
-                         dds::core::status::StatusMask::all(),
-                         "StatusMask.ALL"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a DataReader.")
-            .def(py::init<
-                         const PySubscriber&,
-                         const PyContentFilteredTopic<T>&>(),
-                 py::arg("sub"),
-                 py::arg("cft"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a DataReader with a ContentFilteredTopic.")
-            .def(py::init([](const PySubscriber& s,
+                auto reader = PyDataReader<T>(s, t, q, listener, m);
+                PostInitFunc()(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("topic"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyContentFilteredTopic<T>& t) {
+                auto reader = PyDataReader<T>(s, t);
+                PostInitFunc()(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("cft"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader with a ContentFilteredTopic.");
+
+    cls.def(py::init([](const PySubscriber& s,
                              const PyContentFilteredTopic<T>& t,
                              const dds::sub::qos::DataReaderQos& q,
                              PyDataReaderListenerPtr<T> listener,
                              const dds::core::status::StatusMask& m) {
-                     return PyDataReader<T>(s, t, q, listener, m);
-                 }),
-                 py::arg("sub"),
-                 py::arg("cft"),
-                 py::arg("qos"),
-                 py::arg("listener") = py::none(),
-                 py::arg_v(
-                         "mask",
-                         dds::core::status::StatusMask::all(),
-                         "StatusMask.ALL"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a DataReader with a ContentFilteredTopic.")
-            .def(py::init([](PyIAnyDataReader& adr) {
-                     auto dr = adr.get_any_datareader().get<T>();
-                     return PyDataReader<T>(dr);
-                 }),
-                 py::arg("reader"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a typed DataReader from an AnyDataReader.")
-            .def(py::init([](PyIEntity& e) {
-                     auto entity = e.get_entity();
-                     return dds::core::polymorphic_cast<PyDataReader<T>>(
-                             entity);
-                 }),
-                 py::arg("entity"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a typed DataReader from an Entity.")
+                auto reader = PyDataReader<T>(s, t, q, listener, m);
+                PostInitFunc()(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("cft"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader with a ContentFilteredTopic.");
+
+    cls.def(py::init([](PyIAnyDataReader& adr) {
+                auto dr = adr.get_any_datareader().get<T>();
+                return PyDataReader<T>(dr);
+            }),
+            py::arg("reader"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Get a typed DataReader from an AnyDataReader.");
+
+    cls.def(py::init([](PyIEntity& e) {
+                auto entity = e.get_entity();
+                return dds::core::polymorphic_cast<PyDataReader<T>>(entity);
+            }),
+            py::arg("entity"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Get a typed DataReader from an Entity.");
+}
+
+
+// Defines the Python methods common to all DataReaders, including IDL,
+// DynamicData, and built-in types.
+template<typename T>
+void init_dds_typed_datareader_base_template(PyDataReaderClass<T>& cls)
+{
+    cls
             .def_property(
                     "default_filter_state",
                     [](PyDataReader<T>& dr)
@@ -693,13 +728,7 @@ void init_dds_typed_datareader_base_template(
 // Defines the read/take methods for all DataReaders except the DataReader for
 // IDL types.
 template<typename T>
-void init_dds_datareader_read_methods(
-        py::class_<
-                PyDataReader<T>,
-                PyIDataReader,
-                std::unique_ptr<
-                        PyDataReader<T>,
-                        no_gil_delete<PyDataReader<T>>>>& cls)
+void init_dds_datareader_read_methods(PyDataReaderClass<T>& cls)
 {
     cls.def("read",
             (dds::sub::LoanedSamples<T>(PyDataReader<T>::*)())
@@ -870,13 +899,7 @@ void init_dds_datareader_selector_base(
 }
 
 template<typename T>
-void init_dds_datareader_selector(
-        py::class_<
-                PyDataReader<T>,
-                PyIDataReader,
-                std::unique_ptr<
-                        PyDataReader<T>,
-                        no_gil_delete<PyDataReader<T>>>>& cls)
+void init_dds_datareader_selector(PyDataReaderClass<T>& cls)
 {
     py::class_<typename PyDataReader<T>::Selector> selector(cls, "Selector");
     init_dds_datareader_selector_base<T>(selector);
@@ -887,12 +910,9 @@ void init_dds_datareader_selector(
 // DataReader for IDL types. These two define template specializations of this
 // function.
 template<typename T>
-void init_dds_typed_datareader_template(
-        py::class_<
-            PyDataReader<T>,
-            PyIDataReader,
-            std::unique_ptr<PyDataReader<T>, no_gil_delete<PyDataReader<T>>>>& cls)
+void init_dds_typed_datareader_template(PyDataReaderClass<T>& cls)
 {
+    init_dds_datareader_constructors(cls);
     init_dds_typed_datareader_base_template(cls);
     init_dds_datareader_read_methods(cls);
     init_dds_datareader_selector(cls);
@@ -953,12 +973,7 @@ void init_dds_typed_datareader_template(
 }
 
 template<typename T>
-void init_datareader(
-        py::class_<
-            PyDataReader<T>,
-            PyIDataReader,
-            std::unique_ptr<PyDataReader<T>,
-            no_gil_delete<PyDataReader<T>>>>& dr)
+void init_datareader(PyDataReaderClass<T>& dr)
 {
     init_dds_typed_datareader_template(dr);
 }

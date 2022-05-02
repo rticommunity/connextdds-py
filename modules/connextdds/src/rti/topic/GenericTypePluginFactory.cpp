@@ -124,16 +124,6 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
                 };
             });
 
-    cls.def("add_member_previous",
-            &GenericTypePluginFactory::add_member,
-            py::arg("type"),
-            py::arg("name"),
-            py::arg("member_type"),
-            py::arg("id") = Member::INVALID_ID,
-            py::arg("is_key") = false,
-            py::arg("is_optional") = false,
-            py::arg("is_external") = false);
-
     cls.def(
             "add_member",
             [](GenericTypePluginFactory& factory,
