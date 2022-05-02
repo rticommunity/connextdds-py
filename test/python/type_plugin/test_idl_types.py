@@ -19,6 +19,8 @@ from test_utils.fixtures import *
 
 import common_types
 from test_annotations import AnnotationsTest
+from dataclasses import field
+
 
 def same_elements(a, b):
     return len(a) == len(b) and all(x in b for x in a)
@@ -42,6 +44,7 @@ idl_types = [
     common_types.Point,
     common_types.Point3D,
     common_types.Line,
+    common_types.StringSequence,
     common_types.ComplexSequence,
     common_types.SequenceArrayTest,
     common_types.BoundSequenceArrayTest,
@@ -50,6 +53,11 @@ idl_types = [
     common_types.UnboundString,
     common_types.OptionalsTest,
     AnnotationsTest,
+    #common_types.ArrayTest,
+    common_types.SequenceOfSeqTest,
+    common_types.StrSequenceTest,
+    common_types.OptionalStrSequenceTest,
+    common_types.EnumTest,
 ]
 
 

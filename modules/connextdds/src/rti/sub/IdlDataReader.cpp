@@ -23,27 +23,32 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-auto get_create_py_sample_function(PyDataReader<CSampleWrapper> &dr)
-{
-    auto type_support = get_py_type_support_from_topic(dr.topic_description());
-    return type_support.attr("_create_py_sample");
-}
+struct IdlDataReaderPyObjectCache {
+    py::handle create_py_sample_func;
+    py::handle cast_c_sample_func;
+    py::handle type_support;
+};
 
-auto get_cast_c_sample_function(PyDataReader<CSampleWrapper>& dr)
+// Gets the Python objects associated to this writer
+static IdlDataReaderPyObjectCache* get_py_objects(
+        dds::sub::DataReader<CSampleWrapper>& reader)
 {
-    auto type_support = get_py_type_support_from_topic(dr.topic_description());
-    return type_support.attr("_cast_c_sample");
+    auto objects =
+            static_cast<IdlDataReaderPyObjectCache*>(reader->get_user_data_());
+    RTI_CHECK_PRECONDITION(objects != nullptr);
+    return objects;
 }
 
 template <typename CreateSampleFunc>
 py::object invoke_py_sample_function(
         CreateSampleFunc&& py_function,
+        py::handle& type_support,
         const CSampleWrapper &sample)
 {
     // We pass the pointer to the python function as an integer,
     // because that's what ctypes.cast expects.
     size_t sample_ptr = reinterpret_cast<size_t>(sample.sample());
-    return py_function(sample_ptr);
+    return py_function(type_support, sample_ptr);
 }
 
 static std::vector<py::object> convert_data(
@@ -58,10 +63,12 @@ static std::vector<py::object> convert_data(
     py::gil_scoped_acquire acquire;
     // This is the type support function that converts from C data
     // to the user-facing python object.
-    auto create_py_sample = get_create_py_sample_function(dr);
+    auto obj_cache = get_py_objects(dr);
     for (auto& sample : valid_samples) {
-        py_samples.push_back(
-                invoke_py_sample_function(create_py_sample, sample.data()));
+        py_samples.push_back(invoke_py_sample_function(
+                obj_cache->create_py_sample_func,
+                obj_cache->type_support,
+                sample.data()));
     }
 
     return py_samples;
@@ -82,10 +89,12 @@ static DataAndInfoVector convert_data_w_info(
     py::gil_scoped_acquire acquire;
     // This is the type support function that converts from C data
     // to the user-facing python object.
-    auto create_py_sample = get_create_py_sample_function(dr);
+    auto obj_cache = get_py_objects(dr);
     for (auto& sample : valid_samples) {
-        py::object py_data =
-                invoke_py_sample_function(create_py_sample, sample.data());
+        py::object py_data = invoke_py_sample_function(
+                obj_cache->create_py_sample_func,
+                obj_cache->type_support,
+                sample.data());
         py_samples.push_back({ py_data , sample.info() });
     }
 
@@ -155,9 +164,45 @@ static void test_native_reads(PyDataReader<CSampleWrapper>& dr)
     }
 }
 
+struct IdlDataReaderPostInitFunction {
+    void operator()(PyDataReader<CSampleWrapper>& reader)
+    {
+        using rti::core::memory::ObjectAllocator;
+
+        // Store the IdlDataReaderPyObjectCache as this reader's user data
+        if (reader->get_user_data_() == nullptr) {
+            py::gil_scoped_acquire acquire;
+
+            // Obtain all the cached objects
+            auto type_support =
+                    get_py_type_support_from_topic(reader.topic_description());
+            IdlDataReaderPyObjectCache tmp_obj_cache;
+            tmp_obj_cache.type_support = type_support;
+            tmp_obj_cache.create_py_sample_func =
+                    py::type::of(type_support).attr("_create_py_sample");
+            tmp_obj_cache.cast_c_sample_func =
+                    py::type::of(type_support).attr("_cast_c_sample");
+
+            // Once the objects have been successfully retrieved, allocate
+            // the user data object and set it.
+            auto obj_cache =
+                    ObjectAllocator<IdlDataReaderPyObjectCache>::create();
+            *obj_cache = std::move(tmp_obj_cache);
+            reader->set_user_data_(obj_cache, [](void* ptr) {
+                ObjectAllocator<IdlDataReaderPyObjectCache>::destroy(
+                        static_cast<IdlDataReaderPyObjectCache*>(ptr));
+            });
+        }
+    }
+};
+
+
 template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
+    init_dds_datareader_constructors<
+            CSampleWrapper,
+            IdlDataReaderPostInitFunction>(cls);
     init_dds_typed_datareader_base_template(cls);
 
     cls.def("take_data",

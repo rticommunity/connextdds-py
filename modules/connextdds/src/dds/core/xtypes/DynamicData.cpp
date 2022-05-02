@@ -1392,6 +1392,7 @@ void init_dds_typed_datawriter_template(
 {
     using dds::core::xtypes::DynamicData;
 
+    init_dds_datawriter_constructors(cls);
     init_dds_datawriter_untyped_methods(cls);
     init_dds_datawriter_write_methods<
             DynamicData,
@@ -1477,12 +1478,9 @@ void init_dds_typed_datawriter_template(
 }
 
 template<>
-void init_dds_typed_datareader_template(
-        py::class_<
-            PyDataReader<DynamicData>,
-            PyIDataReader,
-            std::unique_ptr<PyDataReader<DynamicData>, no_gil_delete<PyDataReader<DynamicData>>>>& cls)
+void init_dds_typed_datareader_template(PyDataReaderClass<DynamicData>& cls)
 {
+    init_dds_datareader_constructors(cls);
     init_dds_typed_datareader_base_template(cls);
     init_dds_datareader_read_methods(cls);
     init_dds_datareader_selector(cls);

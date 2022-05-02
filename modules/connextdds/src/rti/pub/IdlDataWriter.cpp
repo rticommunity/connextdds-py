@@ -16,6 +16,7 @@
 
 #include "IdlDataWriter.hpp"
 
+#include <rti/core/memory.hpp>
 
 using namespace dds::core::xtypes;
 using namespace dds::topic;
@@ -23,19 +24,32 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-static auto get_create_c_sample_function(
+
+// Caches python objects used by the DataWriter in the critical path for quick
+// access
+struct IdlDataWriterPyObjectCache {
+    py::handle create_c_sample_func;
+    py::handle type_support;
+    rti::topic::cdr::CTypePlugin* type_plugin;
+};
+
+// Gets the Python objects associated to this writer
+static IdlDataWriterPyObjectCache *get_py_objects(
         dds::pub::DataWriter<CSampleWrapper>& writer)
 {
-    auto type_support = get_py_type_support_from_topic(writer.topic());
-    return type_support.attr("_create_c_sample");
+    auto objects =
+            static_cast<IdlDataWriterPyObjectCache*>(writer->get_user_data_());
+    RTI_CHECK_PRECONDITION(objects != nullptr);
+    return objects;
 }
 
 static PyCTypesBuffer convert_sample(
         dds::pub::DataWriter<CSampleWrapper>& writer,
         const py::object& sample)
 {
-    auto&& create_c_sample_func = get_create_c_sample_function(writer);
-    return PyCTypesBuffer(create_c_sample_func(sample));
+    IdlDataWriterPyObjectCache* obj_cache = get_py_objects(writer);
+    return PyCTypesBuffer(
+            obj_cache->create_c_sample_func(obj_cache->type_support, sample));
 }
 
 static void finalize_sample(
@@ -44,11 +58,8 @@ static void finalize_sample(
 {
     // TODO PY-17: Temporary function until we use a scratchpad sample instead
     // of creating one for every write.
-    auto type_support = get_py_type_support_from_topic(writer.topic());
-    auto plugin = py::cast<TypePlugin>(
-        type_support.attr("_plugin_dynamic_type"));
-
-    plugin.type_plugin->finalize_sample(c_sample);
+    IdlDataWriterPyObjectCache* obj_cache = get_py_objects(writer);
+    obj_cache->type_plugin->finalize_sample(c_sample);
 }
 
 // The Write implementation for IDL writers converts Python samples to C
@@ -102,7 +113,7 @@ struct IdlWriteImpl {
     {
         // TODO PY-17: Evaluate if this can be optimized (e.g. convert all
         // first to avoid taking/releasing the GIL in each iteration, or at
-        // least cache get_create_c_sample_function first).
+        // least cache get_python_objects first).
         for (const auto& sample : samples) {
             py_write(writer, sample, std::forward<ExtraArgs>(extra_args)...);
         }
@@ -129,10 +140,53 @@ struct IdlWriteImpl {
     }
 };
 
+struct IdlDataWriterPostInitFunc {
+    void operator()(PyDataWriter<CSampleWrapper>& writer)
+    {
+        using rti::core::memory::ObjectAllocator;
+
+        // Store the IdlDataWriterPyObjectCache as this writer's user data
+        if (writer->get_user_data_() == nullptr) {
+            py::gil_scoped_acquire acquire;
+
+            // Obtain all the cached objects
+            auto type_support = get_py_type_support_from_topic(writer.topic());
+            IdlDataWriterPyObjectCache tmp_obj_cache;
+            tmp_obj_cache.type_support = type_support;
+            tmp_obj_cache.create_c_sample_func =
+                    py::type::of(type_support).attr("_create_c_sample");
+            tmp_obj_cache.type_plugin =
+                    py::cast<TypePlugin>(
+                            type_support.attr("_plugin_dynamic_type"))
+                            .type_plugin;
+
+            // Once the objects have been successfully retrieved, allocate
+            // the user data object and set it.
+            auto obj_cache =
+                    ObjectAllocator<IdlDataWriterPyObjectCache>::create();
+            *obj_cache = std::move(tmp_obj_cache);
+            writer->set_user_data_(obj_cache, [](void* ptr) {
+                ObjectAllocator<IdlDataWriterPyObjectCache>::destroy(
+                        static_cast<IdlDataWriterPyObjectCache*>(ptr));
+            });
+        }
+    }
+};
+
+
+// Sets the Python methods for an IDL DataWriter
 template<>
 void init_dds_typed_datawriter_template(IdlDataWriterPyClass& cls)
 {
+    // Initialize the Python constructors with an additional initialization
+    // functor that sets a Python object cache as the writer user data
+    init_dds_datawriter_constructors<CSampleWrapper, IdlDataWriterPostInitFunc>(cls);
+
+    // These untyped methods do not require any customization for IDL support.
     init_dds_datawriter_untyped_methods(cls);
+
+    // Initialize the write methods with a custom implementation of the write
+    // operation that translates from Python objects to ctypes objects.
     init_dds_datawriter_write_methods<CSampleWrapper, IdlWriteImpl>(cls);
 }
 
