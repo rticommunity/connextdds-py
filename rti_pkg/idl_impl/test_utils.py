@@ -272,8 +272,12 @@ def create_topic(participant: dds.DomainParticipant, type: type, topic_name: Opt
     # unified under dds.Topic.
 
     # For non-IDL types, such as dds.StringTopicType, dds.DynamicData:
-    if "dds." in str(type):
-        return type.Topic(participant, name)
+    if not _is_idl_type(type):
+        if type.__class__ in (dds.StructType, dds.UnionType, dds.DynamicData):
+            return dds.DynamicData.Topic(participant, name, type)
+        else:
+            return type.Topic(participant, name)
+
     # For IDL types:
     else:
         return dds.Topic(participant, name, type)
@@ -286,6 +290,8 @@ def create_topic(participant: dds.DomainParticipant, type: type, topic_name: Opt
 def _get_topic_namespace(topic, type):
     if isinstance(topic, dds.Topic) or isinstance(topic, dds.ContentFilteredTopic):
         return dds
+    elif isinstance(topic, dds.DynamicData.Topic):
+        return dds.DynamicData
     else:
         return type
 
@@ -299,6 +305,9 @@ def _create_writer(topic, type, writer_qos):
     ns = _get_topic_namespace(topic, type)
     return ns.DataWriter(topic.participant, topic, writer_qos)
 
+
+def _is_idl_type(type):
+    return inspect.getmodule(type).__name__ != "rti.connextdds"
 
 class PubSubFixture:
     def __init__(
@@ -316,16 +325,12 @@ class PubSubFixture:
         self.data_type = data_type
 
         # Figure out if the type has an unbounded value in it
-        if "dds." in str(data_type):
+        if not _is_idl_type(data_type):
             has_unbound_member = False
         else:
             type_support = idl.get_type_support(data_type)
             has_unbound_member = _UNBOUNDED_LENGTH <= type_support.max_serialized_sample_size
 
-        if participant is None:
-            self.participant = create_participant()
-        else:
-            self.participant = participant
         self.participant = participant or create_participant()
         self.topic = topic or create_topic(
             self.participant, data_type, topic_name)

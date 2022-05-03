@@ -29,6 +29,7 @@ public:
     using dds::pub::AnyDataWriterListener::on_reliable_reader_activity_changed;
     using dds::pub::AnyDataWriterListener::on_reliable_writer_cache_changed;
     using dds::pub::AnyDataWriterListener::on_service_request_accepted;
+    using dds::pub::AnyDataWriterListener::on_sample_removed;
 
     virtual void on_offered_deadline_missed(
             PyAnyDataWriter& writer,
@@ -68,6 +69,10 @@ public:
             PyAnyDataWriter& writer,
             const rti::core::status::ServiceRequestAcceptedStatus& status) = 0;
 
+    virtual void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) = 0;
+
     virtual ~PyAnyDataWriterListener()
     {
     }
@@ -87,6 +92,7 @@ public:
     using PyAnyDataWriterListener::on_reliable_reader_activity_changed;
     using PyAnyDataWriterListener::on_reliable_writer_cache_changed;
     using PyAnyDataWriterListener::on_service_request_accepted;
+    using PyAnyDataWriterListener::on_sample_removed;
 
     void on_offered_deadline_missed(
             PyAnyDataWriter&,
@@ -144,6 +150,10 @@ public:
             PyAnyDataWriter&,
             const rti::core::status::ServiceRequestAcceptedStatus&)
             override
+    {
+    }
+
+    void on_sample_removed(PyAnyDataWriter&, const rti::core::Cookie&) override
     {
     }
 
@@ -233,6 +243,14 @@ public:
     {
         auto adw = PyAnyDataWriter(writer);
         this->on_service_request_accepted(adw, status);
+    }
+
+    void on_sample_removed(
+            dds::pub::AnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        auto adw = PyAnyDataWriter(writer);
+        this->on_sample_removed(adw, cookie);
     }
 
     void on_offered_deadline_missed(
@@ -348,6 +366,18 @@ public:
                 status);
     }
 
+    void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        PYBIND11_OVERLOAD_PURE(
+                void,
+                ADWLBase,
+                on_sample_removed,
+                writer,
+                cookie);
+    }
+
     virtual ~PyAnyDataWriterListenerTrampoline()
     {
     }
@@ -376,6 +406,7 @@ public:
             ADWLBase>::on_application_acknowledgment;
     using PyAnyDataWriterListenerTrampoline<
             ADWLBase>::on_service_request_accepted;
+    using PyAnyDataWriterListenerTrampoline<ADWLBase>::on_sample_removed;
 
     void on_offered_deadline_missed(
             PyAnyDataWriter& writer,
@@ -478,6 +509,13 @@ public:
                 on_service_request_accepted,
                 writer,
                 status);
+    }
+
+    void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        PYBIND11_OVERLOAD(void, ADWLBase, on_sample_removed, writer, cookie);
     }
 
     virtual ~PyNoOpAnyDataWriterListenerTrampoline()

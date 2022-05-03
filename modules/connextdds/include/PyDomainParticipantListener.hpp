@@ -49,6 +49,7 @@ public:
     using PyNoOpPublisherListener::on_reliable_reader_activity_changed;
     using PyNoOpPublisherListener::on_reliable_writer_cache_changed;
     using PyNoOpPublisherListener::on_service_request_accepted;
+    using PyNoOpPublisherListener::on_sample_removed;
 
     void on_offered_deadline_missed(
             PyAnyDataWriter&,
@@ -106,6 +107,10 @@ public:
             PyAnyDataWriter&,
             const rti::core::status::ServiceRequestAcceptedStatus&)
             override
+    {
+    }
+
+    void on_sample_removed(PyAnyDataWriter&, const rti::core::Cookie&) override
     {
     }
 
@@ -259,6 +264,14 @@ public:
         this->on_service_request_accepted(adw, status);
     }
 
+    void on_sample_removed(
+            dds::pub::AnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        auto adw = PyAnyDataWriter(writer);
+        this->on_sample_removed(adw, cookie);
+    }
+
     void on_offered_deadline_missed(
             PyAnyDataWriter& writer,
             const dds::core::status::OfferedDeadlineMissedStatus& status)
@@ -370,6 +383,18 @@ public:
                 on_service_request_accepted,
                 writer,
                 status);
+    }
+
+    void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        PYBIND11_OVERLOAD_PURE(
+                void,
+                DPLBase,
+                on_sample_removed,
+                writer,
+                cookie);
     }
 
     void on_requested_incompatible_qos(
@@ -647,6 +672,13 @@ public:
                 on_service_request_accepted,
                 writer,
                 status);
+    }
+
+    void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        PYBIND11_OVERLOAD(void, DPLBase, on_sample_removed, writer, cookie);
     }
 
     void on_requested_deadline_missed(

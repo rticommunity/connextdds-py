@@ -24,8 +24,8 @@ def same_elements(a, b):
 
 def check_expected_data(reader: dds.DataReader, expected_samples: list):
     wait.for_data(reader, count=len(expected_samples))
-    samples = reader.take_data()
-    assert same_elements(samples, expected_samples)
+    received = reader.take()
+    assert same_elements([data for (data, _) in received], expected_samples)
 
 
 def check_data_and_get_info(reader: dds.DataReader, expected_samples: list):
@@ -34,79 +34,165 @@ def check_data_and_get_info(reader: dds.DataReader, expected_samples: list):
     assert same_elements([data for (data, _) in samples], expected_samples)
     return [info for (_, info) in samples]
 
+
 @idl.struct(member_annotations={'x': [idl.key]})
-class Point:
+class PointIDL:
     x: int = 0
     y: int = 0
 
 
-@pytest.fixture(scope="function", params=[Point])  # TODO add built-in types
+@idl.struct(member_annotations={'x': [idl.key]})
+class PointIDLForDD:
+    x: int = 0
+    y: int = 0
+
+
+# The reason these types are wrapped in a lambda is so that they are lazily
+# created and they will be garbage collected before we do heap monitoring.
+# Since these types would normally be created at test collection time, they
+# would outlive the tests and be detected as memory leaks.
+def get_test_types_generator():
+    return [
+        lambda: PointIDL,
+        lambda: idl.get_type_support(PointIDLForDD).dynamic_type,
+        lambda: dds.StringTopicType,
+        lambda: dds.KeyedStringTopicType,
+    ]
+
+
+def get_keyed_types_generator():
+    return [
+        lambda: PointIDL,
+        lambda: idl.get_type_support(PointIDLForDD).dynamic_type,
+        lambda: dds.KeyedStringTopicType,
+    ]
+
+
+@pytest.fixture(scope="function", params=get_test_types_generator())
 def pubsub(request, shared_participant):
     """This fixture provides a test with a writer and a reader that have already
        been discovered. The participant is shared within the module to speed up
        execution, but the contained entities are deleted after each test
        function."""
 
-    fixture = PubSubFixture(shared_participant, request.param)
+    data_type = request.param()
+    fixture = PubSubFixture(shared_participant, data_type)
     yield fixture
     fixture.participant.close_contained_entities()
 
 
-@pytest.fixture(scope="function", params=[Point])  # TODO add built-in types
+@pytest.fixture(scope="function", params=get_keyed_types_generator())
+def pubsub_keyed_types(request, shared_participant):
+    data_type = request.param()
+    fixture = PubSubFixture(shared_participant, data_type)
+    yield fixture
+    fixture.participant.close_contained_entities()
+
+
+@pytest.fixture(scope="function", params=get_keyed_types_generator())
 def pub(request, shared_participant):
+    data_type = request.param()
     fixture = PubSubFixture(
-        shared_participant, request.param, create_reader=False)
+        shared_participant, data_type, create_reader=False)
     yield fixture
     fixture.participant.close_contained_entities()
+
+
+def get_sample_value(type: type):
+    if type is PointIDL:
+        return PointIDL(x=1, y=2)
+    elif type == idl.get_type_support(PointIDLForDD).dynamic_type:
+        point_dynamic_data = dds.DynamicData(
+            idl.get_type_support(PointIDLForDD).dynamic_type)
+        point_dynamic_data["x"] = 1
+        point_dynamic_data["y"] = 2
+        return point_dynamic_data
+    elif type is dds.StringTopicType:
+        return dds.StringTopicType("Hello World")
+    elif type is dds.KeyedStringTopicType:
+        return dds.KeyedStringTopicType("Hello World", "Hello World")
+    else:
+        raise TypeError("Unsupported type: {}".format(type))
+
+
+class PointListener(dds.NoOpDataWriterListener):
+    def on_data_available(self, writer):
+        pass
+
+
+class OtherPointListener(dds.NoOpDataWriterListener):
+    def on_data_available(self, writer):
+        pass
+
+
+def get_writer_listeners(type: type):
+    if type is PointIDL:
+        return (PointListener(), OtherPointListener())
+    elif type == idl.get_type_support(PointIDLForDD).dynamic_type:
+        return (dds.DynamicData.NoOpDataWriterListener(),
+                dds.DynamicData.NoOpDataWriterListener())
+    elif type is dds.StringTopicType:
+        return (dds.StringTopicType.NoOpDataWriterListener(),
+                dds.StringTopicType.NoOpDataWriterListener())
+    elif type is dds.KeyedStringTopicType:
+        return (dds.KeyedStringTopicType.NoOpDataWriterListener(),
+                dds.KeyedStringTopicType.NoOpDataWriterListener())
+    else:
+        raise TypeError("Unsupported type: {}".format(type))
+
+
+def get_writer_w_listeners(participant, topic, type, listener):
+    ns = test_utils._get_topic_namespace(topic, type)
+    return ns.DataWriter(participant, topic, dds.DataWriterQos(), listener)
 
 
 # --- Write tests -------------------------------------------------------------
 
 def test_write(pubsub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pubsub.data_type)
     pubsub.writer.write(sample)
     check_expected_data(pubsub.reader, [sample])
 
 
 def test_write_with_shift_operator(pubsub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pubsub.data_type)
     pubsub.writer << sample
     check_expected_data(pubsub.reader, [sample])
 
 
 def test_write_with_timestamp(pubsub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pubsub.data_type)
     pubsub.writer.write(sample, dds.Time(123))
     info = check_data_and_get_info(pubsub.reader, [sample])
 
     assert info[0].source_timestamp == dds.Time(123)
 
 
-def test_write_with_instance_handle(pubsub):
-    sample = Point(x=11, y=22)
-    instance_handle = pubsub.writer.register_instance(sample)
+def test_write_with_instance_handle(pubsub_keyed_types):
+    sample = get_sample_value(pubsub_keyed_types.data_type)
+    instance_handle = pubsub_keyed_types.writer.register_instance(sample)
     assert not instance_handle.is_nil
 
-    pubsub.writer.write(sample, handle=instance_handle)
-    info = check_data_and_get_info(pubsub.reader, [sample])
+    pubsub_keyed_types.writer.write(sample, handle=instance_handle)
+    info = check_data_and_get_info(pubsub_keyed_types.reader, [sample])
 
     assert info[0].instance_handle == instance_handle
 
 
-def test_write_with_instance_handle_and_timestamp(pubsub):
-    sample = Point(x=11, y=22)
-    instance_handle = pubsub.writer.register_instance(sample)
+def test_write_with_instance_handle_and_timestamp(pubsub_keyed_types):
+    sample = get_sample_value(pubsub_keyed_types.data_type)
+    instance_handle = pubsub_keyed_types.writer.register_instance(sample)
 
-    pubsub.writer.write(sample, handle=instance_handle,
-                        timestamp=dds.Time(123))
-    info = check_data_and_get_info(pubsub.reader, [sample])
+    pubsub_keyed_types.writer.write(sample, handle=instance_handle,
+                                    timestamp=dds.Time(123))
+    info = check_data_and_get_info(pubsub_keyed_types.reader, [sample])
 
     assert info[0].instance_handle == instance_handle
     assert info[0].source_timestamp == dds.Time(123)
 
 
 def test_write_w_params(pubsub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pubsub.data_type)
     params = dds.WriteParams()
     params.source_timestamp = dds.Time(123)
     pubsub.writer.write(sample, params)
@@ -116,7 +202,7 @@ def test_write_w_params(pubsub):
 
 
 def test_write_with_timestamp_with_shift_operator(pubsub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pubsub.data_type)
     pubsub.writer << (sample, dds.Time(123))
 
     info = check_data_and_get_info(pubsub.reader, [sample])
@@ -124,19 +210,22 @@ def test_write_with_timestamp_with_shift_operator(pubsub):
 
 
 def test_write_list(pubsub):
-    samples = [Point(x=11, y=22), Point(x=33, y=44)]
+    samples = [get_sample_value(pubsub.data_type),
+               get_sample_value(pubsub.data_type)]
     pubsub.writer.write(samples)
     check_expected_data(pubsub.reader, samples)
 
 
 def test_write_list_with_shift_operator(pubsub):
-    samples = [Point(x=11, y=22), Point(x=33, y=44)]
+    samples = [get_sample_value(pubsub.data_type),
+               get_sample_value(pubsub.data_type)]
     pubsub.writer << samples
     check_expected_data(pubsub.reader, samples)
 
 
 def test_write_list_with_timestamp(pubsub):
-    samples = [Point(x=11, y=22), Point(x=33, y=44)]
+    samples = [get_sample_value(pubsub.data_type),
+               get_sample_value(pubsub.data_type)]
     pubsub.writer.write(samples, dds.Time(123))
 
     infos = check_data_and_get_info(pubsub.reader, samples)
@@ -144,24 +233,17 @@ def test_write_list_with_timestamp(pubsub):
 
 
 def test_write_list_of_pairs_with_shift_operator(pubsub):
-    samples = [Point(x=11, y=22), Point(x=33, y=44)]
-    pubsub.writer << [(sample, dds.Time(sample.x)) for sample in samples]
+    samples = [get_sample_value(pubsub.data_type),
+               get_sample_value(pubsub.data_type)]
+    pubsub.writer << [(sample, dds.Time(1)) for sample in samples]
 
     infos = check_data_and_get_info(pubsub.reader, samples)
-    assert all(info.source_timestamp == dds.Time(sample.x) for info, sample in zip(infos, samples))
+    assert all(info.source_timestamp == dds.Time(1)
+               for info, sample in zip(infos, samples))
 
 
 def test_datawriter_listener_can_be_set(pubsub):
-    class PointListener(dds.NoOpDataWriterListener):
-        def on_instance_replaced(self, writer, handle):
-            pass
-
-    class OtherPointListener(dds.NoOpDataWriterListener):
-        def on_instance_replaced(self, writer, handle):
-            pass
-
-    listener = PointListener()
-    other_listener = OtherPointListener()
+    listener, other_listener = get_writer_listeners(pubsub.data_type)
 
     assert pubsub.writer.listener is None
 
@@ -175,13 +257,17 @@ def test_datawriter_listener_can_be_set(pubsub):
     # Test it can be set to none
     pubsub.writer.listener = None
     assert pubsub.writer.listener is None
-    
-    pubsub.writer.listener = PointListener()
-    assert type(pubsub.writer.listener) is PointListener
+
+    pubsub.writer.listener = get_writer_listeners(pubsub.data_type)[0]
+    assert isinstance(pubsub.writer.listener,
+                      (dds.DataWriterListener,
+                       dds.DynamicData.DataWriterListener,
+                       dds.StringTopicType.DataWriterListener,
+                       dds.KeyedStringTopicType.DataWriterListener))
 
     # Test constructor
-    new_writer = dds.DataWriter(
-        pubsub.participant, pubsub.topic, dds.DataWriterQos(), listener)
+    new_writer = get_writer_w_listeners(
+        pubsub.participant, pubsub.topic, pubsub.data_type, listener)
     assert new_writer.listener == listener
     new_writer.close()
 
@@ -189,7 +275,7 @@ def test_datawriter_listener_can_be_set(pubsub):
 
 
 def test_register_dispose_unregister_instance(pub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pub.data_type)
     instance_handle = pub.writer.register_instance(sample)
     assert instance_handle is not None
     assert instance_handle != dds.InstanceHandle.nil()
@@ -199,7 +285,7 @@ def test_register_dispose_unregister_instance(pub):
 
 
 def test_register_dispose_unregister_instance_with_timestamp(pub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pub.data_type)
     instance_handle = pub.writer.register_instance(sample, dds.Time(123))
     assert instance_handle is not None
     assert instance_handle != dds.InstanceHandle.nil()
@@ -209,7 +295,7 @@ def test_register_dispose_unregister_instance_with_timestamp(pub):
 
 
 def test_register_dispose_unregister_instance_with_params(pub):
-    sample = Point(x=11, y=22)
+    sample = get_sample_value(pub.data_type)
     params = dds.WriteParams()
     params.source_timestamp = dds.Time(123)
     instance_handle = pub.writer.register_instance(sample, params)
@@ -230,11 +316,11 @@ def test_register_dispose_unregister_instance_with_params(pub):
 def test_stress_write():
     # TODO PY-17: this is not automated. It requires manually monitoring the
     # memory of the process to ensure that it doesn't grow unlimited.
-    t = Point
+    t = PointIDL
     participant = fixtures.create_participant()
     topic = fixtures.create_topic(participant, t)
     writer = fixtures.create_writer(topic, t, dds.DataWriterQos())
 
     while True:
-        samples = Point(x=11, y=22)
+        samples = PointIDL(x=11, y=22)
         writer.write(samples, dds.Time(123))
