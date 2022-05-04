@@ -153,10 +153,10 @@ class ArrayTest:
     wstrings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
     complex: Sequence[SequenceTest] = field(
         default_factory=idl.list_factory(SequenceTest, 3))
-    multi_str: Sequence[str] = field(
-        default_factory=idl.list_factory(str, [2, 3]))
-    multi_int: Sequence[int] = field(
-        default_factory=idl.array_factory(int, [3, 2]))
+    #multi_str: Sequence[str] = field(
+    #    default_factory=idl.list_factory(str, [2, 3]))
+    #multi_int: Sequence[int] = field(
+    #    default_factory=idl.array_factory(int, [3, 2]))
 
 
 @idl.struct(member_annotations={
@@ -227,3 +227,70 @@ class Color(IntEnum):
 @idl.struct()
 class EnumTest:
     color: Color = field(default=Color.RED)
+
+
+@idl.struct
+class PrimitiveType:
+    myInt8: idl.int8 = 0
+    myUint8: idl.int8 = 0
+    myChar: str = ""
+    myWchar: str = ""
+    myOctet: idl.int8 = 0
+    myShort: idl.int16 = 0
+    myUnsignedShort: idl.uint16 = 0
+    myLong: idl.int32 = 0
+    myUnsignedLong: idl.uint32 = 0
+    myLongLong: idl.int64 = 0
+    myUnsignedLongLong: int = 0
+    myFloat: idl.float32 = 0.0
+    myDouble: float = 0.0
+    myLongDouble: float = 0.0
+    myBoolean: bool = False
+
+
+@idl.alias(
+    annotations=[idl.array([4])]
+)
+class MyShortArray_4:
+    value: Sequence[idl.int16] = field(
+        default_factory=idl.array_factory(idl.int16, [4]))
+
+
+@idl.alias(
+    annotations=[idl.bound(4)]
+)
+class MyShortSeq_4:
+    value: Sequence[idl.int16] = field(
+        default_factory=idl.array_factory(idl.int16))
+
+
+@idl.alias(
+    annotations=[idl.bound(100)]
+)
+class MyShortSeq_Unbounded:
+    value: Sequence[idl.int16] = field(
+        default_factory=idl.array_factory(idl.int16))
+
+
+@idl.struct(
+    member_annotations={
+        'myShortArraySeq': [idl.bound(2)],
+        'myShortSeqSeq': [idl.bound(2)],
+        'myShortSeqSeq_2': [idl.bound(2)],
+    }
+)
+class SequenceAliasTest:
+    myShortArraySeq: Sequence[MyShortArray_4] = field(default_factory=list)
+    myShortSeqSeq: Sequence[MyShortSeq_4] = field(default_factory=list)
+    myShortSeqSeq_2: Sequence[MyShortSeq_Unbounded] = field(
+        default_factory=list)
+
+
+@idl.struct(
+    member_annotations={
+        'key': [idl.key],
+    }
+)
+class KeyTest:
+    key: int = 0
+    value: int = 0
