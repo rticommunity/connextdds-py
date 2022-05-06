@@ -80,6 +80,7 @@ def test_serialization():
 def test_pubsub(shared_participant):
     fixture = PubSubFixture(shared_participant, Point)
     fixture.send_and_check(Point(3, 4))
+    fixture.send_and_check(Point(5, 7))
 
 @idl.struct
 class NotAPoint:
@@ -119,15 +120,13 @@ def test_idl_writer_fails_with_bad_sample_type():
     writer = dds.DataWriter(participant.implicit_publisher, topic)
 
     ts = idl.get_type_support(Point)
-    ExceptionType = TypeError if not ts.allow_duck_typing else idl.FieldSerializationError
-
-    with pytest.raises(ExceptionType):
+    with pytest.raises(idl.FieldSerializationError):
         writer.write(NotAPoint())
 
-    with pytest.raises(ExceptionType):
+    with pytest.raises(idl.FieldSerializationError):
         writer.write(4)
 
-    with pytest.raises(ExceptionType):
+    with pytest.raises(idl.FieldSerializationError):
         writer.write(None)
 
 def test_nested_type():

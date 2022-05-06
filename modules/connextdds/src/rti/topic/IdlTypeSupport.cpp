@@ -186,6 +186,17 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             py::call_guard<py::gil_scoped_acquire>());
 
     cls.def(
+            "finalize_optional_members",
+            [](const TypePlugin& self, py::object c_sample) {
+                PyCTypesBuffer c_sample_buffer(c_sample);
+
+                py::gil_scoped_release release;
+                self.type_plugin->finalize_optional_members(c_sample_buffer);
+            },
+            py::arg("c_sample"),
+            py::call_guard<py::gil_scoped_acquire>());
+
+    cls.def(
             "initialize_member",
             [](const TypePlugin& self,
                py::object c_sample,

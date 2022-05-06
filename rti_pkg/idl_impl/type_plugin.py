@@ -494,6 +494,16 @@ class TypeSupport:
             raise
         return c_sample
 
+    def _create_empty_c_sample(self):
+        c_sample = self.c_type()
+        self._plugin_dynamic_type.initialize_sample(c_sample)
+        return c_sample
+
+    def _convert_to_c_sample(self, c_sample, py_sample):
+        self._plugin_dynamic_type.finalize_optional_members(c_sample)
+        self._sample_programs.py_to_c_program.execute(
+            src=py_sample, dst=c_sample)
+
     def _cast_c_sample(self, c_sample_ptr):
         return ctypes.cast(c_sample_ptr, self.c_type_ptr)[0]
 
