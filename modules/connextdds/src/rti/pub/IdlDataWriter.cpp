@@ -217,6 +217,45 @@ void init_dds_typed_datawriter_template(IdlDataWriterPyClass& cls)
     // Initialize the write methods with a custom implementation of the write
     // operation that translates from Python objects to ctypes objects.
     init_dds_datawriter_write_methods<CSampleWrapper, IdlWriteImpl>(cls);
+
+    cls.def(
+            "key_value",
+            [](IdlDataWriter& writer,
+                    dds::core::InstanceHandle h) -> py::object {
+                rti::core::EntityLock lock_writer(writer);
+                py::gil_scoped_acquire acquire_gil;
+                // Entity lock + gil taken
+                auto obj_cache = get_py_objects(writer);
+                obj_cache->convert_to_c_sample(obj_cache->c_sample);
+                writer.key_value(obj_cache->c_sample_buffer, h);
+                py::gil_scoped_release release_gil_for_native_operation;
+
+                return obj_cache->c_sample;
+            },
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance key that corresponds to an instance "
+            "handle.");
+
+
+    cls.def(
+            "lookup_instance",
+            [](IdlDataWriter& writer,
+                    py::object key_holder) -> dds::core::InstanceHandle {
+                
+                rti::core::EntityLock lock_writer(writer);
+                py::gil_scoped_acquire acquire_gil;
+                // Entity lock + gil taken
+                auto obj_cache = convert_sample(writer, key_holder);
+                auto handle = writer.lookup_instance(obj_cache->c_sample_buffer);
+                py::gil_scoped_release release_gil_for_native_operation;
+
+                return handle;
+            },
+            py::arg("key_holder"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance handle that corresponds to an instance "
+            "key_holder");
 }
 
 } // namespace pyrti

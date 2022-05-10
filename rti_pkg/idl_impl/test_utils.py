@@ -35,13 +35,14 @@ and subscribe to them.
 class IdlValueGenerator:
     """Class for creating data samples with test values given an IDL type"""
 
-    def __init__(self, sample_type: type, max_string_bounds=1000, max_seq_bounds=10):
+    def __init__(self, sample_type: type, max_string_bounds=1000, max_seq_bounds=10, keys_only=False):
         """Creates an IdlValueGenerator for the given type"""
 
         self.sample_type = sample_type
         self.dynamic_type = idl.get_type_support(sample_type).dynamic_type
         self.max_string_bounds = max_string_bounds
         self.max_seq_bounds = max_seq_bounds
+        self.keys_only = keys_only
 
     def create_test_data(self, seed: int = 0) -> Any:
         """Returns an instance of value of the type given to the constructor.
@@ -185,6 +186,23 @@ class IdlValueGenerator:
 
         value = sample_type()
 
+        if self.keys_only:
+            # When this flag is passes to the constructor the generator will
+            # only generate the values for the keys of the type and will leave
+            # the other values to be their default values
+            ts = idl.get_type_support(sample_type)
+            for field in fields(sample_type):
+                member_annotations = ts.member_annotations.get(field.name, [])
+                key_annotation = annotations.find_annotation(
+                    member_annotations, annotations.KeyAnnotation)
+                if not key_annotation.value:
+                    # Skip this field if it is not a key
+                    continue
+                setattr(value, field.name, self._generate_value_from_seed(
+                    sample_type, field.type, field.name, field.default_factory, seed))
+                seed += 1
+            return value
+
         for field in fields(sample_type):
             setattr(value, field.name, self._generate_value_from_seed(
                 sample_type, field.type, field.name, field.default_factory, seed))
@@ -318,6 +336,7 @@ def _create_writer(topic, type, writer_qos):
 
 def _is_idl_type(type):
     return inspect.getmodule(type).__name__ != "rti.connextdds"
+
 
 class PubSubFixture:
     def __init__(
