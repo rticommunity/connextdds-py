@@ -33,6 +33,7 @@ struct IdlDataWriterPyObjectCache {
     rti::topic::cdr::CTypePlugin* type_plugin;
     py::handle create_c_sample_func;
     py::handle convert_to_c_sample_func;
+    py::handle create_py_sample_func;
     py::object c_sample;
     PyCTypesBuffer c_sample_buffer;
 
@@ -45,6 +46,7 @@ struct IdlDataWriterPyObjectCache {
                                            .attr("_create_empty_c_sample")),
               convert_to_c_sample_func(
                       py::type::of(type_support).attr("_convert_to_c_sample")),
+              create_py_sample_func(py::type::of(type_support).attr("_create_py_sample")),
               c_sample(create_c_sample_func(type_support)),
               c_sample_buffer(c_sample)
 
@@ -177,6 +179,20 @@ struct IdlWriteImpl {
                 obj_cache->c_sample_buffer,
                 std::forward<ExtraArgs>(extra_args)...);
     }
+
+    template<typename... ExtraArgs>
+    static dds::core::InstanceHandle py_lookup_instance(
+            IdlDataWriter& writer,
+            py_sample key_holder)
+    {
+        rti::core::EntityLock lock_writer(writer);
+        py::gil_scoped_acquire acquire_gil;
+        // Entity lock + gil taken
+        auto obj_cache = convert_sample(writer, key_holder);
+        py::gil_scoped_release release_gil_for_native_operation;
+
+        return writer.lookup_instance(obj_cache->c_sample_buffer);
+    }
 };
 
 struct IdlDataWriterPostInitFunc {
@@ -202,6 +218,22 @@ struct IdlDataWriterPostInitFunc {
     }
 };
 
+static py::object py_key_value(
+        IdlDataWriter& writer,
+        dds::core::InstanceHandle handle)
+{
+    rti::core::EntityLock lock_writer(writer);
+    py::gil_scoped_acquire acquire_gil;
+    // Entity lock + gil taken
+    IdlDataWriterPyObjectCache* obj_cache = get_py_objects(writer);
+    writer.key_value(obj_cache->c_sample_buffer, handle);
+    auto val = obj_cache->create_py_sample_func(
+            obj_cache->type_support,
+            reinterpret_cast<size_t>(&obj_cache->c_sample_buffer));
+    py::gil_scoped_release release_gil_for_native_operation;
+    return val;
+}
+
 
 // Sets the Python methods for an IDL DataWriter
 template<>
@@ -218,44 +250,12 @@ void init_dds_typed_datawriter_template(IdlDataWriterPyClass& cls)
     // operation that translates from Python objects to ctypes objects.
     init_dds_datawriter_write_methods<CSampleWrapper, IdlWriteImpl>(cls);
 
-    cls.def(
-            "key_value",
-            [](IdlDataWriter& writer,
-                    dds::core::InstanceHandle h) -> py::object {
-                rti::core::EntityLock lock_writer(writer);
-                py::gil_scoped_acquire acquire_gil;
-                // Entity lock + gil taken
-                auto obj_cache = get_py_objects(writer);
-                obj_cache->convert_to_c_sample(obj_cache->c_sample);
-                writer.key_value(obj_cache->c_sample_buffer, h);
-                py::gil_scoped_release release_gil_for_native_operation;
-
-                return obj_cache->c_sample;
-            },
+    cls.def("key_value",
+            &py_key_value,
             py::arg("handle"),
             py::call_guard<py::gil_scoped_release>(),
             "Retrieve the instance key that corresponds to an instance "
             "handle.");
-
-
-    cls.def(
-            "lookup_instance",
-            [](IdlDataWriter& writer,
-                    py::object key_holder) -> dds::core::InstanceHandle {
-                
-                rti::core::EntityLock lock_writer(writer);
-                py::gil_scoped_acquire acquire_gil;
-                // Entity lock + gil taken
-                auto obj_cache = convert_sample(writer, key_holder);
-                auto handle = writer.lookup_instance(obj_cache->c_sample_buffer);
-                py::gil_scoped_release release_gil_for_native_operation;
-
-                return handle;
-            },
-            py::arg("key_holder"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Retrieve the instance handle that corresponds to an instance "
-            "key_holder");
 }
 
 } // namespace pyrti

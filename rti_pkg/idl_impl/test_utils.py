@@ -39,7 +39,8 @@ class IdlValueGenerator:
         """Creates an IdlValueGenerator for the given type"""
 
         self.sample_type = sample_type
-        self.dynamic_type = idl.get_type_support(sample_type).dynamic_type
+        self.type_support = idl.get_type_support(sample_type)
+        self.dynamic_type = self.type_support.dynamic_type
         self.max_string_bounds = max_string_bounds
         self.max_seq_bounds = max_seq_bounds
         self.keys_only = keys_only
@@ -56,8 +57,8 @@ class IdlValueGenerator:
     def _get_sequence_type_bounds_annotation(self, seq_name: str):
         """Private member function used to determine a sequences max length"""
         # You must check that the type is a sequence before calling this
-        ts = idl.get_type_support(self.sample_type)
-        member_annotations = ts.member_annotations.get(seq_name, [])
+        member_annotations = self.type_support.member_annotations.get(
+            seq_name, [])
         array_annotation = annotations.find_annotation(
             member_annotations, annotations.ArrayAnnotation)
         if array_annotation.is_array:
@@ -130,8 +131,7 @@ class IdlValueGenerator:
 
         length = self._get_sequence_type_length(field_name, seed)
         seq = [self._generate_value_from_seed(sample_type, reflection_utils.get_underlying_type(
-            member_type), field_name, None, seed + x) for x in range(0, length)]
-
+            member_type), field_name, None, seed + x, self.keys_only) for x in range(0, length)]
         return self._make_sequence_from_list(field_factory, seq)
 
     def _generate_str_seq_from_seed(self, field_name: str, field_factory, seed: int):
@@ -142,7 +142,7 @@ class IdlValueGenerator:
             field_factory,
             [self._generate_string_from_seed(str_length, seed + x) for x in range(0, seq_length)])
 
-    def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
+    def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int, keys_only=False):
         """Recursive private function used to generate the values given a type"""
         if member_type is bool:
             return seed % 2 == 0
@@ -163,7 +163,7 @@ class IdlValueGenerator:
             # If the seed is even we will fill the optional type
             if seed % 2 == 0:
                 return self._generate_value_from_seed(
-                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed)
+                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed, self.keys_only)
             else:
                 return None
         elif reflection_utils.is_sequence_type(member_type):
@@ -186,26 +186,15 @@ class IdlValueGenerator:
 
         value = sample_type()
 
-        if self.keys_only:
-            # When this flag is passes to the constructor the generator will
-            # only generate the values for the keys of the type and will leave
-            # the other values to be their default values
-            ts = idl.get_type_support(sample_type)
-            for field in fields(sample_type):
-                member_annotations = ts.member_annotations.get(field.name, [])
-                key_annotation = annotations.find_annotation(
-                    member_annotations, annotations.KeyAnnotation)
-                if not key_annotation.value:
-                    # Skip this field if it is not a key
-                    continue
-                setattr(value, field.name, self._generate_value_from_seed(
-                    sample_type, field.type, field.name, field.default_factory, seed))
-                seed += 1
-            return value
-
         for field in fields(sample_type):
+            if self.keys_only:
+                # Skip this field if it is not a key
+                is_key = not self._has_keys() or self._is_field_key(field.name)
+                if not is_key:
+                    continue
+
             setattr(value, field.name, self._generate_value_from_seed(
-                sample_type, field.type, field.name, field.default_factory, seed))
+                sample_type, field.type, field.name, field.default_factory, seed, keys_only=self.keys_only))
             seed += 1
         return value
 
@@ -227,6 +216,22 @@ class IdlValueGenerator:
     def _is_alias_type(self) -> bool:
         """Private function used to check if this is an alias"""
         return type(self.dynamic_type) is dds.AliasType
+
+    def _is_field_key(self, field_name: str) -> bool:
+        """Private function used to check if a field is a key"""
+
+        member_annotations = self.type_support.member_annotations.get(
+            field_name, [])
+        key_annotation = annotations.find_annotation(
+            member_annotations, annotations.KeyAnnotation)
+        return key_annotation.value
+
+    def _has_keys(self) -> bool:
+        """Private function used to check if this type has a key"""
+        for field in fields(self.sample_type):
+            if self._is_field_key(field.name):
+                return True
+        return False
 
 # --- Wait test utilitites -----------------------------------------------------
 
@@ -381,6 +386,9 @@ class PubSubFixture:
             reader_qos << dds.History.keep_all
             for policy in reader_policies:
                 reader_qos << policy
+            if has_unbound_member and \
+                    not reader_qos.property.exists('dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'):
+                reader_qos.property['dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
             if content_filter is not None:
                 cft_name = "Filtered " + self.topic.name
                 if type(content_filter) == str:
