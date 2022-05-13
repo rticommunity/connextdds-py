@@ -44,8 +44,8 @@ def check_leaks() -> None:
     # native C DDS object, the leak checker would report a leak.
     gc.collect()
     # Finalize global state
-    idl.finalize_globals()
     dds.DomainParticipant.finalize_participant_factory()
+    idl.finalize_globals()
 
     # Take snapshot when all native heap memory should've been freed
     heap_monitoring.take_snapshot(HEAP_USAGE_FILENAME, print_details=True)

@@ -93,6 +93,8 @@ def test_sequence_memory_is_managed_pubsub(shared_participant):
                             dds.ResourceLimits(1, 1, 1)])
     fixture.send_and_check(create_sequence_sample(2))
     fixture.send_and_check(create_sequence_sample(3))
+    fixture.send_and_check(create_sequence_sample(0))
+    fixture.send_and_check(create_sequence_sample(1))
 
 
 def test_sequence_variable_lengths_pubsub(

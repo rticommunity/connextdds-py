@@ -18,7 +18,7 @@ import rti.connextdds as dds
 import rti.idl as idl
 
 from test_utils.fixtures import *
-import test_utils.log_capture as log_capture
+from test_utils import log_capture
 
 from common_types import Point
 

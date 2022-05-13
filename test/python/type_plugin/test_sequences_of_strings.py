@@ -26,6 +26,9 @@ import rti.idl as idl
 
 from test_utils.fixtures import *
 
+from test_strings import StringTest, str_sample
+from test_utils import log_capture
+
 
 @idl.struct(
     member_annotations={
@@ -118,7 +121,7 @@ def test_sequence_serialization(sequence_sample):
     assert sequence_sample == deserialized_sample
 
 
-def test_optional_sequence_serialization33(optional_sequence_sample):
+def test_optional_sequence_serialization(optional_sequence_sample):
     ts = idl.get_type_support(OptionalSequenceTest)
     buffer = ts.serialize(optional_sequence_sample)
     deserialized_sample = ts.deserialize(buffer)
@@ -135,6 +138,23 @@ def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
     fixture.send_and_check([optional_sequence_sample, OptionalSequenceTest()])
 
 
+def test_seq_of_struct_with_string_pubsub(shared_participant, str_sample):
+    @idl.struct(
+        member_annotations={
+            'b_seq': [idl.bound(3)],
+        }
+    )
+    class SequencesOfStructsWithStrings:
+        b_seq: Sequence[StringTest] = field(default_factory=list)
+        u_seq: Sequence[StringTest] = field(default_factory=list)
+
+    fixture = PubSubFixture(shared_participant, SequencesOfStructsWithStrings)
+    sample = SequencesOfStructsWithStrings([str_sample, StringTest(), str_sample])
+    fixture.send_and_check(sample)
+    fixture.send_and_check(SequencesOfStructsWithStrings())
+    fixture.send_and_check(sample)
+
+
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
     ts = idl.get_type_support(SequenceTestType)
@@ -142,9 +162,9 @@ def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
     sample = SequenceTestType(b_b=["hello!"] * 3)
     ts.serialize(sample)
     sample.b_b += "world!"
-    with pytest.raises(Exception) as ex:
+    with log_capture.expected_exception(idl.FieldSerializationError, fail_if_no_logs=False) as errinfo:
         ts.serialize(sample)
-    assert "Error processing field 'b_b'" in str(ex.value)
+    assert "Error processing field 'b_b'" in str(errinfo.exception_msg)
 
     sample = SequenceTestType(b_b=["hello!!"])
     with pytest.raises(Exception) as ex:

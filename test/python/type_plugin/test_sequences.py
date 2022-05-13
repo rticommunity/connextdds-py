@@ -20,6 +20,7 @@ import rti.idl as idl
 
 from common_types import Point
 from test_utils.fixtures import *
+from test_utils import log_capture
 
 
 @idl.struct(
@@ -133,9 +134,15 @@ def test_empty_sequence_serialization(SequenceTestType):
     assert SequenceTestType() == deserialized_sample
 
 
-def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
-    fixture = PubSubFixture(shared_participant, SequenceTest)
-    fixture.send_and_check([optional_sequence_sample, SequenceTest()])
+def test_sequence_pubsub(shared_participant, sequence_sample):
+    fixture = PubSubFixture(shared_participant, SequenceTest, reader_policies=[
+                            dds.ResourceLimits(1, 1, 1)])
+    fixture.send_and_check(SequenceTest())
+    fixture.send_and_check(sequence_sample)
+    fixture.send_and_check(SequenceTest())
+    sequence_sample.vertices_bounded += [Point(7, 8)]
+    sequence_sample.vertices += [Point(7, 8)]
+    fixture.send_and_check(sequence_sample)
 
 
 def test_optional_sequence_serialization(optional_sequence_sample):
@@ -147,7 +154,11 @@ def test_optional_sequence_serialization(optional_sequence_sample):
 
 def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
     fixture = PubSubFixture(shared_participant, OptionalSequenceTest)
-    fixture.send_and_check([optional_sequence_sample, OptionalSequenceTest()])
+    fixture.send_and_check(optional_sequence_sample)
+    fixture.send_and_check(OptionalSequenceTest())
+    optional_sequence_sample.prices_array += [7.23]
+    optional_sequence_sample.vertices_bounded += [Point(7, 8)]
+    fixture.send_and_check(optional_sequence_sample)
 
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
@@ -156,16 +167,22 @@ def test_sequence_serialization_fails_when_out_of_bounds(SequenceTestType):
     sample = SequenceTestType(prices=[1.5, 2.5, 3.5, 4.5])
     ts.serialize(sample)
     sample.prices += [5.5]
-    with pytest.raises(idl.FieldSerializationError) as ex:
+
+    # fail_if_no_logs is set to False because due to impl. details the bounds
+    # check for optionals is done in C, but for non-optionals it is done in
+    # Python, and therefore in both cases there's an exception, but only in the
+    # C layer an additional stdout log message is printed.
+    with log_capture.expected_exception(idl.FieldSerializationError, fail_if_no_logs=False) as errinfo:
         ts.serialize(sample)
-    assert "Error processing field 'prices'" in str(ex.value)
+    assert "Error processing field 'prices'" in str(errinfo.exception_msg)
 
     sample = SequenceTestType(vertices_bounded=[Point(1, 2), Point(3, 4)])
     ts.serialize(sample)
     sample.vertices_bounded += [Point(5, 6)]
-    with pytest.raises(idl.FieldSerializationError) as ex:
+    with log_capture.expected_exception(idl.FieldSerializationError, fail_if_no_logs=False) as errinfo:
         ts.serialize(sample)
-    assert "Error processing field 'vertices_bounded'" in str(ex.value)
+    assert "Error processing field 'vertices_bounded'" in str(
+        errinfo.exception_msg)
 
 
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
@@ -211,9 +228,9 @@ def test_sequence_iterator_serialization():
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_sequence_publication_fails_when_out_of_bounds(shared_participant, SequenceTestType):
     fixture = PubSubFixture(shared_participant, SequenceTestType)
-    with pytest.raises(idl.FieldSerializationError) as ex:
+    with log_capture.expected_exception(idl.FieldSerializationError, fail_if_no_logs=False) as errinfo:
         fixture.writer.write(SequenceTestType(prices=[1.1] * 5))
-    assert "Error processing field 'prices'" in str(ex.value)
+    assert "Error processing field 'prices'" in str(errinfo.exception_msg)
 
 
 def test_sequence_of_sequence_not_supported():
