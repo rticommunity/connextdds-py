@@ -13,7 +13,7 @@ import typing
 import pytest
 
 import rti.idl as idl
-import rti.connextdds as rti
+import rti.connextdds as dds
 from rti.idl_impl.test_utils import *
 from test_utils.fixtures import *
 from dataclasses import field
@@ -177,10 +177,9 @@ def test_key_value(type_fixture, shared_participant):
         instance = pubsub.writer.register_instance(sample)
         assert instance != dds.InstanceHandle.nil()
         result = pubsub.writer.key_value(instance)
-        print(result)
         key_holder = IdlTypeFixture(
             type_fixture.sample_type, keys_only=True).create_test_data(seed=seed)
-        assert result == key_holder
+        assert test_utils.keys_equal(result, key_holder)
         assert instance == pubsub.writer.lookup_instance(result)
 
 
@@ -191,7 +190,10 @@ def test_idl_types_generate_same_keyhashes_as_dynamic_data(type_fixture: IdlType
     dd_participant = create_participant()
     dd_topic = dds.DynamicData.Topic(dd_participant, idl_pubsub.topic.name,
                                      type_fixture.dynamic_type)
-    dd_writer = dds.DynamicData.DataWriter(dd_participant, dd_topic)
+    writer_qos = dd_participant.implicit_publisher.default_datawriter_qos
+    writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
+    dd_writer = dds.DynamicData.DataWriter(
+        dd_participant, dd_topic, writer_qos)
 
     for seed in seeds:
         key_holder = type_fixture.create_test_data(seed=seed)

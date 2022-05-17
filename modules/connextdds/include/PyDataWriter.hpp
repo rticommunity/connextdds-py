@@ -956,7 +956,7 @@ void init_dds_datawriter_write_methods(PyDataWriterClass<T>& cls)
     //
 
     cls.def("lookup_instance",
-            &WriteImpl::template py_register_instance<>,
+            &WriteImpl::template py_lookup_instance<>,
             py::arg("key_holder"),
             py::call_guard<GilPolicy>(),
             "Retrieve the instance handle that corresponds to an instance "
@@ -1365,6 +1365,15 @@ struct DefaultWriteImpl {
         return writer.extensions().register_instance(
                 sample,
                 std::forward<ExtraArgs>(extra_args)...);
+    }
+    
+    template<typename... ExtraArgs>
+    static dds::core::InstanceHandle py_lookup_instance(
+            PyDataWriter<T>& writer,
+            const py_sample& sample,
+            ExtraArgs&&... extra_args)
+    {
+        return writer.lookup_instance(sample);
     }
 };
 

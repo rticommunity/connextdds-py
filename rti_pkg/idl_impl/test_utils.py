@@ -233,6 +233,21 @@ class IdlValueGenerator:
                 return True
         return False
 
+
+def keys_equal(a: Any, b: Any) -> bool:
+    """Private function used to compare two keys"""
+    if type(a) is not type(b):
+        return False
+    
+    #Create an IDL value generator object for the type to use some member fns
+    gen = IdlValueGenerator(a.__class__)
+    for field in fields(a.__class__):
+        is_key = not gen._has_keys() or gen._is_field_key(field.name)
+        if is_key:
+            if getattr(a, field.name) != getattr(b, field.name):
+                return False
+    return True
+
 # --- Wait test utilitites -----------------------------------------------------
 
 
