@@ -86,7 +86,8 @@ def test_string_serialization(str_sample):
 
 
 def test_string_pubsub(shared_participant, str_sample):
-    fixture = PubSubFixture(shared_participant, StringTest)
+    fixture = PubSubFixture(shared_participant, StringTest, reader_policies=[
+                            dds.ResourceLimits(1, 1, 1)])
     fixture.send_and_check(str_sample)
     fixture.send_and_check(StringTest())
     str_sample.unbounded_str = "a" * 40
