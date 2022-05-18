@@ -34,7 +34,6 @@ class MyPointArray:
 class MyIntArray:
     value: Sequence[int] = field(default_factory=idl.array_factory(int, 3))
 
-
 @idl.struct(
     member_annotations={
         'vertices': [idl.array(3)],
@@ -249,3 +248,50 @@ def test_arrays_of_sequences_not_supported():
             s: Sequence[Sequence[Point]]
 
     assert "Arrays of sequences are not supported" in str(ex.value)
+
+
+@idl.struct
+class AlignmentTest:
+    a: idl.int8 = 0
+    b: idl.int16 = 0
+
+
+@idl.alias(annotations=[idl.array(3)])
+class AlignmentTestArray:
+    value: Sequence[AlignmentTest] = field(
+        default_factory=idl.list_factory(AlignmentTest, 3))
+
+
+@idl.alias(annotations=[idl.array(3)])
+class AlignmentTestArrayArray:
+    value: Sequence[AlignmentTestArray] = field(
+        default_factory=idl.list_factory(AlignmentTestArray, 3))
+
+
+@idl.struct(member_annotations={'array_array': [idl.array(3)]})
+class AlignmentTestContainer:
+    single_struct: Optional[AlignmentTest] = None
+    struct_array: Optional[AlignmentTestArray] = None
+    array_array: Sequence[AlignmentTestArray] = field(
+        default_factory=idl.list_factory(AlignmentTestArray, 3))
+    opt_array_array: Optional[AlignmentTestArrayArray] = None
+
+
+def test_array_alignment_pubsub(shared_participant):
+    fixture = PubSubFixture(
+        shared_participant,
+        AlignmentTestContainer,
+        reader_policies=[dds.ResourceLimits(1, 1, 1)])
+
+    value = AlignmentTest(77, 99)
+    sample = AlignmentTestContainer(
+        single_struct=value,
+        struct_array=AlignmentTestArray([value] * 3),
+        array_array=[AlignmentTestArray([value] * 3)] * 3,
+        opt_array_array=AlignmentTestArrayArray(
+            [AlignmentTestArray([value] * 3)] * 3)
+    )
+
+    fixture.send_and_check(sample)
+    fixture.send_and_check(AlignmentTestContainer())
+    fixture.send_and_check(sample)
