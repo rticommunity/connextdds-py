@@ -1,5 +1,5 @@
 #
-# (c) 2021 Copyright, Real-Time Innovations, Inc.  All rights reserved.
+# (c) 2022 Copyright, Real-Time Innovations, Inc.  All rights reserved.
 #
 # RTI grants Licensee a license to use, modify, compile, and create derivative
 # works of the Software solely for use with RTI products.  The Software is
@@ -17,12 +17,6 @@ import rti.idl as idl
 
 import pytest
 from test_utils.fixtures import *
-
-#
-# Chars get their own test file because they have a complicated mapping. In
-# Python they're strings with a single character, while in IDL they are 1-byte
-# integers. They also have to be encoded as UTF-8 or UTF-16 (wchars).
-#
 
 @idl.struct(
     member_annotations={
