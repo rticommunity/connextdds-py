@@ -103,6 +103,8 @@ PRIMITIVE_TO_CTYPES_MAP = {
     type_hints.uint64: ctypes.c_uint64,
     type_hints.float32: ctypes.c_float,
     type_hints.float64: ctypes.c_double,
+    type_hints.char: ctypes.c_int8,
+    type_hints.wchar: ctypes.c_uint16
 }
 
 STR_ENCODING_TO_CTYPES_MAP = {
@@ -222,6 +224,8 @@ PY_TYPE_TO_DYNAMIC_TYPE_MAP = {
     type_hints.uint64: dds.Uint64Type(),
     type_hints.float32: dds.Float32Type(),
     type_hints.float64: dds.Float64Type(),
+    type_hints.char: dds.CharType(),
+    type_hints.wchar: dds.WcharType()
 }
 
 def get_idl_base_type(idl_type: type) -> Optional[bool]:

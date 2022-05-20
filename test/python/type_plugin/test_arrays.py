@@ -9,7 +9,7 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from typing import Sequence
+from typing import Sequence, Optional
 from dataclasses import field
 from array import array
 import copy
@@ -25,6 +25,15 @@ from test_utils.fixtures import *
 from test_sequences import SequenceTest, create_sequence_sample
 
 
+@idl.alias(annotations=[idl.array(3)])
+class MyPointArray:
+    value: Sequence[Point] = field(default_factory=idl.list_factory(Point, 3))
+
+
+@idl.alias(annotations=[idl.array(3)])
+class MyIntArray:
+    value: Sequence[int] = field(default_factory=idl.array_factory(int, 3))
+
 @idl.struct(
     member_annotations={
         'vertices': [idl.array(3)],
@@ -35,7 +44,9 @@ from test_sequences import SequenceTest, create_sequence_sample
         'wstrings': [idl.array(3), idl.element_annotations([idl.utf16, idl.bound(5)])],
         'complex': [idl.array(3)],
         'multi_str': [idl.array([2, 3])],
-        'multi_int': [idl.array([3, 2])]
+        'multi_int': [idl.array([3, 2])],
+        'int_array_array': [idl.array(2)],
+        'point_array_array': [idl.array(2)],
     }
 )
 class ArrayTest:
@@ -49,6 +60,10 @@ class ArrayTest:
     multi_str: Sequence[str] = field(default_factory=idl.list_factory(str, [2, 3]))
     multi_int: Sequence[int] = field(
         default_factory=idl.array_factory(int, [3, 2]))
+    int_array_array: Sequence[MyIntArray] = field(default_factory=idl.list_factory(MyIntArray, 2))
+    point_array_array: Sequence[MyPointArray] = field(default_factory=idl.list_factory(MyPointArray, 2))
+    opt_int_seq_array: Optional[MyIntArray] = None
+    opt_point_seq_array: Optional[MyPointArray] = None
 
 
 def create_array_sample():
@@ -60,7 +75,15 @@ def create_array_sample():
         wstrings=["hi", "world", "!"],
         complex=[create_sequence_sample()] * 2 + [SequenceTest(vertices_bounded=[Point(1, 1)])],
         multi_str=["hello", "world", "!!"] * 2,
-        multi_int=array('q', [1, 2, 3] * 2))
+        multi_int=array('q', [1, 2, 3] * 2),
+        int_array_array=[
+            MyIntArray(value=array('q', [1, 2, 3])),
+            MyIntArray(value=array('q', [4, 5, 6]))],
+        point_array_array=[
+            MyPointArray(value=[Point(1, 1), Point(2, 2), Point(3, 3)]),
+            MyPointArray(value=[Point(4, 4), Point(5, 5), Point(6, 6)])],
+        opt_int_seq_array=MyIntArray(value=array('q', [1, 2, 3])),
+        opt_point_seq_array=MyPointArray([Point(31, 14), Point(15, 16), Point(17, 18)]))
 
 
 @pytest.fixture
@@ -74,7 +97,7 @@ def test_array_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "ArrayTest"
-    assert len(dt.members()) == 9
+    assert len(dt.members()) == 13
 
     point_ts = idl.get_type_support(Point)
     assert dt["vertices"].type == dds.ArrayType(point_ts.dynamic_type, 3)
@@ -87,6 +110,8 @@ def test_array_plugin():
     assert dt["complex"].type == dds.ArrayType(element_ts.dynamic_type, 3)
     assert dt["multi_str"].type == dds.ArrayType(dds.StringType(), 2 * 3)
     assert dt["multi_int"].type == dds.ArrayType(dds.Int64Type(), 3 * 2)
+    assert dt["int_array_array"].type == dds.ArrayType(idl.get_type_support(MyIntArray).dynamic_type, 2)
+    assert dt["point_array_array"].type == dds.ArrayType(idl.get_type_support(MyPointArray).dynamic_type, 2)
 
 
 @pytest.mark.xfail(reason="TODO PY-17: multi_str-dimensional arrays are created flat for now")
@@ -106,6 +131,8 @@ def test_array_default_creation():
     assert sample.complex == [SequenceTest()] * 3
     assert sample.multi_str == [""] * 6
     assert sample.multi_int == array('q', [0] * 6)
+    assert sample.opt_int_seq_array is None
+    assert sample.opt_point_seq_array is None
 
     # The elements are copies
     assert sample.vertices[0] is not sample.vertices[1]
@@ -123,6 +150,9 @@ def test_array_deep_copy(array_sample: ArrayTest):
     assert array_sample.vertices[0] is not array_copy.vertices[0]
     assert array_sample.complex[0] == array_copy.complex[0]
     assert array_sample.complex[0] is not array_copy.complex[0]
+    assert array_sample.opt_point_seq_array.value[0] == array_copy.opt_point_seq_array.value[0]
+    assert array_sample.opt_point_seq_array.value[0] is not array_copy.opt_point_seq_array.value[0]
+
 
 
 def test_array_shallow_copy(array_sample: ArrayTest):
@@ -218,3 +248,50 @@ def test_arrays_of_sequences_not_supported():
             s: Sequence[Sequence[Point]]
 
     assert "Arrays of sequences are not supported" in str(ex.value)
+
+
+@idl.struct
+class AlignmentTest:
+    a: idl.int8 = 0
+    b: idl.int16 = 0
+
+
+@idl.alias(annotations=[idl.array(3)])
+class AlignmentTestArray:
+    value: Sequence[AlignmentTest] = field(
+        default_factory=idl.list_factory(AlignmentTest, 3))
+
+
+@idl.alias(annotations=[idl.array(3)])
+class AlignmentTestArrayArray:
+    value: Sequence[AlignmentTestArray] = field(
+        default_factory=idl.list_factory(AlignmentTestArray, 3))
+
+
+@idl.struct(member_annotations={'array_array': [idl.array(3)]})
+class AlignmentTestContainer:
+    single_struct: Optional[AlignmentTest] = None
+    struct_array: Optional[AlignmentTestArray] = None
+    array_array: Sequence[AlignmentTestArray] = field(
+        default_factory=idl.list_factory(AlignmentTestArray, 3))
+    opt_array_array: Optional[AlignmentTestArrayArray] = None
+
+
+def test_array_alignment_pubsub(shared_participant):
+    fixture = PubSubFixture(
+        shared_participant,
+        AlignmentTestContainer,
+        reader_policies=[dds.ResourceLimits(1, 1, 1)])
+
+    value = AlignmentTest(77, 99)
+    sample = AlignmentTestContainer(
+        single_struct=value,
+        struct_array=AlignmentTestArray([value] * 3),
+        array_array=[AlignmentTestArray([value] * 3)] * 3,
+        opt_array_array=AlignmentTestArrayArray(
+            [AlignmentTestArray([value] * 3)] * 3)
+    )
+
+    fixture.send_and_check(sample)
+    fixture.send_and_check(AlignmentTestContainer())
+    fixture.send_and_check(sample)

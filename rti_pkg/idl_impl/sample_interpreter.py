@@ -324,12 +324,12 @@ class CopyListToCInstruction(Instruction):
     def resize_sequence_member(self, c_sample, c_sequence, new_size: int) -> None:
         if c_sequence._absolute_maximum == 0x7FFFFFFF:
             # Unbounded sequences may need to be resized
-            if new_size <= c_sequence._maximum:
+            if new_size <= c_sequence.capacity:
                 c_sequence.set_length(new_size)
-            else:
+            elif new_size != c_sequence._length:
                 self.container_type_plugin.resize_member(
                     c_sample, self.field_index, new_size)
-        elif c_sequence.capacity == 0:
+        elif c_sequence.capacity == 0 and new_size != 0:
             # This sequence is not initialized (it could be an optional sequence)
             self.container_type_plugin.resize_member(
                 c_sample, self.field_index, new_size)

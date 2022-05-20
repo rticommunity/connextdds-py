@@ -41,7 +41,7 @@ def get_underlying_type(t):
     return args[0] if args is not None else None
 
 
-_PRIMITIVE_TYPES = (bool, int8, int16, uint16, int32,
+_PRIMITIVE_TYPES = (bool, int8, char, int16, uint16, wchar, int32,
                     uint32, int64, uint64, float32, float64)
 
 
@@ -52,8 +52,10 @@ def is_primitive(t: type) -> bool:
 _TYPE_TO_ARRAY_TYPE_MAP: typing.Dict[type, str] = {
     bool: 'b',
     int8: 'b',
+    char: 'b',
     int16: 'h',
     uint16: 'H',
+    wchar: 'H',
     int32: 'i',
     uint32: 'I',
     int64: 'q',
