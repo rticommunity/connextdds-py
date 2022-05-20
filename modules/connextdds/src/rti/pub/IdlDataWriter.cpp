@@ -83,16 +83,13 @@ struct IdlDataWriterPyObjectCache {
         }
     }
 
-    template<typename CreateSampleFunc>
-    py::object invoke_py_sample_function(
-            CreateSampleFunc&& py_function,
-            py::handle& type_support,
-            const CSampleWrapper& sample)
+    py::object create_py_sample()
     {
         // We pass the pointer to the python function as an integer,
         // because that's what ctypes.cast expects.
-        size_t sample_ptr = reinterpret_cast<size_t>(sample.sample());
-        return py_function(type_support, sample_ptr);
+        size_t sample_ptr = reinterpret_cast<size_t>(
+                (static_cast<CSampleWrapper&>(c_sample_buffer)).sample());
+        return create_py_sample_func(type_support, sample_ptr);
     }
 };
 
@@ -239,10 +236,7 @@ static py::object py_key_value(
     // Entity lock + gil taken
     IdlDataWriterPyObjectCache* obj_cache = get_py_objects(writer);
     writer.key_value(obj_cache->c_sample_buffer, handle);
-    auto val = obj_cache->invoke_py_sample_function(
-            obj_cache->create_py_sample_func,
-            obj_cache->type_support,
-            obj_cache->c_sample_buffer);
+    auto val = obj_cache->create_py_sample();
     py::gil_scoped_release release_gil_for_native_operation;
     return val;
 }

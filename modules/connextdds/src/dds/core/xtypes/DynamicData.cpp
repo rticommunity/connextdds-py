@@ -1386,6 +1386,32 @@ void init_dds_typed_topic_template(
                  "Creates a new Topic.");
 }
 
+void init_dds_datawriter_key_value_methods(PyDataWriterClass<dds::core::xtypes::DynamicData>& cls)
+{
+    cls.def(
+            "key_value",
+            [](PyDataWriter<DynamicData>& dw,
+                    const dds::core::InstanceHandle& handle) {
+                DynamicData d(PyDynamicTypeMap::get(dw->type_name()));
+                dw.key_value(d, handle);
+                return d;
+            },
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance key that corresponds to an instance "
+            "handle.");
+
+    cls.def("key_value",
+            (DynamicData
+                    & (PyDataWriter<DynamicData>::*) (DynamicData&, const dds::core::InstanceHandle&) )
+                    & PyDataWriter<DynamicData>::key_value,
+            py::arg("key_holder"),
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Set the instance key that corresponds to an instance "
+            "handle.");
+}
+
 template<>
 void init_dds_typed_datawriter_template(
         PyDataWriterClass<dds::core::xtypes::DynamicData>& cls)
@@ -1398,11 +1424,11 @@ void init_dds_typed_datawriter_template(
             DynamicData,
             DefaultWriteImpl<DynamicData>>(cls);
     init_dds_datawriter_async_write_methods(cls);
+    init_dds_datawriter_key_value_methods(cls);
 
     cls.def(
                "write",
-               [](PyDataWriter<DynamicData>& dw,
-                  py::dict& dict) {
+               [](PyDataWriter<DynamicData>& dw, py::dict& dict) {
                    auto dt = PyDynamicTypeMap::get(dw->type_name());
                    DynamicData sample(dt);
                    update_dynamicdata_object(sample, dict);
@@ -1416,8 +1442,7 @@ void init_dds_typed_datawriter_template(
                "dictionary containing field names as keys.")
             .def(
                     "write_async",
-                    [](PyDataWriter<DynamicData>& dw,
-                       py::dict& dict) {
+                    [](PyDataWriter<DynamicData>& dw, py::dict& dict) {
                         return PyAsyncioExecutor::run<void>(
                                 std::function<void()>([&dw, &dict]() {
                                     py::gil_scoped_acquire acquire;
@@ -1449,7 +1474,7 @@ void init_dds_typed_datawriter_template(
             .def(
                     "key_value",
                     [](PyDataWriter<DynamicData>& dw,
-                       const dds::core::InstanceHandle& handle) {
+                            const dds::core::InstanceHandle& handle) {
                         DynamicData d(
                                 PyDynamicTypeMap::get(dw->type_name()));
                         dw.key_value(d, handle);
@@ -1462,7 +1487,7 @@ void init_dds_typed_datawriter_template(
             .def(
                     "topic_instance_key_value",
                     [](PyDataWriter<DynamicData>& dw,
-                       const dds::core::InstanceHandle& handle) {
+                            const dds::core::InstanceHandle& handle) {
                         DynamicData d(
                                 PyDynamicTypeMap::get(dw->type_name()));
                         dds::topic::TopicInstance<

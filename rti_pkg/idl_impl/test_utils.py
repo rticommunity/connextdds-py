@@ -238,15 +238,21 @@ def keys_equal(a: Any, b: Any) -> bool:
     """Private function used to compare two keys"""
     if type(a) is not type(b):
         return False
-    
+
     #Create an IDL value generator object for the type to use some member fns
-    gen = IdlValueGenerator(a.__class__)
-    for field in fields(a.__class__):
-        is_key = not gen._has_keys() or gen._is_field_key(field.name)
-        if is_key:
-            if getattr(a, field.name) != getattr(b, field.name):
-                return False
-    return True
+    def key_equal_helper(a: Any, b: Any) -> bool:
+        gen = IdlValueGenerator(type(a))
+        for field in fields(type(a)):
+            if reflection_utils.is_constructed_type(field.type):
+                if IdlValueGenerator(getattr(a, field.name))._has_keys():
+                    return key_equal_helper(getattr(a, field.name), getattr(b, field.name))
+            is_key = not gen._has_keys() or gen._is_field_key(field.name)
+            if is_key:
+                if getattr(a, field.name) != getattr(b, field.name):
+                    return False
+        return True
+
+    return key_equal_helper(a, b)
 
 # --- Wait test utilitites -----------------------------------------------------
 

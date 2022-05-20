@@ -112,7 +112,7 @@ def get_sample_value(type: type):
     elif type is dds.KeyedStringTopicType:
         return dds.KeyedStringTopicType("Hello World", "Hello World")
     else:
-        raise TypeError("Unsupported type: {}".format(type))
+        raise TypeError(f"Unsupported type: {type}")
 
 
 def get_sample_keys(type: type):
@@ -127,13 +127,13 @@ def get_sample_keys(type: type):
     elif type is dds.KeyedStringTopicType:
         return dds.KeyedStringTopicType("Hello World", "")
     else:
-        raise TypeError("Unsupported type: {}".format(type))
+        raise TypeError(f"Unsupported type: {type}")
 
 
 def keys_equal(a, b) -> bool:
     if type(a) is not type(b):
         raise TypeError(
-            "Types do not match: {} != {}".format(type(a), type(b)))
+            f"Types do not match: {type(a)} != {type(b)}")
     if type(a) is PointIDL:
         return a.x == b.x
     elif type(a) == dds.DynamicData:
@@ -141,7 +141,7 @@ def keys_equal(a, b) -> bool:
     elif type(a) is dds.KeyedStringTopicType:
         return a.key == b.key
     else:
-        raise TypeError("Unsupported type: {}".format(type))
+        raise TypeError(f"Unsupported type: {type}")
 
 
 class PointListener(dds.NoOpDataWriterListener):
@@ -167,7 +167,7 @@ def get_writer_listeners(type: type):
         return (dds.KeyedStringTopicType.NoOpDataWriterListener(),
                 dds.KeyedStringTopicType.NoOpDataWriterListener())
     else:
-        raise TypeError("Unsupported type: {}".format(type))
+        raise TypeError(f"Unsupported type: {type}")
 
 
 def get_writer_w_listeners(participant, topic, type, listener):

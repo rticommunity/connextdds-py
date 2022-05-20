@@ -975,6 +975,18 @@ void init_dds_datawriter_key_value_methods(PyDataWriterClass<T> cls)
             py::arg("key_holder"),
             py::arg("handle"),
             py::call_guard<GilPolicy>(),
+            "Set the instance key that corresponds to an instance "
+            "handle.");
+
+    cls.def(
+            "key_value",
+            [](PyDataWriter& dw, const dds::core::InstanceHandle& handle) {
+                T value;
+                dw.key_value(value, handle);
+                return value;
+            },
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
             "Retrieve the instance key that corresponds to an instance "
             "handle.");
 }
@@ -1393,17 +1405,6 @@ void init_dds_typed_datawriter_template(PyDataWriterClass<T>& cls)
             py::call_guard<py::gil_scoped_release>(),
             "Create data of the writer's associated type and initialize it.");
 #endif
-    cls.def(
-            "key_value",
-            [](PyDataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
-                T value;
-                dw.key_value(value, handle);
-                return value;
-            },
-            py::arg("handle"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Retrieve the instance key that corresponds to an instance "
-            "handle.");
 }
 
 template<typename T>
