@@ -10,6 +10,7 @@
 #
 
 import dataclasses
+from types import SimpleNamespace
 from typing import List, Union, Any
 import rti.idl_impl.type_plugin as idl_impl
 import rti.idl_impl.annotations as annotations
@@ -191,6 +192,17 @@ def enum(cls=None, *, type_annotations=[]):
         #  class Foo(IntEnum):
         return wrapper(cls)
 
+
+_idl_modules = {}
+
+
+def get_module(name: str):
+    """Returns a SimpleNamespace that contains types defined in an IDL module
+    for a given name. The syntax is '::MyModule' or '::MyModule::MySubmodule'.
+    """
+
+    # Return the module if it already exists or create it if it doesn't
+    return _idl_modules.setdefault(name, SimpleNamespace())
 
 def get_type_support(cls: type):
     if not hasattr(cls, 'type_support'):
