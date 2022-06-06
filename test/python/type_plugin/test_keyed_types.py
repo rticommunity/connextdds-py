@@ -32,6 +32,14 @@ seeds = [0,
          ]
 
 
+def same_elements(a, b):
+    return len(a) == len(b) and all(x in b for x in a)
+
+def check_expected_data(reader: dds.DataReader, expected_samples: list):
+    wait.for_data(reader, count=len(expected_samples))
+    samples = reader.take_data()
+    assert same_elements(samples, expected_samples)
+
 @idl.struct(member_annotations={"x": [idl.key]})
 class A_keyed:
     x: idl.int32 = 11
@@ -204,3 +212,27 @@ def test_idl_types_generate_same_keyhashes_as_dynamic_data(type_fixture: IdlType
         dd_instance = dd_writer.register_instance(dd_key_holder)
 
         assert dd_instance == idl_instance
+
+
+def test_serialized_sample_to_key_hash(type_fixture: IdlTypeFixture, shared_participant: dds.DomainParticipant):
+    prop = dds.DataWriterProtocol()
+    #prop.disable_inline_keyhash = True
+    pubsub = PubSubFixture(shared_participant, type_fixture.sample_type)#, 
+    #                        writer_policies=[prop])
+    for seed in seeds:
+        sample = type_fixture.create_test_data(seed)
+        print("SAMPLE MADE")
+        pubsub.writer.write(sample)
+        print("WRITE DONE")
+        
+        check_expected_data(pubsub.reader, [sample])
+        print("BEFORE TAKE")
+        samples = pubsub.reader.take()
+        print("AFTER TAKE")
+        assert samples[0].data == sample
+        
+        key_holder = type_fixture.create_test_data(seed)
+        instance_handle = pubsub.reader.lookup_instance(samples[0].data)
+        assert test_utils.keys_equal(pubsub.reader.keyvalue(
+            key_holder, instance_handle), sample)
+    
