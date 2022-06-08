@@ -188,8 +188,10 @@ class IdlValueGenerator:
 
         for field in fields(sample_type):
             if self.keys_only:
-                # Skip this field if it is not a key
-                is_key = not self._has_keys() or self._is_field_key(field.name)
+                # A member is part of the key if annotated or when the type
+                # doesn't have any keys(the whole sample is the key)
+                is_key = not has_keys(sample_type) or is_field_key(
+                    sample_type, field.name)
                 if not is_key:
                     continue
 
@@ -217,36 +219,38 @@ class IdlValueGenerator:
         """Private function used to check if this is an alias"""
         return type(self.dynamic_type) is dds.AliasType
 
-    def _is_field_key(self, field_name: str) -> bool:
-        """Private function used to check if a field is a key"""
 
-        member_annotations = self.type_support.member_annotations.get(
-            field_name, [])
-        key_annotation = annotations.find_annotation(
-            member_annotations, annotations.KeyAnnotation)
-        return key_annotation.value
+def is_field_key(t: type, field_name: str) -> bool:
+    """Function used to check if a field is a key"""
 
-    def _has_keys(self) -> bool:
-        """Private function used to check if this type has a key"""
-        for field in fields(self.sample_type):
-            if self._is_field_key(field.name):
-                return True
-        return False
+    type_support = idl.get_type_support(t)
+    member_annotations = type_support.member_annotations.get(
+        field_name, [])
+    key_annotation = annotations.find_annotation(
+        member_annotations, annotations.KeyAnnotation)
+    return key_annotation.value
+
+
+def has_keys(t: type) -> bool:
+    """Function used to check if this type has a key"""
+    for field in fields(t):
+        if is_field_key(t, field.name):
+            return True
+    return False
 
 
 def keys_equal(a: Any, b: Any) -> bool:
-    """Private function used to compare two keys"""
+    """Function used to determine if two values have the same keys"""
     if type(a) is not type(b):
         return False
 
-    #Create an IDL value generator object for the type to use some member fns
     def key_equal_helper(a: Any, b: Any) -> bool:
-        gen = IdlValueGenerator(type(a))
         for field in fields(type(a)):
             if reflection_utils.is_constructed_type(field.type):
-                if IdlValueGenerator(getattr(a, field.name))._has_keys():
-                    return key_equal_helper(getattr(a, field.name), getattr(b, field.name))
-            is_key = not gen._has_keys() or gen._is_field_key(field.name)
+                if has_keys(getattr(a, field.name)):
+                    if not key_equal_helper(getattr(a, field.name), getattr(b, field.name)):
+                        return False
+            is_key = not has_keys(type(a)) or is_field_key(type(a), field.name)
             if is_key:
                 if getattr(a, field.name) != getattr(b, field.name):
                     return False

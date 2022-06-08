@@ -32,14 +32,6 @@ seeds = [0,
          ]
 
 
-def same_elements(a, b):
-    return len(a) == len(b) and all(x in b for x in a)
-
-def check_expected_data(reader: dds.DataReader, expected_samples: list):
-    wait.for_data(reader, count=len(expected_samples))
-    samples = reader.take_data()
-    assert same_elements(samples, expected_samples)
-
 @idl.struct(member_annotations={"x": [idl.key]})
 class A_keyed:
     x: idl.int32 = 11
@@ -148,21 +140,21 @@ def test_generate_expected_values_keys_only():
 
 def test_nested_key_generation():
     inner_value = IdlValueGenerator(
-        InnerType, keys_only=True).create_test_data()
-    assert inner_value.key == 0  # Generated
+        InnerType, keys_only=True).create_test_data(1)
+    assert inner_value.key == 1  # Generated
     assert inner_value.value == 999
 
     middle_value = IdlValueGenerator(
-        MiddleType1, keys_only=True).create_test_data()
-    assert middle_value.x == 0  # Generated
-    assert middle_value.y.key == 1  # Generated
-    assert middle_value.y.value == 2  # Generated
+        MiddleType1, keys_only=True).create_test_data(1)
+    assert middle_value.x == 1  # Generated
+    assert middle_value.y.key == 2  # Generated
+    assert middle_value.y.value == 3  # Generated
 
     outer_value = IdlValueGenerator(
-        OuterType1, keys_only=True).create_test_data()
-    assert outer_value.a.x == 0  # Generated
-    assert outer_value.a.y.key == 1  # Generated
-    assert outer_value.a.y.value == 2  # Generated
+        OuterType1, keys_only=True).create_test_data(1)
+    assert outer_value.a.x == 1  # Generated
+    assert outer_value.a.y.key == 2  # Generated
+    assert outer_value.a.y.value == 3  # Generated
     assert outer_value.b == 111
 
 
@@ -216,23 +208,17 @@ def test_idl_types_generate_same_keyhashes_as_dynamic_data(type_fixture: IdlType
 
 def test_serialized_sample_to_key_hash(type_fixture: IdlTypeFixture, shared_participant: dds.DomainParticipant):
     prop = dds.DataWriterProtocol()
-    #prop.disable_inline_keyhash = True
-    pubsub = PubSubFixture(shared_participant, type_fixture.sample_type)#, 
-    #                        writer_policies=[prop])
+    prop.disable_inline_keyhash = True
+    pubsub = PubSubFixture(shared_participant, type_fixture.sample_type,
+                           writer_policies=[prop])
     for seed in seeds:
         sample = type_fixture.create_test_data(seed)
-        print("SAMPLE MADE")
         pubsub.writer.write(sample)
-        print("WRITE DONE")
-        
-        check_expected_data(pubsub.reader, [sample])
-        print("BEFORE TAKE")
+        wait.for_data(pubsub.reader, 1)
         samples = pubsub.reader.take()
-        print("AFTER TAKE")
-        assert samples[0].data == sample
-        
-        key_holder = type_fixture.create_test_data(seed)
-        instance_handle = pubsub.reader.lookup_instance(samples[0].data)
-        assert test_utils.keys_equal(pubsub.reader.keyvalue(
-            key_holder, instance_handle), sample)
-    
+        assert len(samples) == 1
+        assert samples[0][0] == sample
+
+        instance_handle = pubsub.writer.lookup_instance(samples[0][0])
+        assert test_utils.keys_equal(
+            pubsub.writer.key_value(instance_handle), sample)
