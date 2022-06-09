@@ -32,7 +32,7 @@ class Person:
 })
 class Worker(Person):
     tasks: Sequence[str] = field(default_factory=list)
-
+    locations: Sequence[str] = field(default_factory=list)
 
 @idl.struct
 class Employee(Worker):
@@ -40,7 +40,7 @@ class Employee(Worker):
 
 
 def create_sample():
-    return Employee(name="John", age=30, tasks=['Cleaning', 'Coffee'], company="RTI")
+    return Employee(name="John", age=30, tasks=['Cleaning', 'Coffee'], locations=['Denver', 'San Jose'], company="RTI")
 
 
 @pytest.fixture

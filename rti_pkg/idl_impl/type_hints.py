@@ -12,9 +12,11 @@
 import typing
 
 int8 = typing.NewType('int8', int)
+char = typing.NewType('char', int)
 
 int16 = typing.NewType('int16', int)
 uint16 = typing.NewType('uint16', int)
+wchar = typing.NewType('wchar', int)
 
 int32 = typing.NewType('int32', int)
 uint32 = typing.NewType('uint32', int)

@@ -47,7 +47,7 @@ class ErrorInfo:
 
 
 @contextmanager
-def expected_errors():
+def expected_errors(fail_if_no_logs: bool = True):
     """Context manager that captures log messages when an exception is not
     expected
     """
@@ -61,17 +61,18 @@ def expected_errors():
     try:
         yield errors
     finally:
-        assert len(errors.messages) > 0, "No error messages were captured"
+        if fail_if_no_logs:
+            assert len(errors.messages) > 0, "No error messages were captured"
         dds.Logger.instance.reset_output_handler()
 
 
 @contextmanager
-def expected_exception(expected_exception_type):
+def expected_exception(expected_exception_type, fail_if_no_logs: bool = True):
     """Context manager that captures log messages and an exception when both
     an exception and a separate log message are expected
     """
 
-    with expected_errors() as errors:
+    with expected_errors(fail_if_no_logs) as errors:
         with pytest.raises(expected_exception_type) as excinfo:
             yield errors
         errors.excinfo = excinfo

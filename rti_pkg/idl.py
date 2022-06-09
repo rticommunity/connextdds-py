@@ -10,6 +10,7 @@
 #
 
 import dataclasses
+from types import SimpleNamespace
 from typing import List, Union, Any
 import rti.idl_impl.type_plugin as idl_impl
 import rti.idl_impl.annotations as annotations
@@ -17,6 +18,7 @@ import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.sample_interpreter as sample_interpreter
 import rti.idl_impl.reflection_utils as reflection_utils
 import rti.idl_impl.unions as unions
+import rti.idl_impl.type_utils as type_utils
 import rti.connextdds
 
 #
@@ -46,6 +48,9 @@ uint64 = type_hints.uint64
 # float64 is provided for consistency, but float has the same meaning
 float32 = type_hints.float32
 float64 = type_hints.float64
+
+char = type_hints.char
+wchar = type_hints.wchar
 
 # --- Member annotations ------------------------------------------------------
 
@@ -134,6 +139,14 @@ def list_factory(element_type_or_value: Any, size: Union[int, List[int]]):
 # --- Exceptions --------------------------------------------------------------
 
 FieldSerializationError = sample_interpreter.FieldSerializationError
+
+# --- Utility functions -------------------------------------------------------
+
+to_array = type_utils.to_array
+to_char = type_utils.to_char
+to_wchar = type_utils.to_wchar
+from_char = type_utils.from_char
+from_wchar = type_utils.from_wchar
 
 # --- Decorators --------------------------------------------------------------
 
@@ -232,6 +245,17 @@ def enum(cls=None, *, type_annotations=[]):
         #  class Foo(IntEnum):
         return wrapper(cls)
 
+
+_idl_modules = {}
+
+
+def get_module(name: str):
+    """Returns a SimpleNamespace that contains types defined in an IDL module
+    for a given name. The syntax is '::MyModule' or '::MyModule::MySubmodule'.
+    """
+
+    # Return the module if it already exists or create it if it doesn't
+    return _idl_modules.setdefault(name, SimpleNamespace())
 
 def get_type_support(cls: type):
     if not hasattr(cls, 'type_support'):

@@ -19,6 +19,7 @@ import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
 from rti.idl_impl.type_plugin import ListFactory, PrimitiveArrayFactory, ValueListFactory
 from itertools import islice, cycle
+import rti.idl_impl.annotations as annotations
 
 import rti.connextdds as dds
 
@@ -51,24 +52,26 @@ class IdlValueGenerator:
 
         return self._create_test_data_impl(self.sample_type, seed)
 
-    def _get_sequence_type_bounds(self, seq_name: str):
+    def _get_sequence_type_bounds_annotation(self, seq_name: str):
         """Private member function used to determine a sequences max length"""
         # You must check that the type is a sequence before calling this
+        ts = idl.get_type_support(self.sample_type)
+        member_annotations = ts.member_annotations.get(seq_name, [])
+        array_annotation = annotations.find_annotation(
+            member_annotations, annotations.ArrayAnnotation)
+        if array_annotation.is_array:
+            return array_annotation
 
-        if self.dynamic_type[seq_name].type.kind == dds.TypeKind.ARRAY_TYPE:
-            return self.dynamic_type[seq_name].type.total_element_count
-        else:
-            return self.dynamic_type[seq_name].type.bounds
+        bound_annotation = annotations.find_annotation(
+            member_annotations, annotations.BoundAnnotation)
+        return bound_annotation
 
     def _get_sequence_type_length(self, seq_name: str, seed: int):
         """Private member function used to determine the length of a sequence"""
-        bound = self._get_sequence_type_bounds(seq_name)
-        if bound == idl.unbounded.value:
-            return seed % self.max_seq_bounds
-        elif self.dynamic_type[seq_name].type.kind == dds.TypeKind.ARRAY_TYPE:
-            return bound
-        else:
-            return ((seed % bound) + 1) % self.max_seq_bounds
+        bound = self._get_sequence_type_bounds_annotation(seq_name)
+        if type(bound) is annotations.ArrayAnnotation:
+            return bound.total_size
+        return seed % bound.value % self.max_seq_bounds
 
     def _get_str_sequence_type_bounds(self, seq_name: str):
         """Private member function used to determine a string sequences max length"""
@@ -125,30 +128,33 @@ class IdlValueGenerator:
             return self._generate_str_seq_from_seed(field_name, field_factory, seed)
 
         length = self._get_sequence_type_length(field_name, seed)
-
         seq = [self._generate_value_from_seed(sample_type, reflection_utils.get_underlying_type(
             member_type), field_name, None, seed + x) for x in range(0, length)]
+
         return self._make_sequence_from_list(field_factory, seq)
 
     def _generate_str_seq_from_seed(self, field_name: str, field_factory, seed: int):
         """Private local function used to generate string sequence values"""
         seq_length, str_length = self._get_str_sequence_type_length(
             field_name, seed)
-
         return self._make_sequence_from_list(
             field_factory,
             [self._generate_string_from_seed(str_length, seed + x) for x in range(0, seq_length)])
 
     def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
         """Recursive private function used to generate the values given a type"""
-
         if member_type is bool:
             return seed % 2 == 0
         elif reflection_utils.is_primitive(member_type):
             # return mod 128 so it fits in all types
             return member_type(seed % 128)
         elif member_type is str:
-            bound = self._get_sequence_type_bounds(field_name)
+            bound_annotation = self._get_sequence_type_bounds_annotation(
+                field_name)
+            if type(bound_annotation) is annotations.ArrayAnnotation:
+                bound = bound_annotation.total_size
+            else:
+                bound = bound_annotation.value
             return self._generate_string_from_seed(bound, seed)
         elif self._is_enum_type(member_type):
             return self._generate_enum_from_seed(member_type, seed)
@@ -188,7 +194,7 @@ class IdlValueGenerator:
     def _make_sequence_from_list(self, field_factory, lst):
         """Private function used to create a sequence from a list using its factory"""
         # will return either a list or an array depending on the factory
-        if field_factory is list or type(field_factory) is ListFactory or field_factory is None:
+        if field_factory is list or field_factory is None:
             return lst
         else:
             arr = field_factory()
@@ -200,8 +206,12 @@ class IdlValueGenerator:
         """Private function used to check if a type is an enum"""
         return inspect.isclass(sample_type) and issubclass(sample_type, IntEnum)
 
+    def _is_alias_type(self) -> bool:
+        """Private function used to check if this is an alias"""
+        return type(self.dynamic_type) is dds.AliasType
 
 # --- Wait test utilitites -----------------------------------------------------
+
 
 class WaitError(Exception):
     def __init__(self, message: str = None):
@@ -342,7 +352,7 @@ class PubSubFixture:
             for policy in writer_policies:
                 writer_qos << policy
             if has_unbound_member and \
-                not writer_qos.property.exists('dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'):
+                    not writer_qos.property.exists('dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'):
                 writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
             self.writer = _create_writer(self.topic, data_type, writer_qos)
 

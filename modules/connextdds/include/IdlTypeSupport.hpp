@@ -115,12 +115,25 @@ struct PyCTypesBuffer {
     // move-only struct
     PyCTypesBuffer(const PyCTypesBuffer&) = delete;
     PyCTypesBuffer& operator=(const PyCTypesBuffer&) = delete;
-    PyCTypesBuffer(PyCTypesBuffer&& other) = default;
-    PyCTypesBuffer& operator=(PyCTypesBuffer&& other) = default;
+
+    PyCTypesBuffer(PyCTypesBuffer&& other)
+    {
+        py_buffer = other.py_buffer;
+        other.py_buffer.buf = nullptr;
+    }
+
+    PyCTypesBuffer& operator=(PyCTypesBuffer&& other)
+    {
+        py_buffer = other.py_buffer;
+        other.py_buffer.buf = nullptr;
+        return *this;
+    }
 
     ~PyCTypesBuffer()
     {
-        PyBuffer_Release(&py_buffer);
+        if (py_buffer.buf != nullptr) {
+            PyBuffer_Release(&py_buffer);
+        }
     }
 
     // Obtain the actual buffer as a CSampleWrapper, as required by

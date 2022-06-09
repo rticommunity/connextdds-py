@@ -111,6 +111,8 @@ PRIMITIVE_TO_CTYPES_MAP = {
     type_hints.uint64: ctypes.c_uint64,
     type_hints.float32: ctypes.c_float,
     type_hints.float64: ctypes.c_double,
+    type_hints.char: ctypes.c_int8,
+    type_hints.wchar: ctypes.c_uint16
 }
 
 STR_ENCODING_TO_CTYPES_MAP = {
@@ -258,6 +260,8 @@ PY_TYPE_TO_DYNAMIC_TYPE_MAP = {
     type_hints.uint64: dds.Uint64Type(),
     type_hints.float32: dds.Float32Type(),
     type_hints.float64: dds.Float64Type(),
+    type_hints.char: dds.CharType(),
+    type_hints.wchar: dds.WcharType()
 }
 
 def get_idl_base_type(idl_type: type) -> Optional[bool]:
@@ -644,6 +648,16 @@ class TypeSupport:
             self._plugin_dynamic_type.finalize_sample(c_sample)
             raise
         return c_sample
+
+    def _create_empty_c_sample(self):
+        c_sample = self.c_type()
+        self._plugin_dynamic_type.initialize_sample(c_sample)
+        return c_sample
+
+    def _convert_to_c_sample(self, c_sample, py_sample):
+        self._plugin_dynamic_type.finalize_optional_members(c_sample)
+        self._sample_programs.py_to_c_program.execute(
+            src=py_sample, dst=c_sample)
 
     def _cast_c_sample(self, c_sample_ptr):
         return ctypes.cast(c_sample_ptr, self.c_type_ptr)[0]

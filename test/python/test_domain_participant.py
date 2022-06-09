@@ -13,7 +13,7 @@ import rti.connextdds as dds
 import pytest
 import utils
 from test_utils.fixtures import *
-
+from test_utils import log_capture
 
 # def test_participant_qos_value_type():
 #    pass
@@ -58,7 +58,7 @@ def test_participant_creation_w_listener():
 def test_participant_creation_failure():
     qos = get_test_participant_qos()
     qos.resource_limits.type_object_max_serialized_length = -2
-    with pytest.raises(dds.Error):
+    with log_capture.expected_exception(dds.Error):
         dds.DomainParticipant(0, qos)
 
 def test_set_get_qos():
@@ -233,14 +233,14 @@ def test_ignore():
 def test_add_peer():
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     p.add_peer("udpv4://")
-    with pytest.raises(dds.InvalidArgumentError):
+    with log_capture.expected_exception(dds.InvalidArgumentError):
         p.add_peer("")
 
 
 def test_remove_peer():
     p = utils.create_participant() # PY-26: Use participant fixture from test_utils.fixtures instead
     p.remove_peer("udpv4://")
-    with pytest.raises(dds.InvalidArgumentError):
+    with log_capture.expected_exception(dds.InvalidArgumentError):
         p.remove_peer("")
 
 

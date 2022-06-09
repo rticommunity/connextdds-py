@@ -39,8 +39,7 @@ class StringTest:
     opt_unbounded_wstr: Optional[str] = None
 
 
-@pytest.fixture
-def str_sample():
+def create_string_sample():
     return StringTest(
         "hello 1",
         "hello world 2",
@@ -51,6 +50,9 @@ def str_sample():
         "hello 3",
         "hello world 4")
 
+@pytest.fixture
+def str_sample():
+    return create_string_sample()
 
 def test_string_plugin():
     ts = idl.get_type_support(StringTest)
@@ -84,8 +86,13 @@ def test_string_serialization(str_sample):
 
 
 def test_string_pubsub(shared_participant, str_sample):
-    fixture = PubSubFixture(shared_participant, StringTest)
-    fixture.send_and_check([str_sample, StringTest(), str_sample])
+    fixture = PubSubFixture(shared_participant, StringTest, reader_policies=[
+                            dds.ResourceLimits(1, 1, 1)])
+    fixture.send_and_check(str_sample)
+    fixture.send_and_check(StringTest())
+    str_sample.unbounded_str = "a" * 40
+    str_sample.bounded_wstr += "b"
+    fixture.send_and_check(str_sample)
 
 def test_string_serialization_fails_when_out_of_bounds():
     ts = idl.get_type_support(StringTest)

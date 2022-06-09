@@ -122,33 +122,49 @@ void init_class_defs(py::class_<DynamicType>& cls)
                         return dds::core::xtypes::is_aggregation_type(dt);
                     },
                     "Determines if this DynamicType is an aggregation type.")
-            .def("print_idl",
-                 &rti::core::xtypes::print_idl,
-                 py::arg("index") = 0,
-                 "Prints the IDL representation of this type to the standard "
-                 "output.")
             .def(
-                "__str__",
-                [](const DynamicType& t) {
-                    return rti::core::xtypes::to_string(t);
-                },
-                "DynamicData value to string.")
+                    "is_keyed",
+                    [](const DynamicType& dt) {
+                        DDS_ExceptionCode_t ex = DDS_NO_EXCEPTION_CODE;
+                        bool is_keyed = DDS_TypeCode_is_keyed(
+                                const_cast<DDS_TypeCode*>(&dt.native()),
+                                &ex);
+                        rti::core::check_tc_ex_code(
+                                ex,
+                                "failed check if keyed");
+                        return is_keyed;
+                    },
+                    "Determines if this DynamicType has a key.")
+            .def("print_idl",
+                    &rti::core::xtypes::print_idl,
+                    py::arg("index") = 0,
+                    "Prints the IDL representation of this type to the "
+                    "standard "
+                    "output.")
+            .def(
+                    "__str__",
+                    [](const DynamicType& t) {
+                        return rti::core::xtypes::to_string(t);
+                    },
+                    "DynamicData value to string.")
 #if rti_connext_version_gte(6, 0, 1, 0)
             .def(
-                "to_string",
-                [](const DynamicType& t, const rti::core::xtypes::DynamicTypePrintFormatProperty& prop) {
-                    return rti::core::xtypes::to_string(t, prop);
-                },
-                py::arg_v(
-                    "format",
-                    rti::core::xtypes::DynamicTypePrintFormatProperty(),
-                    "DynamicTypePrintFormatProperty()"),
-                "Convert DynamicType to string with print format.")
+                    "to_string",
+                    [](const DynamicType& t,
+                            const rti::core::xtypes::
+                                    DynamicTypePrintFormatProperty& prop) {
+                        return rti::core::xtypes::to_string(t, prop);
+                    },
+                    py::arg_v(
+                            "format",
+                            rti::core::xtypes::DynamicTypePrintFormatProperty(),
+                            "DynamicTypePrintFormatProperty()"),
+                    "Convert DynamicType to string with print format.")
 #endif
             .def(py::self == py::self,
-                 "Compare DynamicType objects for equality.")
+                    "Compare DynamicType objects for equality.")
             .def(py::self != py::self,
-                 "Compare DynamicType objects for inequality.");
+                    "Compare DynamicType objects for inequality.");
 }
 
 template<>

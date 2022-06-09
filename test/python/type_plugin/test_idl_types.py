@@ -53,11 +53,13 @@ idl_types = [
     common_types.UnboundString,
     common_types.OptionalsTest,
     AnnotationsTest,
-    #common_types.ArrayTest,
+    common_types.ArrayTest,
     common_types.SequenceOfSeqTest,
     common_types.StrSequenceTest,
     common_types.OptionalStrSequenceTest,
     common_types.EnumTest,
+    common_types.SequenceAliasTest,
+    common_types.KeyTest,
 ]
 
 
@@ -85,7 +87,7 @@ types_with_expected_size = [
     (common_types.Point, 20),
     (common_types.Point3D, 28),
     (common_types.Line, 36),
-    (common_types.ComplexSequence, 44)
+    (common_types.ComplexSequence, 28),
 ]
 
 

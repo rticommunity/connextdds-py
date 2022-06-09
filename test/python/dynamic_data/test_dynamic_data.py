@@ -13,7 +13,7 @@ import rti.connextdds as dds
 import pytest
 import pathlib
 import array
-
+from test_utils import log_capture
 
 @pytest.fixture
 def types():
@@ -229,14 +229,17 @@ def test_member_info(types):
     with pytest.raises(dds.InvalidArgumentError):
         loan.data.member_info(12)
 
-    with pytest.raises(dds.PreconditionNotMetError):
+    with log_capture.expected_exception(dds.PreconditionNotMetError):
         data2.member_info("myLongSeq[12]")
 
     loan.return_loan()
 
-    assert not data2.member_exists("myLongSeq[12]")
-    array = data2.loan_value("myLongArray")
+    with log_capture.expected_errors() as errinfo:
+        assert not data2.member_exists("myLongSeq[12]")
+    assert "Cannot find a member" in errinfo.logs
+    assert "in type sequence" in errinfo.logs
 
+    array = data2.loan_value("myLongArray")
     with pytest.raises(dds.InvalidArgumentError):
         array.data.member_info(11)
 
