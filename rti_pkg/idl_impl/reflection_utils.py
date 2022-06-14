@@ -54,15 +54,20 @@ def _is_classvar(t: type) -> bool:
 
 
 def _is_classvar_workaround(t: type) -> bool:
-    return type(t) is typing.ClassVar
+    return type(t) is typing._ClassVar
+
+
+def _get_classvar_type_workaround(t: type) -> type:
+    return t.__type__ if hasattr(t, '__type__') else None
 
 
 is_classvar = _is_classvar if not CLASSVAR_WORKAROUND else _is_classvar_workaround
+get_classvar_type = get_underlying_type if not CLASSVAR_WORKAROUND else _get_classvar_type_workaround
 
 
 def remove_classvar(t: type) -> type:
     if is_classvar(t):  # for ClassVar[T] return T
-        return get_underlying_type(t)
+        return get_classvar_type(t)
     else:
         return t
 
