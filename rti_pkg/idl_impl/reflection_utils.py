@@ -16,36 +16,56 @@ import collections.abc as collections
 from rti.idl_impl.type_hints import *
 
 SUPPORT_GET_ORIGIN = sys.version_info >= (3, 8)
+CLASSVAR_WORKAROUND = sys.version_info < (3, 7)
+
 
 def _get_origin_workaround(t):
     return t.__origin__ if hasattr(t, '__origin__') else None
 
+
 def _get_args_workaround(t):
     return t.__args__ if hasattr(t, '__args__') else None
+
 
 get_origin = typing.get_origin if SUPPORT_GET_ORIGIN else _get_origin_workaround
 get_args = typing.get_args if SUPPORT_GET_ORIGIN else _get_args_workaround
 
+
 def is_optional_type(t):
     return get_origin(t) is typing.Union
+
 
 def is_sequence_type(t):
     origin = get_origin(t)
     return origin in (typing.Sequence, collections.Sequence, typing.List, list)
 
+
 def is_constructed_type(t):
     return hasattr(t, 'type_support')
+
 
 def get_underlying_type(t):
     args = get_args(t)
     return args[0] if args is not None else None
 
 
+def _is_classvar(t: type) -> bool:
+    return get_origin(t) is typing.ClassVar
+
+
+def _is_classvar_workaround(t: type) -> bool:
+    return type(t) is typing.ClassVar
+
+
+is_classvar = _is_classvar if not CLASSVAR_WORKAROUND else _is_classvar_workaround
+
+
 def remove_classvar(t: type) -> type:
-    if get_origin(t) is typing.ClassVar: # for ClassVar[T] return T
+    if is_classvar(t):  # for ClassVar[T] return T
         return get_underlying_type(t)
     else:
         return t
+
 
 _PRIMITIVE_TYPES = (bool, int8, char, int16, uint16, wchar, int32,
                     uint32, int64, uint64, float32, float64)
@@ -54,6 +74,7 @@ _PRIMITIVE_TYPES = (bool, int8, char, int16, uint16, wchar, int32,
 def is_primitive(t: type) -> bool:
     """Returns True if the type is a primitive type"""
     return t in _PRIMITIVE_TYPES
+
 
 _TYPE_TO_ARRAY_TYPE_MAP: typing.Dict[type, str] = {
     bool: 'b',
