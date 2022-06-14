@@ -17,7 +17,7 @@ from enum import IntEnum
 import inspect
 import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
-from rti.idl_impl.type_plugin import ListFactory, PrimitiveArrayFactory, ValueListFactory
+from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
 

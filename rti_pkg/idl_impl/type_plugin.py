@@ -9,11 +9,9 @@
 # damages arising out of the use or inability to use the software.
 #
 
-from dataclasses import dataclass, fields
-from typing import List, Any, ClassVar, Optional, Dict
+from dataclasses import fields
+from typing import List, Any, Optional, Dict
 from enum import Enum
-import itertools
-import array
 import ctypes
 import rti.connextdds as dds
 import rti.idl_impl.sample_interpreter as sample_interpreter
@@ -42,60 +40,6 @@ def finalize_type_plugin_factory() -> None:
     _internal_type_factory = None
     _public_type_factory = None
     dds._GenericTypePluginFactory.delete_instance()
-
-
-@dataclass
-class PrimitiveArrayFactory:
-    """A callable that creates an array for the default_factory of a dataclass
-    field
-    """
-
-    element_type: type
-    size: int
-    supports_buffer_protocol: ClassVar[bool] = True
-
-    def __post_init__(self):
-        self.element_type_str = reflection_utils.get_array_type(
-            self.element_type)
-
-        if self.element_type_str is None:
-            raise TypeError(
-                f"'{self.element_type}' is not a valid primitive element type for an array")
-
-    def __call__(self):
-        if self.size == 0:
-            return array.array(self.element_type_str)
-        else:
-            return array.array(self.element_type_str, itertools.repeat(0, self.size))
-
-
-@dataclass
-class ListFactory:
-    """A callable that creates a list of a fixed size for the default_factory
-    of a dataclass field
-    """
-
-    element_type: type
-    size: int
-    supports_buffer_protocol: ClassVar[bool] = False
-
-    def __call__(self):
-        return [self.element_type() for _ in range(self.size)]
-
-
-@dataclass
-class ValueListFactory:
-    """A optimization of ListFactory for types types with immutable values"""
-
-    element_value: Any
-    size: int
-    supports_buffer_protocol: ClassVar[bool] = False
-
-    def __call__(self):
-        # Optimization over ListFactory; strings are immutable so we don't need
-        # a new object for each element
-        return [self.element_value] * self.size
-
 
 # --- C/Python type conversions -----------------------------------------------
 

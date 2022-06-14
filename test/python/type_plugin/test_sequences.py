@@ -81,12 +81,12 @@ def create_sequence_sample():
 def create_optional_sequence_sample():
     return OptionalSequenceTest(
         vertices=[Point(10, 20), Point(30, 40)],
-        weights=[1, 2, 3],
-        prices=[1.5, 2.5, 3.5, 4.5],
-        ready=[True, False, True, True],
-        weights_array=[111, 222],
-        prices_array=[11.5, 22.5, 33.5],
-        ready_array=[False, True],
+        weights=array('h', [1, 2, 3]),
+        prices=array('d', [1.5, 2.5, 3.5, 4.5]),
+        ready=array('b', [True, False, True, True]),
+        weights_array=array('h', [111, 222]),
+        prices_array=array('d', [11.5, 22.5, 33.5]),
+        ready_array=array('b', [False, True]),
         vertices_bounded=[Point(100, 200)])
 
 
@@ -156,7 +156,7 @@ def test_optional_sequence_pubsub(shared_participant, optional_sequence_sample):
     fixture = PubSubFixture(shared_participant, OptionalSequenceTest)
     fixture.send_and_check(optional_sequence_sample)
     fixture.send_and_check(OptionalSequenceTest())
-    optional_sequence_sample.prices_array += [7.23]
+    optional_sequence_sample.prices_array += idl.to_array(float, [7.23])
     optional_sequence_sample.vertices_bounded += [Point(7, 8)]
     fixture.send_and_check(optional_sequence_sample)
 

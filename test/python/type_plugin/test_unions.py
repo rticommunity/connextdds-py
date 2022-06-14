@@ -18,6 +18,7 @@ import rti.connextdds as dds
 import rti.idl as idl
 
 from common_types import Point
+from test_sequences import SequenceTest, create_sequence_sample
 from test_utils.fixtures import *
 
 
@@ -215,7 +216,6 @@ def test_union_plugin():
     assert dt["my_str"].labels == [1]
     assert dt["my_point"].type == idl.get_type_support(Point).dynamic_type
     assert dt["my_point"].labels == [2, 3]
-
 
 def test_default_union_plugin():
     dt = idl.get_type_support(UnionWithDefault).dynamic_type
@@ -486,3 +486,29 @@ def test_union_deepcopy():
     assert s_copy.my_union_opt is not s.my_union_opt
     assert s_copy.my_union_seq is not s.my_union_seq
 
+
+@idl.union(
+    member_annotations={
+        'complex_array': [idl.array([3])],
+        'float_array': [idl.array([3])]
+    }
+)
+class UnionWithArrays:
+    discriminator: idl.int32 = 0
+    value: Union[int, Sequence[SequenceTest], Sequence[idl.float32]] = 0
+
+    primitive_Value: int = idl.case(0)
+    complex_array: Sequence[SequenceTest] = idl.case(10)
+    float_array: Sequence[idl.float32] = idl.case(15)
+
+
+def test_pubsub_union_with_arrays(shared_participant):
+    fixture = PubSubFixture(shared_participant, UnionWithArrays, reader_policies=[
+                            dds.ResourceLimits(1, 1, 1)])
+    fixture.send_and_check(UnionWithArrays(
+        float_array=idl.to_array(idl.float32, [1, 2, 3])))
+    fixture.send_and_check(UnionWithArrays(
+        complex_array=[create_sequence_sample()] * 3))
+    fixture.send_and_check(UnionWithArrays())
+    fixture.send_and_check(UnionWithArrays(
+        float_array=idl.to_array(idl.float32, [4, 5, 6])))

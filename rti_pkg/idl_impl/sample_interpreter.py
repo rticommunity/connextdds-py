@@ -27,6 +27,7 @@ import rti.connextdds as dds
 import rti.idl_impl.reflection_utils as reflection_utils
 import rti.idl_impl.annotations as annotations
 import rti.connextdds.core_utils as core_utils
+import rti.idl_impl.type_utils as type_utils
 from rti.idl_impl.unions import union_cases, union_discriminator, DEFAULT_LABEL
 
 
@@ -180,7 +181,7 @@ class StringInstruction(Instruction):
 
 class StringConstantsMixin:
     """Defines the parameters required by the instruction for UTF-8 strings."""
-    encoding = 'utf-8'
+    encoding = type_utils.STRING_ENCODING
     get_memoryview_func = core_utils.get_memoryview_from_string
     strcpy_func = core_utils.strcpy_from_buffer_object
     realloc_func = core_utils.string_realloc
@@ -189,11 +190,11 @@ class StringConstantsMixin:
 
 class WideStringConstantsMixin:
     """Defines the parameters required by the instruction for UTF-16 strings."""
-    encoding = 'utf-16-le'
+    encoding = type_utils.WSTRING_ENCODING
     get_memoryview_func = core_utils.get_memoryview_from_wstring
     strcpy_func = core_utils.wstrcpy_from_buffer_object
     realloc_func = core_utils.wstring_realloc
-    bytes_per_char = 2
+    bytes_per_char = type_utils.WSTRING_BYTES_PER_CHAR
 
 
 class CopyBytesToStrInstructionMixin(StringInstruction):
@@ -940,6 +941,7 @@ class SamplePrograms:
                     c_to_py_instr, py_to_c_instr = self._create_array_instructions(
                         field,
                         is_optional=is_optional,
+                        field_factory=field_factory,
                         sequence_annotations=current_annotations)
                 else:
                     c_to_py_instr, py_to_c_instr = self._create_sequence_instructions(
@@ -1096,6 +1098,7 @@ class SamplePrograms:
         self,
         field,
         is_optional: bool,
+        field_factory,
         sequence_annotations
     ):
         if is_optional:
@@ -1144,6 +1147,7 @@ class SamplePrograms:
                 field.name,
                 element_ts._sample_programs.py_to_c_program)
 
+        c_to_py_instr.field_factory = field_factory
         return c_to_py_instr, py_to_c_instr
 
     def _get_field_factory(self, field, member_annotations) -> Callable[[], Any]:
@@ -1163,17 +1167,16 @@ class SamplePrograms:
         if reflection_utils.is_sequence_type(field_type):
             # In the Python type there is no distinction between an array
             # and a sequence; the ArrayAnnotation makes it an array.
+            element_type = reflection_utils.get_underlying_type(field_type)
             array_info = annotations.find_annotation(
                 member_annotations, annotations.ArrayAnnotation)
-            element_type = reflection_utils.get_underlying_type(field_type)
-            if array_info.is_array:
-                return None # TODO PY-17: support optional and in-union arrays
-            else:
-                return list
-                # if reflection_utils.is_primitive_or_enum(element_type):
-                #     return idl.array_factory(element_type)
-                # else:
-                #     return list
+
+            # For arrays, the factory returns fixed-size collections; for
+            # sequences, the factory returns empty collections.
+            dimensions = array_info.dimensions if array_info.is_array else 0
+            return type_utils.get_optimal_collection_factory(
+                element_type,
+                dimensions)
 
         if reflection_utils.is_constructed_type(field_type):
             return field_type

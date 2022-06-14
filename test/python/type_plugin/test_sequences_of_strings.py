@@ -56,7 +56,7 @@ class SequenceTest:
     w_unb_unb: Sequence[str] = field(default_factory=list)
 
     # sequence of struct with strings/wide strings
-    strings: Sequence[test_strings.StringTest] = field(default_factory=list)
+    strings: Sequence[StringTest] = field(default_factory=list)
 
 
 @idl.struct(
@@ -82,7 +82,7 @@ class OptionalSequenceTest:
     w_unb_b: Optional[Sequence[str]] = None
     w_unb_unb: Optional[Sequence[str]] = None
 
-    strings: Optional[Sequence[test_strings.StringTest]] = None
+    strings: Optional[Sequence[StringTest]] = None
 
 
 def create_sample(SequenceType):
@@ -95,7 +95,7 @@ def create_sample(SequenceType):
         w_b_unb=["a" * 10, "b" * 20],
         w_unb_b=["hello", ",", "world!"] * 3,
         w_unb_unb=["a" * 10, "b" * 20] * 10,
-        strings=[test_strings.StringTest(
+        strings=[StringTest(
             "hello 1",
             "hello world 2",
             "hello 3",
