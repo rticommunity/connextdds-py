@@ -11,7 +11,7 @@
 
 import os
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from dataclasses import fields
 from enum import IntEnum
 import inspect
@@ -231,7 +231,7 @@ def is_field_key(t: type, field_name: str) -> bool:
     return key_annotation.value
 
 
-def has_keys(t: type) -> bool:
+def has_keys(t: Any) -> bool:
     """Function used to check if this type has a key"""
     for field in fields(t):
         if is_field_key(t, field.name):
@@ -245,12 +245,13 @@ def keys_equal(a: Any, b: Any) -> bool:
         return False
 
     def key_equal_helper(a: Any, b: Any) -> bool:
+        type_has_keys = has_keys(type(a))
         for field in fields(type(a)):
             if reflection_utils.is_constructed_type(field.type):
-                if has_keys(getattr(a, field.name)):
+                if has_keys(getattr(a, field.name)) or is_field_key(type(a), field.name):
                     if not key_equal_helper(getattr(a, field.name), getattr(b, field.name)):
                         return False
-            is_key = not has_keys(type(a)) or is_field_key(type(a), field.name)
+            is_key = not type_has_keys or is_field_key(type(a), field.name)
             if is_key:
                 if getattr(a, field.name) != getattr(b, field.name):
                     return False
