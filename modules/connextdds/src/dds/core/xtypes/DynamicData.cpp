@@ -736,9 +736,9 @@ static bool set_buffer_collection_member(
     case TypeKind::UINT_32_TYPE:
         return set_buffer_values<uint32_t>(dd, key, info, DDS_DynamicData_set_ulong_array);
     case TypeKind::INT_64_TYPE:
-        return set_buffer_values<rti::core::int64>(dd, key, info, DDS_DynamicData_set_longlong_array);
+        return set_buffer_values<DDS_LongLong>(dd, key, info, DDS_DynamicData_set_longlong_array);
     case TypeKind::UINT_64_TYPE:
-        return set_buffer_values<rti::core::uint64>(dd, key, info, DDS_DynamicData_set_ulonglong_array);
+        return set_buffer_values<DDS_UnsignedLongLong>(dd, key, info, DDS_DynamicData_set_ulonglong_array);
     case TypeKind::FLOAT_32_TYPE:
         return set_buffer_values<float>(dd, key, info, DDS_DynamicData_set_float_array);
     case TypeKind::FLOAT_64_TYPE:
