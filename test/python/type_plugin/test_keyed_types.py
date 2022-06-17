@@ -222,3 +222,27 @@ def test_serialized_sample_to_key_hash(type_fixture: IdlTypeFixture, shared_part
         instance_handle = pubsub.writer.lookup_instance(samples[0][0])
         assert test_utils.keys_equal(
             pubsub.writer.key_value(instance_handle), sample)
+
+
+def test_deserialize_key_sample(type_fixture: IdlTypeFixture, shared_participant: dds.DomainParticipant):
+    w_prop = dds.DataWriterProtocol()
+    w_prop.serialize_key_with_dispose = True
+    pubsub = PubSubFixture(shared_participant, type_fixture.sample_type,
+                            writer_policies=[w_prop])
+                            
+    for seed in seeds:
+        sample = type_fixture.create_test_data(seed)
+        pubsub.writer.write(sample)
+        wait.for_data(pubsub.reader, 1)
+        pubsub.reader.take()
+        disposed_instance = pubsub.writer.lookup_instance(sample)
+        pubsub.writer.dispose_instance(disposed_instance)
+        wait.until_equal(1, lambda: len(pubsub.reader.read()))
+        
+        wait.for_data(pubsub.reader, 1)
+        samples = pubsub.reader.take()
+        for s in samples:
+            assert not s.info.valid
+        key_holder = pubsub.reader.key_value(disposed_instance)
+        assert test_utils.keys_equal(sample, key_holder)
+        
