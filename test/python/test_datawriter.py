@@ -321,6 +321,9 @@ def test_pubsub_with_timestamp(pubsub_keyed_types):
     wait.for_data(pubsub.reader)
     samples = pubsub.reader.take()
     assert len(samples) == 1
+    _, info = samples[0]
+    assert info.valid
+    assert info.source_timestamp == dds.Time(124)
 
     pubsub.writer.dispose_instance(instance_handle, dds.Time(124))
     wait.for_samples(pubsub.reader)
