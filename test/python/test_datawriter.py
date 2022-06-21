@@ -337,6 +337,31 @@ def test_register_dispose_unregister_instance_with_params(pub):
 
     params.source_timestamp = dds.Time(125)
     pub.writer.unregister_instance(params)
+    
+
+def test_pubsub_with_timestamp(pubsub_keyed_types):
+    pubsub = pubsub_keyed_types
+    sample = get_sample_value(pubsub.data_type)
+    instance_handle = pubsub.writer.register_instance(sample, dds.Time(123))
+    assert instance_handle is not None
+    assert instance_handle != dds.InstanceHandle.nil()
+
+    pubsub.writer.write(sample, dds.Time(124))
+    wait.for_data(pubsub.reader)
+    samples = pubsub.reader.take()
+    assert len(samples) == 1
+    _, info = samples[0]
+    assert info.valid
+    assert info.source_timestamp == dds.Time(124)
+
+    pubsub.writer.dispose_instance(instance_handle, dds.Time(124))
+    wait.for_samples(pubsub.reader)
+    samples = pubsub.reader.take()
+    assert len(samples) == 1
+    data, info = samples[0]
+    assert data is None
+    assert not info.valid
+    assert info.source_timestamp == dds.Time(124)
 
 
 # --- Key Value tests ---------------------------------------------------------
@@ -349,6 +374,7 @@ def test_key_value(pub):
     key_holder = get_sample_keys(pub.data_type)
     assert keys_equal(result, key_holder)
     assert instance == pub.writer.lookup_instance(result)
+
 
 
 # --- Manual tests ------------------------------------------------------------

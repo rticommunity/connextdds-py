@@ -300,6 +300,14 @@ class Wait:
             self.until_equal(
                 count, lambda: reader.datareader_cache_status.sample_count)
 
+    def for_samples(self, reader: dds.DataReader, count: int = -1) -> None:
+        if count < 0:
+            # Wait for one or more samples
+            self.until(lambda: len(reader.read()) > 0)
+        else:
+            # Wait for a specific number
+            self.until_equal(count, lambda: len(reader.read()))
+
 
 wait = Wait()
 
