@@ -189,7 +189,6 @@ struct IdlWriteImpl {
                 std::forward<ExtraArgs>(extra_args)...);
     }
 
-    template<typename... ExtraArgs>
     static dds::core::InstanceHandle py_lookup_instance(
             IdlDataWriter& writer,
             py_sample key_holder)
