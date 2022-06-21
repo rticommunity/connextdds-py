@@ -47,10 +47,10 @@ class BoundAnnotation:
 def get_total_size_from_dimensions(dimensions: Union[None, int, List[int]]) -> int:
     if dimensions is None:
         return 1
-    elif isinstance(dimensions, int):
-        return dimensions
+    elif isinstance(dimensions, list) or isinstance(dimensions, tuple):
+        return reduce(lambda x, y: int(x) * int(y), dimensions)
     else:
-        return reduce(lambda x, y: x * y, dimensions)
+        return int(dimensions)
 
 @dataclass
 class ArrayAnnotation:
