@@ -90,8 +90,8 @@ def list_factory(element_type_or_value: Any, size: Union[int, List[int]]):
 
 # Gets the most efficient factory for a list or an array
 def get_optimal_collection_factory(element_type: type, size: Union[int, List[int]]):
-    if reflection_utils.is_primitive_or_enum(element_type):
-        # For primitives, use a factory of compact Python arrays
+    if reflection_utils.is_primitive(element_type):
+        # For primitives (excluding enums), use a factory of compact Python arrays
         return array_factory(element_type, size)
     elif size != 0:
         # For IDL arrays of non-primitives, use a factory of lists of fixed size
