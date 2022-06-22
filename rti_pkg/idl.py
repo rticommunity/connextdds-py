@@ -61,12 +61,12 @@ def id(value: int) -> annotations.IdAnnotation:
     """Annotation that sets a explicit member ID. By default they're assigned
     automatically
     """
-    return annotations.IdAnnotation(value)
+    return annotations.IdAnnotation(int(value))
 
 
 def bound(value: int):
     """Annotation that sets the maximum size for a Sequence or a str field"""
-    return annotations.BoundAnnotation(value)
+    return annotations.BoundAnnotation(int(value))
 
 
 unbounded = bound(annotations.UNBOUNDED)

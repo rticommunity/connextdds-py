@@ -123,3 +123,26 @@ def test_optional_annotation():
     assert not dt["my_int32"].optional
     assert not dt["my_float64"].optional
 
+
+@idl.struct(
+    type_annotations=[idl.mutable],
+    member_annotations={
+        'my_seq': [idl.bound(1230/10), idl.id(10/5)],
+        'my_array': [idl.array(4/2)],
+        'my_array_multi': [idl.array([10/2, 4/2])]
+    }
+)
+class FloatAnnotationsTest:
+    my_seq: Sequence[Point] = field(default_factory=list)
+    my_array: Sequence[int] = field(default_factory=idl.array_factory(int, 4/2))
+    my_array_multi: Sequence[int] = field(default_factory=idl.array_factory(int, [10/2, 4/2]))
+
+
+
+def test_float_annotations():
+    dt = idl.get_type_support(FloatAnnotationsTest).dynamic_type
+
+    assert dt["my_seq"].type.bounds == 123
+    assert dt["my_seq"].id == 2
+    assert dt["my_array"].type.dimension(0) == 2
+    assert dt["my_array_multi"].type.dimension(0) == 10

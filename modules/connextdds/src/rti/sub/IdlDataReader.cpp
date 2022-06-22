@@ -82,7 +82,6 @@ static DataAndInfoVector convert_data_w_info(
         dds::sub::LoanedSamples<CSampleWrapper>&& samples)
 {
     size_t max_length = samples.length();
-    auto valid_samples = rti::sub::valid_data(std::move(samples));
     DataAndInfoVector py_samples;
     py_samples.reserve(max_length);
 
@@ -90,11 +89,16 @@ static DataAndInfoVector convert_data_w_info(
     // This is the type support function that converts from C data
     // to the user-facing python object.
     auto obj_cache = get_py_objects(dr);
-    for (auto& sample : valid_samples) {
-        py::object py_data = invoke_py_sample_function(
-                obj_cache->create_py_sample_func,
-                obj_cache->type_support,
-                sample.data());
+    for (auto& sample : samples) {
+        py::object py_data;
+        if (sample.info().valid()) {
+            py_data = invoke_py_sample_function(
+                    obj_cache->create_py_sample_func,
+                    obj_cache->type_support,
+                    sample.data());
+        } else {
+            py_data = py::none();
+        }
         py_samples.push_back({ py_data , sample.info() });
     }
 
