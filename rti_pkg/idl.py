@@ -58,12 +58,12 @@ key = annotations.KeyAnnotation(True)
 
 def id(value: int) -> annotations.IdAnnotation:
     "Sets a explicit member ID. By default they're assigned automatically"
-    return annotations.IdAnnotation(value)
+    return annotations.IdAnnotation(int(value))
 
 
 def bound(value: int):
     """Sets the maximum size for a sequence or a string member"""
-    return annotations.BoundAnnotation(value)
+    return annotations.BoundAnnotation(int(value))
 
 
 unbounded = bound(annotations.UNBOUNDED)
