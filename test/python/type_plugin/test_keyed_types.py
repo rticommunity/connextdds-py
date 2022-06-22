@@ -89,6 +89,26 @@ class SeqKeyType:
     not_key: typing.Sequence[idl.int16] = field(default_factory=list)
 
 
+@idl.struct
+class Point:
+    a: int = 0
+    b: int = 0
+
+
+@idl.struct(member_annotations={"b": [idl.key]})
+class PointSeq:
+    a: int = 0
+    b: typing.Sequence[Point] = field(default_factory=list)
+
+
+@idl.struct(member_annotations={"a_k": [idl.key], "b_k": [idl.key]})
+class MultiKeyType:
+    a_u: Point = field(default_factory=Point)
+    a_k: Point = field(default_factory=Point)
+    b_u: PointSeq = field(default_factory=PointSeq)
+    b_k: typing.Sequence[PointSeq] = field(default_factory=list)
+
+
 def get_inner_x_value(struct):
     if type(struct) is int:
         return struct
@@ -119,12 +139,13 @@ types_to_test = [
     OuterType1,
     StringKeyType,
     SeqKeyType,
+    MultiKeyType,
 ]
 
 
 @pytest.fixture(params=types_to_test)
 def type_fixture(request) -> IdlTypeFixture:
-    return IdlTypeFixture(request.param, keys_only=False)
+    return IdlTypeFixture(request.param, keys_only=True)
 
 
 def test_generate_expected_values_keys_only():
@@ -228,8 +249,8 @@ def test_deserialize_key_sample(type_fixture: IdlTypeFixture, shared_participant
     w_prop = dds.DataWriterProtocol()
     w_prop.serialize_key_with_dispose = True
     pubsub = PubSubFixture(shared_participant, type_fixture.sample_type,
-                            writer_policies=[w_prop])
-                            
+                           writer_policies=[w_prop])
+
     for seed in seeds:
         sample = type_fixture.create_test_data(seed)
         pubsub.writer.write(sample)
@@ -238,11 +259,8 @@ def test_deserialize_key_sample(type_fixture: IdlTypeFixture, shared_participant
         disposed_instance = pubsub.writer.lookup_instance(sample)
         pubsub.writer.dispose_instance(disposed_instance)
         wait.until_equal(1, lambda: len(pubsub.reader.read()))
-        
-        wait.for_data(pubsub.reader, 1)
         samples = pubsub.reader.take()
         for s in samples:
-            assert not s.info.valid
-        key_holder = pubsub.reader.key_value(disposed_instance)
+            assert not s[1].valid
+        key_holder = pubsub.writer.key_value(disposed_instance)
         assert test_utils.keys_equal(sample, key_holder)
-        

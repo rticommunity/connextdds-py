@@ -121,7 +121,7 @@ class IdlValueGenerator:
         """Private local function used to generate enum values"""
         return next(islice(cycle(enum_type), seed, seed + 1))
 
-    def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
+    def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, keys_only, seed: int):
         """Private local function used to generate sequence values"""
         if field_factory not in [None, list] and type(field_factory) not in [ListFactory, PrimitiveArrayFactory, ValueListFactory]:
             return field_factory()
@@ -131,7 +131,7 @@ class IdlValueGenerator:
 
         length = self._get_sequence_type_length(field_name, seed)
         seq = [self._generate_value_from_seed(sample_type, reflection_utils.get_underlying_type(
-            member_type), field_name, None, seed + x, self.keys_only) for x in range(0, length)]
+            member_type), field_name, None, seed + x, keys_only) for x in range(0, length)]
         return self._make_sequence_from_list(field_factory, seq)
 
     def _generate_str_seq_from_seed(self, field_name: str, field_factory, seed: int):
@@ -144,6 +144,19 @@ class IdlValueGenerator:
 
     def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int, keys_only=False):
         """Recursive private function used to generate the values given a type"""
+
+        if keys_only:
+            # If we are only generating keys and there is a type with a nested
+            # key type then we must skip fields that are not keys
+            if reflection_utils.is_constructed_type(
+                    member_type) and has_keys(member_type) and is_field_key(sample_type, field_name):
+                return IdlValueGenerator(
+                    member_type,
+                    max_string_bounds=self.max_string_bounds,
+                    max_seq_bounds=self.max_seq_bounds,
+                    keys_only=self.keys_only)._create_test_data_impl(
+                        member_type, seed)
+
         if member_type is bool:
             return seed % 2 == 0
         elif reflection_utils.is_primitive(member_type):
@@ -167,7 +180,7 @@ class IdlValueGenerator:
             else:
                 return None
         elif reflection_utils.is_sequence_type(member_type):
-            return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, seed)
+            return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, self.keys_only, seed)
         elif reflection_utils.is_constructed_type(member_type):
             return IdlValueGenerator(member_type)._create_test_data_impl(
                 member_type, seed)
@@ -194,9 +207,17 @@ class IdlValueGenerator:
                     sample_type, field.name)
                 if not is_key:
                     continue
-
-            setattr(value, field.name, self._generate_value_from_seed(
-                sample_type, field.type, field.name, field.default_factory, seed, keys_only=self.keys_only))
+            val = self._generate_value_from_seed(
+                sample_type,
+                field.type,
+                field.name,
+                field.default_factory,
+                seed,
+                keys_only=self.keys_only)
+            if val is not None or reflection_utils.is_optional_type(field.type):
+                # The only time val will return None is if the type is optional
+                # or if it is a keyed type with nested keys
+                setattr(value, field.name, val)
             seed += 1
         return value
 
