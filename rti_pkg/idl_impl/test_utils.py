@@ -145,18 +145,6 @@ class IdlValueGenerator:
     def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int, keys_only=False):
         """Recursive private function used to generate the values given a type"""
 
-        if keys_only:
-            # If we are only generating keys and there is a type with a nested
-            # key type then we must skip fields that are not keys
-            if reflection_utils.is_constructed_type(
-                    member_type) and has_keys(member_type) and is_field_key(sample_type, field_name):
-                return IdlValueGenerator(
-                    member_type,
-                    max_string_bounds=self.max_string_bounds,
-                    max_seq_bounds=self.max_seq_bounds,
-                    keys_only=self.keys_only)._create_test_data_impl(
-                        member_type, seed)
-
         if member_type is bool:
             return seed % 2 == 0
         elif reflection_utils.is_primitive(member_type):
@@ -182,8 +170,17 @@ class IdlValueGenerator:
         elif reflection_utils.is_sequence_type(member_type):
             return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, self.keys_only, seed)
         elif reflection_utils.is_constructed_type(member_type):
-            return IdlValueGenerator(member_type)._create_test_data_impl(
-                member_type, seed)
+            # Here there is a special case if we are only generating keys. If
+            # the inner type has keys and this field is a key then we only want 
+            # to generate those, else generate the whole structure
+            generate_keys = keys_only and has_keys(
+                member_type) and is_field_key(sample_type, field_name)
+            return IdlValueGenerator(
+                member_type,
+                max_seq_bounds=self.max_seq_bounds,
+                max_string_bounds=self.max_string_bounds,
+                keys_only=generate_keys)._create_test_data_impl(
+                    member_type, seed)
         else:
             raise TypeError(
                 f"unknown type {str(member_type)} given to generator")
