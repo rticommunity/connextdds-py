@@ -112,7 +112,36 @@ def get_sample_value(type: type):
     elif type is dds.KeyedStringTopicType:
         return dds.KeyedStringTopicType("Hello World", "Hello World")
     else:
-        raise TypeError("Unsupported type: {}".format(type))
+        raise TypeError(f"Unsupported type: {type}")
+
+
+def get_sample_keys(type: type):
+    if type is PointIDL:
+        return PointIDL(x=1, y=0)
+    elif type == idl.get_type_support(PointIDLForDD).dynamic_type:
+        point_dynamic_data = dds.DynamicData(
+            idl.get_type_support(PointIDLForDD).dynamic_type)
+        point_dynamic_data["x"] = 1
+        point_dynamic_data["y"] = 0
+        return point_dynamic_data
+    elif type is dds.KeyedStringTopicType:
+        return dds.KeyedStringTopicType("Hello World", "")
+    else:
+        raise TypeError(f"Unsupported type: {type}")
+
+
+def keys_equal(a, b) -> bool:
+    if type(a) is not type(b):
+        raise TypeError(
+            f"Types do not match: {type(a)} != {type(b)}")
+    if type(a) is PointIDL:
+        return a.x == b.x
+    elif type(a) == dds.DynamicData:
+        return a["x"] == b["x"]
+    elif type(a) is dds.KeyedStringTopicType:
+        return a.key == b.key
+    else:
+        raise TypeError(f"Unsupported type: {type}")
 
 
 class PointListener(dds.NoOpDataWriterListener):
@@ -138,7 +167,7 @@ def get_writer_listeners(type: type):
         return (dds.KeyedStringTopicType.NoOpDataWriterListener(),
                 dds.KeyedStringTopicType.NoOpDataWriterListener())
     else:
-        raise TypeError("Unsupported type: {}".format(type))
+        raise TypeError(f"Unsupported type: {type}")
 
 
 def get_writer_w_listeners(participant, topic, type, listener):
@@ -308,7 +337,7 @@ def test_register_dispose_unregister_instance_with_params(pub):
 
     params.source_timestamp = dds.Time(125)
     pub.writer.unregister_instance(params)
-
+    
 
 def test_pubsub_with_timestamp(pubsub_keyed_types):
     pubsub = pubsub_keyed_types
@@ -333,6 +362,21 @@ def test_pubsub_with_timestamp(pubsub_keyed_types):
     assert data is None
     assert not info.valid
     assert info.source_timestamp == dds.Time(124)
+
+
+# --- Key Value tests ---------------------------------------------------------
+
+def test_key_value(pub):
+    if pub.data_type == dds.KeyedStringTopicType:
+        pytest.skip("TODO: KeyedStringTopicType has known bug")
+    sample = get_sample_value(pub.data_type)
+    instance = pub.writer.register_instance(sample)
+    assert instance != dds.InstanceHandle.nil()
+    result = pub.writer.key_value(instance)
+    key_holder = get_sample_keys(pub.data_type)
+    assert keys_equal(result, key_holder)
+    assert instance == pub.writer.lookup_instance(result)
+
 
 
 # --- Manual tests ------------------------------------------------------------
