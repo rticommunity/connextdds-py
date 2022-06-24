@@ -956,7 +956,7 @@ void init_dds_datawriter_write_methods(PyDataWriterClass<T>& cls)
     //
 
     cls.def("lookup_instance",
-            &WriteImpl::template py_lookup_instance,
+            &WriteImpl::py_lookup_instance,
             py::arg("key_holder"),
             py::call_guard<GilPolicy>(),
             "Retrieve the instance handle that corresponds to an instance "
