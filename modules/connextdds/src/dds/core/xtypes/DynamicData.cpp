@@ -520,9 +520,9 @@ static py::object get_collection_member(
     case TypeKind::UINT_32_TYPE:
         return py::cast(get_collection_buffer_member<uint32_t, T>(dd, key));
     case TypeKind::INT_64_TYPE:
-        return py::cast(get_collection_buffer_member<rti::core::int64, T>(dd, key));
+        return py::cast(get_collection_buffer_member<DDS_LongLong, T>(dd, key));
     case TypeKind::UINT_64_TYPE:
-        return py::cast(get_collection_buffer_member<rti::core::uint64, T>(dd, key));
+        return py::cast(get_collection_buffer_member<DDS_UnsignedLongLong, T>(dd, key));
     case TypeKind::FLOAT_32_TYPE:
         return py::cast(get_collection_buffer_member<float, T>(dd, key));
     case TypeKind::FLOAT_64_TYPE:
@@ -808,14 +808,14 @@ static void set_collection_member(
         dd.set_values<uint32_t>(key, py::cast<std::vector<uint32_t>>(values));
         break;
     case TypeKind::INT_64_TYPE:
-        dd.set_values<rti::core::int64>(
+        dd.set_values<DDS_LongLong>(
                 key,
-                py::cast<std::vector<rti::core::int64>>(values));
+                py::cast<std::vector<DDS_LongLong>>(values));
         break;
     case TypeKind::UINT_64_TYPE:
-        dd.set_values<rti::core::uint64>(
+        dd.set_values<DDS_UnsignedLongLong>(
                 key,
-                py::cast<std::vector<rti::core::uint64>>(values));
+                py::cast<std::vector<DDS_UnsignedLongLong>>(values));
         break;
     case TypeKind::FLOAT_32_TYPE:
         dd.set_values<float>(key, py::cast<std::vector<float>>(values));
