@@ -235,9 +235,7 @@ static py::object py_key_value(
     // Entity lock + gil taken
     IdlDataWriterPyObjectCache* obj_cache = get_py_objects(writer);
     writer.key_value(obj_cache->c_sample_buffer, handle);
-    auto val = obj_cache->create_py_sample();
-    py::gil_scoped_release release_gil_for_native_operation;
-    return val;
+    return obj_cache->create_py_sample();
 }
 
 
