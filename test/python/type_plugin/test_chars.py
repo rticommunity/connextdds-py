@@ -51,7 +51,6 @@ def test_char_plugin():
     assert ts.type is CharTest
 
     dt = ts.dynamic_type
-    print(dt)
     assert dt.name == "CharTest"
 
     assert dt["my_char"].type == dds.CharType()
@@ -77,8 +76,6 @@ def test_char_serialization(char_sample):
     assert idl.from_char(deserialized_sample.unb_char_seq[0]) == "C"
     assert idl.from_char(deserialized_sample.b_char_seq[0]) == "F"
     assert idl.from_wchar(deserialized_sample.wchar_seq[0]) == "倍"
-
-    print(deserialized_sample)
 
 
 def test_char_default_serialization():

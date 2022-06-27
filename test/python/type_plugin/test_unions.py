@@ -33,6 +33,7 @@ class MyUnion:
 
     my_int: int = idl.case(0)
     my_str: str = idl.case(1)
+    my_seq: Sequence[int] = idl.case(5)
     my_point: Point = idl.case(2, 3)
 
 
@@ -43,6 +44,7 @@ class UnionWithDefault:
 
     my_int: int = idl.case(0)
     my_str: str = idl.case(1)
+    my_seq: Sequence[int] = idl.case(5)
     my_point: Point = idl.case(2, is_default=True)
 
 
@@ -57,6 +59,7 @@ class UnionWithDefault2:
 
     my_int: int = idl.case(0)
     my_str: str = idl.case(1)
+    my_seq: Sequence[int] = idl.case(5)
     my_point: Point = idl.case(is_default=True)
 
 
@@ -66,6 +69,7 @@ class Option(IntEnum):
     OPTION3 = 3
     OPTION5 = 5
     OPTION6 = 6
+    OPTION8 = 8
     OPTION9 = 9
 
 
@@ -80,6 +84,7 @@ class UnionWithEnum:
 
     my_int: int = idl.case(Option.OPTION2)
     my_str: str = idl.case(Option.OPTION3)
+    my_seq: Sequence[int] = idl.case(Option.OPTION8)
     my_point: Point = idl.case(Option.OPTION5, Option.OPTION6)
 
 
@@ -89,6 +94,7 @@ class Numbers(IntEnum):
     ONE = 1
     TWO = 2
     THREE = 3
+    EIGHT = 8
 
 
 @idl.union
@@ -98,17 +104,30 @@ class UnionWithEnumDefault:
 
     my_int: int = idl.case(Numbers.ZERO)
     my_str: str = idl.case(Numbers.ONE)
+    my_seq: Sequence[int] = idl.case(Numbers.EIGHT)
     my_point: Point = idl.case(is_default=True)
+
+
+@idl.union
+class UnionWithDefault3:
+    discriminator: idl.int16 = 2
+    value: Union[int, str, Point] = field(default_factory=Point)
+
+    my_str: str = idl.case(1)
+    my_int: int = idl.case(0)
+    my_seq: Sequence[int] = idl.case(5)
+    my_point: Point = idl.case(2, is_default=True)
 
 @idl.alias
 class UnionWithEnumDefaultSeq:
     value: Sequence[UnionWithEnumDefault] = field(default_factory=list)
 
-UNION_TYPES = [MyUnion, UnionWithDefault,
-               UnionWithDefault2, UnionWithEnum, UnionWithEnumDefault]
 
-UNIONS_WITH_DEFAULT = [UnionWithDefault,
-                       UnionWithDefault2, UnionWithEnumDefault]
+UNION_TYPES = [MyUnion, UnionWithDefault, UnionWithDefault2,
+               UnionWithEnum, UnionWithEnumDefault, UnionWithDefault3]
+
+UNIONS_WITH_DEFAULT = [UnionWithDefault, UnionWithDefault2,
+                       UnionWithEnumDefault, UnionWithDefault3]
 
 
 def create_union_sample(UnionType, index):
@@ -207,7 +226,7 @@ def test_union_plugin():
 
     dt = ts.dynamic_type
     assert dt.name == "MyUnion"
-    assert len(dt.members()) == 3
+    assert len(dt.members()) == 4
 
     assert dt.discriminator == dds.Int16Type()
     assert dt["my_int"].type == dds.Int64Type()
@@ -398,6 +417,8 @@ def test_union_serialization(UnionType: type):
     assert sample == ts.deserialize(ts.serialize(sample))
     sample = UnionType(my_int=3)
     assert sample == ts.deserialize(ts.serialize(sample))
+    sample = UnionType(my_seq=idl.to_array(int, [1, 2, 3]))
+    assert sample == ts.deserialize(ts.serialize(sample))
 
 
 @pytest.mark.parametrize("UnionType", UNION_TYPES)
@@ -407,6 +428,7 @@ def test_union_pubsub(shared_participant, UnionType: type):
     fixture.send_and_check(UnionType(my_point=Point(3, 4)))
     fixture.send_and_check(UnionType(my_str="hello"))
     fixture.send_and_check(UnionType(my_int=3))
+    fixture.send_and_check(UnionType(my_seq=idl.to_array(int, [1, 2, 3])))
 
 def test_type_with_unions_pubsub(shared_participant):
     fixture = PubSubFixture(shared_participant, TypeWithUnions, reader_policies=[

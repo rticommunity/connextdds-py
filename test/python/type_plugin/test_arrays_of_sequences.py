@@ -70,7 +70,6 @@ def test_array_serialization(array_sample: ArrayTest):
     buffer = ts.serialize(array_sample)
     deserialized_sample = ts.deserialize(buffer)
     assert array_sample == deserialized_sample
-    print(deserialized_sample)
 
 def test_array_pubsub(shared_participant, array_sample: ArrayTest):
     fixture = PubSubFixture(shared_participant, ArrayTest)

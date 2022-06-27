@@ -16,7 +16,7 @@ import pytest
 def test_sequence(types):
     sample = dds.DynamicData(types["PrimitiveArrayType4"])
     sample["longArray"] = list(range(0, 4))
-    print(sample["longArray"])
+    assert "[0, 1, 2, 3]" in str(sample["longArray"])
     for i in range(0, 4):
         assert i == sample["longArray"][i]
 

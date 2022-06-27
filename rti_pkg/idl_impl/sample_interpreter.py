@@ -884,6 +884,7 @@ class SamplePrograms:
         c_to_py_instruction_map = {}
         py_to_c_instruction_map = {}
         for i, case in enumerate(cases):
+            # The actual Case object is in case.default (case is a dataclass field)
             for label in case.default.labels:
                 c_to_py_instruction_map[label] = c_to_py_instructions[i]
                 py_to_c_instruction_map[label] = py_to_c_instructions[i]
@@ -915,20 +916,27 @@ class SamplePrograms:
 
             c_to_py_instr = None
             py_to_c_instr = None
+
+            # Translate from the member index to the index of the instruction
+            # in the XCDR initialization program. This is the argument required
+            # to manipulate individual member (e.g. in resize_member) in the
+            # C type using the XCDR interpreter.
+            plugin_instruction_index = type_plugin.get_instruction_index_from_member_index(i)
+
             if reflection_utils.is_primitive(field_type):
                 c_to_py_instr = CopyPrimitiveToPyInstruction(
-                    field_name, is_optional=is_optional, field_index=i)
+                    field_name, is_optional=is_optional, field_index=plugin_instruction_index)
                 py_to_c_instr = CopyPrimitiveToCInstruction(
-                    field_name, is_optional=is_optional, field_index=i)
+                    field_name, is_optional=is_optional, field_index=plugin_instruction_index)
             elif reflection_utils.is_enum(field_type):
                 c_to_py_instr = CopyInt32ToIntEnumInstruction(
                     field_name, enum_type=field_type, is_optional=is_optional)
                 py_to_c_instr = CopyIntEnumToInt32Instruction(
-                    field_name, field_index=i, is_optional=is_optional)
+                    field_name, field_index=plugin_instruction_index, is_optional=is_optional)
             elif field_type is str:
                 c_to_py_instr, py_to_c_instr = self._create_string_instructions(
                     field_name,
-                    field_index=i,
+                    field_index=plugin_instruction_index,
                     is_optional=is_optional,
                     field_factory=field_factory,
                     string_annotations=current_annotations)
@@ -947,7 +955,7 @@ class SamplePrograms:
                     c_to_py_instr, py_to_c_instr = self._create_sequence_instructions(
                         type_plugin,
                         field,
-                        field_index=i,
+                        field_index=plugin_instruction_index,
                         is_optional=is_optional,
                         field_factory=field_factory,
                         sequence_annotations=current_annotations)
@@ -959,7 +967,7 @@ class SamplePrograms:
                     sample_program=field_type.type_support._sample_programs.c_to_py_program)
                 py_to_c_instr = CopyAggregationToCInstruction(
                     field_name,
-                    field_index=i,
+                    field_index=plugin_instruction_index,
                     is_optional=is_optional,
                     sample_program=field_type.type_support._sample_programs.py_to_c_program)
 

@@ -195,6 +195,15 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             py::arg("member_index"),
             py::arg("new_size"),
             py::call_guard<py::gil_scoped_acquire>());
+
+    cls.def(
+            "get_instruction_index_from_member_index",
+            [](const TypePlugin& self, uint32_t member_index) -> uint32_t {
+                return self.type_plugin->get_instruction_index_from_member_index(
+                        member_index);
+            },
+            py::arg("member_index"),
+            py::call_guard<py::gil_scoped_release>());
 }
 
 template<>
