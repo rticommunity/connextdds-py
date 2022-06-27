@@ -952,24 +952,43 @@ void init_dds_datawriter_write_methods(PyDataWriterClass<T>& cls)
             "Registers instance with parameters.");
 
     //
-    // key/instance getters
+    // instance getter
     //
 
+    cls.def("lookup_instance",
+            &WriteImpl::py_lookup_instance,
+            py::arg("key_holder"),
+            py::call_guard<GilPolicy>(),
+            "Retrieve the instance handle that corresponds to an instance "
+            "key_holder");
+}
+
+template<typename T>
+void init_dds_datawriter_key_value_methods(PyDataWriterClass<T> cls)
+{
+    using PyDataWriter = PyDataWriter<T>;
+    using GilPolicy = py::gil_scoped_release;
+    
     cls.def("key_value",
             (T & (PyDataWriter::*) (T&, const dds::core::InstanceHandle&) )
                     & PyDataWriter::key_value,
             py::arg("key_holder"),
             py::arg("handle"),
             py::call_guard<GilPolicy>(),
-            "Retrieve the instance key that corresponds to an instance "
+            "Set the instance key that corresponds to an instance "
             "handle.");
 
-    cls.def("lookup_instance",
-            &PyDataWriter::lookup_instance,
-            py::arg("key_holder"),
-            py::call_guard<GilPolicy>(),
-            "Retrieve the instance handle that corresponds to an instance "
-            "key_holder");
+    cls.def(
+            "key_value",
+            [](PyDataWriter& dw, const dds::core::InstanceHandle& handle) {
+                T value;
+                dw.key_value(value, handle);
+                return value;
+            },
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance key that corresponds to an instance "
+            "handle.");
 }
 
 template<typename T>
@@ -1359,6 +1378,13 @@ struct DefaultWriteImpl {
                 sample,
                 std::forward<ExtraArgs>(extra_args)...);
     }
+    
+    static dds::core::InstanceHandle py_lookup_instance(
+            PyDataWriter<T>& writer,
+            const py_sample& sample)
+    {
+        return writer.lookup_instance(sample);
+    }
 };
 
 template<typename T>
@@ -1367,6 +1393,7 @@ void init_dds_typed_datawriter_template(PyDataWriterClass<T>& cls)
     init_dds_datawriter_constructors(cls);
     init_dds_datawriter_untyped_methods(cls);
     init_dds_datawriter_write_methods<T, DefaultWriteImpl<T>>(cls);
+    init_dds_datawriter_key_value_methods(cls);
     init_dds_datawriter_async_write_methods(cls);
 
 #if rti_connext_version_gte(6, 0, 0, 0)
@@ -1376,17 +1403,6 @@ void init_dds_typed_datawriter_template(PyDataWriterClass<T>& cls)
             py::call_guard<py::gil_scoped_release>(),
             "Create data of the writer's associated type and initialize it.");
 #endif
-    cls.def(
-            "key_value",
-            [](PyDataWriter<T>& dw, const dds::core::InstanceHandle& handle) {
-                T value;
-                dw.key_value(value, handle);
-                return value;
-            },
-            py::arg("handle"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Retrieve the instance key that corresponds to an instance "
-            "handle.");
 }
 
 template<typename T>

@@ -11,7 +11,7 @@
 
 import os
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from dataclasses import fields
 from enum import IntEnum
 import inspect
@@ -35,13 +35,15 @@ and subscribe to them.
 class IdlValueGenerator:
     """Class for creating data samples with test values given an IDL type"""
 
-    def __init__(self, sample_type: type, max_string_bounds=1000, max_seq_bounds=10):
+    def __init__(self, sample_type: type, max_string_bounds=1000, max_seq_bounds=10, keys_only=False):
         """Creates an IdlValueGenerator for the given type"""
 
         self.sample_type = sample_type
-        self.dynamic_type = idl.get_type_support(sample_type).dynamic_type
+        self.type_support = idl.get_type_support(sample_type)
+        self.dynamic_type = self.type_support.dynamic_type
         self.max_string_bounds = max_string_bounds
         self.max_seq_bounds = max_seq_bounds
+        self.keys_only = keys_only
 
     def create_test_data(self, seed: int = 0) -> Any:
         """Returns an instance of value of the type given to the constructor.
@@ -55,8 +57,8 @@ class IdlValueGenerator:
     def _get_sequence_type_bounds_annotation(self, seq_name: str):
         """Private member function used to determine a sequences max length"""
         # You must check that the type is a sequence before calling this
-        ts = idl.get_type_support(self.sample_type)
-        member_annotations = ts.member_annotations.get(seq_name, [])
+        member_annotations = self.type_support.member_annotations.get(
+            seq_name, [])
         array_annotation = annotations.find_annotation(
             member_annotations, annotations.ArrayAnnotation)
         if array_annotation.is_array:
@@ -119,7 +121,7 @@ class IdlValueGenerator:
         """Private local function used to generate enum values"""
         return next(islice(cycle(enum_type), seed, seed + 1))
 
-    def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
+    def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, keys_only, seed: int):
         """Private local function used to generate sequence values"""
         if field_factory not in [None, list] and type(field_factory) not in [ListFactory, PrimitiveArrayFactory, ValueListFactory]:
             return field_factory()
@@ -129,8 +131,7 @@ class IdlValueGenerator:
 
         length = self._get_sequence_type_length(field_name, seed)
         seq = [self._generate_value_from_seed(sample_type, reflection_utils.get_underlying_type(
-            member_type), field_name, None, seed + x) for x in range(0, length)]
-
+            member_type), field_name, None, seed + x, keys_only) for x in range(0, length)]
         return self._make_sequence_from_list(field_factory, seq)
 
     def _generate_str_seq_from_seed(self, field_name: str, field_factory, seed: int):
@@ -141,8 +142,9 @@ class IdlValueGenerator:
             field_factory,
             [self._generate_string_from_seed(str_length, seed + x) for x in range(0, seq_length)])
 
-    def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int):
+    def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int, keys_only=False):
         """Recursive private function used to generate the values given a type"""
+
         if member_type is bool:
             return seed % 2 == 0
         elif reflection_utils.is_primitive(member_type):
@@ -162,14 +164,23 @@ class IdlValueGenerator:
             # If the seed is even we will fill the optional type
             if seed % 2 == 0:
                 return self._generate_value_from_seed(
-                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed)
+                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed, self.keys_only)
             else:
                 return None
         elif reflection_utils.is_sequence_type(member_type):
-            return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, seed)
+            return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, self.keys_only, seed)
         elif reflection_utils.is_constructed_type(member_type):
-            return IdlValueGenerator(member_type)._create_test_data_impl(
-                member_type, seed)
+            # Here there is a special case if we are only generating keys. If
+            # the inner type has keys and this field is a key then we only want 
+            # to generate those, else generate the whole structure
+            generate_keys = keys_only and has_keys(
+                member_type) and is_field_key(sample_type, field_name)
+            return IdlValueGenerator(
+                member_type,
+                max_seq_bounds=self.max_seq_bounds,
+                max_string_bounds=self.max_string_bounds,
+                keys_only=generate_keys)._create_test_data_impl(
+                    member_type, seed)
         else:
             raise TypeError(
                 f"unknown type {str(member_type)} given to generator")
@@ -186,8 +197,24 @@ class IdlValueGenerator:
         value = sample_type()
 
         for field in fields(sample_type):
-            setattr(value, field.name, self._generate_value_from_seed(
-                sample_type, field.type, field.name, field.default_factory, seed))
+            if self.keys_only:
+                # A member is part of the key if annotated or when the type
+                # doesn't have any keys(the whole sample is the key)
+                is_key = not has_keys(sample_type) or is_field_key(
+                    sample_type, field.name)
+                if not is_key:
+                    continue
+            val = self._generate_value_from_seed(
+                sample_type,
+                field.type,
+                field.name,
+                field.default_factory,
+                seed,
+                keys_only=self.keys_only)
+            if val is not None or reflection_utils.is_optional_type(field.type):
+                # The only time val will return None is if the type is optional
+                # or if it is a keyed type with nested keys
+                setattr(value, field.name, val)
             seed += 1
         return value
 
@@ -209,6 +236,46 @@ class IdlValueGenerator:
     def _is_alias_type(self) -> bool:
         """Private function used to check if this is an alias"""
         return type(self.dynamic_type) is dds.AliasType
+
+
+def is_field_key(t: type, field_name: str) -> bool:
+    """Function used to check if a field is a key"""
+
+    type_support = idl.get_type_support(t)
+    member_annotations = type_support.member_annotations.get(
+        field_name, [])
+    key_annotation = annotations.find_annotation(
+        member_annotations, annotations.KeyAnnotation)
+    return key_annotation.value
+
+
+def has_keys(t: Any) -> bool:
+    """Function used to check if this type has a key"""
+    for field in fields(t):
+        if is_field_key(t, field.name):
+            return True
+    return False
+
+
+def keys_equal(a: Any, b: Any) -> bool:
+    """Function used to determine if two values have the same keys"""
+    if type(a) is not type(b):
+        return False
+
+    def key_equal_helper(a: Any, b: Any) -> bool:
+        type_has_keys = has_keys(type(a))
+        for field in fields(type(a)):
+            if reflection_utils.is_constructed_type(field.type):
+                if has_keys(getattr(a, field.name)) or is_field_key(type(a), field.name):
+                    if not key_equal_helper(getattr(a, field.name), getattr(b, field.name)):
+                        return False
+            is_key = not type_has_keys or is_field_key(type(a), field.name)
+            if is_key:
+                if getattr(a, field.name) != getattr(b, field.name):
+                    return False
+        return True
+
+    return key_equal_helper(a, b)
 
 # --- Wait test utilitites -----------------------------------------------------
 
@@ -327,6 +394,7 @@ def _create_writer(topic, type, writer_qos):
 def _is_idl_type(type):
     return inspect.getmodule(type).__name__ != "rti.connextdds"
 
+
 class PubSubFixture:
     def __init__(
         self,
@@ -370,6 +438,9 @@ class PubSubFixture:
             reader_qos << dds.History.keep_all
             for policy in reader_policies:
                 reader_qos << policy
+            if has_unbound_member and \
+                    not reader_qos.property.exists('dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'):
+                reader_qos.property['dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
             if content_filter is not None:
                 cft_name = "Filtered " + self.topic.name
                 if type(content_filter) == str:
