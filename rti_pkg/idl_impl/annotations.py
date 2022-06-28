@@ -73,6 +73,17 @@ class CharEncoding(IntEnum):
 class CharEncodingAnnotation:
     value: CharEncoding = CharEncoding.UTF8
 
+
+class AllowedDataRepresentationFlags(IntEnum):
+    XCDR1 = 0x01
+    XCDR2 = 0x02
+
+
+@dataclass
+class AllowedDataRepresentationAnnotation:
+    value: AllowedDataRepresentationFlags = AllowedDataRepresentationFlags.XCDR1 \
+        | AllowedDataRepresentationFlags.XCDR2
+
 @dataclass
 class ElementAnnotations:
     value: List[Any] = field(default_factory=list)

@@ -15,13 +15,18 @@ from dataclasses import field
 import rti.connextdds as dds
 import rti.idl as idl
 
+from rti.idl_impl.annotations import AllowedDataRepresentationAnnotation, AllowedDataRepresentationFlags
+
 import pytest
 from common_types import Point
 from test_utils.fixtures import *
 
 
 @idl.struct(
-    type_annotations=[idl.mutable],
+    type_annotations=[
+        idl.mutable,
+        idl.allowed_data_representation(xcdr2=True, xcdr1=False)
+    ],
     member_annotations={
         'my_seq': [idl.bound(123), idl.id(2)],
         'my_key': [idl.key],
@@ -80,6 +85,11 @@ def test_mutable_annotation(dt):
     assert dt.extensibility_kind == dds.ExtensibilityKind.MUTABLE
     assert dt["my_seq"].type.content_type.extensibility_kind == dds.ExtensibilityKind.EXTENSIBLE
 
+
+def test_allowed_data_representation():
+    ts = idl.get_type_support(AnnotationsTest)
+    assert AllowedDataRepresentationAnnotation(
+        AllowedDataRepresentationFlags.XCDR2) in ts.type_annotations
 
 def test_id_annotation(dt):
     assert dt["my_seq"].id == 2

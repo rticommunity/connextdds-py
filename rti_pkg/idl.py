@@ -95,6 +95,13 @@ mutable = annotations.ExtensibilityAnnotation(
 final = annotations.ExtensibilityAnnotation(
     rti.connextdds.ExtensibilityKind.FINAL)
 
+
+def allowed_data_representation(xcdr1=True, xcdr2=True):
+    """Type annotation that specifies which serialized data representation the type supports"""
+    value = annotations.AllowedDataRepresentationFlags.XCDR1 if xcdr1 else 0
+    value |= annotations.AllowedDataRepresentationFlags.XCDR2 if xcdr2 else 0
+    return annotations.AllowedDataRepresentationAnnotation(value)
+
 # --- Union cases -------------------------------------------------------------
 
 
