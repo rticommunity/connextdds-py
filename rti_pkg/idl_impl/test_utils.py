@@ -183,7 +183,7 @@ class IdlValueGenerator:
             else:
                 bound = bound_annotation.value
             return self._generate_string_from_seed(bound, seed)
-        elif self._is_enum_type(member_type):
+        elif is_enum_type(member_type):
             return self._generate_enum_from_seed(member_type, seed)
         elif reflection_utils.is_optional_type(member_type):
             # If the seed is even we will fill the optional type
@@ -196,7 +196,7 @@ class IdlValueGenerator:
             return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, self.keys_only, seed)
         elif reflection_utils.is_constructed_type(member_type):
             # Here there is a special case if we are only generating keys. If
-            # the inner type has keys and this field is a key then we only want 
+            # the inner type has keys and this field is a key then we only want
             # to generate those, else generate the whole structure
             generate_keys = keys_only and has_keys(
                 member_type) and is_field_key(sample_type, field_name)
@@ -215,7 +215,7 @@ class IdlValueGenerator:
         if sample_type is None:
             sample_type = self.sample_type
 
-        if self._is_enum_type(sample_type):
+        if is_enum_type(sample_type):
             # Enums are a special case because they do not have a default ctor
             return self._generate_enum_from_seed(sample_type, seed)
 
@@ -257,10 +257,6 @@ class IdlValueGenerator:
                 arr[i] = lst[i]
             return arr
 
-    def _is_enum_type(self, sample_type: type) -> bool:
-        """Private function used to check if a type is an enum"""
-        return inspect.isclass(sample_type) and issubclass(sample_type, IntEnum)
-
     def _is_alias_type(self) -> bool:
         """Private function used to check if this is an alias"""
         return isinstance(self.dynamic_type, dds.AliasType)
@@ -298,6 +294,10 @@ class IdlValueGenerator:
             return field_type
 
 
+def is_enum_type(sample_type: type) -> bool:
+    """function used to check if a type is an enum"""
+    return inspect.isclass(sample_type) and issubclass(sample_type, IntEnum)
+
 
 def is_field_key(t: type, field_name: str) -> bool:
     """Function used to check if a field is a key"""
@@ -312,6 +312,9 @@ def is_field_key(t: type, field_name: str) -> bool:
 
 def has_keys(t: Any) -> bool:
     """Function used to check if this type has a key"""
+    if is_enum_type(t):
+        # Enums cannot have a key
+        return False
     for field in fields(t):
         if is_field_key(t, field.name):
             return True
@@ -326,7 +329,7 @@ def keys_equal(a: Any, b: Any) -> bool:
     def key_equal_helper(a: Any, b: Any) -> bool:
         type_has_keys = has_keys(type(a))
         for field in fields(type(a)):
-            if reflection_utils.is_constructed_type(field.type):
+            if reflection_utils.is_constructed_type(field.type) and not is_enum_type(field.type):
                 if has_keys(getattr(a, field.name)) or is_field_key(type(a), field.name):
                     if not key_equal_helper(getattr(a, field.name), getattr(b, field.name)):
                         return False
