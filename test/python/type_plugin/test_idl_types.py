@@ -53,6 +53,12 @@ idl_types = [
     common_types.UnboundString,
     common_types.OptionalsTest,
     AnnotationsTest,
+    common_types.UnionTest,
+    common_types.UnionWithDefault,
+    common_types.UnionWithDefault2,
+    common_types.UnionWithEnum,
+    common_types.UnionWithEnumDefault,
+    common_types.UnionWithEnumDefaultSeq,
     common_types.ArrayTest,
     common_types.SequenceOfSeqTest,
     common_types.StrSequenceTest,
@@ -60,6 +66,7 @@ idl_types = [
     common_types.EnumTest,
     common_types.SequenceAliasTest,
     common_types.KeyTest,
+    common_types.LongUnionType,
 ]
 
 

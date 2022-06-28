@@ -13,6 +13,7 @@ from enum import IntEnum, auto
 import rti.idl as idl
 from dataclasses import field
 from typing import *
+from enum import IntEnum
 
 ## TODO: Remove all comments from this file
 
@@ -104,6 +105,91 @@ class OptionalsTest:
     opt_complex_struct: Optional[Line] = None
 
 
+@idl.union
+class UnionTest:
+    discriminator: idl.int16 = 0
+    value: Union[int, str, Point, Person] = 0
+
+    my_int: int = idl.case(0)
+    my_str: str = idl.case(1)
+    my_point: Point = idl.case(2, 3)
+    my_person: Person = idl.case(4, 5)
+    
+
+@idl.union
+class UnionWithDefault:
+    discriminator: idl.int16 = 2
+    value: Union[int, str, Point] = field(default_factory=Point)
+
+    my_int: int = idl.case(0)
+    my_str: str = idl.case(1)
+    my_point: Point = idl.case(2, is_default=True)
+
+
+@idl.union(
+    member_annotations={
+        "my_str": [idl.bound(10)]
+    }
+)
+class UnionWithDefault2:
+    discriminator: idl.int16 = 2
+    value: Union[int, str, Point] = field(default_factory=Point)
+
+    my_int: int = idl.case(0)
+    my_str: str = idl.case(1)
+    my_point: Point = idl.case(is_default=True)
+
+
+@idl.enum(type_annotations=[idl.mutable])
+class Option(IntEnum):
+    OPTION2 = 2
+    OPTION3 = 3
+    OPTION5 = 5
+    OPTION6 = 6
+    OPTION9 = 9
+
+
+@idl.union(
+    member_annotations={
+        "my_str": [idl.bound(10)]
+    }
+)
+class UnionWithEnum:
+    discriminator: Option = Option.OPTION2
+    value: Union[int, str, Point] = 0
+
+    my_int: int = idl.case(Option.OPTION2)
+    my_str: str = idl.case(Option.OPTION3)
+    my_point: Point = idl.case(Option.OPTION5, Option.OPTION6)
+
+
+@idl.enum
+class Numbers(IntEnum):
+    ZERO = 0
+    ONE = 1
+    TWO = 2
+    THREE = 3
+
+
+@idl.union
+class UnionWithEnumDefault:
+    discriminator: Numbers = Numbers.TWO
+    value: Union[int, str, Point] = field(default_factory=Point)
+
+    my_int: int = idl.case(Numbers.ZERO)
+    my_str: str = idl.case(Numbers.ONE)
+    my_point: Point = idl.case(is_default=True)
+
+
+@idl.alias
+class UnionWithEnumDefaultSeqAlias:
+    value: Sequence[UnionWithEnumDefault] = field(default_factory=list)
+
+
+@idl.struct
+class UnionWithEnumDefaultSeq:
+    x: UnionWithEnumDefaultSeqAlias = field(
+        default_factory=UnionWithEnumDefaultSeqAlias)
 @idl.struct(
     member_annotations={
         'prices': [idl.bound(4)],
@@ -294,3 +380,20 @@ class SequenceAliasTest:
 class KeyTest:
     key: int = 0
     value: int = 0
+    
+
+@idl.union(
+    member_annotations={
+        'string_case_10_member': [idl.bound(20)],
+        'float_arr_case_15_member': [idl.array([3])]
+    }
+)
+class LongUnionType:
+
+    discriminator: idl.int32 = 0
+
+    value: Union[idl.int16, str, Sequence[idl.float32]] = 0
+
+    short_case_0_1_member: idl.int16 = idl.case(0, 1)
+    string_case_10_member: str = idl.case(10)
+    float_arr_case_15_member: Sequence[idl.float32] = idl.case(15)

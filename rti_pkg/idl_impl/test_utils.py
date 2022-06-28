@@ -11,15 +11,19 @@
 
 import os
 import time
+
 from typing import Any, Optional, Union
-from dataclasses import fields
+from dataclasses import fields, MISSING
 from enum import IntEnum
 import inspect
 import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
+from rti.idl_impl.reflection_utils import get_args
+from rti.idl_impl.type_plugin import TypeSupportKind
 from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
+from rti.idl_impl.unions import union_cases
 
 import rti.connextdds as dds
 
@@ -71,7 +75,7 @@ class IdlValueGenerator:
     def _get_sequence_type_length(self, seq_name: str, seed: int):
         """Private member function used to determine the length of a sequence"""
         bound = self._get_sequence_type_bounds_annotation(seq_name)
-        if type(bound) is annotations.ArrayAnnotation:
+        if isinstance(bound, annotations.ArrayAnnotation):
             return bound.total_size
         return seed % bound.value % self.max_seq_bounds
 
@@ -123,7 +127,7 @@ class IdlValueGenerator:
 
     def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, keys_only, seed: int):
         """Private local function used to generate sequence values"""
-        if field_factory not in [None, list] and type(field_factory) not in [ListFactory, PrimitiveArrayFactory, ValueListFactory]:
+        if field_factory not in [None, list, MISSING] and isinstance(field_factory, (ListFactory, PrimitiveArrayFactory, ValueListFactory)):
             return field_factory()
 
         if reflection_utils.get_underlying_type(member_type) is str:
@@ -142,6 +146,27 @@ class IdlValueGenerator:
             field_factory,
             [self._generate_string_from_seed(str_length, seed + x) for x in range(0, seq_length)])
 
+    def _generate_union_from_seed(self, sample_type: type, seed: int):
+        union_case_list = union_cases(sample_type)
+        index = seed % len(union_case_list)
+        value_name = union_case_list[index].name
+        value_type = get_args(union_case_list[index].type)[0]
+        if reflection_utils.is_constructed_type(value_type):
+            value_value = IdlValueGenerator(
+                value_type).create_test_data(seed)
+        else:
+            value_value = self._generate_value_from_seed(
+                sample_type,
+                value_type,
+                value_name,
+                self._get_field_factory(union_case_list[index]),
+                seed)
+        union = sample_type()
+
+        # upon setting the attribute the discriminator is set properly
+        setattr(union, value_name, value_value)
+        return union
+
     def _generate_value_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, seed: int, keys_only=False):
         """Recursive private function used to generate the values given a type"""
 
@@ -153,7 +178,7 @@ class IdlValueGenerator:
         elif member_type is str:
             bound_annotation = self._get_sequence_type_bounds_annotation(
                 field_name)
-            if type(bound_annotation) is annotations.ArrayAnnotation:
+            if isinstance(bound_annotation, annotations.ArrayAnnotation):
                 bound = bound_annotation.total_size
             else:
                 bound = bound_annotation.value
@@ -194,6 +219,9 @@ class IdlValueGenerator:
             # Enums are a special case because they do not have a default ctor
             return self._generate_enum_from_seed(sample_type, seed)
 
+        if idl.get_type_support(sample_type).kind == TypeSupportKind.UNION:
+            return self._generate_union_from_seed(sample_type, seed)
+
         value = sample_type()
 
         for field in fields(sample_type):
@@ -208,7 +236,7 @@ class IdlValueGenerator:
                 sample_type,
                 field.type,
                 field.name,
-                field.default_factory,
+                self._get_field_factory(field),
                 seed,
                 keys_only=self.keys_only)
             if val is not None or reflection_utils.is_optional_type(field.type):
@@ -221,7 +249,7 @@ class IdlValueGenerator:
     def _make_sequence_from_list(self, field_factory, lst):
         """Private function used to create a sequence from a list using its factory"""
         # will return either a list or an array depending on the factory
-        if field_factory is list or field_factory is None:
+        if field_factory in [list, None, MISSING] or isinstance(field_factory, ListFactory):
             return lst
         else:
             arr = field_factory()
@@ -235,7 +263,40 @@ class IdlValueGenerator:
 
     def _is_alias_type(self) -> bool:
         """Private function used to check if this is an alias"""
-        return type(self.dynamic_type) is dds.AliasType
+        return isinstance(self.dynamic_type, dds.AliasType)
+
+    def _get_field_factory(self, field):
+        ts = idl.get_type_support(self.sample_type)
+        member_annotations = ts.member_annotations.get(field.name, [])
+        if field.default_factory is not MISSING:
+            return field.default_factory
+
+        field_type = reflection_utils.remove_classvar(field.type)
+        if reflection_utils.is_optional_type(field_type):
+            field_type = reflection_utils.get_underlying_type(field_type)
+
+        if reflection_utils.is_primitive_or_enum(field_type):
+            return None
+        if field_type is str:
+            return None
+
+        if reflection_utils.is_sequence_type(field_type):
+            # In the Python type there is no distinction between an array
+            # and a sequence; the ArrayAnnotation makes it an array.
+            array_info = annotations.find_annotation(
+                member_annotations, annotations.ArrayAnnotation)
+            element_type = reflection_utils.get_underlying_type(field_type)
+            if array_info.is_array:
+                return PrimitiveArrayFactory(element_type, array_info.total_size)
+            else:
+                if reflection_utils.is_primitive_or_enum(element_type):
+                    return idl.array_factory(element_type)
+                else:
+                    return list
+
+        if reflection_utils.is_constructed_type(field_type):
+            return field_type
+
 
 
 def is_field_key(t: type, field_name: str) -> bool:
@@ -329,7 +390,7 @@ class Wait:
 
 wait = Wait()
 
-# --- Pub/sub test utilitites --------------------------------------------------
+# --- Pub/sub test utilities --------------------------------------------------
 
 # We subtract 1024 from the max serialized size because the core does some
 # operations on the returned result that may end up adding some additional byte
