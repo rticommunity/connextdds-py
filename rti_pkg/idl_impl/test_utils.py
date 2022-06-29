@@ -95,22 +95,16 @@ class IdlValueGenerator:
     def _get_str_sequence_type_length(self, seq_name: str, seed: int):
         """Private member function used to determine the length of a string sequence"""
         seq_length = self._get_sequence_type_length(seq_name, seed)
-        if self._is_alias_type():
-            annotation = annotations.find_annotation(
-                self.type_support.member_annotations.get("value"), annotations.ElementAnnotations)
-            if annotation is None:
-                # If there's no annotation then it is unbounded
-                str_bound = idl.unbounded.value
-            else:
-                str_bound = annotation.value[0].value
-        else:
-            str_bound = self.dynamic_type[seq_name].type.content_type.bounds
+        element_annotations = annotations.find_annotation(
+            self.type_support.member_annotations.get(seq_name),
+            annotations.ElementAnnotations)
+        str_bound = annotations.find_annotation(
+            element_annotations.value, annotations.BoundAnnotation)
 
-        # calculate the length of the strings
-        if str_bound == idl.unbounded.value:
+        if str_bound == idl.unbounded:
             str_length = seed % self.max_string_bounds
         else:
-            str_length = (seed % str_bound) % self.max_string_bounds
+            str_length = (seed % str_bound.value) % self.max_string_bounds
 
         return (seq_length, str_length)
 
