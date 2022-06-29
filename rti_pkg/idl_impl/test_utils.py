@@ -20,7 +20,7 @@ import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
 from rti.idl_impl.reflection_utils import get_args
 from rti.idl_impl.type_plugin import TypeSupportKind
-from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory
+from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory, get_optimal_collection_factory
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
 from rti.idl_impl.unions import union_cases
@@ -198,7 +198,7 @@ class IdlValueGenerator:
             # If the seed is even we will fill the optional type
             if seed % 2 == 0:
                 return self._generate_value_from_seed(
-                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed, self.keys_only)
+                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, field_factory, seed, self.keys_only)
             else:
                 return None
         elif reflection_utils.is_sequence_type(member_type):
@@ -291,13 +291,10 @@ class IdlValueGenerator:
             array_info = annotations.find_annotation(
                 member_annotations, annotations.ArrayAnnotation)
             element_type = reflection_utils.get_underlying_type(field_type)
-            if array_info.is_array:
-                return PrimitiveArrayFactory(element_type, array_info.total_size)
-            else:
-                if reflection_utils.is_primitive_or_enum(element_type):
-                    return idl.array_factory(element_type)
-                else:
-                    return list
+            dimensions = array_info.dimensions if array_info.is_array else 0
+            return get_optimal_collection_factory(
+                element_type,
+                dimensions)
 
         if reflection_utils.is_constructed_type(field_type):
             return field_type
