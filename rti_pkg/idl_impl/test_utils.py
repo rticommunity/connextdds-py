@@ -20,7 +20,7 @@ import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
 from rti.idl_impl.reflection_utils import get_args
 from rti.idl_impl.type_plugin import TypeSupportKind
-from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory
+from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory, get_optimal_collection_factory
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
 from rti.idl_impl.unions import union_cases
@@ -95,13 +95,16 @@ class IdlValueGenerator:
     def _get_str_sequence_type_length(self, seq_name: str, seed: int):
         """Private member function used to determine the length of a string sequence"""
         seq_length = self._get_sequence_type_length(seq_name, seed)
-        str_bound = self.dynamic_type[seq_name].type.content_type.bounds
+        element_annotations = annotations.find_annotation(
+            self.type_support.member_annotations.get(seq_name),
+            annotations.ElementAnnotations)
+        str_bound = annotations.find_annotation(
+            element_annotations.value, annotations.BoundAnnotation)
 
-        # calculate the length of the strings
-        if str_bound == idl.unbounded.value:
+        if str_bound == idl.unbounded:
             str_length = seed % self.max_string_bounds
         else:
-            str_length = (seed % str_bound) % self.max_string_bounds
+            str_length = (seed % str_bound.value) % self.max_string_bounds
 
         return (seq_length, str_length)
 
@@ -183,20 +186,20 @@ class IdlValueGenerator:
             else:
                 bound = bound_annotation.value
             return self._generate_string_from_seed(bound, seed)
-        elif self._is_enum_type(member_type):
+        elif reflection_utils.is_enum(member_type):
             return self._generate_enum_from_seed(member_type, seed)
         elif reflection_utils.is_optional_type(member_type):
             # If the seed is even we will fill the optional type
             if seed % 2 == 0:
                 return self._generate_value_from_seed(
-                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, None, seed, self.keys_only)
+                    sample_type, reflection_utils.get_underlying_type(member_type), field_name, field_factory, seed, self.keys_only)
             else:
                 return None
         elif reflection_utils.is_sequence_type(member_type):
             return self._generate_seq_from_seed(sample_type, member_type, field_name, field_factory, self.keys_only, seed)
         elif reflection_utils.is_constructed_type(member_type):
             # Here there is a special case if we are only generating keys. If
-            # the inner type has keys and this field is a key then we only want 
+            # the inner type has keys and this field is a key then we only want
             # to generate those, else generate the whole structure
             generate_keys = keys_only and has_keys(
                 member_type) and is_field_key(sample_type, field_name)
@@ -215,7 +218,7 @@ class IdlValueGenerator:
         if sample_type is None:
             sample_type = self.sample_type
 
-        if self._is_enum_type(sample_type):
+        if reflection_utils.is_enum(sample_type):
             # Enums are a special case because they do not have a default ctor
             return self._generate_enum_from_seed(sample_type, seed)
 
@@ -257,10 +260,6 @@ class IdlValueGenerator:
                 arr[i] = lst[i]
             return arr
 
-    def _is_enum_type(self, sample_type: type) -> bool:
-        """Private function used to check if a type is an enum"""
-        return inspect.isclass(sample_type) and issubclass(sample_type, IntEnum)
-
     def _is_alias_type(self) -> bool:
         """Private function used to check if this is an alias"""
         return isinstance(self.dynamic_type, dds.AliasType)
@@ -286,17 +285,13 @@ class IdlValueGenerator:
             array_info = annotations.find_annotation(
                 member_annotations, annotations.ArrayAnnotation)
             element_type = reflection_utils.get_underlying_type(field_type)
-            if array_info.is_array:
-                return PrimitiveArrayFactory(element_type, array_info.total_size)
-            else:
-                if reflection_utils.is_primitive_or_enum(element_type):
-                    return idl.array_factory(element_type)
-                else:
-                    return list
+            dimensions = array_info.dimensions if array_info.is_array else 0
+            return get_optimal_collection_factory(
+                element_type,
+                dimensions)
 
         if reflection_utils.is_constructed_type(field_type):
             return field_type
-
 
 
 def is_field_key(t: type, field_name: str) -> bool:
@@ -326,7 +321,7 @@ def keys_equal(a: Any, b: Any) -> bool:
     def key_equal_helper(a: Any, b: Any) -> bool:
         type_has_keys = has_keys(type(a))
         for field in fields(type(a)):
-            if reflection_utils.is_constructed_type(field.type):
+            if reflection_utils.is_constructed_type(field.type) and not reflection_utils.is_enum(field.type):
                 if has_keys(getattr(a, field.name)) or is_field_key(type(a), field.name):
                     if not key_equal_helper(getattr(a, field.name), getattr(b, field.name)):
                         return False
