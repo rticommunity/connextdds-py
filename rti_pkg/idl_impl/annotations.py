@@ -92,6 +92,9 @@ def find_annotation(annotations, cls, default=None):
     if default is None:
         default = cls()
 
+    if annotations is None:
+        return default
+
     for annotation in annotations:
         if isinstance(annotation, cls):
             return annotation
