@@ -795,7 +795,8 @@ class UnionSampleProgram:
             # The discriminator is always a primitive or enum so we know
             # the instruction is always getattr/setattr
             discriminator = getattr(src, instruction.field_name)
-            setattr(dst, instruction.field_name, discriminator)
+            discriminator_field = instruction.field_name
+            setattr(dst, discriminator_field, discriminator)
 
             instruction = self.instructions.get(
                 discriminator, self.default_instruction)
@@ -809,6 +810,16 @@ class UnionSampleProgram:
                                 instruction.field_factory())
 
                 instruction.execute(dst=dst, src=src)
+
+            # Temporary solution to handle the case where multiple
+            # discriminators select the same case. We need to set it again in
+            # case instruction.execute called the instruction.field_name setter
+            # and selected another discriminator.
+            #
+            # The solution is to not call the setters, but assign to dst.value
+            # (when dst is the Python object).
+            setattr(dst, discriminator_field, discriminator)
+
         except Exception as ex:
             raise FieldSerializationError(instruction.field_name) from ex
 

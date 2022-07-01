@@ -38,6 +38,9 @@ class Worker(Person):
 class Employee(Worker):
     company: str = ""
 
+@idl.struct
+class EmployeeEmpty(Employee):
+    pass
 
 def create_sample():
     return Employee(name="John", age=30, tasks=['Cleaning', 'Coffee'], locations=['Denver', 'San Jose'], company="RTI")
@@ -48,7 +51,7 @@ def sample():
     return create_sample()
 
 
-def test_plugin33():
+def test_plugin():
     ts = idl.get_type_support(Employee)
     assert ts.type is Employee
 
@@ -74,6 +77,13 @@ def test_default_serialization():
     buffer = ts.serialize(Employee())
     deserialized_sample = ts.deserialize(buffer)
     assert Employee() == deserialized_sample
+
+
+def test_default_serialization_empty_struct():
+    ts = idl.get_type_support(EmployeeEmpty)
+    buffer = ts.serialize(EmployeeEmpty())
+    deserialized_sample = ts.deserialize(buffer)
+    assert EmployeeEmpty() == deserialized_sample
 
 
 def test_serialization(sample):

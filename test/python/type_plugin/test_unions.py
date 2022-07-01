@@ -534,3 +534,13 @@ def test_pubsub_union_with_arrays(shared_participant):
     fixture.send_and_check(UnionWithArrays())
     fixture.send_and_check(UnionWithArrays(
         float_array=idl.to_array(idl.float32, [4, 5, 6])))
+
+def test_serialize_alternative_discriminator():
+    sample = MyUnion()
+    sample.my_point = (Point(1, 2), 3)
+    assert sample.discriminator == 3
+
+    ts = idl.get_type_support(MyUnion)
+    deserialized = ts.deserialize(ts.serialize(sample))
+    assert deserialized.discriminator == 3
+    assert deserialized == sample
