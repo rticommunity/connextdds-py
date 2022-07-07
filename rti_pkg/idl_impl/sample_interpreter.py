@@ -355,7 +355,7 @@ class CopyPrimitiveSequenceToListInstruction(Instruction):
         length = len(c_member)
 
         # extend() first is faster than N append() calls
-        py_member.extend([0] * length)
+        py_member.extend(itertools.repeat(0, length))
         for i in range(length):
             py_member[i] = c_elements[i]
 
