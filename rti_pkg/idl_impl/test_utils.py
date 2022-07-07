@@ -24,6 +24,7 @@ from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueLis
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
 from rti.idl_impl.unions import union_cases
+import array
 
 import rti.connextdds as dds
 
@@ -130,7 +131,7 @@ class IdlValueGenerator:
 
     def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, keys_only, seed: int):
         """Private local function used to generate sequence values"""
-        if field_factory not in [None, list, MISSING] and isinstance(field_factory, (ListFactory, PrimitiveArrayFactory, ValueListFactory)):
+        if field_factory not in [None, list, MISSING] and not isinstance(field_factory, (ListFactory, PrimitiveArrayFactory, ValueListFactory)):
             return field_factory()
 
         if reflection_utils.get_underlying_type(member_type) is str:
@@ -254,6 +255,8 @@ class IdlValueGenerator:
         # will return either a list or an array depending on the factory
         if field_factory in [list, None, MISSING] or isinstance(field_factory, ListFactory):
             return lst
+        elif isinstance(field_factory, PrimitiveArrayFactory):
+            return array.array(field_factory.element_type_str, lst)
         else:
             arr = field_factory()
             for i in range(0, len(arr)):
