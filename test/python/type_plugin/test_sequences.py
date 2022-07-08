@@ -240,3 +240,40 @@ def test_sequence_of_sequence_not_supported():
             s: Sequence[Sequence[Point]]
 
     assert "Sequences of sequences are not supported" in str(ex.value)
+
+
+def test_serialize_primitive_list():
+
+    # By default you can serialize a list of primitives even if by default
+    # we deserialize primitive sequences as array.array's for better performance
+    @idl.struct
+    class List1:
+        values: Sequence[int] = field(default_factory=idl.array_factory(int))
+
+    ts = idl.get_type_support(List1)
+    sample = List1([1, 2, 3])
+    result = ts.deserialize(ts.serialize(sample))
+    assert result.values == idl.to_array(int, [1, 2, 3])
+
+    # You're allowed to disable primitive lists before a type is parsed,
+    # which improves performance a bit (it saves an isinstance(member, list),
+    # but now you can only assign arrays.
+    idl.serialization_options.allow_primitive_lists = False
+
+    try:
+        @idl.struct
+        class List2:
+            values: Sequence[int] = field(
+                default_factory=idl.array_factory(int))
+
+        ts = idl.get_type_support(List2)
+        sample = List2([1, 2, 3])
+        with pytest.raises(idl.FieldSerializationError):
+            ts.serialize(sample)
+
+        sample = List2(idl.to_array(int, [1, 2, 3]))
+        result = ts.deserialize(ts.serialize(sample))
+        assert result == sample
+
+    finally:
+        idl.serialization_options.allow_primitive_lists = True

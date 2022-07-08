@@ -138,6 +138,32 @@ to_wchar = type_utils.to_wchar
 from_char = type_utils.from_char
 from_wchar = type_utils.from_wchar
 
+# --- Serialization options ---------------------------------------------------
+
+@dataclasses.dataclass
+class SerializationOptions:
+    """Configures certain global options that control how types are
+    serialized.
+
+    The singleton variable that can be modified is called serialization_options.
+    It must be modified before the definition of the @struct- or
+    @union-decorated types for which the options are to be applied.
+    """
+
+    allow_primitive_lists: bool = True
+
+serialization_options = SerializationOptions()
+
+def _get_sample_program_options(
+    serialization_options: SerializationOptions
+) -> sample_interpreter.SampleProgramOptions:
+    return sample_interpreter.SampleProgramOptions(
+        allow_primitive_lists=serialization_options.allow_primitive_lists)
+
+def _get_current_sample_program_options():
+    return _get_sample_program_options(serialization_options)
+
+
 # --- Decorators --------------------------------------------------------------
 
 
@@ -152,7 +178,8 @@ def struct(cls=None, *, type_annotations=[], member_annotations={}):
             actual_cls,
             idl_impl.TypeSupportKind.STRUCT,
             type_annotations,
-            member_annotations)
+            member_annotations,
+            sample_program_options=_get_current_sample_program_options())
         return actual_cls
     if cls is None:
         # Decorator used with arguments:
@@ -180,7 +207,8 @@ def union(cls=None, *, type_annotations=[], member_annotations={}):
             cls,
             idl_impl.TypeSupportKind.UNION,
             type_annotations,
-            member_annotations)
+            member_annotations,
+            sample_program_options=_get_current_sample_program_options())
 
         return cls
     if cls is None:
@@ -205,7 +233,8 @@ def alias(cls=None, *, annotations=[]):
             actual_cls,
             idl_impl.TypeSupportKind.ALIAS,
             type_annotations=None,
-            member_annotations=member_annotations)
+            member_annotations=member_annotations,
+            sample_program_options=_get_current_sample_program_options())
         return actual_cls
     if cls is None:
         return wrapper
@@ -239,7 +268,7 @@ def enum(cls=None, *, type_annotations=[]):
 _idl_modules = {}
 
 
-def get_module(name: str):
+def get_module(name: str) -> SimpleNamespace:
     """Returns a SimpleNamespace that contains types defined in an IDL module
     for a given name. The syntax is '::MyModule' or '::MyModule::MySubmodule'.
     """

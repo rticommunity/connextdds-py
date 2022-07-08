@@ -19,7 +19,7 @@
 """
 
 from typing import Any, List, Dict, Tuple, Sequence, Callable, Optional
-from dataclasses import fields, MISSING
+from dataclasses import dataclass, fields, MISSING
 import itertools
 import abc
 
@@ -414,6 +414,31 @@ class CopyBufferToSequenceInstruction(CopyListToCInstruction):
             elements_ptr = c_member.get_elements_raw_ptr()
             core_utils.memcpy_from_buffer_object(
                 elements_ptr, py_member, c_member._element_size * length)
+
+
+class CopyBufferOrListToSequenceInstruction(CopyListToCInstruction):
+    """Primitive sequence: Python to C
+
+    Instruction to copy a bounded sequence of primitive types using buffer
+    protocol or a list, depending on what the user provides
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(src, field_name)
+        length = len(py_member)
+        c_member = self.get_c_attr(dst, field_name)
+        self.resize_sequence_member(dst, c_member, length)
+
+        if length > 0:
+            if isinstance(py_member, list):
+                c_elements = c_member.get_elements_ptr()
+                for i in range(length):
+                    c_elements[i] = py_member[i]
+            else:
+                elements_ptr = c_member.get_elements_raw_ptr()
+                core_utils.memcpy_from_buffer_object(
+                    elements_ptr, py_member, c_member._element_size * length)
 
 
 class CopyConstructedSequenceToListInstruction(Instruction):
@@ -827,6 +852,12 @@ class UnionSampleProgram:
         return f"UnionSampleProgram({len(self.instructions)})"
 
 
+@dataclass
+class SampleProgramOptions:
+    allow_primitive_lists: bool = True
+
+DEFAULT_SAMPLE_PROGRAM_OPTIONS = SampleProgramOptions()
+
 class SamplePrograms:
     """Contains the programs to copy a dataclass object to a ctypes object and
     viceversa
@@ -838,8 +869,10 @@ class SamplePrograms:
         c_type: type,
         type_plugin,
         member_annotations,
-        is_union: bool = False
+        is_union: bool = False,
+        options: SampleProgramOptions = DEFAULT_SAMPLE_PROGRAM_OPTIONS
     ):
+        self.options = options
         if reflection_utils.is_enum(py_type):
             self.c_to_py_program, self.py_to_c_program = self._create_enum_programs(
                 py_type, type_plugin)
@@ -1055,11 +1088,18 @@ class SamplePrograms:
                     field_index=field_index,
                     is_optional=is_optional,
                     field_factory=field_factory)
-                py_to_c_instr = CopyBufferToSequenceInstruction(
-                    field_name,
-                    field_index=field_index,
-                    is_optional=is_optional,
-                    container_type_plugin=container_type_plugin)
+                if self.options.allow_primitive_lists:
+                    py_to_c_instr = CopyBufferOrListToSequenceInstruction(
+                        field_name,
+                        field_index=field_index,
+                        is_optional=is_optional,
+                        container_type_plugin=container_type_plugin)
+                else:
+                    py_to_c_instr = CopyBufferToSequenceInstruction(
+                        field_name,
+                        field_index=field_index,
+                        is_optional=is_optional,
+                        container_type_plugin=container_type_plugin)
             else:
                 c_to_py_instr = CopyPrimitiveSequenceToListInstruction(
                     field_name,

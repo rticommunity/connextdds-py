@@ -502,7 +502,13 @@ class TypeSupportKind(Enum):
 class TypeSupport:
     """Support and utility methods for the usage of an IDL type"""
 
-    def __init__(self, idl_type, kind: TypeSupportKind, type_annotations = None, member_annotations=None):
+    def __init__(
+        self,
+        idl_type, kind: TypeSupportKind,
+        type_annotations = None,
+        member_annotations=None,
+        sample_program_options: Optional[sample_interpreter.SampleProgramOptions]=None
+    ):
         self.type = idl_type
 
         # For all types except unions, the object factory for deserialization
@@ -558,7 +564,8 @@ class TypeSupport:
             c_type=self.c_type,
             type_plugin=self._plugin_dynamic_type,
             member_annotations=member_annotations,
-            is_union=is_union)
+            is_union=is_union,
+            options=sample_program_options)
 
     def _create_dynamic_type(self, is_public: bool):
         if self.kind == TypeSupportKind.ENUM:
