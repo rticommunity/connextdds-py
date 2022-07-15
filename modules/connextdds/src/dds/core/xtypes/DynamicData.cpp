@@ -412,64 +412,13 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values)
 }
 
 
-/*
-    EXPERIMENTAL!!!
-
-    std::vector<T>::resize forces initialization of added elements. This
-    workaround relies on compiler optimizations to avoid this forced
-    initialization when the vector template type is a primitive.
- */
-template<typename T>
-static void resize_no_init(std::vector<T>& v, py::ssize_t newSize) {
-    /*
-        A continguous array of this struct must have the same memory layout
-        as a type T array or this optimization will not work (and the assert
-        following the struct definition will fail)
-    */
-    struct vector_no_init_elem {
-        typename std::vector<T>::value_type data;
-        vector_no_init_elem() {}
-    };
-    static_assert(
-        sizeof(vector_no_init_elem[10]) == sizeof(typename std::vector<T>::value_type[10]), 
-        "alignment error");
-
-    /*
-        To make use of this compiler optimization, we will use the allocator
-        from the primitive vector and rebind it for our struct with an empty
-        default constructor. The compiler will optimize away the overhead of
-        default initialization on calls to vector_no_init::resize.
-    */
-    using vector_allocator = 
-        typename std::vector<T>::allocator_type;
-
-    using vector_allocator_traits = 
-        std::allocator_traits<vector_allocator>;
-
-    using no_init_allocator = 
-        typename vector_allocator_traits::template rebind_alloc<vector_no_init_elem>;
-
-    using vector_no_init = std::vector<vector_no_init_elem, no_init_allocator>;
-
-    /*
-        Because the memory layout of std::vector<T> matches that of our vector_no_init
-        we can perform a reinterpret cast on our input argument and use the
-        optimized resize. Note that added vector entries will contain unitialized
-        values, but since this function will only be used when returning vectors filled
-        with values from an existing DynamicData collection, the unitialized values
-        should never be accessible to the calling application.
-    */
-    reinterpret_cast<vector_no_init&>(v).resize(newSize);
-}
-
-
 template<typename V, typename K>
 static std::vector<V> get_collection_buffer_member(
         const DynamicData& dd,
         const K& key) {
     std::vector<V> values;
     auto mi = get_member_info(dd, key);
-    resize_no_init(values, mi.element_count());
+    vector_resize_no_init(values, mi.element_count());
     dd.get_values<V>(key, values);
     return values;
 }
@@ -1655,12 +1604,12 @@ void add_field_type_collection(
                 if (id.index_type == DynamicDataNestedIndex::INT) 
                 {
                     auto mi = get_member_info(parent, id.int_index);
-                    resize_no_init(values, mi.element_count());
+                    vector_resize_no_init(values, mi.element_count());
                     parent.get_values<T>(id.int_index, values);
                 }
                 else {
                     auto mi = get_member_info(parent, id.string_index);
-                    resize_no_init(values, mi.element_count());
+                    vector_resize_no_init(values, mi.element_count());
                     parent.get_values<T>(id.string_index, values);
                 }
                 return values;
@@ -1674,7 +1623,7 @@ void add_field_type_collection(
                      }
                      std::vector<T> values;
                      auto mi = get_member_info(dd, index);
-                     resize_no_init(values, mi.element_count());
+                     vector_resize_no_init(values, mi.element_count());
                      dd.get_values<T>(index, values);
                      return values;
                  },

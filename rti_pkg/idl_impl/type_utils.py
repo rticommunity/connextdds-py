@@ -10,12 +10,13 @@
 #
 
 from dataclasses import dataclass
-from typing import Any, Sequence, Union, ClassVar, List
+from typing import Any, Callable, Sequence, Union, ClassVar, List
 import array
 import itertools
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.annotations as annotations
 import rti.idl_impl.reflection_utils as reflection_utils
+import rti.connextdds as dds
 
 @dataclass
 class PrimitiveArrayFactory:
@@ -40,6 +41,47 @@ class PrimitiveArrayFactory:
             return array.array(self.element_type_str)
         else:
             return array.array(self.element_type_str, itertools.repeat(0, self.size))
+
+
+IDL_TO_STD_VECTOR = {
+    bool: dds.Int8Seq,
+    type_hints.char: dds.Int8Seq,
+    type_hints.int8: dds.Int8Seq,
+    type_hints.wchar: dds.Int16Seq,
+    type_hints.int16: dds.Int16Seq,
+    type_hints.int32: dds.Int32Seq,
+    type_hints.int64: dds.Int64Seq,
+    type_hints.uint16: dds.Uint16Seq,
+    type_hints.uint32: dds.Uint32Seq,
+    type_hints.uint64: dds.Uint64Seq,
+    type_hints.float32: dds.Float32Seq,
+    type_hints.float64: dds.Float64Seq,
+}
+
+@dataclass
+class PrimitiveStdVectorFactory:
+
+    element_type: type
+    size: int = 0
+    supports_buffer_protocol: ClassVar[bool] = True
+    is_resizable: ClassVar[bool] = True
+
+    def __post_init__(self):
+        # Translate from IDL primitive type to RTI std::vector-based Seq type
+        self.seq_type = IDL_TO_STD_VECTOR.get(
+            self.element_type)
+
+        if self.seq_type is None:
+            raise TypeError(
+                f"'{self.element_type}' is not a valid primitive element type for an array")
+
+    def __call__(self):
+        if self.size == 0:
+            # An empty sequence is requested
+            return self.seq_type()
+        else:
+            # A fixed-size array is requested (i.e. a int[10] IDL array)
+            return self.seq_type(self.size)
 
 
 @dataclass
@@ -69,11 +111,25 @@ class ValueListFactory:
         # a new object for each element
         return [self.element_value] * self.size
 
-def array_factory(element_type: type, size: Union[int, List[int]] = 0):
-    return PrimitiveArrayFactory(
+def _default_array_factory(element_type: type, size: Union[int, List[int]] = 0):
+    return PrimitiveStdVectorFactory(
         element_type,
         annotations.get_total_size_from_dimensions(size))
 
+
+array_factory = _default_array_factory
+
+
+def set_array_factory(
+    factory: Callable[[type, Union[int, List[int]]], Any]
+) -> None:
+    """Override the factory to create the arrays used by user types"""
+    global array_factory
+    array_factory = factory
+
+def reset_default_array_factory() -> None:
+    """Resets the array factory to the default one"""
+    set_array_factory(_default_array_factory)
 
 def list_factory(element_type_or_value: Any, size: Union[int, List[int]]):
     if type(element_type_or_value) is type:
@@ -91,7 +147,7 @@ def list_factory(element_type_or_value: Any, size: Union[int, List[int]]):
 # Gets the most efficient factory for a list or an array
 def get_optimal_collection_factory(element_type: type, size: Union[int, List[int]]):
     if reflection_utils.is_primitive(element_type):
-        # For primitives (excluding enums), use a factory of compact Python arrays
+        # For primitives (excluding enums), use a factory of compact arrays
         return array_factory(element_type, size)
     elif size != 0:
         # For IDL arrays of non-primitives, use a factory of lists of fixed size
@@ -115,7 +171,7 @@ def to_array(idl_primitive_type: type, lst: Sequence[Any]) -> array.array:
             [to_char(x) for x in lst])
     elif idl_primitive_type is type_hints.wchar:
         return array.array(
-            reflection_utils.get_array_type(type_hints.uint16),
+            reflection_utils.get_array_type(type_hints.int16),
             [to_wchar(x) for x in lst])
 
     return array.array(

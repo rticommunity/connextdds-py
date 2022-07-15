@@ -43,8 +43,8 @@ def char_sample():
         opt_char=idl.to_char("B"),
         opt_wchar=idl.to_wchar("頃"),
         unb_char_seq=[idl.to_char(x) for x in ["C", "D", "E"]],
-        b_char_seq=idl.to_array(idl.char, ["F", "G"]),
-        wchar_seq=idl.to_array(idl.wchar, ["倍"] * 10))
+        b_char_seq=dds.CharSeq(["F", "G"]),
+        wchar_seq=dds.Int16Seq(idl.to_array(idl.wchar, ["倍"] * 10)))
 
 def test_char_plugin():
     ts = idl.get_type_support(CharTest)

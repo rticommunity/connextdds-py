@@ -11,6 +11,7 @@
 
 import sys
 import typing
+import inspect
 from enum import EnumMeta
 import collections.abc as collections
 from rti.idl_impl.type_hints import *
@@ -131,4 +132,26 @@ def supports_buffer_protocol(factory_type: type) -> bool:
         memoryview(factory_type())
         return True
     except TypeError:
+        return False
+
+def supports_size_argument(factory_type: type) -> bool:
+    """Returns True if the factory type takes an optional size argument"""
+
+    # Get specification of the __call__ method
+    call_args = inspect.getargspec(factory_type)
+
+    # Check for __call__(self, size, ...) signature
+    return call_args is not None and len(call_args.args) > 1 and call_args.args[1] == 'size'
+
+
+def sequence_is_resizable(factory_type: type) -> bool:
+    """Returns True if the sequence type is resizable"""
+    # lists don't support the buffer protocol
+    if factory_type is list:
+        return False
+
+    # RTI-defined factories indicate support with a class attribute
+    if hasattr(factory_type, 'is_resizable'):
+        return factory_type.is_resizable
+    else:
         return False

@@ -123,8 +123,12 @@ def case(*args, **kwargs):
 
 # --- Dataclass factories -----------------------------------------------------
 
-array_factory = type_utils.array_factory
-list_factory = type_utils.list_factory
+
+def array_factory(element_type: type, size: Union[int, List[int]] = 0):
+    # Note that type_utils.array_factory can be set with a custom factory
+    return type_utils.array_factory(element_type, size)
+
+list_factory = type_utils.list_factory # list_factory can't be customized
 
 # --- Exceptions --------------------------------------------------------------
 

@@ -78,7 +78,7 @@ def create_array_sample():
         multi_int=array('q', [1, 2, 3] * 2),
         int_array_array=[
             MyIntArray(value=array('q', [1, 2, 3])),
-            MyIntArray(value=array('q', [4, 5, 6]))],
+            MyIntArray(value=dds.Int64Seq([4, 5, 6]))],
         point_array_array=[
             MyPointArray(value=[Point(1, 1), Point(2, 2), Point(3, 3)]),
             MyPointArray(value=[Point(4, 4), Point(5, 5), Point(6, 6)])],
@@ -144,6 +144,11 @@ def test_array_default_creation():
 def test_array_deep_copy(array_sample: ArrayTest):
     array_copy = copy.deepcopy(array_sample)
     assert array_sample == array_copy
+
+    ts = idl.get_type_support(ArrayTest)
+    array_deser = ts.deserialize(ts.serialize(array_sample))
+    array_deser_copy = copy.deepcopy(array_deser)
+    assert array_deser == array_deser_copy
 
     # Sequences are deep-copied
     assert array_sample.vertices[0] == array_copy.vertices[0]

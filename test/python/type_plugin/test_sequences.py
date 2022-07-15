@@ -10,8 +10,9 @@
 #
 
 from typing import Sequence, Optional
-from dataclasses import field
+from dataclasses import field, dataclass
 from array import array
+import numpy as np
 
 import pytest
 
@@ -81,11 +82,11 @@ def create_sequence_sample():
 def create_optional_sequence_sample():
     return OptionalSequenceTest(
         vertices=[Point(10, 20), Point(30, 40)],
-        weights=array('h', [1, 2, 3]),
+        weights=dds.Int64Seq([1, 2, 3]),
         prices=array('d', [1.5, 2.5, 3.5, 4.5]),
         ready=array('b', [True, False, True, True]),
         weights_array=array('h', [111, 222]),
-        prices_array=array('d', [11.5, 22.5, 33.5]),
+        prices_array=dds.DoubleSeq([11.5, 22.5, 33.5]),
         ready_array=array('b', [False, True]),
         vertices_bounded=[Point(100, 200)])
 
@@ -277,3 +278,119 @@ def test_serialize_primitive_list():
 
     finally:
         idl.serialization_options.allow_primitive_lists = True
+
+
+def test_set_list_array_factory():
+
+    # Change the default array factory to use Python lists
+    idl.type_utils.set_array_factory(idl.type_utils.list_factory)
+
+    try:
+        # array_factory now creates lists arrays
+        @idl.struct
+        class List1:
+            int_values: Sequence[int] = field(
+                default_factory=idl.array_factory(int))
+            float32_values: Sequence[idl.float32] = field(
+                default_factory=idl.array_factory(idl.float32))
+
+        ts = idl.get_type_support(List1)
+        sample = List1(
+            int_values=[1, 2, 3],
+            float32_values=np.array([1.0, 2.0, 3.0], dtype=np.float32))
+        result = ts.deserialize(ts.serialize(sample))
+        assert isinstance(result.int_values, list)
+        assert isinstance(result.float32_values, list)
+        assert result.int_values == [1, 2, 3]
+        assert result.float32_values == [1.0, 2.0, 3.0]
+    finally:
+        idl.type_utils.reset_default_array_factory()
+
+    # array_factory creates rti sequences again
+    @idl.struct
+    class List2:
+        int_values: Sequence[int] = field(
+            default_factory=idl.array_factory(int))
+        float32_values: Sequence[idl.float32] = field(
+            default_factory=idl.array_factory(idl.float32))
+
+    ts = idl.get_type_support(List2)
+    sample = List2(
+        # The serialization supports lists...
+        int_values=idl.to_array(int, [1, 2, 3]),
+        # ... or arrays
+        float32_values=[1.0, 2.0, 3.0])
+    result = ts.deserialize(ts.serialize(sample))
+    assert isinstance(result.int_values, dds.Int64Seq)
+    assert isinstance(result.float32_values, dds.Float32Seq)
+    assert result.int_values == sample.int_values
+    assert result.float32_values == idl.to_array(idl.float32, [1.0, 2.0, 3.0])
+
+IDL_TO_NUMPY_PRIMITIVE_TYPES = {
+    idl.int8: np.int8,
+    idl.int16: np.int16,
+    idl.int32: np.int32,
+    idl.int64: np.int64,
+    idl.uint16: np.uint16,
+    idl.uint32: np.uint32,
+    idl.uint64: np.uint64,
+    idl.float32: np.float32,
+    idl.float64: np.float64,
+    bool: np.int8,
+}
+
+
+@dataclass
+class NumpyArrayFactory:
+
+    element_type: type
+    size: int = 0
+
+    def __post_init__(self):
+        # Translate from IDL primitive type to numpy primitive type
+        self.element_type_numpy = IDL_TO_NUMPY_PRIMITIVE_TYPES.get(
+            self.element_type)
+
+        if self.element_type_numpy is None:
+            raise TypeError(
+                f"'{self.element_type}' is not a valid primitive element type for an array")
+
+    def __call__(self, size=None):
+        if self.size == 0:
+            if size is not None:
+                # A sequence of a specific size is requested
+                return np.zeros(size, dtype=self.element_type_numpy)
+            else:
+                # An empty sequence is requested
+                return np.zeros(0, dtype=self.element_type_numpy)
+        else:
+            # A fixed-size array is requested (i.e. a int[10] IDL array)
+            return np.zeros(self.size, dtype=self.element_type_numpy)
+
+
+def test_set_numpy_array_factory():
+
+    # Change the default array factory to use numpy
+    idl.type_utils.set_array_factory(NumpyArrayFactory)
+
+    try:
+        # array_factory now creates numpy arrays
+        @idl.struct
+        class List1:
+            int_values: Sequence[int] = field(
+                default_factory=idl.array_factory(int))
+            float32_values: Sequence[idl.float32] = field(
+                default_factory=idl.array_factory(idl.float32))
+
+        ts = idl.get_type_support(List1)
+        sample = List1(
+            int_values=[1, 2, 3],
+            float32_values=np.array([1.0, 2.0, 3.0], dtype=np.float32))
+        result = ts.deserialize(ts.serialize(sample))
+        assert isinstance(result.int_values, np.ndarray)
+        assert isinstance(result.float32_values, np.ndarray)
+        assert (result.int_values == [1, 2, 3]).all()
+        assert (result.float32_values == [1.0, 2.0, 3.0]).all()
+    finally:
+        idl.type_utils.reset_default_array_factory()
+

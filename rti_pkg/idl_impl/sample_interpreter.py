@@ -360,11 +360,14 @@ class CopyPrimitiveSequenceToListInstruction(Instruction):
             py_member[i] = c_elements[i]
 
 
-class CopyPrimitiveSequenceToBufferInstruction(Instruction):
+class CopyPrimitiveSequenceToExtendableBufferInstruction(Instruction):
     """Primitive sequence: C to Python
 
     Instruction to copy a sequence of primitive types from a C DDS_Sequence
-    to a python object supporting the buffer protocol, using a memcpy
+    to a python object supporting the buffer protocol, using a memcpy.
+
+    The instruction assumes that the object holding the buffer (e.g. an
+    array.array) can be resized with .extend(range).
     """
 
     def execute(self, dst: Any, src: Any) -> None:
@@ -378,6 +381,48 @@ class CopyPrimitiveSequenceToBufferInstruction(Instruction):
             core_utils.memcpy_to_buffer_object(
                 py_member, elements_ptr, c_member._element_size * length)
 
+
+class CopyPrimitiveSequenceToResizableBufferInstruction(Instruction):
+    """Primitive sequence: C to Python
+
+    Instruction to copy a sequence of primitive types from a C DDS_Sequence
+    to a python object supporting the buffer protocol, using a memcpy.
+
+    The instruction assumes that the object holding the buffer (e.g. an
+    array.array) can be resized with .resize(length).
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        py_member = getattr(dst, field_name)
+        c_member = self.get_c_attr(src, field_name)
+        length = len(c_member)
+        if length > 0:
+            elements_ptr = c_member.get_elements_raw_ptr()
+            py_member.resize(length)
+            core_utils.memcpy_to_buffer_object(
+                py_member, elements_ptr, c_member._element_size * length)
+
+class CopyPrimitiveSequenceToFixedSizeBufferInstruction(Instruction):
+    """Primitive sequence: C to Python
+
+    Instruction to copy a sequence of primitive types from a C DDS_Sequence
+    to a python object supporting the buffer protocol, using a memcpy
+
+    The instruction assumes that the object holding the buffer cannot be resized
+    and therfore it creates a new one with the right size.
+    """
+
+    def execute(self, dst: Any, src: Any) -> None:
+        field_name = self.field_name
+        c_member = self.get_c_attr(src, field_name)
+        length = len(c_member)
+        if length > 0:
+            elements_ptr = c_member.get_elements_raw_ptr()
+            py_member = self.field_factory(length)
+            core_utils.memcpy_to_buffer_object(
+                py_member, elements_ptr, c_member._element_size * length)
+            setattr(dst, field_name, py_member)
 
 class CopyPrimitiveListToSequenceInstruction(CopyListToCInstruction):
     """Primitive sequence: Python to C
@@ -1082,12 +1127,27 @@ class SamplePrograms:
             sequence_annotations, annotations.BoundAnnotation)
 
         if reflection_utils.is_primitive_or_enum(element_type):
-            if reflection_utils.supports_buffer_protocol(field_factory) and not is_optional:
-                c_to_py_instr = CopyPrimitiveSequenceToBufferInstruction(
-                    field_name,
-                    field_index=field_index,
-                    is_optional=is_optional,
-                    field_factory=field_factory)
+            if reflection_utils.supports_buffer_protocol(field_factory):
+                # C to Py: select the optimal way to resize the python collection
+                if reflection_utils.sequence_is_resizable(field_factory):
+                    c_to_py_instr = CopyPrimitiveSequenceToResizableBufferInstruction(
+                        field_name,
+                        field_index=field_index,
+                        is_optional=is_optional,
+                        field_factory=field_factory)
+                elif reflection_utils.supports_size_argument(field_factory):
+                    c_to_py_instr = CopyPrimitiveSequenceToFixedSizeBufferInstruction(
+                        field_name,
+                        field_index=field_index,
+                        is_optional=is_optional,
+                        field_factory=field_factory)
+                else:
+                    c_to_py_instr = CopyPrimitiveSequenceToExtendableBufferInstruction(
+                        field_name,
+                        field_index=field_index,
+                        is_optional=is_optional,
+                        field_factory=field_factory)
+                # Py to C
                 if self.options.allow_primitive_lists:
                     py_to_c_instr = CopyBufferOrListToSequenceInstruction(
                         field_name,
