@@ -151,41 +151,6 @@ def test_types_can_be_converted_to_dynamic_data(type_fixture: IdlTypeFixture):
     new_value = ts.from_dynamic_data(dt)
     assert value == new_value
 
-
-@pytest.mark.skip(reason="Waiting for nddsgen types")
-def test_cannot_deserialize_non_compatible_type():
-    @idl.struct()
-    class NotTheRightType:
-        x: int = 0
-    value = NotTheRightType()
-
-    NotTheRightType_ts = idl.get_type_support(NotTheRightType)
-    Point_ts = idl.get_type_support(common_types.Point3D)
-    buffer = NotTheRightType_ts.serialize(value)
-
-    with pytest.raises(TypeError):
-        Point_ts.serialize(value)
-
-    with pytest.raises(TypeError):
-        Point_ts.deserialize(buffer)
-
-
-@pytest.mark.skip(reason="Ranges not implemented in idl yet")
-def test_cannot_deserialize_sample_out_of_range():
-    ranged_point = common_types.RangedPoint()
-    # First assert that the ranged point works by default
-    ts = idl.get_type_support(common_types.RangedPoint)
-    assert ranged_point == ts.deserialize(ts.serialize(ranged_point))
-
-    ranged_point.x = 11  # Greatest value is 10
-    with pytest.raises(TypeError):
-        ts.deserialize(ts.serialize(ranged_point))
-
-    ranged_point.x = 0  # Lowest value is 1
-    with pytest.raises(TypeError):
-        ts.deserialize(ts.serialize(ranged_point))
-
-
 def test_cannot_deserialize_sample_with_out_of_bounds_string():
     bound_string = common_types.BoundString()
     ts = idl.get_type_support(common_types.BoundString)
