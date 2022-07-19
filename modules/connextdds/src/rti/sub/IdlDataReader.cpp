@@ -151,6 +151,31 @@ static auto read_data_native(PyDataReader<CSampleWrapper>& dr)
     return get_native_ptrs(dr, dr.read());
 }
 
+static auto take_selector_data(PyDataReader<CSampleWrapper>::Selector& selector)
+{
+    PyDataReader<CSampleWrapper> dr(selector.reader());
+    return convert_data(dr, selector.take());
+}
+
+static auto take_selector_data_and_info(
+        PyDataReader<CSampleWrapper>::Selector& selector)
+{
+    PyDataReader<CSampleWrapper> dr(selector.reader());
+    return convert_data_w_info(dr, selector.take());
+}
+
+static auto read_selector_data(PyDataReader<CSampleWrapper>::Selector& selector)
+{
+    PyDataReader<CSampleWrapper> dr(selector.reader());
+    return convert_data(dr, selector.read());
+}
+
+static auto read_selector_data_and_info(PyDataReader<CSampleWrapper>::Selector& selector)
+{
+    PyDataReader<CSampleWrapper> dr(selector.reader());
+    return convert_data_w_info(dr, selector.read());
+}
+
 // For testing purposes only
 static void test_native_reads(PyDataReader<CSampleWrapper>& dr)
 {
@@ -202,12 +227,47 @@ struct IdlDataReaderPostInitFunction {
 
 
 template<>
+void init_dds_datareader_selector_read_methods<CSampleWrapper>(
+        py::class_<typename PyDataReader<CSampleWrapper>::Selector>& selector)
+{
+    selector.def(
+            "read",
+            read_selector_data_and_info,
+            py::call_guard<py::gil_scoped_release>(),
+            "Read copies of all available data and info based on Selector "
+            "settings.");
+    selector.def(
+            "read_data",
+            read_selector_data,
+            py::call_guard<py::gil_scoped_release>(),
+            "Read copies of all available valid data based on Selector settings.");
+    selector.def(
+            "take",
+            take_selector_data_and_info,
+            py::call_guard<py::gil_scoped_release>(),
+            "Take copies of all available data and info based on Selector "
+            "settings.");
+    selector.def(
+            "take_data",
+            take_selector_data,
+            py::call_guard<py::gil_scoped_release>(),
+            "Take copies of all available valid data based on Selector "
+            "settings.");
+}
+
+template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
     init_dds_datareader_constructors<
             CSampleWrapper,
             IdlDataReaderPostInitFunction>(cls);
     init_dds_typed_datareader_base_template(cls);
+
+    py::class_<typename PyDataReader<CSampleWrapper>::Selector> selector(
+            cls,
+            "Selector");
+    init_dds_datareader_selector_base<CSampleWrapper>(selector);
+    init_dds_datareader_selector_read_methods<CSampleWrapper>(selector);
 
     cls.def("take_data",
             take_data,
@@ -228,6 +288,16 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
             read_data_and_info,
             py::call_guard<py::gil_scoped_release>(),
             "Read copies of all available data and info");
+
+    cls.def(
+            "select",
+            [](PyDataReader<CSampleWrapper>& dr) {
+                return typename PyDataReader<CSampleWrapper>::Selector(dr.select());
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Get a Selector to perform complex data selections, such "
+            "as "
+            "per-instance selection, content, and status filtering.");
 
     cls.def("read_data_native",
             read_data_native,

@@ -882,11 +882,17 @@ void init_dds_datareader_selector_base(
             "Select samples based on a Query.");
     selector.def(
             "condition",
-            [](typename PyDataReader<T>::Selector& sel, PyIReadCondition& rc) {
-                auto cond = rc.get_read_condition();
-                return sel.condition(cond);
+            [](typename PyDataReader<T>::Selector& sel, PyIReadCondition* rc) ->
+            typename PyDataReader<T>::Selector& {
+                if (rc != nullptr) {
+                    auto cond = rc->get_read_condition();
+                    return sel.condition(cond);
+                } else {
+                    // If the condition is none then set the condition to null
+                    return sel.condition(dds::core::null);
+                }
             },
-            py::arg("condition"),
+            py::arg("condition").none(true),
             py::call_guard<py::gil_scoped_release>(),
             "Select samples based on a ReadCondition.");
 
