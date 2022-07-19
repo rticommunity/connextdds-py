@@ -376,20 +376,3 @@ def test_key_value(pub):
     key_holder = get_sample_keys(pub.data_type)
     assert keys_equal(result, key_holder)
     assert instance == pub.writer.lookup_instance(result)
-
-
-
-# --- Manual tests ------------------------------------------------------------
-
-@pytest.mark.skip(reason="This is a manual test")
-def test_stress_write():
-    # TODO PY-17: this is not automated. It requires manually monitoring the
-    # memory of the process to ensure that it doesn't grow unlimited.
-    t = PointIDL
-    participant = fixtures.create_participant()
-    topic = fixtures.create_topic(participant, t)
-    writer = fixtures.create_writer(topic, t, dds.DataWriterQos())
-
-    while True:
-        samples = PointIDL(x=11, y=22)
-        writer.write(samples, dds.Time(123))
