@@ -20,7 +20,7 @@ import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
 from rti.idl_impl.reflection_utils import get_args
 from rti.idl_impl.type_plugin import TypeSupportKind
-from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory, get_optimal_collection_factory
+from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory, PrimitiveStdVectorFactory, get_optimal_collection_factory
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
 from rti.idl_impl.unions import union_cases
@@ -131,7 +131,7 @@ class IdlValueGenerator:
 
     def _generate_seq_from_seed(self, sample_type: type, member_type: type, field_name: str, field_factory, keys_only, seed: int):
         """Private local function used to generate sequence values"""
-        if field_factory not in [None, list, MISSING] and not isinstance(field_factory, (ListFactory, PrimitiveArrayFactory, ValueListFactory)):
+        if field_factory not in [None, list, MISSING] and not isinstance(field_factory, (ListFactory, PrimitiveArrayFactory, ValueListFactory, PrimitiveStdVectorFactory)):
             return field_factory()
 
         if reflection_utils.get_underlying_type(member_type) is str:
@@ -257,6 +257,12 @@ class IdlValueGenerator:
             return lst
         elif isinstance(field_factory, PrimitiveArrayFactory):
             return array.array(field_factory.element_type_str, lst)
+        elif isinstance(field_factory, PrimitiveStdVectorFactory):
+            arr = PrimitiveStdVectorFactory(
+                field_factory.element_type, len(lst))()
+            for i in range(0, len(lst)):
+                arr[i] = lst[i]
+            return arr
         else:
             arr = field_factory()
             for i in range(0, len(arr)):
