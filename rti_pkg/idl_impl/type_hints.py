@@ -11,7 +11,8 @@
 
 import typing
 
-int8 = typing.NewType('int8', int)
+uint8 = typing.NewType('uint8', int)
+int8 = uint8  # workaround for CODEGENII-1753
 char = typing.NewType('char', int)
 
 int16 = typing.NewType('int16', int)

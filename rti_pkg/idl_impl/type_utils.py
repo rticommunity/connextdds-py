@@ -46,7 +46,7 @@ class PrimitiveArrayFactory:
 IDL_TO_STD_VECTOR = {
     bool: dds.Int8Seq,
     type_hints.char: dds.Int8Seq,
-    type_hints.int8: dds.Int8Seq,
+    type_hints.uint8: dds.Uint8Seq,
     type_hints.wchar: dds.Int16Seq,
     type_hints.int16: dds.Int16Seq,
     type_hints.int32: dds.Int32Seq,

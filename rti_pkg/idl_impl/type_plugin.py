@@ -46,7 +46,7 @@ def finalize_type_plugin_factory() -> None:
 
 PRIMITIVE_TO_CTYPES_MAP = {
     bool: ctypes.c_int8,
-    type_hints.int8: ctypes.c_int8,
+    type_hints.uint8: ctypes.c_uint8,
     type_hints.int16: ctypes.c_int16,
     type_hints.uint16: ctypes.c_uint16,
     type_hints.int32: ctypes.c_int32,
@@ -195,7 +195,7 @@ def bounded_string():
 
 PY_TYPE_TO_DYNAMIC_TYPE_MAP = {
     bool: dds.BoolType(),
-    type_hints.int8: dds.Int8Type(),
+    type_hints.uint8: dds.Uint8Type(),
     type_hints.int16: dds.Int16Type(),
     type_hints.uint16: dds.Uint16Type(),
     type_hints.int32: dds.Int32Type(),

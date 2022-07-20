@@ -111,7 +111,9 @@ def test_bound_annotation(dt):
 
 def test_primitive_types(dt):
     assert dt["my_key"].type == dds.Int64Type()
-    assert dt["my_int8"].type == dds.Int8Type()
+
+    # workaround for CODEGENII-1753
+    assert dt["my_int8"].type == dds.Uint8Type()
     assert dt["my_int16"].type == dds.Int16Type()
     assert dt["my_uint16"].type == dds.Uint16Type()
     assert dt["my_int32"].type == dds.Int32Type()
