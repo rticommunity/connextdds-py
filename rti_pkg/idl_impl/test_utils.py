@@ -18,7 +18,7 @@ from enum import IntEnum
 import inspect
 import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
-from rti.idl_impl.reflection_utils import get_args
+from rti.idl_impl.reflection_utils import remove_classvar
 from rti.idl_impl.type_plugin import TypeSupportKind
 from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueListFactory, PrimitiveStdVectorFactory, get_optimal_collection_factory
 from itertools import islice, cycle
@@ -154,7 +154,7 @@ class IdlValueGenerator:
         union_case_list = union_cases(sample_type)
         index = seed % len(union_case_list)
         value_name = union_case_list[index].name
-        value_type = get_args(union_case_list[index].type)[0]
+        value_type = remove_classvar(union_case_list[index].type)
         if reflection_utils.is_constructed_type(value_type):
             value_value = IdlValueGenerator(
                 value_type).create_test_data(seed)
