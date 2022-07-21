@@ -263,79 +263,8 @@ using PyDataReaderClass = py::class_<
 
 
 template<typename T>
-struct NoOpDataReaderPostInitFunction {
-    void operator()(PyDataReader<T>&)
-    {
-    }
-};
-
-
-// PostInitFunc is an optional functor to perform additional initialization
-// after the PyDataReader is constructed.
-template<typename T, typename PostInitFunc = NoOpDataReaderPostInitFunction<T>>
-void init_dds_datareader_constructors(PyDataReaderClass<T>& cls)
+void init_dds_datareader_cast_constructors(PyDataReaderClass<T>& cls)
 {
-    cls.def(py::init([](const PySubscriber& s, const PyTopic<T>& t) {
-                auto reader = PyDataReader<T>(s, t);
-                PostInitFunc()(reader);
-                return reader;
-            }),
-            py::arg("sub"),
-            py::arg("topic"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Create a DataReader.");
-
-    cls.def(py::init([](const PySubscriber& s,
-                             const PyTopic<T>& t,
-                             const dds::sub::qos::DataReaderQos& q,
-                             PyDataReaderListenerPtr<T> listener,
-                             const dds::core::status::StatusMask& m) {
-                auto reader = PyDataReader<T>(s, t, q, listener, m);
-                PostInitFunc()(reader);
-                return reader;
-            }),
-            py::arg("sub"),
-            py::arg("topic"),
-            py::arg("qos"),
-            py::arg("listener") = py::none(),
-            py::arg_v(
-                    "mask",
-                    dds::core::status::StatusMask::all(),
-                    "StatusMask.ALL"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Create a DataReader.");
-
-    cls.def(py::init([](const PySubscriber& s,
-                             const PyContentFilteredTopic<T>& t) {
-                auto reader = PyDataReader<T>(s, t);
-                PostInitFunc()(reader);
-                return reader;
-            }),
-            py::arg("sub"),
-            py::arg("cft"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Create a DataReader with a ContentFilteredTopic.");
-
-    cls.def(py::init([](const PySubscriber& s,
-                             const PyContentFilteredTopic<T>& t,
-                             const dds::sub::qos::DataReaderQos& q,
-                             PyDataReaderListenerPtr<T> listener,
-                             const dds::core::status::StatusMask& m) {
-                auto reader = PyDataReader<T>(s, t, q, listener, m);
-                PostInitFunc()(reader);
-                return reader;
-            }),
-            py::arg("sub"),
-            py::arg("cft"),
-            py::arg("qos"),
-            py::arg("listener") = py::none(),
-            py::arg_v(
-                    "mask",
-                    dds::core::status::StatusMask::all(),
-                    "StatusMask.ALL"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Create a DataReader with a ContentFilteredTopic.");
-
     cls.def(py::init([](PyIAnyDataReader& adr) {
                 auto dr = adr.get_any_datareader().get<T>();
                 return PyDataReader<T>(dr);
@@ -351,6 +280,63 @@ void init_dds_datareader_constructors(PyDataReaderClass<T>& cls)
             py::arg("entity"),
             py::call_guard<py::gil_scoped_release>(),
             "Get a typed DataReader from an Entity.");
+}
+
+template<typename T>
+void init_dds_datareader_constructors(PyDataReaderClass<T>& cls)
+{
+    cls.def(py::init<const PySubscriber&, const PyTopic<T>&>(),
+            py::arg("sub"),
+            py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyTopic<T>& t,
+                             const dds::sub::qos::DataReaderQos& q,
+                             PyDataReaderListenerPtr<T> listener,
+                             const dds::core::status::StatusMask& m) {
+                return PyDataReader<T>(s, t, q, listener, m);
+            }),
+            py::arg("sub"),
+            py::arg("topic"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyContentFilteredTopic<T>& t) {
+                return PyDataReader<T>(s, t);
+            }),
+            py::arg("sub"),
+            py::arg("cft"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader with a ContentFilteredTopic.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyContentFilteredTopic<T>& t,
+                             const dds::sub::qos::DataReaderQos& q,
+                             PyDataReaderListenerPtr<T> listener,
+                             const dds::core::status::StatusMask& m) {
+                return PyDataReader<T>(s, t, q, listener, m);
+            }),
+            py::arg("sub"),
+            py::arg("cft"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader with a ContentFilteredTopic.");
+
+    init_dds_datareader_cast_constructors(cls);
 }
 
 

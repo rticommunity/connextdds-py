@@ -138,10 +138,10 @@ def supports_size_argument(factory_type: type) -> bool:
     """Returns True if the factory type takes an optional size argument"""
 
     # Get specification of the __call__ method
-    call_args = inspect.getargspec(factory_type)
+    signature = inspect.signature(factory_type)
 
     # Check for __call__(self, size, ...) signature
-    return call_args is not None and len(call_args.args) > 1 and call_args.args[1] == 'size'
+    return 'size' in signature.parameters
 
 
 def sequence_is_resizable(factory_type: type) -> bool:

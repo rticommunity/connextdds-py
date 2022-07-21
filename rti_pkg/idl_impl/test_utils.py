@@ -396,12 +396,6 @@ wait = Wait()
 
 # --- Pub/sub test utilities --------------------------------------------------
 
-# We subtract 1024 from the max serialized size because the core does some
-# operations on the returned result that may end up adding some additional byte
-_MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES = 1024
-_UNBOUNDED_LENGTH = idl.unbounded.value - _MAX_SERIALIZED_SIZE_ADDITIONAL_BYTES
-
-
 def get_test_domain():
     return int(os.environ.get('TEST_DOMAIN', 0))
 
@@ -475,13 +469,6 @@ class PubSubFixture:
     ):
         self.data_type = data_type
 
-        # Figure out if the type has an unbounded value in it
-        if not _is_idl_type(data_type):
-            has_unbound_member = False
-        else:
-            type_support = idl.get_type_support(data_type)
-            has_unbound_member = _UNBOUNDED_LENGTH <= type_support.max_serialized_sample_size
-
         self.participant = participant or create_participant()
         self.topic = topic or create_topic(
             self.participant, data_type, topic_name)
@@ -492,9 +479,6 @@ class PubSubFixture:
             writer_qos << dds.History.keep_all
             for policy in writer_policies:
                 writer_qos << policy
-            if has_unbound_member and \
-                    not writer_qos.property.exists('dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'):
-                writer_qos.property['dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
             self.writer = _create_writer(self.topic, data_type, writer_qos)
 
         if create_reader:
@@ -503,9 +487,6 @@ class PubSubFixture:
             reader_qos << dds.History.keep_all
             for policy in reader_policies:
                 reader_qos << policy
-            if has_unbound_member and \
-                    not reader_qos.property.exists('dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'):
-                reader_qos.property['dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'] = "1000"
             if content_filter is not None:
                 cft_name = "Filtered " + self.topic.name
                 if type(content_filter) == str:

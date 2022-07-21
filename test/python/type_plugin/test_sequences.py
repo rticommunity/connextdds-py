@@ -17,7 +17,9 @@ import numpy as np
 import pytest
 
 import rti.connextdds as dds
-import rti.idl as idl
+import rti.types as idl
+from rti.types.builtin import KeyedString
+
 
 from common_types import Point
 from test_utils.fixtures import *
@@ -118,6 +120,8 @@ def test_sequence_plugin():
     assert dt["prices_array"].type == dds.SequenceType(dds.Float64Type(), 4)
     assert dt["ready_array"].type == dds.SequenceType(dds.BoolType())
     assert dt["vertices_bounded"].type == dds.SequenceType(point_ts.dynamic_type, 2)
+
+    assert ts.is_unbounded
 
 
 def test_sequence_serialization(sequence_sample):
@@ -394,3 +398,61 @@ def test_set_numpy_array_factory():
     finally:
         idl.type_utils.reset_default_array_factory()
 
+
+def test_unbounded_writer_qos(shared_participant: dds.DomainParticipant):
+    property_name = 'dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size'
+
+    # For unbounded types, the writer is automatically created with unbounded
+    # memory management support
+    assert idl.get_type_support(SequenceTest).is_unbounded
+
+    topic = dds.Topic(shared_participant, "test_unbounded", SequenceTest)
+    default_writer = dds.DataWriter(shared_participant, topic)
+    assert default_writer.qos.property[property_name] == "4096"
+
+    qos = shared_participant.default_datawriter_qos
+    other_writer = dds.DataWriter(shared_participant, topic, qos)
+    assert other_writer.qos.property[property_name] == "4096"
+    # We don't modify the input parameter
+    assert not qos.property.exists(property_name)
+
+    # If the property has been set, we honor the input value
+    qos.property[property_name] = "3421"
+    configured_writer = dds.DataWriter(shared_participant, topic, qos)
+    assert configured_writer.qos.property[property_name] == "3421"
+
+    # For a bounded type we don't change the qos settings
+    assert not idl.get_type_support(Point).is_unbounded
+    bounded_topic = dds.Topic(shared_participant, "test_bounded", Point)
+    bounded_writer = dds.DataWriter(shared_participant, bounded_topic)
+    assert not bounded_writer.qos.property.exists(property_name)
+
+
+def test_unbounded_reader_qos(shared_participant: dds.DomainParticipant):
+    property_name = 'dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size'
+    assert not idl.get_type_support(SequenceTest).is_keyed
+
+    topic = dds.Topic(shared_participant, "test_unbounded", SequenceTest)
+    sub = dds.Subscriber(shared_participant)
+    unkeyed_unbounded_reader = dds.DataReader(sub, topic)
+
+    # Unkeyed readers don't need unbounded Qos settings
+    assert not unkeyed_unbounded_reader.qos.property.exists(property_name)
+
+    assert idl.get_type_support(KeyedString).is_keyed
+    topic = dds.Topic(shared_participant, "test_keyed_unbounded", KeyedString)
+    keyed_unbounded_reader = dds.DataReader(sub, topic)
+    assert keyed_unbounded_reader.qos.property[property_name] == "4096"
+
+    # If the property has been set, we honor the input value
+    qos = shared_participant.default_datareader_qos
+    qos.property[property_name] = "3421"
+    configured_reader = dds.DataReader(sub, topic, qos)
+    assert configured_reader.qos.property[property_name] == "3421"
+
+    # Test with CFT constructor
+    cft = dds.ContentFilteredTopic(topic, "cft", "key = '1'")
+    keyed_unbounded_reader = dds.DataReader(sub, cft)
+    assert keyed_unbounded_reader.qos.property[property_name] == "4096"
+    configured_reader = dds.DataReader(sub, cft, qos)
+    assert configured_reader.qos.property[property_name] == "3421"

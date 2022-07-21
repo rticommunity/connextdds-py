@@ -9,9 +9,12 @@
  # damages arising out of the use or inability to use the software.
  #
 
-import rti.connextdds as dds
 import time
 import pathlib
+
+import rti.connextdds as dds
+from rti.types.builtin import String
+
 import test_utils.fixtures as fixtures
 
 class TestSystem:
@@ -28,11 +31,11 @@ class TestSystem:
         writer_qos << dds.Reliability.reliable()
         writer_qos << dds.History.keep_all
         if sample_type == "StringTopicType":
-            self.topic = dds.StringTopicType.Topic(self.participant, "StringTopicType")
-            self.reader = dds.StringTopicType.DataReader(
+            self.topic = dds.Topic(self.participant, "StringTopicType", String)
+            self.reader = dds.DataReader(
                 self.participant, self.topic, reader_qos
             )
-            self.writer = dds.StringTopicType.DataWriter(
+            self.writer = dds.DataWriter(
                 self.participant, self.topic, writer_qos
             )
         elif sample_type == "KeyedStringTopicType":

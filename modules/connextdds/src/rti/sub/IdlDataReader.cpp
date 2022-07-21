@@ -193,38 +193,149 @@ static void test_native_reads(PyDataReader<CSampleWrapper>& dr)
     }
 }
 
-struct IdlDataReaderPostInitFunction {
-    void operator()(PyDataReader<CSampleWrapper>& reader)
-    {
-        using rti::core::memory::ObjectAllocator;
+static dds::sub::qos::DataReaderQos get_modified_qos(
+        const PySubscriber&,
+        const dds::topic::Topic<CSampleWrapper>& topic,
+        const dds::sub::qos::DataReaderQos& qos)
+{
+    using rti::core::policy::Property;
+    static const char* pool_buffer_max_size_property_name =
+            "dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size";
 
-        // Store the IdlDataReaderPyObjectCache as this reader's user data
-        if (reader->get_user_data_() == nullptr) {
-            py::gil_scoped_acquire acquire;
+    py::gil_scoped_acquire acquire;
 
-            // Obtain all the cached objects
-            auto type_support =
-                    get_py_type_support_from_topic(reader.topic_description());
-            IdlDataReaderPyObjectCache tmp_obj_cache;
-            tmp_obj_cache.type_support = type_support;
-            tmp_obj_cache.create_py_sample_func =
-                    py::type::of(type_support).attr("_create_py_sample");
-            tmp_obj_cache.cast_c_sample_func =
-                    py::type::of(type_support).attr("_cast_c_sample");
-
-            // Once the objects have been successfully retrieved, allocate
-            // the user data object and set it.
-            auto obj_cache =
-                    ObjectAllocator<IdlDataReaderPyObjectCache>::create();
-            *obj_cache = std::move(tmp_obj_cache);
-            reader->set_user_data_(obj_cache, [](void* ptr) {
-                ObjectAllocator<IdlDataReaderPyObjectCache>::destroy(
-                        static_cast<IdlDataReaderPyObjectCache*>(ptr));
-            });
-        }
+    auto type_support = get_py_type_support_from_topic(topic);
+    auto is_unbounded = py::cast<bool>(type_support.attr("is_unbounded"));
+    auto is_keyed = py::cast<bool>(type_support.attr("is_keyed"));
+    if (!is_unbounded || !is_keyed) {
+        // If the type is bounded or unkeyed, we don't need to do anything
+        return qos;
     }
-};
 
+    if (qos.policy<Property>().exists(pool_buffer_max_size_property_name)) {
+        // If the property is already set, we honor that value
+        return qos;
+    }
+
+    // The type is unbounded and the buffer size has not been set. We set it
+    // to a predetermined value to support unbounded sequences out of the box.
+    dds::sub::qos::DataReaderQos modified_qos = qos;
+    modified_qos.policy<Property>().set({
+        pool_buffer_max_size_property_name,
+        "4096"
+    });
+
+    return modified_qos;
+}
+
+static void cache_idl_datareader_py_objects(
+        PyDataReader<CSampleWrapper>& reader)
+{
+    using rti::core::memory::ObjectAllocator;
+
+    // Store the IdlDataReaderPyObjectCache as this reader's user data
+    if (reader->get_user_data_() == nullptr) {
+        py::gil_scoped_acquire acquire;
+
+        // Obtain all the cached objects
+        auto type_support =
+                get_py_type_support_from_topic(reader.topic_description());
+        IdlDataReaderPyObjectCache tmp_obj_cache;
+        tmp_obj_cache.type_support = type_support;
+        tmp_obj_cache.create_py_sample_func =
+                py::type::of(type_support).attr("_create_py_sample");
+        tmp_obj_cache.cast_c_sample_func =
+                py::type::of(type_support).attr("_cast_c_sample");
+
+        // Once the objects have been successfully retrieved, allocate
+        // the user data object and set it.
+        auto obj_cache =
+                ObjectAllocator<IdlDataReaderPyObjectCache>::create();
+        *obj_cache = std::move(tmp_obj_cache);
+        reader->set_user_data_(obj_cache, [](void* ptr) {
+            ObjectAllocator<IdlDataReaderPyObjectCache>::destroy(
+                    static_cast<IdlDataReaderPyObjectCache*>(ptr));
+        });
+    }
+}
+
+
+void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
+{
+    // The constructors defined here are different from those defined for non
+    // IDL types in a couple of ways:
+    // - They automatically configure the Qos for unbounded support, if needed
+    // - They cache the python objects needed for the C-to-py data conversions
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyTopic<CSampleWrapper>& t) {
+                auto modified_qos =
+                        get_modified_qos(s, t, s.default_datareader_qos());
+                auto reader = PyIdlDataReader(s, t, modified_qos);
+                cache_idl_datareader_py_objects(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyTopic<CSampleWrapper>& t,
+                             const dds::sub::qos::DataReaderQos& q,
+                             PyDataReaderListenerPtr<CSampleWrapper> listener,
+                             const dds::core::status::StatusMask& m) {
+                auto modified_qos = get_modified_qos(s, t, q);
+                auto reader = PyIdlDataReader(s, t, modified_qos, listener, m);
+                cache_idl_datareader_py_objects(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("topic"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyContentFilteredTopic<CSampleWrapper>& cft) {
+                auto modified_qos = get_modified_qos(
+                        s,
+                        cft.topic(),
+                        s.default_datareader_qos());
+                auto reader = PyIdlDataReader(s, cft, modified_qos);
+                cache_idl_datareader_py_objects(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("cft"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader with a ContentFilteredTopic.");
+
+    cls.def(py::init([](const PySubscriber& s,
+                             const PyContentFilteredTopic<CSampleWrapper>& cft,
+                             const dds::sub::qos::DataReaderQos& q,
+                             PyDataReaderListenerPtr<CSampleWrapper> listener,
+                             const dds::core::status::StatusMask& m) {
+                auto modified_qos = get_modified_qos(s, cft.topic(), q);
+                auto reader = PyIdlDataReader(s, cft, modified_qos, listener, m);
+                cache_idl_datareader_py_objects(reader);
+                return reader;
+            }),
+            py::arg("sub"),
+            py::arg("cft"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a DataReader with a ContentFilteredTopic.");
+}
 
 template<>
 void init_dds_datareader_selector_read_methods<CSampleWrapper>(
@@ -258,9 +369,12 @@ void init_dds_datareader_selector_read_methods<CSampleWrapper>(
 template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
-    init_dds_datareader_constructors<
-            CSampleWrapper,
-            IdlDataReaderPostInitFunction>(cls);
+    // These constructors have a specific implementation for IDL types
+    init_dds_idl_datareader_constructors(cls);
+
+    // These constructors are the same for all types
+    init_dds_datareader_cast_constructors(cls);
+
     init_dds_typed_datareader_base_template(cls);
 
     py::class_<typename PyDataReader<CSampleWrapper>::Selector> selector(

@@ -203,28 +203,61 @@ struct IdlWriteImpl {
     }
 };
 
-struct IdlDataWriterPostInitFunc {
-    void operator()(PyDataWriter<CSampleWrapper>& writer)
-    {
-        using rti::core::memory::ObjectAllocator;
+static dds::pub::qos::DataWriterQos get_modified_qos(
+        const PyPublisher&,
+        const PyTopic<CSampleWrapper>& topic,
+        const dds::pub::qos::DataWriterQos& qos)
+{
+    using rti::core::policy::Property;
+    static const char* pool_buffer_max_size_property_name =
+            "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size";
 
-        // Store the IdlDataWriterPyObjectCache as this writer's user data
-        if (writer->get_user_data_() == nullptr) {
-            py::gil_scoped_acquire acquire;
+    py::gil_scoped_acquire acquire;
 
-            // Obtain all the cached objects
-            auto type_support = get_py_type_support_from_topic(writer.topic());
-            auto obj_cache =
-                    ObjectAllocator<IdlDataWriterPyObjectCache>::create(type_support);
-            writer->set_user_data_(obj_cache, [](void* ptr) {
-                py::gil_scoped_acquire acquire; // we will finalize
-                auto obj_cache = static_cast<IdlDataWriterPyObjectCache*>(ptr);
-                obj_cache->finalize_c_sample();
-                ObjectAllocator<IdlDataWriterPyObjectCache>::destroy(obj_cache);
-            });
-        }
+    auto type_support = get_py_type_support_from_topic(topic);
+    auto is_unbounded =
+        py::cast<bool>(type_support.attr("is_unbounded"));
+    if (!is_unbounded) {
+        // If the type is not unbounded, we don't need to do anything
+        return qos;
     }
-};
+
+    if (qos.policy<Property>().exists(pool_buffer_max_size_property_name)) {
+        // If the property is already set, we honor that value
+        return qos;
+    }
+
+    // The type is unbounded and the buffer size has not been set. We set it
+    // to a predetermined value to support unbounded sequences out of the box.
+    dds::pub::qos::DataWriterQos modified_qos = qos;
+    modified_qos.policy<Property>().set({
+        pool_buffer_max_size_property_name,
+        "4096"
+    });
+
+    return modified_qos;
+}
+
+static void cache_idl_datawriter_py_objects(IdlDataWriter& writer)
+{
+    using rti::core::memory::ObjectAllocator;
+
+    // Store the IdlDataWriterPyObjectCache as this writer's user data
+    if (writer->get_user_data_() == nullptr) {
+        py::gil_scoped_acquire acquire;
+
+        // Obtain all the cached objects
+        auto type_support = get_py_type_support_from_topic(writer.topic());
+        auto obj_cache =
+                ObjectAllocator<IdlDataWriterPyObjectCache>::create(type_support);
+        writer->set_user_data_(obj_cache, [](void* ptr) {
+            py::gil_scoped_acquire acquire; // we will finalize
+            auto obj_cache = static_cast<IdlDataWriterPyObjectCache*>(ptr);
+            obj_cache->finalize_c_sample();
+            ObjectAllocator<IdlDataWriterPyObjectCache>::destroy(obj_cache);
+        });
+    }
+}
 
 static py::object py_key_value(
         IdlDataWriter& writer,
@@ -238,14 +271,58 @@ static py::object py_key_value(
     return obj_cache->create_py_sample();
 }
 
+void init_dds_idl_datawriter_constructors(IdlDataWriterPyClass& cls)
+{
+    // The constructors defined here are different from those defined for non
+    // IDL types in a couple of ways:
+    // - They automatically configure the Qos for unbounded support, if needed
+    // - They cache the python objects needed for the py-to-C data conversions
+
+    cls.def(py::init([](const PyPublisher& p,
+                             const PyTopic<CSampleWrapper>& t) {
+                dds::pub::qos::DataWriterQos modified_qos =
+                        get_modified_qos(p, t, p.default_datawriter_qos());
+                auto writer = IdlDataWriter(p, t, modified_qos);
+                cache_idl_datawriter_py_objects(writer);
+                return writer;
+            }),
+            py::arg("pub"),
+            py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Creates a DataWriter.");
+
+    cls.def(py::init([](const PyPublisher& p,
+                             const PyTopic<CSampleWrapper>& t,
+                             const dds::pub::qos::DataWriterQos& q,
+                             PyDataWriterListenerPtr<CSampleWrapper> listener,
+                             const dds::core::status::StatusMask& m) {
+                dds::pub::qos::DataWriterQos modified_qos =
+                        get_modified_qos(p, t, q);
+                auto writer = IdlDataWriter(p, t, modified_qos, listener, m);
+                cache_idl_datawriter_py_objects(writer);
+                return writer;
+            }),
+            py::arg("pub"),
+            py::arg("topic"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Creates a DataWriter with QoS and a listener.");
+}
 
 // Sets the Python methods for an IDL DataWriter
 template<>
 void init_dds_typed_datawriter_template(IdlDataWriterPyClass& cls)
 {
-    // Initialize the Python constructors with an additional initialization
-    // functor that sets a Python object cache as the writer user data
-    init_dds_datawriter_constructors<CSampleWrapper, IdlDataWriterPostInitFunc>(cls);
+    init_dds_idl_datawriter_constructors(cls);
+
+    // Add the constructors that just do a cast; these don't need any
+    // special functionality for IDL types.
+    init_dds_datawriter_cast_constructors(cls);
 
     // These untyped methods do not require any customization for IDL support.
     init_dds_datawriter_untyped_methods(cls);

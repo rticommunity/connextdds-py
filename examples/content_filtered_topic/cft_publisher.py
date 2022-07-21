@@ -1,15 +1,16 @@
-"""
- (c) 2020 Copyright, Real-Time Innovations, Inc.  All rights reserved.
- RTI grants Licensee a license to use, modify, compile, and create derivative
- works of the Software.  Licensee has the right to distribute object form only
- for use with RTI products.  The Software is provided "as is", with no warranty
- of any type, including any warranty for fitness for any purpose. RTI is under
- no obligation to maintain or support the Software.  RTI shall not be liable for
- any incidental or consequential damages arising out of the use or inability to
- use the software.
- """
+#
+# (c) 2022 Copyright, Real-Time Innovations, Inc.  All rights reserved.
+#
+# RTI grants Licensee a license to use, modify, compile, and create derivative
+# works of the Software solely for use with RTI products.  The Software is
+# provided "as is", with no warranty of any type, including any warranty for
+# fitness for any purpose. RTI is under no obligation to maintain or support
+# the Software.  RTI shall not be liable for any incidental or consequential
+# damages arising out of the use or inability to use the software.
+#
 
 import rti.connextdds as dds
+from test_type import CftExample
 import time
 import argparse
 
@@ -17,22 +18,18 @@ import argparse
 def publisher_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    cft_type = dds.QosProvider("cft.xml").type("cft_lib", "cft")
-    topic = dds.DynamicData.Topic(participant, "Example cft", cft_type)
+    topic = dds.Topic(participant, "Example cft", CftExample)
+    writer = dds.DataWriter(participant.implicit_publisher, topic)
 
-    writer_qos = dds.QosProvider.default.datawriter_qos
-    writer = dds.DynamicData.DataWriter(dds.Publisher(participant), topic, writer_qos)
-
-    instance = dds.DynamicData(cft_type)
-    handle = dds.InstanceHandle.nil()
+    sample = CftExample()
 
     # Output "ones" digit of count as 'x' field
     count = 0
-    while (sample_count == 0) or (count < sample_count):
-        instance["count"] = count
-        instance["x"] = count % 10
-        print("Writing cft, count={}\tx={}".format(instance["count"], instance["x"]))
-        writer.write(instance, handle)
+    while sample_count == 0 or count < sample_count:
+        sample.count = count
+        sample.x = count % 10
+        print(f"Writing cft, {sample}")
+        writer.write(sample)
         time.sleep(1)
         count += 1
 

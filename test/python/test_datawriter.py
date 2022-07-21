@@ -376,3 +376,12 @@ def test_key_value(pub):
     key_holder = get_sample_keys(pub.data_type)
     assert keys_equal(result, key_holder)
     assert instance == pub.writer.lookup_instance(result)
+
+# --- Other tests -------------------------------------------------------------
+
+
+def test_writer_cast(shared_participant):
+    fixture = PubSubFixture(shared_participant, PointIDL, create_reader=False)
+    writer = fixture.writer
+    any_writer = dds.AnyDataWriter(writer)
+    assert writer == dds.DataWriter(any_writer)

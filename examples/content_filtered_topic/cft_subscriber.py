@@ -10,28 +10,27 @@
  """
 
 import rti.connextdds as dds
+from test_type import CftExample
 import time
 import argparse
 import textwrap
 
 
 # Process incoming data in a listener, print out each sample
-class CftListener(dds.DynamicData.NoOpDataReaderListener):
+class CftListener(dds.NoOpDataReaderListener):
     def on_data_available(self, reader):
-        with reader.take() as samples:
-            for sample in filter(lambda s: s.info.valid, samples):
-                print(sample.data)
+        for sample in reader.take_data():
+            print(sample)
 
 
 def subscriber_main(domain_id, sample_count, is_cft):
     participant = dds.DomainParticipant(domain_id)
 
-    cft_type = dds.QosProvider("cft.xml").type("cft_lib", "cft")
-    topic = dds.DynamicData.Topic(participant, "Example cft", cft_type)
+    topic = dds.Topic(participant, "Example cft", CftExample)
 
     if is_cft:
         # Create a CFT that filters for incoming data within a range
-        topic = dds.DynamicData.ContentFilteredTopic(
+        topic = dds.ContentFilteredTopic(
             topic, "ContentFilteredTopic", dds.Filter("x >= %0 AND x <= %1", ["1", "4"])
         )
         print(
@@ -54,8 +53,7 @@ def subscriber_main(domain_id, sample_count, is_cft):
             )
         )
 
-    reader_qos = dds.QosProvider.default.datareader_qos
-    reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)
+    reader = dds.DataReader(dds.Subscriber(participant), topic)
     reader.set_listener(CftListener(), dds.StatusMask.DATA_AVAILABLE)
 
     count = 0

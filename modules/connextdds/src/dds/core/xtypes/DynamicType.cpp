@@ -125,6 +125,13 @@ void init_class_defs(py::class_<DynamicType>& cls)
             .def(
                     "is_keyed",
                     [](const DynamicType& dt) {
+
+                        auto kind = dt.kind();
+                        if (kind != dds::core::xtypes::TypeKind::STRUCTURE_TYPE
+                                && kind != dds::core::xtypes::TypeKind::ALIAS_TYPE) {
+                            return false;
+                        }
+
                         DDS_ExceptionCode_t ex = DDS_NO_EXCEPTION_CODE;
                         bool is_keyed = DDS_TypeCode_is_keyed(
                                 const_cast<DDS_TypeCode*>(&dt.native()),

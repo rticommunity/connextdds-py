@@ -10,6 +10,7 @@
  #
 
 import rti.connextdds as dds
+from rti.types.builtin import String
 import utils
 from test_utils.fixtures import wait
 
@@ -19,10 +20,10 @@ DOMAIN_ID = 0
 def test_write_timestamp():
     system = utils.TestSystem("StringTopicType")
     test_timestamp = dds.Time(123)
-    system.writer.write(dds.StringTopicType("hi"), test_timestamp)
+    system.writer.write(String("hi"), test_timestamp)
     wait.for_data(system.reader, 1)
     samples = system.reader.take()
-    assert samples[0].info.source_timestamp == test_timestamp
+    assert samples[0][1].source_timestamp == test_timestamp
 
 
 def test_write_handle():
@@ -50,10 +51,10 @@ def test_write_handle_and_timestamp():
 def test_write_timestamp_w_operator():
     system = utils.TestSystem("StringTopicType")
     test_timestamp = dds.Time(123)
-    system.writer << (dds.StringTopicType("hi"), test_timestamp)
+    system.writer << (String("hi"), test_timestamp)
     wait.for_data(system.reader, 1)
     samples = system.reader.take()
-    assert samples[0].info.source_timestamp == test_timestamp
+    assert samples[0][1].source_timestamp == test_timestamp
 
 
 def test_write_handle_w_operator():

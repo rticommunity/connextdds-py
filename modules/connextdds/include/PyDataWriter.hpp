@@ -213,46 +213,9 @@ using PyDataWriterClass = py::class_<
         PyDataWriterUniquePtr<T>>;
 
 template<typename T>
-struct NoOpDataWriterPostInitFunction {
-    void operator()(PyDataWriter<T>&) {}
-};
-
-// PostInitFunc is an optional functor to perform additional initialization
-// after the PyDataWriter is constructed.
-template<typename T, typename PostInitFunc = NoOpDataWriterPostInitFunction<T>>
-void init_dds_datawriter_constructors(PyDataWriterClass<T>& cls)
+void init_dds_datawriter_cast_constructors(PyDataWriterClass<T>& cls)
 {
     using PyDataWriter = PyDataWriter<T>;
-
-    cls.def(py::init([](const PyPublisher& p, const PyTopic<T>& t) {
-                auto writer = PyDataWriter(p, t);
-                PostInitFunc()(writer);
-                return writer;
-            }),
-            py::arg("pub"),
-            py::arg("topic"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Creates a DataWriter.");
-
-    cls.def(py::init([](const PyPublisher& p,
-                        const PyTopic<T>& t,
-                        const dds::pub::qos::DataWriterQos& q,
-                        PyDataWriterListenerPtr<T> listener,
-                        const dds::core::status::StatusMask& m) {
-                auto writer = PyDataWriter(p, t, q, listener, m);
-                PostInitFunc()(writer);
-                return writer;
-            }),
-            py::arg("pub"),
-            py::arg("topic"),
-            py::arg("qos"),
-            py::arg("listener") = py::none(),
-            py::arg_v(
-                    "mask",
-                    dds::core::status::StatusMask::all(),
-                    "StatusMask.ALL"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Creates a DataWriter with QoS and a listener.");
 
     cls.def(py::init([](PyIAnyDataWriter& adw) {
                 return PyDataWriter(adw.get_any_datawriter().get<T>());
@@ -268,6 +231,39 @@ void init_dds_datawriter_constructors(PyDataWriterClass<T>& cls)
             py::arg("entity"),
             py::call_guard<py::gil_scoped_release>(),
             "Create a typed DataWriter from an Entity.");
+}
+
+
+template<typename T>
+void init_dds_datawriter_constructors(PyDataWriterClass<T>& cls)
+{
+    using PyDataWriter = PyDataWriter<T>;
+
+    cls.def(py::init<const PyPublisher&, const PyTopic<T>&>(),
+            py::arg("pub"),
+            py::arg("topic"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Creates a DataWriter.");
+
+    cls.def(py::init([](const PyPublisher& p,
+                        const PyTopic<T>& t,
+                        const dds::pub::qos::DataWriterQos& q,
+                        PyDataWriterListenerPtr<T> listener,
+                        const dds::core::status::StatusMask& m) {
+                return PyDataWriter(p, t, q, listener, m);
+            }),
+            py::arg("pub"),
+            py::arg("topic"),
+            py::arg("qos"),
+            py::arg("listener") = py::none(),
+            py::arg_v(
+                    "mask",
+                    dds::core::status::StatusMask::all(),
+                    "StatusMask.ALL"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Creates a DataWriter with QoS and a listener.");
+
+    init_dds_datawriter_cast_constructors(cls);
 }
 
 template<typename T>

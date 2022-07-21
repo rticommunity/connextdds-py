@@ -499,6 +499,8 @@ class TypeSupportKind(Enum):
     ALIAS = 4
 
 
+_SERIALIZATION_OVERHEAD_BYTES = 1024
+
 class TypeSupport:
     """Support and utility methods for the usage of an IDL type"""
 
@@ -661,6 +663,21 @@ class TypeSupport:
     def max_serialized_sample_size(self) -> int:
         """Returns the max serialized size of a given type"""
         return self._plugin_dynamic_type.max_serialized_sample_size()
+
+    @property
+    def is_unbounded(self) -> bool:
+        """Returns True if the data type is unbounded, that is, it contains at
+        least one unbounded sequence or string.
+        """
+        # Unbounded types have an actual max_serialized_size that is a few bytes
+        # smaller than the UNBOUNDED value, because certain overhead is accounted for
+        return self.max_serialized_sample_size >= annotations.UNBOUNDED - _SERIALIZATION_OVERHEAD_BYTES
+
+    @property
+    def is_keyed(self) -> bool:
+        """Returns True if the data type is keyed, that is, at least one of its
+        members is a key."""
+        return self._dynamic_type_ref.is_keyed()
 
     def to_dynamic_data(self, sample: Any) -> dds.DynamicData:
         """Converts a given idl sample to dynamic data"""

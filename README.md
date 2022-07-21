@@ -1,6 +1,6 @@
 # connextdds-py
 
-A full Python binding for RTI Connext DDS using pybind11. (This binding is experimental.)
+A full Python binding for RTI Connext DDS. (This binding is experimental.)
 
 ## Documentation
 
@@ -12,20 +12,25 @@ an API reference.
 
 ```python
 import rti.connextdds as dds
-import time
+import rti.types as idl
 
-participant = dds.DomainParticipant(0)
-topic = dds.StringTopicType.Topic(participant, 'example')
-writer = dds.StringTopicType.DataWriter(participant.implicit_publisher, topic)
+@idl.struct
+class HelloWorld:
+    msg: str = ""
+
+participant = dds.DomainParticipant(domain_id=0)
+topic = dds.Topic(participant, 'HelloWorld Topic', HelloWorld)
+writer = dds.DataWriter(participant, topic)
 
 while True:
-    writer.write("Hello World!")
+    writer.write(HelloWorld("Hello, World!"))
     time.sleep(1)
 ```
 
 ## Feature highlights
 
-- Python-friendly design built on the Modern C++ API.
+- Python-friendly design.
+- Supports user data classes, defined in Python or generated from IDL.
 - Supports DynamicData and the built-in types.
 - Supports DDS Entities in code and in XML.
 - Supports QoS Policies in code and in XML.
@@ -38,10 +43,10 @@ while True:
 
 ## Requirements
 
-- Windows (requires Visual Studio 2015 or newer), macOS, and Linux
-- Python 2.7, Python 3.x with pip
-- RTI Connext DDS 5.3.1, 6.0.0, 6.0.1, 6.1.0
-- [patchelf](https://github.com/NixOS/patchelf) (Python 2.7.x on Linux)
+- Windows, Linux, mac OS
+- C++11 compiler (or newer); for Windows, Visual Studio 2015 or newer.
+- Python 3.6 or above, with pip
+- RTI Connext DDS 7.0.0 or newer
 
 ## Configuration
 

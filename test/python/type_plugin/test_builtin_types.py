@@ -41,3 +41,9 @@ def test_builtin_keyedbytes_pubsub(shared_participant):
     fixture.send_and_check(KeyedBytes("a", value=[]))
     fixture.send_and_check(KeyedBytes())
     fixture.send_and_check(KeyedBytes("b", dds.Uint8Seq([1, 4, 2, 3])))
+
+def test_builtin_keyed_string_keyvalue(shared_participant):
+    fixture = PubSubFixture(shared_participant, KeyedString)
+    k1_handle = fixture.writer.register_instance(KeyedString(key="k1"))
+    assert fixture.writer.key_value(k1_handle).key == "k1"
+    assert fixture.writer.lookup_instance(KeyedString(key="k1")) == k1_handle

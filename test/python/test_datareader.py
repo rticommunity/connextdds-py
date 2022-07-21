@@ -11,6 +11,7 @@
 
 import rti.connextdds as dds
 import rti.idl as idl
+from rti.types.builtin import String
 
 import pytest
 from rti.idl_impl.test_utils import wait
@@ -39,7 +40,7 @@ def get_test_types_generator():
     return [
         lambda: PointIDL,
         lambda: idl.get_type_support(PointIDLForDD).dynamic_type,
-        lambda: dds.StringTopicType
+        lambda: String
     ]
 
 
@@ -61,10 +62,10 @@ def get_sample_value(type: type, not_selected=False):
         point_dynamic_data["x"] = x
         point_dynamic_data["y"] = y
         return point_dynamic_data
-    elif type is dds.StringTopicType:
+    elif type is String:
         if not_selected:
-            return dds.StringTopicType("not_selected")
-        return dds.StringTopicType("Hello World")
+            return String("not_selected")
+        return String("Hello World")
     elif type is dds.KeyedStringTopicType:
         if not_selected:
             return dds.KeyedStringTopicType("not_selected", "not_selected")
@@ -93,7 +94,7 @@ def get_selector_query_str(type: type):
         return "x = 1"
     elif type == idl.get_type_support(PointIDLForDD).dynamic_type:
         return "x = 1"
-    elif type is dds.StringTopicType:
+    elif type is String:
         return "value = 'Hello World'"
     else:
         raise TypeError(f"Unsupported type: {type}")
@@ -172,8 +173,8 @@ def get_reader_listeners(type: type):
         return (PointListener(), OtherPointListener())
     elif type == idl.get_type_support(PointIDLForDD).dynamic_type:
         return (dds.DynamicData.NoOpDataReaderListener(), dds.DynamicData.NoOpDataReaderListener())
-    elif type is dds.StringTopicType:
-        return (dds.StringTopicType.NoOpDataReaderListener(), dds.StringTopicType.NoOpDataReaderListener())
+    elif type is String:
+        return (dds.NoOpDataReaderListener(), dds.NoOpDataReaderListener())
     else:
         raise TypeError("Unsupported type: {}".format(type))
 
@@ -206,7 +207,7 @@ def test_datareader_listener_can_be_set(pubsub_idl_dd_builtin_no_samples):
 
     pubsub.reader.listener = get_reader_listeners(pubsub.data_type)[0]
     assert isinstance(pubsub.reader.listener,
-                      (dds.DataReaderListener, dds.DynamicData.DataReaderListener, dds.StringTopicType.DataReaderListener))
+                      (dds.DataReaderListener, dds.DynamicData.DataReaderListener, dds.DataReaderListener))
 
     # Test constructor
     new_reader = get_reader_w_listeners(
@@ -470,3 +471,9 @@ def test_select_instance_not_returning_properly(pubsub_idl_point_no_samples):
 
     # make sure that only one is selected
     assert 1 == len(selector.read())
+
+
+def test_reader_cast(pubsub_idl_point_no_samples):
+    reader = pubsub_idl_point_no_samples.reader
+    any_reader = dds.AnyDataReader(reader)
+    assert reader == dds.DataReader(any_reader)
