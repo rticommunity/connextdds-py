@@ -11,6 +11,7 @@
 
 import rti.connextdds as dds
 import utils
+from test_utils.fixtures import wait
 
 DOMAIN_ID = 0
 
@@ -18,8 +19,8 @@ DOMAIN_ID = 0
 def test_write_timestamp():
     system = utils.TestSystem("StringTopicType")
     test_timestamp = dds.Time(123)
-    system.writer.write("hi", test_timestamp)
-    utils.wait(system.reader)
+    system.writer.write(dds.StringTopicType("hi"), test_timestamp)
+    wait.for_data(system.reader, 1)
     samples = system.reader.take()
     assert samples[0].info.source_timestamp == test_timestamp
 
@@ -29,7 +30,7 @@ def test_write_handle():
     sample = dds.KeyedStringTopicType()
     handle = system.writer.register_instance(sample)
     system.writer.write(sample, handle)
-    utils.wait(system.reader)
+    wait.for_data(system.reader, 1)
     samples = system.reader.take()
     assert samples[0].info.instance_handle == handle
 
@@ -40,7 +41,7 @@ def test_write_handle_and_timestamp():
     test_timestamp = dds.Time(123)
     handle = system.writer.register_instance(sample)
     system.writer.write(sample, handle, test_timestamp)
-    utils.wait(system.reader)
+    wait.for_data(system.reader, 1)
     samples = system.reader.take()
     assert samples[0].info.instance_handle == handle
     assert samples[0].info.source_timestamp == test_timestamp
@@ -49,8 +50,8 @@ def test_write_handle_and_timestamp():
 def test_write_timestamp_w_operator():
     system = utils.TestSystem("StringTopicType")
     test_timestamp = dds.Time(123)
-    system.writer << ("hi", test_timestamp)
-    utils.wait(system.reader)
+    system.writer << (dds.StringTopicType("hi"), test_timestamp)
+    wait.for_data(system.reader, 1)
     samples = system.reader.take()
     assert samples[0].info.source_timestamp == test_timestamp
 
@@ -60,7 +61,7 @@ def test_write_handle_w_operator():
     sample = dds.KeyedStringTopicType()
     handle = system.writer.register_instance(sample)
     system.writer << (sample, handle)
-    utils.wait(system.reader)
+    wait.for_data(system.reader, 1)
     samples = system.reader.take()
     assert samples[0].info.instance_handle == handle
 

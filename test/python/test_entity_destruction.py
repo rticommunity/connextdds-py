@@ -10,13 +10,13 @@
  #
 
 import rti.connextdds as dds
-import utils
+from test_utils.fixtures import create_participant
 import pytest
 
 
 @pytest.mark.parametrize("implicit_sub", [True, False])
 def test_close_subscriber_contained_entities(implicit_sub):
-    p = utils.create_participant()
+    p = create_participant()
     topic1 = dds.StringTopicType.Topic(p, "test topic1")
     topic2 = dds.StringTopicType.Topic(p, "test topic2")
     topic3 = dds.StringTopicType.Topic(p, "test topic3")
@@ -55,7 +55,7 @@ def test_close_subscriber_contained_entities(implicit_sub):
 
 @pytest.mark.parametrize("implicit_pub", [True, False])
 def test_close_publisher_contained_entities(implicit_pub):
-    p = utils.create_participant()
+    p = create_participant()
     topic1 = dds.StringTopicType.Topic(p, "test topic1")
     topic2 = dds.StringTopicType.Topic(p, "test topic2")
     topic30 = dds.StringTopicType.Topic(p, "test topic3")
@@ -89,8 +89,8 @@ def test_close_publisher_contained_entities(implicit_pub):
     "implicit_pub,test_retain", [(False, False), (False, True), (True, False)]
 )
 def test_close_participant_contained_entities(implicit_pub, test_retain):
-    p1 = utils.create_participant()
-    p2 = utils.create_participant()
+    p1 = create_participant()
+    p2 = create_participant()
     topic1 = dds.StringTopicType.Topic(p1, "test_topic1")
     topic2 = dds.StringTopicType.Topic(p1, "test topic2")
     topic30 = dds.StringTopicType.Topic(p1, "test topic3")
@@ -197,7 +197,7 @@ def test_close_participant_contained_entities(implicit_pub, test_retain):
 
 @pytest.mark.parametrize("retain", [True, False])
 def test_close_datareader_contained_entity(retain):
-    p = utils.create_participant()
+    p = create_participant()
     topic = dds.StringTopicType.Topic(p, "test_topic")
     sub = dds.Subscriber(p)
     reader = dds.StringTopicType.DataReader(sub, topic)

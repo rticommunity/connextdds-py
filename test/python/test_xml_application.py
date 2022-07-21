@@ -10,9 +10,9 @@
  #
 
 import rti.connextdds as dds
-import utils
 import pytest
 import pathlib
+from test_utils.fixtures import wait
 
 FILE = (
     str(pathlib.Path(__file__).parent.absolute())
@@ -81,14 +81,14 @@ def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filte
     write_dynamic_sample(writer, 9)
 
     if filtered:
-        utils.wait(reader, 10, 2)
+        wait.for_data(reader, 2)
         samples = reader.take()
 
         assert samples[0].data == make_dynamic_data(7)
         assert samples[1].data == make_dynamic_data(9)
 
     else:
-        utils.wait(reader, 10, 3)
+        wait.for_data(reader, 3)
         samples = reader.take()
 
         assert samples[0].data == make_dynamic_data(7)

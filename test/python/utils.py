@@ -16,7 +16,7 @@ import test_utils.fixtures as fixtures
 
 class TestSystem:
     def __init__(self, sample_type):
-        self.participant = create_participant()
+        self.participant = fixtures.create_participant()
 
         reader_qos = self.participant.implicit_subscriber.default_datareader_qos
         reader_qos << dds.Durability.transient_local
@@ -61,20 +61,3 @@ class TestSystem:
             )
         else:
             raise Exception(sample_type + " not supported in test system")
-
-
-# PY-26: replace with test_utils.fixtures.participant fixture
-# (pass as a input fixture to the test instead of calling a function)
-def create_participant():
-    return fixtures.create_participant()
-
-
-def wait(reader, t=10, count=1):
-    curr = 0
-    while t > curr:
-        if len(reader.read()) >= count:
-            break
-        time.sleep(0.5)
-        curr += 0.5
-    else:
-        raise Exception("Waited for " + str(t) + " seconds and recieved nothing")

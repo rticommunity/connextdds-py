@@ -23,8 +23,10 @@ get_test_participant_qos = test_utils.get_test_participant_qos
 @pytest.fixture
 def participant():
     participant = create_participant()
-    yield participant
-    participant.close()
+    try:
+        yield participant
+    finally:
+        participant.close()
 
 # Provides a participant that is shared among all the tests in a module that
 # request this fixture
