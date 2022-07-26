@@ -11,7 +11,7 @@ find_package(
     REQUIRED
     COMPONENTS
         Interpreter
-        Development
+        Development.Module
 )
 
 find_package(

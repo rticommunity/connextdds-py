@@ -1,0 +1,8 @@
+[tool.cibuildwheel]
+build-verbosity = 3
+test-requires = ["pytest", "numpy"]
+
+[tool.cibuildwheel.windows]
+before-all = "resources\\jenkins\\buildconnext-win32.bat"
+build = "cp36-win* cp37-win* cp38-win* cp39-win*"
+test-command = "pytest -v {project}\\test || exit 0;"

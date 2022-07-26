@@ -76,14 +76,14 @@ def get_python_root():
 
 
 def get_cpu(arch):
-    if 'x64' in arch:
+    if 'x64' in arch or 'AMD64' in arch:
         cpu = 'x64'
     elif 'i86' in arch:
         cpu = 'Win32'
     elif 'arm64' in arch:
         cpu = 'arm64'
     else:
-        raise RuntimeError('Unsupported CPU in arch')
+        raise RuntimeError(f'Unsupported CPU in arch: {arch}')
     return cpu
 
 
