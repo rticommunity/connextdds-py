@@ -1462,7 +1462,7 @@ void init_dds_typed_datareader_template(PyDataReaderClass<DynamicData>& cls)
     cls.def(
                "key_value",
                [](PyDataReader<dds::core::xtypes::DynamicData>& dr,
-                  const dds::core::InstanceHandle& handle) {
+                       const dds::core::InstanceHandle& handle) {
                    dds::core::xtypes::DynamicType dt(
                            PyDynamicTypeMap::get(dr->type_name()));
                    dds::core::xtypes::DynamicData dd(dt);
@@ -1476,7 +1476,7 @@ void init_dds_typed_datareader_template(PyDataReaderClass<DynamicData>& cls)
             .def(
                     "topic_instance_key_value",
                     [](PyDataReader<dds::core::xtypes::DynamicData>& dr,
-                       const dds::core::InstanceHandle& handle) {
+                            const dds::core::InstanceHandle& handle) {
                         dds::core::xtypes::DynamicType dt(
                                 PyDynamicTypeMap::get(dr->type_name()));
                         dds::core::xtypes::DynamicData dd(dt);

@@ -11,7 +11,7 @@
 
 import rti.connextdds as dds
 import rti.idl as idl
-from rti.types.builtin import String
+from rti.types.builtin import String, KeyedString
 
 import pytest
 from rti.idl_impl.test_utils import wait
@@ -45,7 +45,11 @@ def get_test_types_generator():
 
 
 def get_keyed_types_generator():
-    return [lambda: PointIDL, lambda: idl.get_type_support(PointIDLForDD).dynamic_type]
+    return [
+        lambda: PointIDL, 
+        lambda: idl.get_type_support(PointIDLForDD).dynamic_type, 
+        lambda: KeyedString
+    ]
 
 
 def get_sample_value(type: type, not_selected=False):
@@ -66,10 +70,10 @@ def get_sample_value(type: type, not_selected=False):
         if not_selected:
             return String("not_selected")
         return String("Hello World")
-    elif type is dds.KeyedStringTopicType:
+    elif type is KeyedString:
         if not_selected:
-            return dds.KeyedStringTopicType("not_selected", "not_selected")
-        return dds.KeyedStringTopicType("Hello World", "Hello World")
+            return KeyedString("not_selected", "not_selected")
+        return KeyedString("Hello World", "Hello World")
     else:
         raise TypeError(f"Unsupported type: {type}")
 
@@ -83,8 +87,8 @@ def get_sample_keys(type: type):
         point_dynamic_data["x"] = 1
         point_dynamic_data["y"] = 0
         return point_dynamic_data
-    elif type is dds.KeyedStringTopicType:
-        return dds.KeyedStringTopicType("Hello World", "")
+    elif type is KeyedString:
+        return KeyedString("Hello World", "")
     else:
         raise TypeError(f"Unsupported type: {type}")
 
@@ -108,7 +112,7 @@ def keys_equal(a, b) -> bool:
         return a.x == b.x
     elif type(a) == dds.DynamicData:
         return a["x"] == b["x"]
-    elif type(a) is dds.KeyedStringTopicType:
+    elif type(a) is KeyedString:
         return a.key == b.key
     else:
         raise TypeError(f"Unsupported type: {type}")
@@ -126,6 +130,18 @@ def check_expected_data(reader: dds.DataReader, expected_samples: list):
 
 @pytest.fixture(scope="function", params=get_test_types_generator())
 def pubsub_idl_dd_builtin_no_samples(request, shared_participant):
+    """This fixture provides a test with a writer and a reader that have already
+       been discovered. The participant is shared within the module to speed up
+       execution, but the contained entities are deleted after each test
+       function."""
+
+    data_type = request.param()
+    fixture = PubSubFixture(shared_participant, data_type)
+    return fixture
+    
+
+@pytest.fixture(scope="function", params=get_keyed_types_generator())
+def pubsub_keyed_idl_dd_builtin_no_samples(request, shared_participant):
     """This fixture provides a test with a writer and a reader that have already
        been discovered. The participant is shared within the module to speed up
        execution, but the contained entities are deleted after each test
@@ -215,6 +231,19 @@ def test_datareader_listener_can_be_set(pubsub_idl_dd_builtin_no_samples):
 
     assert new_reader.listener == listener
     new_reader.close()
+
+
+def test_datareader_key_value_and_lookup_instance(pubsub_keyed_idl_dd_builtin_no_samples):
+    pubsub = pubsub_keyed_idl_dd_builtin_no_samples
+    sample = get_sample_value(pubsub.data_type)
+    pubsub.writer.write(sample)
+    wait.for_data(pubsub.reader, count=1)
+    instance = pubsub.reader.lookup_instance(sample)
+    assert instance != dds.InstanceHandle.nil()
+    result = pubsub.reader.key_value(instance)
+    key_holder = get_sample_keys(pubsub.data_type)
+    assert keys_equal(result, key_holder)
+    assert instance == pubsub.reader.lookup_instance(result)
 
 
 def test_selector(pubsub_idl_dd_builtin_no_samples):

@@ -13,9 +13,9 @@
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
 #include <pybind11/functional.h>
-
+#include <rti/core/EntityLock.hpp>
 #include "IdlDataReader.hpp"
-
+#include "IdlTypeSupport.hpp"
 
 using namespace dds::core::xtypes;
 using namespace dds::topic;
@@ -23,21 +23,29 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-struct IdlDataReaderPyObjectCache {
-    py::handle create_py_sample_func;
-    py::handle cast_c_sample_func;
-    py::handle type_support;
-};
 
-// Gets the Python objects associated to this writer
-static IdlDataReaderPyObjectCache* get_py_objects(
+
+// Gets the Python objects associated to this reader
+static CPySampleConverter* get_py_objects(
         dds::sub::DataReader<CSampleWrapper>& reader)
 {
-    auto objects =
-            static_cast<IdlDataReaderPyObjectCache*>(reader->get_user_data_());
+    auto objects = static_cast<CPySampleConverter*>(reader->get_user_data_());
     RTI_CHECK_PRECONDITION(objects != nullptr);
     return objects;
 }
+
+static CPySampleConverter* convert_sample(
+        dds::sub::DataReader<CSampleWrapper>& reader,
+        const py::object& sample)
+{
+    CPySampleConverter* obj_cache = get_py_objects(reader);
+
+    // Important: this is a call into Python; the caller must acquire the GIL
+    obj_cache->convert_to_c_sample(sample);
+
+    return obj_cache;  // return the obj_cache for convenience
+}
+
 
 template <typename CreateSampleFunc>
 py::object invoke_py_sample_function(
@@ -193,6 +201,31 @@ static void test_native_reads(PyDataReader<CSampleWrapper>& dr)
     }
 }
 
+static py::object py_key_value(
+        PyDataReader<CSampleWrapper>& reader,
+        dds::core::InstanceHandle handle)
+{
+    rti::core::EntityLock lock_reader(reader);
+    py::gil_scoped_acquire acquire_gil;
+    // Entity lock + gil taken
+    CPySampleConverter* obj_cache = get_py_objects(reader);
+    reader.key_value(obj_cache->c_sample_buffer, handle);
+    return obj_cache->create_py_sample();
+}
+
+static dds::core::InstanceHandle py_lookup_instance(
+        PyDataReader<CSampleWrapper>& reader,
+        py::object sample)
+{
+    rti::core::EntityLock lock_reader(reader);
+    py::gil_scoped_acquire acquire_gil;
+    // Entity lock + gil taken
+    CPySampleConverter* obj_cache = convert_sample(reader, sample);
+    py::gil_scoped_release release_gil_for_native_operation;
+
+    return reader.lookup_instance(obj_cache->c_sample_buffer);
+}
+
 static dds::sub::qos::DataReaderQos get_modified_qos(
         const PySubscriber&,
         const dds::topic::Topic<CSampleWrapper>& topic,
@@ -228,37 +261,6 @@ static dds::sub::qos::DataReaderQos get_modified_qos(
     return modified_qos;
 }
 
-static void cache_idl_datareader_py_objects(
-        PyDataReader<CSampleWrapper>& reader)
-{
-    using rti::core::memory::ObjectAllocator;
-
-    // Store the IdlDataReaderPyObjectCache as this reader's user data
-    if (reader->get_user_data_() == nullptr) {
-        py::gil_scoped_acquire acquire;
-
-        // Obtain all the cached objects
-        auto type_support =
-                get_py_type_support_from_topic(reader.topic_description());
-        IdlDataReaderPyObjectCache tmp_obj_cache;
-        tmp_obj_cache.type_support = type_support;
-        tmp_obj_cache.create_py_sample_func =
-                py::type::of(type_support).attr("_create_py_sample");
-        tmp_obj_cache.cast_c_sample_func =
-                py::type::of(type_support).attr("_cast_c_sample");
-
-        // Once the objects have been successfully retrieved, allocate
-        // the user data object and set it.
-        auto obj_cache =
-                ObjectAllocator<IdlDataReaderPyObjectCache>::create();
-        *obj_cache = std::move(tmp_obj_cache);
-        reader->set_user_data_(obj_cache, [](void* ptr) {
-            ObjectAllocator<IdlDataReaderPyObjectCache>::destroy(
-                    static_cast<IdlDataReaderPyObjectCache*>(ptr));
-        });
-    }
-}
-
 
 void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
 {
@@ -271,7 +273,9 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
                 auto modified_qos =
                         get_modified_qos(s, t, s.default_datareader_qos());
                 auto reader = PyIdlDataReader(s, t, modified_qos);
-                cache_idl_datareader_py_objects(reader);
+                CPySampleConverter::cache_idl_entity_py_objects(
+                        reader,
+                        reader.topic_description());
                 return reader;
             }),
             py::arg("sub"),
@@ -285,8 +289,11 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
                              PyDataReaderListenerPtr<CSampleWrapper> listener,
                              const dds::core::status::StatusMask& m) {
                 auto modified_qos = get_modified_qos(s, t, q);
-                auto reader = PyIdlDataReader(s, t, modified_qos, listener, m);
-                cache_idl_datareader_py_objects(reader);
+                auto reader =
+                        PyIdlDataReader(s, t, modified_qos, listener, m);
+                CPySampleConverter::cache_idl_entity_py_objects(
+                        reader,
+                        reader.topic_description());
                 return reader;
             }),
             py::arg("sub"),
@@ -300,16 +307,20 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
             py::call_guard<py::gil_scoped_release>(),
             "Create a DataReader.");
 
-    cls.def(py::init([](const PySubscriber& s,
-                             const PyContentFilteredTopic<CSampleWrapper>& cft) {
-                auto modified_qos = get_modified_qos(
-                        s,
-                        cft.topic(),
-                        s.default_datareader_qos());
-                auto reader = PyIdlDataReader(s, cft, modified_qos);
-                cache_idl_datareader_py_objects(reader);
-                return reader;
-            }),
+    cls.def(py::init(
+                    [](const PySubscriber& s,
+                            const PyContentFilteredTopic<CSampleWrapper>& cft) {
+                        auto modified_qos = get_modified_qos(
+                                s,
+                                cft.topic(),
+                                s.default_datareader_qos());
+                        auto reader =
+                                PyIdlDataReader(s, cft, modified_qos);
+                        CPySampleConverter::cache_idl_entity_py_objects(
+                                reader,
+                                reader.topic_description());
+                        return reader;
+                    }),
             py::arg("sub"),
             py::arg("cft"),
             py::call_guard<py::gil_scoped_release>(),
@@ -321,8 +332,11 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
                              PyDataReaderListenerPtr<CSampleWrapper> listener,
                              const dds::core::status::StatusMask& m) {
                 auto modified_qos = get_modified_qos(s, cft.topic(), q);
-                auto reader = PyIdlDataReader(s, cft, modified_qos, listener, m);
-                cache_idl_datareader_py_objects(reader);
+                auto reader =
+                        PyIdlDataReader(s, cft, modified_qos, listener, m);
+                CPySampleConverter::cache_idl_entity_py_objects(
+                        reader,
+                        reader.topic_description());
                 return reader;
             }),
             py::arg("sub"),
@@ -406,12 +420,27 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
     cls.def(
             "select",
             [](PyDataReader<CSampleWrapper>& dr) {
-                return typename PyDataReader<CSampleWrapper>::Selector(dr.select());
+                return typename PyDataReader<CSampleWrapper>::Selector(
+                        dr.select());
             },
             py::call_guard<py::gil_scoped_release>(),
             "Get a Selector to perform complex data selections, such "
             "as "
             "per-instance selection, content, and status filtering.");
+
+    cls.def("key_value",
+            &py_key_value,
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance key that corresponds to an instance "
+            "handle.");
+
+    cls.def("lookup_instance",
+            &py_lookup_instance,
+            py::arg("key_holder"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance handle that corresponds to an instance "
+            "key_holder");
 
     cls.def("read_data_native",
             read_data_native,

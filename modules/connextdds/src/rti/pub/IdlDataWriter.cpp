@@ -15,6 +15,7 @@
 #include <pybind11/functional.h>
 
 #include "IdlDataWriter.hpp"
+#include "IdlTypeSupport.hpp"
 
 #include <rti/core/memory.hpp>
 #include <rti/core/EntityLock.hpp>
@@ -25,89 +26,21 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-
-// Caches python objects used by the DataWriter in the critical path for quick
-// access
-struct IdlDataWriterPyObjectCache {
-    py::handle type_support;
-    rti::topic::cdr::CTypePlugin* type_plugin;
-    py::handle create_c_sample_func;
-    py::handle convert_to_c_sample_func;
-    py::handle create_py_sample_func;
-    py::object c_sample;
-    PyCTypesBuffer c_sample_buffer;
-
-    IdlDataWriterPyObjectCache(py::handle the_type_support)
-            : type_support(the_type_support),
-              type_plugin(py::cast<TypePlugin>(
-                                  type_support.attr("_plugin_dynamic_type"))
-                                  .type_plugin),
-              create_c_sample_func(py::type::of(type_support)
-                                           .attr("_create_empty_c_sample")),
-              convert_to_c_sample_func(
-                      py::type::of(type_support).attr("_convert_to_c_sample")),
-              create_py_sample_func(py::type::of(type_support).attr("_create_py_sample")),
-              c_sample(create_c_sample_func(type_support)),
-              c_sample_buffer(c_sample)
-
-    {
-    }
-
-    ~IdlDataWriterPyObjectCache()
-    {
-        try {
-            finalize_c_sample();
-        } catch (...) {
-            // Ignore exceptions
-        }
-    }
-
-    // Disable copies
-    IdlDataWriterPyObjectCache(const IdlDataWriterPyObjectCache&) = delete;
-    IdlDataWriterPyObjectCache& operator=(const IdlDataWriterPyObjectCache&) =
-            delete;
-    // Default move
-    IdlDataWriterPyObjectCache(IdlDataWriterPyObjectCache&&) = default;
-    IdlDataWriterPyObjectCache& operator=(IdlDataWriterPyObjectCache&&) =
-            default;
-
-    void convert_to_c_sample(const py::object& py_sample)
-    {
-        convert_to_c_sample_func(type_support, c_sample, py_sample);
-    }
-
-    void finalize_c_sample()
-    {
-        if (type_plugin != nullptr && c_sample) {
-            type_plugin->finalize_sample(c_sample_buffer);
-        }
-    }
-
-    py::object create_py_sample()
-    {
-        // We pass the pointer to the python function as an integer,
-        // because that's what ctypes.cast expects.
-        size_t sample_ptr = reinterpret_cast<size_t>(
-                (static_cast<CSampleWrapper&>(c_sample_buffer)).sample());
-        return create_py_sample_func(type_support, sample_ptr);
-    }
-};
-
 // Gets the Python objects associated to this writer
-static IdlDataWriterPyObjectCache *get_py_objects(
+static CPySampleConverter* get_py_objects(
         dds::pub::DataWriter<CSampleWrapper>& writer)
 {
     auto objects =
-            static_cast<IdlDataWriterPyObjectCache*>(writer->get_user_data_());
+            static_cast<CPySampleConverter*>(writer->get_user_data_());
     RTI_CHECK_PRECONDITION(objects != nullptr);
     return objects;
 }
 
-static IdlDataWriterPyObjectCache* convert_sample(
+static CPySampleConverter* convert_sample(
         dds::pub::DataWriter<CSampleWrapper>& writer,
         const py::object& sample)
 {
-    IdlDataWriterPyObjectCache *obj_cache = get_py_objects(writer);
+    CPySampleConverter *obj_cache = get_py_objects(writer);
 
     // Important: this is a call into Python; the caller must acquire the GIL
     obj_cache->convert_to_c_sample(sample);
@@ -238,26 +171,6 @@ static dds::pub::qos::DataWriterQos get_modified_qos(
     return modified_qos;
 }
 
-static void cache_idl_datawriter_py_objects(IdlDataWriter& writer)
-{
-    using rti::core::memory::ObjectAllocator;
-
-    // Store the IdlDataWriterPyObjectCache as this writer's user data
-    if (writer->get_user_data_() == nullptr) {
-        py::gil_scoped_acquire acquire;
-
-        // Obtain all the cached objects
-        auto type_support = get_py_type_support_from_topic(writer.topic());
-        auto obj_cache =
-                ObjectAllocator<IdlDataWriterPyObjectCache>::create(type_support);
-        writer->set_user_data_(obj_cache, [](void* ptr) {
-            py::gil_scoped_acquire acquire; // we will finalize
-            auto obj_cache = static_cast<IdlDataWriterPyObjectCache*>(ptr);
-            obj_cache->finalize_c_sample();
-            ObjectAllocator<IdlDataWriterPyObjectCache>::destroy(obj_cache);
-        });
-    }
-}
 
 static py::object py_key_value(
         IdlDataWriter& writer,
@@ -266,7 +179,7 @@ static py::object py_key_value(
     rti::core::EntityLock lock_writer(writer);
     py::gil_scoped_acquire acquire_gil;
     // Entity lock + gil taken
-    IdlDataWriterPyObjectCache* obj_cache = get_py_objects(writer);
+    CPySampleConverter* obj_cache = get_py_objects(writer);
     writer.key_value(obj_cache->c_sample_buffer, handle);
     return obj_cache->create_py_sample();
 }
@@ -283,7 +196,9 @@ void init_dds_idl_datawriter_constructors(IdlDataWriterPyClass& cls)
                 dds::pub::qos::DataWriterQos modified_qos =
                         get_modified_qos(p, t, p.default_datawriter_qos());
                 auto writer = IdlDataWriter(p, t, modified_qos);
-                cache_idl_datawriter_py_objects(writer);
+                CPySampleConverter::cache_idl_entity_py_objects(
+                        writer,
+                        writer.topic());
                 return writer;
             }),
             py::arg("pub"),
@@ -299,7 +214,9 @@ void init_dds_idl_datawriter_constructors(IdlDataWriterPyClass& cls)
                 dds::pub::qos::DataWriterQos modified_qos =
                         get_modified_qos(p, t, q);
                 auto writer = IdlDataWriter(p, t, modified_qos, listener, m);
-                cache_idl_datawriter_py_objects(writer);
+                CPySampleConverter::cache_idl_entity_py_objects(
+                        writer,
+                        writer.topic());
                 return writer;
             }),
             py::arg("pub"),

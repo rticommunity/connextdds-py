@@ -14,6 +14,7 @@ import rti.idl as idl
 
 import pytest
 from test_utils.fixtures import *
+from rti.types.builtin import String, KeyedString
 
 
 # --- Helpers and fixtures ----------------------------------------------------
@@ -55,8 +56,8 @@ def get_test_types_generator():
     return [
         lambda: PointIDL,
         lambda: idl.get_type_support(PointIDLForDD).dynamic_type,
-        lambda: dds.StringTopicType,
-        lambda: dds.KeyedStringTopicType,
+        lambda: String,
+        lambda: KeyedString,
     ]
 
 
@@ -64,7 +65,7 @@ def get_keyed_types_generator():
     return [
         lambda: PointIDL,
         lambda: idl.get_type_support(PointIDLForDD).dynamic_type,
-        lambda: dds.KeyedStringTopicType,
+        lambda: KeyedString,
     ]
 
 
@@ -107,10 +108,10 @@ def get_sample_value(type: type):
         point_dynamic_data["x"] = 1
         point_dynamic_data["y"] = 2
         return point_dynamic_data
-    elif type is dds.StringTopicType:
-        return dds.StringTopicType("Hello World")
-    elif type is dds.KeyedStringTopicType:
-        return dds.KeyedStringTopicType("Hello World", "Hello World")
+    elif type is String:
+        return String("Hello World")
+    elif type is KeyedString:
+        return KeyedString("Hello World", "Hello World")
     else:
         raise TypeError(f"Unsupported type: {type}")
 
@@ -124,8 +125,8 @@ def get_sample_keys(type: type):
         point_dynamic_data["x"] = 1
         point_dynamic_data["y"] = 0
         return point_dynamic_data
-    elif type is dds.KeyedStringTopicType:
-        return dds.KeyedStringTopicType("Hello World", "")
+    elif type is KeyedString:
+        return KeyedString("Hello World", "")
     else:
         raise TypeError(f"Unsupported type: {type}")
 
@@ -138,7 +139,7 @@ def keys_equal(a, b) -> bool:
         return a.x == b.x
     elif type(a) == dds.DynamicData:
         return a["x"] == b["x"]
-    elif type(a) is dds.KeyedStringTopicType:
+    elif type(a) is KeyedString:
         return a.key == b.key
     else:
         raise TypeError(f"Unsupported type: {type}")
@@ -160,12 +161,12 @@ def get_writer_listeners(type: type):
     elif type == idl.get_type_support(PointIDLForDD).dynamic_type:
         return (dds.DynamicData.NoOpDataWriterListener(),
                 dds.DynamicData.NoOpDataWriterListener())
-    elif type is dds.StringTopicType:
-        return (dds.StringTopicType.NoOpDataWriterListener(),
-                dds.StringTopicType.NoOpDataWriterListener())
-    elif type is dds.KeyedStringTopicType:
-        return (dds.KeyedStringTopicType.NoOpDataWriterListener(),
-                dds.KeyedStringTopicType.NoOpDataWriterListener())
+    elif type is String:
+        return (dds.NoOpDataWriterListener(),
+                dds.NoOpDataWriterListener())
+    elif type is KeyedString:
+        return (dds.NoOpDataWriterListener(),
+                dds.NoOpDataWriterListener())
     else:
         raise TypeError(f"Unsupported type: {type}")
 
@@ -290,9 +291,7 @@ def test_datawriter_listener_can_be_set(pubsub):
     pubsub.writer.listener = get_writer_listeners(pubsub.data_type)[0]
     assert isinstance(pubsub.writer.listener,
                       (dds.DataWriterListener,
-                       dds.DynamicData.DataWriterListener,
-                       dds.StringTopicType.DataWriterListener,
-                       dds.KeyedStringTopicType.DataWriterListener))
+                       dds.DynamicData.DataWriterListener))
 
     # Test constructor
     new_writer = get_writer_w_listeners(
@@ -367,8 +366,6 @@ def test_pubsub_with_timestamp(pubsub_keyed_types):
 # --- Key Value tests ---------------------------------------------------------
 
 def test_key_value(pub):
-    if pub.data_type == dds.KeyedStringTopicType:
-        pytest.skip("TODO: KeyedStringTopicType has known bug")
     sample = get_sample_value(pub.data_type)
     instance = pub.writer.register_instance(sample)
     assert instance != dds.InstanceHandle.nil()

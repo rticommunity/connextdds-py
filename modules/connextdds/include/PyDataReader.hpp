@@ -635,6 +635,16 @@ void init_dds_typed_datareader_base_template(PyDataReaderClass<T>& cls)
                     py::call_guard<py::gil_scoped_release>(),
                     "Get the ParticipantBuiltinTopicData for a publication "
                     "matched to this DataReader.")
+            .def(
+                    "lookup_instance",
+                    [](PyDataReader<T>& dr, T& sample) {
+                        return dr.lookup_instance(sample);
+                    },
+                    py::arg("key_holder"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Retrieve the instance handle that corresponds to an "
+                    "instance "
+                    "key_holder")
 #if rti_connext_version_gte(6, 1, 0, 0)
             .def(
                     "is_matched_publication_alive",
@@ -912,7 +922,7 @@ void init_dds_typed_datareader_template(PyDataReaderClass<T>& cls)
     cls.def(
                "key_value",
                [](PyDataReader<T>& dr,
-                  const dds::core::InstanceHandle& handle) {
+                       const dds::core::InstanceHandle& handle) {
                    T d;
                    dr.key_value(d, handle);
                    return d;
@@ -924,7 +934,7 @@ void init_dds_typed_datareader_template(PyDataReaderClass<T>& cls)
             .def(
                     "topic_instance_key_value",
                     [](PyDataReader<T>& dr,
-                       const dds::core::InstanceHandle& handle) {
+                            const dds::core::InstanceHandle& handle) {
                         T d;
                         dds::topic::TopicInstance<T> ti(handle, d);
                         dr.key_value(ti, handle);

@@ -41,46 +41,6 @@ using IdlITopicDescriptionPyClass = py::class_<
                 no_gil_delete<
                         PyITopicDescription<rti::topic::cdr::CSampleWrapper>>>>;
 
-// Gets the python TypeSupport from a C++ Topic object, which is stored in its
-// user data.
-inline static py::handle get_py_type_support_from_topic(
-        const dds::topic::TopicDescription<rti::topic::cdr::CSampleWrapper>&
-                topic)
-{
-    // TODO PY-17: The type support must be cached in the writer and reader
-    // instead of looked up every time
-    using namespace dds::topic;
-    using namespace rti::topic::cdr;
-    PyObject* user_data = static_cast<PyObject*>(topic->get_user_data_());
-    if (user_data == nullptr) {
-        // If it's null it means that it's of type cft
-        try {
-            user_data = static_cast<PyObject*>(
-                    dds::core::polymorphic_cast<
-                            ContentFilteredTopic<CSampleWrapper>,
-                            TopicDescription<CSampleWrapper>>(topic)
-                            ->topic()
-                            ->get_user_data_());
-        } catch (const dds::core::InvalidDowncastError&) {
-            user_data = nullptr;
-        }
-    }
-
-    if (user_data == nullptr) {
-        throw dds::core::IllegalOperationError("Not a valid Python Topic");
-    }
-
-    auto type_support = py::handle(user_data);
-
-#ifndef NDEBUG
-    // this shouldn't fail; for performance reasons, check this only in debug
-    // mode
-    assert_valid_type_support(type_support);
-#endif
-
-    return type_support;
-}
-
 inline PyIdlTopic create_idl_py_topic(
         PyDomainParticipant& participant,
         const ::std::string& topic_name,

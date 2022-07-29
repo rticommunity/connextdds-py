@@ -136,7 +136,7 @@ struct PyCTypesBuffer {
         }
     }
 
-    // Obtain the actual buffer as a CSampleWrapper, as required by
+    // Obtain the actual buffer as a rti::topic::cdr::CSampleWrapper, as required by
     // PyDataWriter::py_write
     operator rti::topic::cdr::CSampleWrapper&()
     {
@@ -144,6 +144,138 @@ struct PyCTypesBuffer {
                 py_buffer.buf);
     }
 };
+// Gets the python TypeSupport from a C++ Topic object, which is stored in its
+// user data.
+inline static py::handle get_py_type_support_from_topic(
+        const dds::topic::TopicDescription<rti::topic::cdr::CSampleWrapper>&
+                topic)
+{
+    // TODO PY-17: The type support must be cached in the writer and reader
+    // instead of looked up every time
+    using namespace dds::topic;
+    using namespace rti::topic::cdr;
+    PyObject* user_data = static_cast<PyObject*>(topic->get_user_data_());
+    if (user_data == nullptr) {
+        // If it's null it means that it's of type cft
+        try {
+            user_data = static_cast<PyObject*>(
+                    dds::core::polymorphic_cast<
+                            ContentFilteredTopic<CSampleWrapper>,
+                            TopicDescription<CSampleWrapper>>(topic)
+                            ->topic()
+                            ->get_user_data_());
+        } catch (const dds::core::InvalidDowncastError&) {
+            user_data = nullptr;
+        }
+    }
 
+    if (user_data == nullptr) {
+        throw dds::core::IllegalOperationError("Not a valid Python Topic");
+    }
+
+    auto type_support = py::handle(user_data);
+
+#ifndef NDEBUG
+    // this shouldn't fail; for performance reasons, check this only in debug
+    // mode
+    assert_valid_type_support(type_support);
+#endif
+
+    return type_support;
+}
+
+// Here we change the visibility because the py::objects have lower visibility
+// and without this we will get compiler warnings
+struct PYRTI_SYMBOL_HIDDEN CPySampleConverter {
+    py::handle type_support;
+    rti::topic::cdr::CTypePlugin* type_plugin;
+    py::handle create_py_sample_func;
+    py::handle create_c_sample_func;
+    py::handle convert_to_c_sample_func;
+    py::object c_sample;  // Reusable ctypes sample used to temporarily convert
+                          // a python object into its C representation
+    PyCTypesBuffer c_sample_buffer;  // This buffer points to the memory of
+                                     // c_sample
+
+    CPySampleConverter(py::handle the_type_support)
+            : type_support(the_type_support),
+              type_plugin(py::cast<TypePlugin>(
+                                  type_support.attr("_plugin_dynamic_type"))
+                                  .type_plugin),
+              create_py_sample_func(
+                      py::type::of(type_support).attr("_create_py_sample")),
+              create_c_sample_func(py::type::of(type_support)
+                                           .attr("_create_empty_c_sample")),
+              convert_to_c_sample_func(
+                      py::type::of(type_support).attr("_convert_to_c_sample")),
+              c_sample(create_c_sample_func(type_support)),
+              c_sample_buffer(c_sample)
+    {
+    }
+
+    // Disable copies
+    CPySampleConverter(const CPySampleConverter&) = delete;
+    CPySampleConverter& operator=(const CPySampleConverter&) = delete;
+    // Default move
+    CPySampleConverter(CPySampleConverter&&) = default;
+    CPySampleConverter& operator=(CPySampleConverter&&) = default;
+
+    void convert_to_c_sample(const py::object& py_sample)
+    {
+        convert_to_c_sample_func(type_support, c_sample, py_sample);
+    }
+
+    ~CPySampleConverter()
+    {
+        try {
+            finalize_c_sample();
+        } catch (...) {
+            // Ignore exceptions
+        }
+    }
+
+    void finalize_c_sample()
+    {
+        if (type_plugin != nullptr && c_sample) {
+            type_plugin->finalize_sample(c_sample_buffer);
+        }
+    }
+
+    py::object create_py_sample()
+    {
+        // We pass the pointer to the python function as an integer,
+        // because that's what ctypes.cast expects.
+        size_t sample_ptr = reinterpret_cast<size_t>(
+                (static_cast<rti::topic::cdr::CSampleWrapper&>(c_sample_buffer))
+                        .sample());
+        return create_py_sample_func(type_support, sample_ptr);
+    }
+
+    static void cache_idl_entity_py_objects(
+            dds::core::Entity entity,
+            const dds::topic::TopicDescription<
+                    rti::topic::cdr::CSampleWrapper>& topic)
+    {
+        using rti::core::memory::ObjectAllocator; 
+
+        // Store the CPySampleConverter as this reader's user data
+        if (entity->get_user_data_() == nullptr) {
+            py::gil_scoped_acquire acquire;
+
+            // Obtain all the cached objects
+            auto type_support =
+                    get_py_type_support_from_topic(topic);
+            auto obj_cache =
+                    ObjectAllocator<CPySampleConverter>::create(type_support);
+            entity->set_user_data_(obj_cache, [](void* ptr) {
+                py::gil_scoped_acquire acquire;
+                auto obj_cache = static_cast<CPySampleConverter*>(ptr);
+                obj_cache->finalize_c_sample();
+                ObjectAllocator<CPySampleConverter>::destroy(
+                        static_cast<CPySampleConverter*>(ptr));
+            });
+        }
+    }
+};
 
 }  // namespace pyrti
