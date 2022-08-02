@@ -1,5 +1,5 @@
 find_package(
-    RTIConnextDDS "5.3.1"
+    RTIConnextDDS "7.0.0"
     REQUIRED
     COMPONENTS
         core
@@ -333,7 +333,11 @@ if (RTI_LINK_OPTIMIZATIONS_ON)
 endif()
 
 pybind11_extension(connextdds)
-pybind11_strip(connextdds)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    # Only strip if it is a release build
+    pybind11_strip(connextdds)
+endif()
 
 target_compile_definitions(
     connextdds

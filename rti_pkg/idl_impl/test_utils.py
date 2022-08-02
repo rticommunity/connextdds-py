@@ -253,21 +253,23 @@ class IdlValueGenerator:
     def _make_sequence_from_list(self, field_factory, lst):
         """Private function used to create a sequence from a list using its factory"""
         # will return either a list or an array depending on the factory
-        if field_factory in [list, None, MISSING] or isinstance(field_factory, ListFactory):
-            return lst
-        elif isinstance(field_factory, PrimitiveArrayFactory):
-            return array.array(field_factory.element_type_str, lst)
-        elif isinstance(field_factory, PrimitiveStdVectorFactory):
-            arr = PrimitiveStdVectorFactory(
-                field_factory.element_type, len(lst))()
-            for i in range(0, len(lst)):
-                arr[i] = lst[i]
-            return arr
-        else:
+        if reflection_utils.sequence_is_resizable(field_factory):
             arr = field_factory()
-            for i in range(0, len(arr)):
-                arr[i] = lst[i]
+            arr.resize(len(lst))
+            for i, v in enumerate(lst):
+                arr[i] = v
             return arr
+        
+        arr = field_factory()
+        if len(arr) == 0:
+            # If the seq is empty we need to append to it
+            arr.extend(lst)
+        else:
+            # If its len > 0 then we need to fill it with the values 
+            for i, v in enumerate(lst):
+                arr[i] = v
+        return arr
+
 
     def _is_alias_type(self) -> bool:
         """Private function used to check if this is an alias"""
