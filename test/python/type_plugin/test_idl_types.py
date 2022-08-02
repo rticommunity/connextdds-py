@@ -151,6 +151,7 @@ def test_types_can_be_converted_to_dynamic_data(type_fixture: IdlTypeFixture):
     new_value = ts.from_dynamic_data(dt)
     assert value == new_value
 
+
 def test_cannot_deserialize_sample_with_out_of_bounds_string():
     bound_string = common_types.BoundString()
     ts = idl.get_type_support(common_types.BoundString)
@@ -241,20 +242,3 @@ def test_idl_types_interoperate_with_dynamic_data(type_fixture: IdlTypeFixture, 
 
     dd_participant.close_contained_entities()
     dd_participant.close()
-
-
-@pytest.mark.skip(reason="to be implemented")
-def test_get_key_value_returns_keys_for_registered_instance(type_fixture: IdlTypeFixture):
-    pass
-
-
-@pytest.mark.skip(reason="to be implemented")
-def test_idl_types_generate_same_keyhashes_as_dynamicdata(type_fixture: IdlTypeFixture):
-    ts = idl.get_type_support(type_fixture.sample_type)
-
-    idl_topic = 1
-    idl_writer = 1
-    dd_topic = 1
-    dd_writer = 1
-    for seed in seeds:
-        value = type_fixture.create_test_data(seed=seed)

@@ -9,6 +9,7 @@ docs/build/
 
 build/
 dist/
+rti.connext.egg-info
 rti.egg-info
 rti_connext_dds-6.1.0/
 
