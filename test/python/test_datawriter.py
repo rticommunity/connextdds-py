@@ -272,6 +272,9 @@ def test_write_list_of_pairs_with_shift_operator(pubsub):
                for info, sample in zip(infos, samples))
 
 
+# --- Listeners tests ----------------------------------------------------------
+
+
 def test_datawriter_listener_can_be_set(pubsub):
     listener, other_listener = get_writer_listeners(pubsub.data_type)
 
@@ -298,6 +301,32 @@ def test_datawriter_listener_can_be_set(pubsub):
         pubsub.participant, pubsub.topic, pubsub.data_type, listener)
     assert new_writer.listener == listener
     new_writer.close()
+
+
+def test_datawriter_listener_is_invoked(shared_participant):
+
+    topic = dds.Topic(shared_participant, "listener_test_topic", PointIDL)
+    writer_qos = dds.DataWriterQos()
+    writer_qos << dds.Reliability(dds.ReliabilityKind.BEST_EFFORT)
+    reader_qos = dds.DataReaderQos()
+    reader_qos << dds.Reliability(dds.ReliabilityKind.RELIABLE)
+    pub = dds.Publisher(shared_participant)
+    sub = dds.Subscriber(shared_participant)
+
+    class TestListener(dds.NoOpDataWriterListener):
+        on_offered_incompatible_qos_called = False
+
+        def on_offered_incompatible_qos(self, writer, incompatible_qos_status):
+            # TODO PY-40: change 11 to the policy
+            assert incompatible_qos_status.last_policy_id == 11
+            self.on_offered_incompatible_qos_called = True
+
+    writer = dds.DataWriter(pub, topic, writer_qos, TestListener())
+    # Create a reader with incompatible qos
+    reader = dds.DataReader(sub, topic, reader_qos)
+
+    wait.until(lambda: writer.listener.on_offered_incompatible_qos_called)
+
 
 # --- Instance tests ----------------------------------------------------------
 
@@ -336,7 +365,7 @@ def test_register_dispose_unregister_instance_with_params(pub):
 
     params.source_timestamp = dds.Time(125)
     pub.writer.unregister_instance(params)
-    
+
 
 def test_pubsub_with_timestamp(pubsub_keyed_types):
     pubsub = pubsub_keyed_types

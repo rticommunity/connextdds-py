@@ -46,8 +46,8 @@ def get_test_types_generator():
 
 def get_keyed_types_generator():
     return [
-        lambda: PointIDL, 
-        lambda: idl.get_type_support(PointIDLForDD).dynamic_type, 
+        lambda: PointIDL,
+        lambda: idl.get_type_support(PointIDLForDD).dynamic_type,
         lambda: KeyedString
     ]
 
@@ -138,7 +138,7 @@ def pubsub_idl_dd_builtin_no_samples(request, shared_participant):
     data_type = request.param()
     fixture = PubSubFixture(shared_participant, data_type)
     return fixture
-    
+
 
 @pytest.fixture(scope="function", params=get_keyed_types_generator())
 def pubsub_keyed_idl_dd_builtin_no_samples(request, shared_participant):
@@ -200,7 +200,7 @@ def get_reader_w_listeners(participant, topic, type, listener):
     return ns.DataReader(participant, topic, dds.DataReaderQos(), listener)
 
 
-# --- Datareader tests ---------------------------------------------------------
+# --- Listener tests ---------------------------------------------------------
 
 
 def test_datareader_listener_can_be_set(pubsub_idl_dd_builtin_no_samples):
@@ -231,6 +231,50 @@ def test_datareader_listener_can_be_set(pubsub_idl_dd_builtin_no_samples):
 
     assert new_reader.listener == listener
     new_reader.close()
+
+
+def test_datareader_on_data_available_listener_is_invoked(pubsub_idl_point_no_samples):
+    pubsub = pubsub_idl_point_no_samples
+
+    class TestListener(dds.NoOpDataReaderListener):
+        on_data_available_called = False
+
+        def on_data_available(self, reader):
+            assert len(reader.take()) == 1
+            self.on_data_available_called = True
+
+    pubsub.reader.listener = TestListener()
+    pubsub.writer.write(PointIDL(x=1, y=2))
+
+    wait.until(lambda: pubsub.reader.listener.on_data_available_called)
+
+
+def test_datareader_on_requested_incompatible_qos_listener_is_invoked(shared_participant):
+
+    topic = dds.Topic(shared_participant, "listener_test_topic", PointIDL)
+    writer_qos = dds.DataWriterQos()
+    writer_qos << dds.Reliability(dds.ReliabilityKind.BEST_EFFORT)
+    reader_qos = dds.DataReaderQos()
+    reader_qos << dds.Reliability(dds.ReliabilityKind.RELIABLE)
+    pub = dds.Publisher(shared_participant)
+    sub = dds.Subscriber(shared_participant)
+
+    class TestListener(dds.NoOpDataReaderListener):
+        on_requested_incompatible_qos_called = False
+
+        def on_requested_incompatible_qos(self, reader, status):
+            # TODO PY-40: Change the constant 11 to the policy itself
+            assert status.last_policy_id() == 11
+            self.on_requested_incompatible_qos_called = True
+
+    # Create a writer with incompatible qos
+    reader = dds.DataReader(sub, topic, reader_qos, TestListener())
+    writer = dds.DataWriter(pub, topic, writer_qos)
+
+    wait.until(lambda: reader.listener.on_requested_incompatible_qos_called)
+
+
+# --- Reader tests -------------------------------------------------------------
 
 
 def test_datareader_key_value_and_lookup_instance(pubsub_keyed_idl_dd_builtin_no_samples):
