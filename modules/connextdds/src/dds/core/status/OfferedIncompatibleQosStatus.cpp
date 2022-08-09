@@ -11,6 +11,7 @@
 
 #include "PyConnext.hpp"
 #include <dds/core/status/Status.hpp>
+#include "PyQosPolicy.hpp"
 
 using namespace dds::core::status;
 
@@ -32,10 +33,13 @@ void init_class_defs(py::class_<OfferedIncompatibleQosStatus>& cls)
                     "The delta in total_count since the last time the listener "
                     "was called or the status was read.")
             .def_property_readonly(
-                    "last_policy_id",
-                    &OfferedIncompatibleQosStatus::last_policy_id,
-                    "The policy ID of one of the policies that was found to be "
-                    "incompatible the last time an incompatibility was "
+                    "last_policy",
+                    [](OfferedIncompatibleQosStatus& self) {
+                        auto m = py::module::import("rti.connextdds");
+                        return get_policy_type_from_id(m, self.last_policy_id());
+                    },
+                    "The policy class of one of the policies that was found to "
+                    "be incompatible the last time an incompatibility was "
                     "detected.")
             .def_property_readonly(
                     "policies",

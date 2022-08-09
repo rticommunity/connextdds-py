@@ -12,6 +12,7 @@
 #include "PyConnext.hpp"
 #include "PySeq.hpp"
 #include <dds/core/policy/CorePolicy.hpp>
+#include "PyQosPolicy.hpp"
 
 using namespace dds::core::policy;
 
@@ -20,14 +21,13 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<QosPolicyCount>& cls)
 {
-    cls.def(py::init<uint32_t, int32_t>(),
-            py::arg("policy_id"),
-            py::arg("count"),
-            "Creates an instance with the policy ID and its counter.")
-            .def_property_readonly(
-                    "policy_id",
-                    &QosPolicyCount::policy_id,
-                    "The policy ID.")
+    cls.def_property_readonly(
+                    "policy",
+                    [] (QosPolicyCount& self) {
+                        auto m = py::module::import("rti.connextdds");
+                        return get_policy_type_from_id(m, self.policy_id());
+                    },
+                    "The policy class.")
             .def_property_readonly(
                     "count",
                     &QosPolicyCount::count,

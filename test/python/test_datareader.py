@@ -263,8 +263,7 @@ def test_datareader_on_requested_incompatible_qos_listener_is_invoked(shared_par
         on_requested_incompatible_qos_called = False
 
         def on_requested_incompatible_qos(self, reader, status):
-            # TODO PY-40: Change the constant 11 to the policy itself
-            assert status.last_policy_id() == 11
+            assert status.last_policy is dds.Reliability
             self.on_requested_incompatible_qos_called = True
 
     # Create a writer with incompatible qos

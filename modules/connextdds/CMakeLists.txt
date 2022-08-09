@@ -193,6 +193,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/xtypes/PrimitiveType.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/xtypes/XtypesNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/LatencyBudget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/QosPolicy.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/QosPolicyCount.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/TopicData.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/DataTag.cpp"

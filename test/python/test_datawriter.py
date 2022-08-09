@@ -317,8 +317,10 @@ def test_datawriter_listener_is_invoked(shared_participant):
         on_offered_incompatible_qos_called = False
 
         def on_offered_incompatible_qos(self, writer, incompatible_qos_status):
-            # TODO PY-40: change 11 to the policy
-            assert incompatible_qos_status.last_policy_id == 11
+            assert incompatible_qos_status.last_policy is dds.Reliability
+            assert len(incompatible_qos_status.policies) == 1
+            assert incompatible_qos_status.policies[0].policy is dds.Reliability
+            assert incompatible_qos_status.policies[0].count == 1
             self.on_offered_incompatible_qos_called = True
 
     writer = dds.DataWriter(pub, topic, writer_qos, TestListener())
