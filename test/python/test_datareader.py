@@ -288,6 +288,7 @@ def test_datareader_key_value_and_lookup_instance(pubsub_keyed_idl_dd_builtin_no
     key_holder = get_sample_keys(pubsub.data_type)
     assert keys_equal(result, key_holder)
     assert instance == pubsub.reader.lookup_instance(result)
+    assert hash(instance) == hash(pubsub.reader.lookup_instance(result))
 
 
 def test_selector(pubsub_idl_dd_builtin_no_samples):

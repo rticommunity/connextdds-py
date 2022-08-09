@@ -107,7 +107,7 @@ void init_class_defs(py::class_<PyTriggeredConditions>& cls)
 
 
 template<>
-void init_class_defs(py::class_<WaitSet, std::unique_ptr<WaitSet, no_gil_delete<WaitSet>>>& cls)
+void init_class_defs(py::class_<WaitSet, unique_ptr_no_gil<WaitSet>>& cls)
 {
     cls.def(py::init<>(),
             py::call_guard<py::gil_scoped_release>(),
@@ -274,13 +274,107 @@ void init_class_defs(py::class_<WaitSet, std::unique_ptr<WaitSet, no_gil_delete<
                     "Get/set the WaitSetProperty settings for the WaitSet.");
 }
 
+
+//
+// A waitset optimized for rti.asyncio (take_async, etc) with the following
+// pattern:
+//
+//     await waitset.wait_async()
+//     waitset.dispatch()
+//
+// A regular waitset could simply do:
+//
+//     await waitset.dispatch_async()
+//
+// But that would run the condition handlers in a different thread, which
+// would not allow the usage of asyncio.Event to synchronize take_async.
+//
+// It also optimizes memory usage by reusing the same ConditionSeq internally
+// and never returning it into Python to avoid creating unnecessary objects.
+//
+// A FastWaitSet can only be used by one thread.
+//
+struct FastWaitSet {
+    dds::core::cond::WaitSet waitset;
+    dds::core::cond::WaitSet::ConditionSeq active_conditions;
+
+    void wait_and_remove()
+    {
+        waitset.wait(active_conditions);
+        for (auto& c : active_conditions) {
+            waitset.detach_condition(c);
+        }
+    }
+
+    void dispatch()
+    {
+        for (auto& condition : active_conditions) {
+            condition.dispatch();
+        }
+    }
+};
+
+template<>
+void init_class_defs(
+        py::class_<FastWaitSet, unique_ptr_no_gil<FastWaitSet>>& cls)
+{
+    cls.def(py::init<>(),
+            py::call_guard<py::gil_scoped_release>(),
+            "Create a FastWaitSet.");
+
+    cls.def(
+            "wait_async",
+            [](FastWaitSet& ws) {
+                return PyAsyncioExecutor::run<void>(std::function<void()>(
+                        [&ws]() { ws.wait_and_remove(); }));
+            },
+            py::keep_alive<0, 1>(),
+            "Async wait");
+
+    cls.def("dispatch",
+            &FastWaitSet::dispatch,
+            py::call_guard<py::gil_scoped_release>(),
+            "Dispatch the active conditions after a call to wait or "
+            "wait_async");
+
+    cls.def(
+            "attach_condition",
+            [](FastWaitSet& ws, PyICondition& c) {
+                ws.waitset.attach_condition(c.get_condition());
+            },
+            py::arg("condition"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Attach a condition to the WaitSet.");
+
+    cls.def(
+            "detach_condition",
+            [](FastWaitSet& ws, PyICondition& c) {
+                return ws.waitset.detach_condition(c.get_condition());
+            },
+            py::arg("condition"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Detach a condition from the WaitSet.");
+
+    cls.def(
+            "get_waitset",
+            [](FastWaitSet& ws) {
+                return ws.waitset;
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Get the underlying WaitSet object.");
+}
+
 template<>
 void process_inits<WaitSet>(py::module& m, ClassInitList& l)
 {
-    l.push_back([m]() mutable { 
-        return init_class<
-            WaitSet,
-            std::unique_ptr<WaitSet, no_gil_delete<WaitSet>>>(m, "WaitSet"); 
+    l.push_back([m]() mutable {
+        return init_class<WaitSet, unique_ptr_no_gil<WaitSet>>(m, "WaitSet");
+    });
+
+    l.push_back([m]() mutable {
+        return init_class<FastWaitSet, unique_ptr_no_gil<FastWaitSet>>(
+                m,
+                "_FastWaitSet");
     });
 
     l.push_back([m]() mutable {

@@ -139,6 +139,35 @@ void init_class_defs(
                     py::self != py::self,
                     py::call_guard<py::gil_scoped_release>(),
                     "Test for inequality.");
+
+    cls.def(
+            "set_handler_no_args",
+            [](PyQueryCondition& rc, std::function<void()>& func) {
+                // PY-41: Temporary workaround until handler() is exposed
+                // in ReadCondition
+                auto workaround_gc =
+                        reinterpret_cast<rti::core::cond::GuardCondition*>(
+                                rc.delegate().get());
+                workaround_gc->handler([func]() {
+                    py::gil_scoped_acquire acquire;
+                    func();
+                });
+            },
+            py::arg("func"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Set a handler function receiving no arguments.");
+    cls.def(
+            "reset_handler",
+            [](PyQueryCondition& rc) {
+                // PY-41: Temporary workaround until reset_handler is exposed
+                // in ReadCondition
+                auto workaround_gc =
+                        reinterpret_cast<rti::core::cond::GuardCondition*>(
+                                rc.delegate().get());
+                workaround_gc->reset_handler();
+            },
+            py::call_guard<py::gil_scoped_release>(),
+            "Resets the handler for this QueryCondition.");
 }
 
 template<>

@@ -3,30 +3,107 @@
 Building and Installing
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Building connextdds-py
-======================
-
-This section describes how to build and install connextdds-py.
+This section describes how to build and install the Connext Python API.
 
 Requirements
 ============
 
-- Windows® (requires Visual Studio® 2015 or newer), macOS®, or Linux®
-- Python® 2.7 or Python3.x with pip or pip3 respectively
-- *Connext DDS* 5.3.1, 6.0.0, 6.0.1, or 6.1.0
-- `patchelf <https://github.com/NixOS/patchelf>`_ (Python 2.7.x on Linux)
+- Linux®, macOS®, or Windows® (with Visual Studio® 2015 or newer)
+- Python® 3.6 or newer
+- A *Connext DDS* 7.0.0 host and target installation (see the `Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ for instructions on how to install Connext).
 
 .. note::
 
-    On certain platforms (such as Ubuntu 20.04 LTS), you must explicitly mention
-    what Python version you are using. To do so, just use pip3 or python3 in place of
-    pip or python.
+  Like any other Connext language API, the Connext Python API interoperates
+  with other Connext versions. The required version above is **only to build**
+  the Python API. Once built, you can use it to communicate with applications
+  built on other Connext versions.
 
-Configuration
+Simple Installation
 ===================
 
-Before building/installing connextdds-py, it is necessary to run the configuration.py
-script.
+1. Clone the repository and submodules, and enter the directory.
+
+  .. code-block:: shell
+
+      $ git clone https://github.com/rticommunity/connextdds-py.git
+      $ cd connextdds-py
+
+2. Run configure.py script
+
+  .. code-block:: shell
+
+      $ python configure.py [options...] <platform>
+
+  For example:
+
+  .. code-block:: shell
+
+      $ python configure.py --nddshome /opt/rti_connext_dds-7.0.0 --jobs 4 x64Linux4gcc7.3.0
+
+  More options are listed later in this section.
+
+3. Build and install.
+
+  .. code-block:: shell
+
+      $ pip install .
+
+  This command will compile C++ code and install the Python package. Depending
+  on your machine, it make take a while to complete. You can increase the number
+  of parallel jobs for the compilation (``--jobs`` option used above).
+
+4. The package is now installed and ready to use, you can import
+   the module ``rti.connextdds`` and others. See :ref:`hello:Hello World`, or
+   enter the following on the python interpreter:
+
+   .. code-block:: shell
+
+      $ python
+      >>> import rti.connextdds as dds
+      >>> participant = dds.DomainParticipant(100)
+      >>> participant.domain_id
+      100
+
+Redistributable Wheel Build
+===========================
+
+In addition to installing the API on your machine, you can build a wheel file
+that you can use to install it on other machines. The wheel works on machines
+with the same processor and OS, and the same major Python version. For example,
+you can build a wheel on a x64 Linux machine with Python 3.10 and then
+install it on other x64 Linux machines with Python 3.10.
+
+1. Clone the repository and submodules, and enter the directory.
+
+  .. code-block:: shell
+
+      $ git clone https://github.com/rticommunity/connextdds-py.git
+      $ cd connextdds-py
+
+2. Run configure.py script
+
+  .. code-block:: shell
+
+      $ python configure.py [options...] <platform>
+
+3. Build the wheel.
+
+  .. code-block:: shell
+
+      $ pip wheel .
+
+4. Install the wheel on your machine or other machines:
+
+  .. code-block:: shell
+
+    $ pip install rti.connext-<version>-<platform>.whl
+
+
+Advanced configuration
+======================
+
+The configure.py takes additional options.
 
 .. code-block:: shell
 
@@ -76,138 +153,6 @@ specified in the following table.
       - --help
       - Show help message and exit
 
-Simple Installation
-===================
-
-1. Clone the repository and submodules, and enter the directory.
-
-.. code-block:: shell
-
-    $ git clone https://github.com/rticommunity/connextdds-py.git
-    $ cd connextdds-py
-
-2. Run configuration.py script
-
-.. code-block:: shell
-
-    $ python configure.py [options...] <platform>
-
-3. Build and install.
-
-.. code-block:: shell
-
-    $ pip install .
-
-Simple Wheel Build
-==================
-
-1. Clone the repository and submodules, and enter the directory.
-
-.. code-block:: shell
-
-    $ git clone https://github.com/rticommunity/connextdds-py.git
-    $ cd connextdds-py
-
-2. Run configuration.py script
-
-.. code-block:: shell
-
-    $ python configure.py [options...] <platform>
-
-3. Build the wheel.
-
-.. code-block:: shell
-
-    $ pip wheel .
-
-Development Installation
-========================
-If you want to cache the build files, you can use wheels.
-
-1. Install the required Python modules:
-
-.. code-block:: shell
-    :caption: Windows
-
-    $ pip install setuptools wheel cmake pybind11==2.8.1
-
-.. code-block:: shell
-    :caption: Linux
-
-    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.8.1
-
-
-.. code-block:: shell
-    :caption: macOS
-
-    $ pip install setuptools wheel cmake delocate pybind11==2.8.1
-
-2. Clone the repository and submodules, and enter the directory.
-
-.. code-block:: shell
-
-    $ git clone https://github.com/rticommunity/connextdds-py.git
-    $ cd connextdds-py
-
-3. Run configuration.py script
-
-.. code-block:: shell
-
-    $ python configure.py [options...] <platform>
-
-4. Run the setup script.
-
-.. code-block:: shell
-
-    $ python setup.py bdist_wheel
-
-5. Install the package.
-
-.. code-block:: shell
-
-    $ pip install --find-links=./dist rti==0.1.5
-
-
-Cross Compilation
-=================
-If you want to build for a different architecture, the configuration and build scripts 
-provide some options for doing so. The repository contains an example CMake toolchain
-file at resources/cmake/ExampleToolchain.cmake for use on Linux hosts to build a wheel
-for an armv7l target (such as a 32-bit Raspberry Pi) with Buildroot. The following
-steps assume familiarity with cross-compilation toolchains and that you have a cross
-compiled version of Python for the target.
-
-1. Install the required Python modules:
-
-.. code-block:: shell
-    :caption: Linux
-
-    $ pip install setuptools wheel cmake patchelf-wrapper pybind11==2.8.1
-
-2. Clone the repository and enter the directory.
-
-.. code-block:: shell
-
-    $ git clone https://github.com/rticommunity/connextdds-py.git
-    $ cd connextdds-py
-
-3. Modify the ExampleToolchain.cmake file with the appriate host and target values
-
-4. Run configuration.py script, making sure to point to the cross-compiled Python root 
-   directory and the CMake toolchain file
-
-.. code-block:: shell
-
-    $ python configure.py --python-root <cross-compiled Python root> --cmake-toolchain <toolchain file> [options...] <target platform>
-
-4. Run the setup script, providing version and architecture information.
-
-.. code-block:: shell
-
-    $ python setup.py bdist_wheel --py-limited-api cp37 --plat-name linux_armv7l
-
-5. Install the wheel package on the target.
-
 
 Uninstalling
 ============
@@ -216,4 +161,4 @@ you must uninstall the Python package. To do so, run:
 
 .. code-block:: shell
 
-    $ pip uninstall rti -y
+    $ pip uninstall rti.connext -y

@@ -1,4 +1,5 @@
-#  (c) 2020 Copyright, Real-Time Innovations, Inc.  All rights reserved.
+
+#  (c) 2022 Copyright, Real-Time Innovations, Inc.  All rights reserved.
 #  RTI grants Licensee a license to use, modify, compile, and create derivative
 #  works of the Software.  Licensee has the right to distribute object form only
 #  for use with RTI products.  The Software is provided "as is", with no warranty
@@ -8,40 +9,36 @@
 #  use the software.
 
 
-# This example uses a WaitSet to wait for data that matches the query.
-# See async_take_query_condition.py for an equivalent example that uses
-# async operations (take_data_async).
+# This example implements the same functionality as waitset_query_cond_subscriber.py
+# but uses async operations (take_data_async) instead of a WaitSet.
 
 import textwrap
-import time
 import argparse
+import asyncio
 
 import rti.connextdds as dds
+import rti.asyncio
 
 from waitset_query_cond import waitset_query_cond
 
 
-def query_handler(reader, query_cond):
-    for data in reader.select().condition(query_cond).take_data():
+async def read_data(reader, query_cond):
+    async for data in reader.take_data_async(condition=query_cond):
         print(data)
 
 
-def subscriber_main(domain_id, sample_count):
+async def subscriber_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
-
     topic = dds.Topic(
         participant, "Example waitset_query_cond", waitset_query_cond)
-    reader_qos = dds.QosProvider.default.datareader_qos
-    reader = dds.DataReader(dds.Subscriber(participant), topic, reader_qos)
+    reader = dds.DataReader(dds.Subscriber(participant), topic)
 
     # Query against even samples at the start
     query_parameters = ["'EVEN'"]
     query = dds.Query(reader, "name MATCH %0", query_parameters)
     query_condition = dds.QueryCondition(query, dds.DataState.any_data)
 
-    # Create a WaitSet and attach the QueryCondition
-    waitset = dds.WaitSet()
-    waitset += query_condition
+    read_task = asyncio.create_task(read_data(reader, query_condition))
 
     print(
         textwrap.dedent(
@@ -50,7 +47,7 @@ def subscriber_main(domain_id, sample_count):
         >>> Query conditions: {}
         \t %0 = {}
         ----------------------------------
-        
+
         """.format(
                 1, query_condition.expression, query_parameters[0]
             )
@@ -59,7 +56,7 @@ def subscriber_main(domain_id, sample_count):
 
     count = 0
     while (sample_count == 0) or (count < sample_count):
-        time.sleep(1)
+        await asyncio.sleep(1)
 
         if count == 7:
             # Update the query after 7 seconds
@@ -80,13 +77,9 @@ def subscriber_main(domain_id, sample_count):
                 )
             )
 
-        active = waitset.wait((1, 0))
-
-        # Check to see if the query was triggered
-        if query_condition in active:
-            query_handler(reader, query_condition)
-
         count += 1
+
+    read_task.cancel()
 
 
 if __name__ == "__main__":
@@ -102,4 +95,4 @@ if __name__ == "__main__":
     assert 0 <= args.domain < 233
     assert args.count >= 0
 
-    subscriber_main(args.domain, args.count)
+    rti.asyncio.run(subscriber_main(args.domain, args.count))

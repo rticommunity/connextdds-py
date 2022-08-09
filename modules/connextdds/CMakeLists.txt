@@ -32,7 +32,7 @@ if(APPLE)
 endif()
 
 add_library(
-    connextdds 
+    connextdds
     SHARED
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"

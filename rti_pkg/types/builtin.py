@@ -23,9 +23,12 @@ class String:
     """Built-in type consisting of a string
 
     This type can be used to create a dds.Topic, e.g.
-    ``topic = dds.Topic(participant, "My Topic", String)``.
+    ```
+    topic = dds.Topic(participant, "My Topic", String)
+    ```
     """
     value: str = ""
+    """The string payload"""
 
 
 @_struct(member_annotations={'key': [_KeyAnnotation(True)]})
@@ -37,7 +40,9 @@ class KeyedString:
     ``topic = dds.Topic(participant, "My Topic", KeyedString)``.
     """
     key: str = ""
+    """The key"""
     value: str = ""
+    """The string payload"""
 
 
 @_struct
@@ -48,6 +53,7 @@ class Bytes:
     ``topic = dds.Topic(participant, "My Topic", Bytes)``.
     """
     value: Sequence[_octet] = field(default_factory=_array_factory(_octet))
+    """The byte payload"""
 
 
 @_struct(member_annotations={'key': [_KeyAnnotation(True)]})
@@ -59,4 +65,6 @@ class KeyedBytes:
     ``topic = dds.Topic(participant, "My Topic", KeyedBytes)``.
     """
     key: str = ""
+    """The key"""
     value: Sequence[_octet] = field(default_factory=_array_factory(_octet))
+    """The byte payload"""

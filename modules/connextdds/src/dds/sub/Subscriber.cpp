@@ -95,39 +95,39 @@ void init_class_defs(
             std::unique_ptr<PySubscriber, no_gil_delete<PySubscriber>>>& cls)
 {
     cls.def(py::init<const PyDomainParticipant&>(),
-            py::arg("participant"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Create a subscriber under a DomainParticipant.")
+               py::arg("participant"),
+               py::call_guard<py::gil_scoped_release>(),
+               "Create a subscriber under a DomainParticipant.")
             .def(py::init([](const PyDomainParticipant& dp,
-                             const qos::SubscriberQos& q,
-                             PySubscriberListenerPtr listener,
-                             const dds::core::status::StatusMask& m) {
+                                  const qos::SubscriberQos& q,
+                                  PySubscriberListenerPtr listener,
+                                  const dds::core::status::StatusMask& m) {
                      return PySubscriber(dp, q, listener, m);
                  }),
-                 py::arg("participant"),
-                 py::arg("qos"),
-                 py::arg("listener") = py::none(),
-                 py::arg_v(
-                         "mask",
-                         dds::core::status::StatusMask::all(),
-                         "StatusMask.ALL"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a Subscriber under a DomainParticipant with a "
-                 "listener.")
+                    py::arg("participant"),
+                    py::arg("qos"),
+                    py::arg("listener") = py::none(),
+                    py::arg_v(
+                            "mask",
+                            dds::core::status::StatusMask::all(),
+                            "StatusMask.ALL"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Create a Subscriber under a DomainParticipant with a "
+                    "listener.")
             .def(py::init([](PyIEntity& e) {
                      auto entity = e.get_entity();
                      return dds::core::polymorphic_cast<PySubscriber>(entity);
                  }),
-                 py::arg("entity"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Cast an Entity to a Subscriber.")
+                    py::arg("entity"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Cast an Entity to a Subscriber.")
             .def("notify_datareaders",
-                 &PySubscriber::notify_datareaders,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "This operation invokes the operation on_data_available on "
-                 "the DataReaderListener objects attached to contained "
-                 "DataReader entities with a DATA_AVAILABLE status that is "
-                 "considered changed")
+                    &PySubscriber::notify_datareaders,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "This operation invokes the operation on_data_available on "
+                    "the DataReaderListener objects attached to contained "
+                    "DataReader entities with a DATA_AVAILABLE status that is "
+                    "considered changed")
             .def_property(
                     "listener",
                     [](const PySubscriber& sub) {
@@ -152,8 +152,8 @@ void init_class_defs(
             .def(
                     "set_listener",
                     [](PySubscriber& sub,
-                       PySubscriberListenerPtr listener,
-                       const dds::core::status::StatusMask& m) {
+                            PySubscriberListenerPtr listener,
+                            const dds::core::status::StatusMask& m) {
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
@@ -215,7 +215,7 @@ void init_class_defs(
             .def(
                     "find_datareaders",
                     [](const PySubscriber& sub,
-                       const dds::sub::status::DataState& ds) {
+                            const dds::sub::status::DataState& ds) {
                         std::vector<PyAnyDataReader> v;
                         dds::sub::find(sub, ds, std::back_inserter(v));
                         return v;
@@ -223,12 +223,24 @@ void init_class_defs(
                     py::call_guard<py::gil_scoped_release>(),
                     "Find all DataReaders that contain samples of the given "
                     "DataState in the Subscriber.")
+            .def(
+                    "find_datareaders",
+                    [](const PySubscriber& sub, const std::string& topic_name) {
+                        std::vector<PyAnyDataReader> v;
+                        dds::sub::find<dds::sub::AnyDataReader>(
+                                sub,
+                                topic_name,
+                                std::back_inserter(v));
+                        return v;
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find all DataReaders for a given topic name")
             .def(py::self == py::self,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Test for equality.")
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for equality.")
             .def(py::self != py::self,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Test for inequality.");
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for inequality.");
 
     py::implicitly_convertible<PyIEntity, PySubscriber>();
 }

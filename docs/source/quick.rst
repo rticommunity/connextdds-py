@@ -1,23 +1,24 @@
 
 .. py:currentmodule:: rti.connextdds
 
-Quick reference
+Quick Reference
 ~~~~~~~~~~~~~~~
 This section includes links to common ``rti.connextdds`` types.
+
+See also :ref:`overview:API Overview`
 
 DDS Entities:
    - :class:`DomainParticipant`
    - :class:`Publisher`
    - :class:`Subscriber`
-   - :class:`IAnyTopic`, :class:`DynamicData.Topic`, :class:`DynamicData.ContentFilteredTopic`
-   - :class:`IAnyDataReader`, :class:`DynamicData.DataReader`
-   - :class:`IAnyDataWriter`, :class:`DynamicData.DataWriter`
+   - :class:`Topic`, :class:`ContentFilteredTopic`
+   - :class:`DataReader`
+   - :class:`DataWriter`
 
 Data types:
-   - :class:`DynamicData` and :class:`DynamicType`
-   - Loading types from XML: :meth:`QosProvider.type`
-   - Built-in types: :class:`StringTopicType`, :class:`KeyedStringTopicType`,
-     :class:`BytesTopicType`, :class:`KeyedBytesTopicType`
+   - User types: :ref:`types:Data Types`
+   - :ref:`rti.types:rti.types.builtin`
+   - :class:`DynamicData`
 
 Quality of Service (QoS):
    - :class:`QosProvider`
@@ -33,8 +34,8 @@ Listeners:
    - :class:`TopicListener`
    - :class:`PublisherListener`
    - :class:`SubscriberListener`
-   - :class:`DynamicData.DataReaderListener`
-   - :class:`DynamicData.DataWriterListener`
+   - :class:`DataReaderListener`
+   - :class:`DataWriterListener`
 
 Conditions:
    - :class:`WaitSet`

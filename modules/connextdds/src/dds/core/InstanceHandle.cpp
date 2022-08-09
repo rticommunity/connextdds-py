@@ -38,6 +38,10 @@ void init_class_defs(py::class_<InstanceHandle>& cls)
                      oss << h;
                      return oss.str();
                  })
+            .def("__hash__",
+                [](const InstanceHandle& key) {
+                    return std::hash<InstanceHandle>()(key);
+                })
             .def_static(
                     "nil",
                     &InstanceHandle::nil,

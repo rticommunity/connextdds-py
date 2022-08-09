@@ -11,6 +11,7 @@
 
 #include "PyConnext.hpp"
 #include <dds/topic/BuiltinTopicKey.hpp>
+#include <sstream>
 
 using namespace dds::topic;
 
@@ -19,14 +20,29 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<BuiltinTopicKey>& cls)
 {
-    cls.def(py::init<>(), "Creates a key whose value is all zeros.")
-            .def_property_readonly(
-                    "value",
-                    &BuiltinTopicKey::value,
-                    "Returns a copy of the four integers that represent the "
-                    "key.")
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+    cls.def(py::init<>(), "Creates a key whose value is all zeros.");
+    cls.def_property_readonly(
+            "value",
+            &BuiltinTopicKey::value,
+            "Returns a copy of the four integers that represent the "
+            "key.");
+    cls.def(py::self == py::self, "Test for equality.");
+    cls.def(py::self != py::self, "Test for inequality.");
+
+    // implement __repr__
+    cls.def(
+            "__repr__",
+            [](const BuiltinTopicKey& key) {
+                std::stringstream ss;
+                ss << "BuiltinTopicKey(";
+                // hexadecimal representation of the key
+                for (int i = 0; i < 4; ++i) {
+                    ss << std::hex << key->native().value[i];
+                }
+                ss << ")";
+                return ss.str();
+            },
+            "Returns a string representation of the key.");
 }
 
 template<>

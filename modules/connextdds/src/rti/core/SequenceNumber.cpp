@@ -9,6 +9,8 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <string>
+
 #include "PyConnext.hpp"
 #include <rti/core/SequenceNumber.hpp>
 
@@ -58,6 +60,10 @@ void init_class_defs(py::class_<SequenceNumber>& cls)
                  (long long (SequenceNumber::*)() const)
                          & SequenceNumber::value,
                  "Convert SequenceNumber to integer.")
+            .def("__repr__", [] (const SequenceNumber& self) {
+                    return std::to_string(self.value());
+                },
+                "Convert SequenceNumber to string.")
             .def_property_readonly_static(
                     "zero",
                     [](py::object&) {

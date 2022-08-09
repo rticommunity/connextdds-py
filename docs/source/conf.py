@@ -18,10 +18,11 @@ for i in glob.glob('../../build/lib.*'):
 
 # -- Project information -----------------------------------------------------
 
-project = 'RTI Connext DDS Python API'
+project = 'RTI Connext Python API'
 copyright = '2020, Real-Time Innovations, Inc'
 author = 'Real-Time Innovations, Inc.'
-
+version = '0.2.0'
+release = '0.2.0'
 
 # -- General configuration ---------------------------------------------------
 

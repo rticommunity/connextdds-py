@@ -11,6 +11,7 @@
 
 from test_utils.fixtures import *
 import rti.connextdds as dds
+import rti.types as idl
 
 
 def test_subscriber_listener_can_be_set(shared_participant):
@@ -27,3 +28,20 @@ def test_subscriber_listener_can_be_set(shared_participant):
 
 	sub.listener = dds.NoOpSubscriberListener()
 	assert type(sub.listener) == dds.NoOpSubscriberListener
+
+
+def test_subscriber_find_readers(shared_participant):
+	@idl.struct
+	class Foo:
+		x: int = 0
+
+	sub = dds.Subscriber(shared_participant)
+	assert len(sub.find_datareaders()) == 0
+
+	topic = dds.Topic(shared_participant, 'Foo', Foo)
+	reader = dds.DataReader(sub, topic)
+	assert len(sub.find_datareaders()) == 1
+	reader2 = dds.DataReader(sub, topic)
+	assert len(sub.find_datareaders()) == 2
+	assert reader, reader2 in sub.find_datareaders()
+

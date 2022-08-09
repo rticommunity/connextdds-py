@@ -215,6 +215,9 @@ struct no_gil_delete {
     }
 };
 
+template<typename T>
+using unique_ptr_no_gil = std::unique_ptr<T, no_gil_delete<T>>;
+
 
 // Dummy classes
 class PyPrimitiveType {

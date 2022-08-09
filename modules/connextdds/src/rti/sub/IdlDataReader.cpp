@@ -23,8 +23,6 @@ using namespace rti::topic::cdr;
 
 namespace pyrti {
 
-
-
 // Gets the Python objects associated to this reader
 static CPySampleConverter* get_py_objects(
         dds::sub::DataReader<CSampleWrapper>& reader)
@@ -141,6 +139,25 @@ static auto take_data(PyDataReader<CSampleWrapper>& dr)
 static auto take_data_and_info(PyDataReader<CSampleWrapper>& dr)
 {
     return convert_data_w_info(dr, dr.take());
+}
+
+// These two functions are defined only to provide autocompletion. The actual
+// implementation is in Python code and set by importing rti.asyncio.
+
+static py::object take_data_async(
+        PyDataReader<CSampleWrapper>&,
+        PyIReadCondition* = nullptr)
+{
+    throw dds::core::PreconditionNotMetError(
+            "To use take_data_async, you need to import rti.asyncio");
+}
+
+static py::object take_data_and_info_async(
+        PyDataReader<CSampleWrapper>&,
+        PyIReadCondition * = nullptr)
+{
+    throw dds::core::PreconditionNotMetError(
+            "To use take_async, you need to import rti.asyncio");
 }
 
 static auto read_data(PyDataReader<CSampleWrapper>& dr)
@@ -353,7 +370,7 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
 
 template<>
 void init_dds_datareader_selector_read_methods<CSampleWrapper>(
-        py::class_<typename PyDataReader<CSampleWrapper>::Selector>& selector)
+        py::class_<PyDataReader<CSampleWrapper>::Selector>& selector)
 {
     selector.def(
             "read",
@@ -406,6 +423,35 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
             take_data_and_info,
             py::call_guard<py::gil_scoped_release>(),
             "Take copies of all available data and info");
+
+    cls.def("take_data_async",
+            take_data_async,
+            py::arg("condition") = py::none(),
+            py::call_guard<py::gil_scoped_release>(),
+            "Takes copies of data as it becomes available in an async "
+            "generator. Must ``import rti.asyncio``.\n"
+            "Example:\n"
+            "  .. code-block:: python\n\n"
+            "    async for data in reader.take_data_async():\n"
+            "      print(data)\n"
+            "\n\n"
+            "A ReadCondition or QueryCondition can be used to filter the data\n");
+
+    cls.def("take_async",
+            take_data_and_info_async,
+            py::arg("condition") = py::none(),
+            py::call_guard<py::gil_scoped_release>(),
+            "Takes copies of data, info tuples as data becomes available in an "
+            "async generator. Must ``import rti.asyncio``.\n"
+            "Example:\n\n"
+            "  .. code-block:: python\n\n"
+            "    async for data, info in reader.take_async():\n"
+            "        if info.valid:\n"
+            "            print(data)\n"
+            "        else:\n"
+            "            print(info.state.instance_state)\n"
+            "\n\n"
+            "A ReadCondition or QueryCondition can be used to filter the data\n");
 
     cls.def("read_data",
             read_data,
