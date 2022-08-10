@@ -198,16 +198,18 @@ def test_cancel_async_without_data(shared_participant):
     rti.asyncio.run(cancel_async_without_data(shared_participant))
 
 
-async def begin_async_with_data_available(shared_participant):
-    fixture = PubSubFixture(shared_participant, Point)
-    # Publish and receive the data before we attempt to take it
-    await publisher_run(fixture, 10)
-    await asyncio.to_thread(wait.for_data, fixture.reader)
-    samples = await take_n(fixture.reader, 1)
-    assert len(samples) == 1
+if sys.version_info >= (3, 9): # to_thread added in 3.9
 
-def test_begin_async_with_data_available(shared_participant):
-    rti.asyncio.run(begin_async_with_data_available(shared_participant))
+    async def begin_async_with_data_available(shared_participant):
+        fixture = PubSubFixture(shared_participant, Point)
+        # Publish and receive the data before we attempt to take it
+        await publisher_run(fixture, 10)
+        await asyncio.to_thread(wait.for_data, fixture.reader)
+        samples = await take_n(fixture.reader, 1)
+        assert len(samples) == 1
+
+    def test_begin_async_with_data_available(shared_participant):
+        rti.asyncio.run(begin_async_with_data_available(shared_participant))
 
 
 async def change_query_condition_while_reading(shared_participant):
