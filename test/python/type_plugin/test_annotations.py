@@ -157,4 +157,4 @@ def test_float_annotations():
     assert dt["my_seq"].type.bounds == 123
     assert dt["my_seq"].id == 2
     assert dt["my_array"].type.dimension(0) == 2
-    assert dt["my_array_multi"].type.dimension(0) == 10
+    assert dt["my_array_multi"].type.dimension(0) == 5

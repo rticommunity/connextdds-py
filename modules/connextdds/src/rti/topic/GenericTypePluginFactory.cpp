@@ -22,6 +22,40 @@ using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
 namespace pyrti {
 
+static dds::core::xtypes::ArrayType* create_array_type(
+        rti::topic::cdr::GenericTypePluginFactory& factory,
+        const dds::core::xtypes::DynamicType& element_type,
+        const std::vector<uint32_t>& dimensions)
+{
+    size_t size = dimensions.size();
+    if (size == 0) {
+        throw dds::core::InvalidArgumentError(
+                "Array type must have at least one dimension");
+    }
+
+    dds::core::xtypes::ArrayType *type =
+            factory.create_array(element_type, dimensions[0]);
+
+    if (size > 1) {
+        // PY-41: This is a workaround because GenericTypePluginFactory currently
+        // doesn't have a create_array taking a vector of dimensions.
+        DDS_TypeCode& tc = type->native();
+        tc._data._dimensionsCount = size;
+        RTIOsapiHeap_allocateArray(&tc._data._dimensions, size, DDS_UnsignedLong);
+        if (tc._data._dimensions == NULL) {
+            throw dds::core::OutOfResourcesError(
+                    "Failure to allocate array dimensions");
+        }
+
+        RTIOsapiMemory_copy(
+                (void*) tc._data._dimensions,
+                (const void*) &dimensions[0],
+                size * sizeof(DDS_UnsignedLong));
+    }
+
+    return type;
+}
+
 template<>
 void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
 {
@@ -113,18 +147,18 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
 
     cls.def("create_array",
             [](GenericTypePluginFactory& self,
-               const DynamicType& element_type,
-               uint32_t dimension) {
-                return TypePlugin { self.create_array(element_type, dimension),
+                    const DynamicType& element_type,
+                    const std::vector<uint32_t>& dimensions) {
+                return TypePlugin { create_array_type(self, element_type, dimensions),
                                     nullptr };
             });
 
     cls.def("create_array",
             [](GenericTypePluginFactory& self,
-               TypePlugin& type_holder,
-               uint32_t dimension) {
+                    TypePlugin& type_holder,
+                    const std::vector<uint32_t>& dimensions) {
                 return TypePlugin {
-                    self.create_array(*type_holder.type, dimension),
+                    create_array_type(self, *type_holder.type, dimensions),
                     nullptr
                 };
             });

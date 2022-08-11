@@ -244,7 +244,7 @@ def _get_member_dynamic_type(py_type, member_annotations, type_factory: dds._Gen
         if array_info.is_array:
             # TODO PY-17: Use array_info.dimensions
             return type_factory.create_array(
-                member_dynamic_type, array_info.total_size)
+                member_dynamic_type, array_info.dimension_list)
         else:
             bound = annotations.find_annotation(
                 member_annotations, cls=annotations.BoundAnnotation)

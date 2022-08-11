@@ -64,6 +64,15 @@ class ArrayAnnotation:
     def total_size(self) -> int:
         return get_total_size_from_dimensions(self.dimensions)
 
+    @property
+    def dimension_list(self) -> dds.Uint32Seq:
+        if self.dimensions is None:
+            return dds.Uint32Seq()
+        elif isinstance(self.dimensions, list) or isinstance(self.dimensions, tuple):
+            return dds.Uint32Seq([int(x) for x in self.dimensions])
+        else:
+            return dds.Uint32Seq([int(self.dimensions)])
+
 class CharEncoding(IntEnum):
     UTF8 = 0
     UTF16 = 1

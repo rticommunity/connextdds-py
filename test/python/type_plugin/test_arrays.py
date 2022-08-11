@@ -108,17 +108,11 @@ def test_array_plugin():
     assert dt["wstrings"].type == dds.ArrayType(dds.WStringType(5), 3)
     element_ts = idl.get_type_support(SequenceTest)
     assert dt["complex"].type == dds.ArrayType(element_ts.dynamic_type, 3)
-    assert dt["multi_str"].type == dds.ArrayType(dds.StringType(), 2 * 3)
-    assert dt["multi_int"].type == dds.ArrayType(dds.Int64Type(), 3 * 2)
+    assert dt["multi_str"].type == dds.ArrayType(dds.StringType(), [2, 3])
+    assert dt["multi_int"].type == dds.ArrayType(dds.Int64Type(), [3, 2])
     assert dt["int_array_array"].type == dds.ArrayType(idl.get_type_support(MyIntArray).dynamic_type, 2)
     assert dt["point_array_array"].type == dds.ArrayType(idl.get_type_support(MyPointArray).dynamic_type, 2)
 
-
-@pytest.mark.xfail(reason="TODO PY-17: multi_str-dimensional arrays are created flat for now")
-def test_multi_dim_array_dynamic_type():
-    dt = idl.get_type_support(ArrayTest).dynamic_type
-    assert dt["multi_str"].type == dds.ArrayType(dds.StringType(), [2, 3])
-    assert dt["multi_int"].type == dds.ArrayType(dds.Int32Type(), [3, 2])
 
 def test_array_default_creation():
     sample = ArrayTest()

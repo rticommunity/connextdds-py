@@ -131,6 +131,17 @@ def test_sequence_serialization(sequence_sample):
     assert sequence_sample == deserialized_sample
 
 
+def test_sequence_list_comprehension_serialization():
+    ts = idl.get_type_support(SequenceTest)
+    sequence_sample = SequenceTest()
+    sequence_sample.vertices = [Point(x, 0) for x in range(3)]
+    sequence_sample.weights = range(3)
+    buffer = ts.serialize(sequence_sample)
+    deserialized_sample = ts.deserialize(buffer)
+    assert list(sequence_sample.vertices) == deserialized_sample.vertices
+    assert list(sequence_sample.weights) == deserialized_sample.weights
+
+
 @pytest.mark.parametrize("SequenceTestType", [SequenceTest, OptionalSequenceTest])
 def test_empty_sequence_serialization(SequenceTestType):
     ts = idl.get_type_support(SequenceTestType)

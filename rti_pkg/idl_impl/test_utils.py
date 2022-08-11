@@ -12,9 +12,8 @@
 import os
 import time
 
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from dataclasses import fields, MISSING
-from enum import IntEnum
 import inspect
 import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
@@ -24,7 +23,6 @@ from rti.idl_impl.type_utils import ListFactory, PrimitiveArrayFactory, ValueLis
 from itertools import islice, cycle
 import rti.idl_impl.annotations as annotations
 from rti.idl_impl.unions import union_cases
-import array
 
 import rti.connextdds as dds
 
@@ -405,6 +403,9 @@ def get_test_domain():
 def get_test_participant_qos():
     qos = dds.DomainParticipantQos()
     qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(10)
+    qos.discovery.accept_unknown_peers = False
+    qos.discovery.multicast_receive_addresses = []
+    qos.discovery.initial_peers = ["1@localhost", "shmem://"]
     return qos
 
 
