@@ -245,8 +245,6 @@ class CopyStrToBytesInstructionMixin(StringInstruction):
             raise ValueError(
                 f'String length ({char_length}) exceeds bound ({self.bound}): \'{py_member}\'')
 
-        # TODO PY-17: Review if this should be implemented in C:
-        #
         # We call realloc even if the string is bounded because the XCDR
         # interpreter currently doesn't allocate the strings in a sequence
         c_member_ptr = as_int_ptr(dst[index])

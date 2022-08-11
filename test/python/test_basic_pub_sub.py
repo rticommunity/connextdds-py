@@ -9,22 +9,10 @@
  # damages arising out of the use or inability to use the software.
  #
 
-import rti.connextdds as dds
+from rti.types.builtin import String
 from test_utils.fixtures import *
 
-def test_data_reader_writer():
-    fx = PubSubFixture(None, dds.StringTopicType)
-
-    # TODO PY-17: writer.write("Hello") doesn't work at the moment because
-    # of the ordering of write functions in init_dds_datawriter_untyped_methods.
-    for i in range(1, 6):
-        fx.writer.write(dds.StringTopicType("Hello World " + str(i)))
-
-    wait.for_data(fx.reader, 5)
-
-    count = 0
-    with fx.reader.read() as samples:
-        assert len(samples) == 5
-        for x, _ in samples:
-            count += 1
-            assert x == f"Hello World {count}"
+def test_basic_pubsub():
+    fx = PubSubFixture(None, String)
+    for i in range(5):
+        fx.send_and_check(String(f"Hello World {i}"))

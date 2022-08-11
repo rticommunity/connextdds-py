@@ -242,7 +242,6 @@ def _get_member_dynamic_type(py_type, member_annotations, type_factory: dds._Gen
         array_info = annotations.find_annotation(
             member_annotations, annotations.ArrayAnnotation)
         if array_info.is_array:
-            # TODO PY-17: Use array_info.dimensions
             return type_factory.create_array(
                 member_dynamic_type, array_info.dimension_list)
         else:
@@ -359,7 +358,6 @@ def create_dynamic_type_from_union_dataclass(
             current_annotations, cls=annotations.IdAnnotation)
         case: Case = field.default
 
-        # TODO PY-17: default label not supported yet
         member_args.append(
             (field.name, member_type, case.labels, member_id.value, False))
 
