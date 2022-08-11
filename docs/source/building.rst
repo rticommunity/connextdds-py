@@ -41,7 +41,7 @@ Simple Installation
 
       $ python configure.py --nddshome /opt/rti_connext_dds-7.0.0 --jobs 4 x64Linux4gcc7.3.0
 
-  More options are listed later in this section.
+  See :ref:`building:Advanced configuration` below for more options.
 
 3. Build and install.
 
@@ -156,8 +156,7 @@ specified in the following table.
 
 Uninstalling
 ============
-If you wish to install a new version or update the development version,
-you must uninstall the Python package. To do so, run:
+To uninstall the package, run the following command:
 
 .. code-block:: shell
 
