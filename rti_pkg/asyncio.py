@@ -170,10 +170,17 @@ async def close():
 
 
 def run(coroutine):
-    loop = asyncio.get_event_loop()
+    """Uses the current event loop to run the given coroutine and waits until it
+    finishes. If there is no current running event loop, a new one is created
+    """
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     try:
         loop.run_until_complete(coroutine)
     finally:
         loop.run_until_complete(close())
-
-
