@@ -28,7 +28,7 @@ Reading data
 ------------
 
 When data is available, the :meth:`DataReader.read_data` and
-:meth:`DataReader.take_data` method return a collection of data samples of the
+:meth:`DataReader.take_data` methods return a collection of data samples of the
 type specified in the *Topic*. (``take_data`` removes the data from the reader,
 and ``read_data`` keeps it so it can be accessed again.)
 
@@ -45,7 +45,7 @@ To also access the meta-data associated with each data sample, use
 
     for data, info in reader.take():
         if info.valid:
-            print(f"Data received: {sample}")
+            print(f"Data received: {data}")
         else:
             print(f"State changed: {info.state}")
 
