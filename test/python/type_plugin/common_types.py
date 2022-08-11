@@ -215,36 +215,6 @@ class SequenceTest:
     vertices_bounded: Sequence[Point] = field(default_factory=list)
 
 
-@idl.struct(
-    member_annotations={
-        'vertices': [idl.array(3)],
-        'weights': [idl.array(4)],
-        'prices': [idl.array(5)],
-        'custom_factory': [idl.array(3)],
-        'strings': [idl.array(3), idl.element_annotations([idl.bound(5)])],
-        'wstrings': [idl.array(3), idl.element_annotations([idl.utf16, idl.bound(5)])],
-        'complex': [idl.array(3)],
-        'multi_str': [idl.array([2, 3])],
-        'multi_int': [idl.array([3, 2])]
-    }
-)
-class ArrayTest:
-    vertices: Sequence[Point] = field(
-        default_factory=idl.list_factory(Point, 3))
-    weights: Sequence[idl.int16] = field(
-        default_factory=idl.array_factory(idl.int16, 4))
-    prices: Sequence[float] = field(default_factory=idl.list_factory(float, 5))
-    custom_factory: Sequence[int] = field(default_factory=lambda: [1, 2, 3])
-    strings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
-    wstrings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
-    complex: Sequence[SequenceTest] = field(
-        default_factory=idl.list_factory(SequenceTest, 3))
-    multi_str: Sequence[str] = field(
-        default_factory=idl.list_factory(str, [2, 3]))
-    multi_int: Sequence[int] = field(
-        default_factory=idl.array_factory(int, [3, 2]))
-
-
 @idl.struct(member_annotations={
     "sequences_b": [idl.bound(3)],
     "sequences_b_o": [idl.bound(3)]
