@@ -239,10 +239,10 @@ class ArrayTest:
     wstrings: Sequence[str] = field(default_factory=idl.list_factory(str, 3))
     complex: Sequence[SequenceTest] = field(
         default_factory=idl.list_factory(SequenceTest, 3))
-    #multi_str: Sequence[str] = field(
-    #    default_factory=idl.list_factory(str, [2, 3]))
-    #multi_int: Sequence[int] = field(
-    #    default_factory=idl.array_factory(int, [3, 2]))
+    multi_str: Sequence[str] = field(
+        default_factory=idl.list_factory(str, [2, 3]))
+    multi_int: Sequence[int] = field(
+        default_factory=idl.array_factory(int, [3, 2]))
 
 
 @idl.struct(member_annotations={
