@@ -49,6 +49,10 @@ To also access the meta-data associated with each data sample, use
         else:
             print(f"State changed: {info.state}")
 
+Each call to these methods returns newly created objects (even ``read()``),
+unlike other Connext language bindings, which return temporary loaned
+objects.
+
 The :meth:`DataReader.select` method allows selecting which
 data to read.
 
