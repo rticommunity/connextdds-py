@@ -19,6 +19,7 @@ from test_utils.fixtures import *
 
 import common_types
 from test_annotations import AnnotationsTest
+from test_arrays import ArrayTest
 from dataclasses import field
 
 
@@ -59,7 +60,7 @@ idl_types = [
     common_types.UnionWithEnum,
     common_types.UnionWithEnumDefault,
     common_types.UnionWithEnumDefaultSeq,
-    common_types.ArrayTest,
+    ArrayTest,
     common_types.SequenceOfSeqTest,
     common_types.StrSequenceTest,
     common_types.OptionalStrSequenceTest,
