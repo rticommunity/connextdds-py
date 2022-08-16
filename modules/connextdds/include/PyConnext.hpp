@@ -218,6 +218,14 @@ struct no_gil_delete {
 template<typename T>
 using unique_ptr_no_gil = std::unique_ptr<T, no_gil_delete<T>>;
 
+inline void emit_deprecation_warning(
+        const char* deprecated_symbol,
+        const char* replacement_symbol)
+{
+    std::string message = std::string(deprecated_symbol)
+            + " is deprecated. Use " + replacement_symbol + " instead.";
+    PyErr_WarnEx(PyExc_DeprecationWarning, message.c_str(), 1);
+}
 
 // Dummy classes
 class PyPrimitiveType {

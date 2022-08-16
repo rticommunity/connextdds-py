@@ -360,9 +360,9 @@ modify the ``union``, use the "cases" (read/write properties). For example:
 
     # Attempting to access member that is not selected raises a ValueError:
     try:
-        print(sample.string_value)
+        print(sample.string_member)
     except ValueError:
-        print("string_value is not selected")
+        print("string_member is not selected")
 
 Modules
 =======
@@ -506,6 +506,40 @@ You can directly use these types in your application:
     writer.write(String("Hello World!"))
 
 
+Type Support
+------------
+
+Every ``@idl.struct``- or ``@idl.union``-decorated class has an
+associated ``TypeSupport`` object that can be obtained as follows:
+
+.. code:: python
+
+    import rti.types as idl
+
+    @idl.struct
+    class Foo:
+        ...
+
+    foo_support = idl.get_type_support(Foo)
+
+
+``TypeSupport`` provides access to serialization functions:
+
+.. code:: python
+
+    foo = Foo()
+    buffer = foo_support.serialize(foo)
+    new_foo = foo_support.deserialize(buffer)
+    assert foo == new_foo
+
+It also provides the property ``max_serialized_sample_size``,
+and the method ``get_serialized_sample_size()``.
+
+``TypeSupport`` also provides information about the type definition as a
+:class:`DynamicType` (``dynamic_type`` property) and helpers to convert to and from
+:class:`DynamicData` (``to_dynamic_data()`` and ``from_dynamic_data()`` methods).
+
+
 DynamicType and DynamicData
 ---------------------------
 
@@ -519,18 +553,17 @@ create ``dds.DynamicData`` samples.
     provider = dds.QosProvider("your_types.xml")
     my_type = provider.type("MyType")
 
-You can now use ``my_type`` to create a ``dds.DynamicData.Topic``
+You can now use ``my_type`` to create a :class:`DynamicData.Topic`
 and to instantiate a :class:`DynamicData` object:
 
 .. code-block:: python
 
+    topic = dds.DynamicData.Topic(participant, "Example MyType", my_type)
     sample = dds.DynamicData(my_type)
+    sample["x"] = 42 # assuming MyType has an int32 field
 
-    # Let's say my_type has an int32 field
-    sample["x"] = 42
-
-Now you would be able to publish the sample, which is discussed in
-:ref:`writer:Publications`.
+You can use ``topic`` to create a :class:`DynamicData.DataWriter` or a
+:class:`DynamicData.DataReader`.
 
 Types can also be defined dynamically in the application, using :class:`DynamicType`
 and its derived classes.

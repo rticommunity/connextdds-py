@@ -1,6 +1,30 @@
-# connextdds-py
+<br />
+<p align="center">
+  <a href="https://github.com/rticommunity/connextdds-py">
+    <img src="docs/source/_static/rti-logo-tag-StackedRight.png" alt="RTI Connext Python API" height="50">
+  </a>
+</p>
 
-A full Python binding for RTI Connext DDS. (This binding is experimental.)
+
+<p align="center"><h1 align="center"><strong>RTI Connext Python API</strong></h1></p>
+
+<p align="center">
+  <em>A full Connext DDS binding for Python</em>
+  <br />
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/index.html"><strong>Explore the documentation »</strong></a>
+  <br />
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html">Getting Started</a>
+  ·
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/building.html">Install</a>
+  ·
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/overview.html">API Overview</a>
+  ·
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/quick.html">API Reference</a>
+  ·
+  <a href="https://github.com/rticommunity/rticonnextdds-examples">Examples</a>
+</p>
+
+<br>
 
 ## Documentation
 

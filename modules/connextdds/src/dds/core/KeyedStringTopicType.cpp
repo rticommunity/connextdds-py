@@ -22,43 +22,54 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<dds::core::KeyedStringTopicType>& cls)
 {
-    cls.def(py::init<>(), "Initialize sample with an two empty strings.")
-            .def(py::init<const std::string&, const std::string&>(),
-                 py::arg("key"),
-                 py::arg("value"),
-                 "Initialize sample with provided key and value.")
-            .def(py::init([](const std::pair<std::string, std::string>& p) {
-                     return dds::core::KeyedStringTopicType(p.first, p.second);
-                 }),
-                 py::arg("pair"),
-                 "Initialize sample with provided key/value pair.")
-            .def_property(
-                    "key",
-                    [](const dds::core::KeyedStringTopicType& s) {
-                        return s.key().to_std_string();
-                    },
-                    [](dds::core::KeyedStringTopicType& s,
-                       const std::string& value) {
-                        s.key(dds::core::string(value));
-                    },
-                    "The instance's key string.")
-            .def_property(
-                    "value",
-                    [](const dds::core::KeyedStringTopicType& s) {
-                        return s.value().to_std_string();
-                    },
-                    [](dds::core::KeyedStringTopicType& s,
-                       const std::string& value) {
-                        s.value(dds::core::string(value));
-                    },
-                    "The sample's value string.")
-            .def("__str__",
-                 [](const dds::core::KeyedStringTopicType& s) {
-                     return s.key().to_std_string() + " => "
-                             + s.value().to_std_string();
-                 })
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+    cls.def(py::init([]() {
+                emit_deprecation_warning(
+                        "rti.connextdds.KeyedStringTopicType",
+                        "rti.types.builtin.KeyedString");
+                return dds::core::KeyedStringTopicType();
+            }),
+            "(Deprecated) Initialize sample with an two empty strings.");
+
+    cls.def(py::init([](const std::string& key, const std::string& value) {
+                emit_deprecation_warning(
+                        "rti.connextdds.KeyedStringTopicType",
+                        "rti.types.builtin.KeyedString");
+                return dds::core::KeyedStringTopicType(key, value);
+            }),
+            py::arg("key"),
+            py::arg("value"),
+            "(Deprecated) Initialize sample with provided key and value.");
+    cls.def(py::init([](const std::pair<std::string, std::string>& p) {
+                emit_deprecation_warning(
+                        "rti.connextdds.KeyedStringTopicType",
+                        "rti.types.builtin.KeyedString");
+                return dds::core::KeyedStringTopicType(p.first, p.second);
+            }),
+            py::arg("pair"),
+            "(Deprecated) Initialize sample with provided key/value pair.");
+    cls.def_property(
+            "key",
+            [](const dds::core::KeyedStringTopicType& s) {
+                return s.key().to_std_string();
+            },
+            [](dds::core::KeyedStringTopicType& s, const std::string& value) {
+                s.key(dds::core::string(value));
+            },
+            "The instance's key string.");
+    cls.def_property(
+            "value",
+            [](const dds::core::KeyedStringTopicType& s) {
+                return s.value().to_std_string();
+            },
+            [](dds::core::KeyedStringTopicType& s, const std::string& value) {
+                s.value(dds::core::string(value));
+            },
+            "The sample's value string.");
+    cls.def("__str__", [](const dds::core::KeyedStringTopicType& s) {
+        return s.key().to_std_string() + " => " + s.value().to_std_string();
+    });
+    cls.def(py::self == py::self, "Test for equality.");
+    cls.def(py::self != py::self, "Test for inequality.");
 
     py::implicitly_convertible<
             std::pair<std::string, std::string>,

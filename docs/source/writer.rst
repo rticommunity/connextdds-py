@@ -27,3 +27,6 @@ To publish data, create a sample, set the values, and write it:
 
     data = Point(x=1, y=2)
     writer.write(data)
+
+A special DataWriter type for DynamicData, :class:`DynamicData.DataWriter` is
+also available. More information in :ref:`types:DynamicType and DynamicData`.

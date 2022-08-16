@@ -10,15 +10,14 @@
  #
 
 import rti.connextdds as dds
-from rti.types.builtin import String
-import utils
-from test_utils.fixtures import wait
+from rti.types.builtin import String, KeyedString
+from test_utils.fixtures import *
 
 DOMAIN_ID = 0
 
 
-def test_write_timestamp():
-    system = utils.TestSystem("StringTopicType")
+def test_write_timestamp(shared_participant):
+    system = PubSubFixture(shared_participant, String)
     test_timestamp = dds.Time(123)
     system.writer.write(String("hi"), test_timestamp)
     wait.for_data(system.reader, 1)
@@ -26,30 +25,31 @@ def test_write_timestamp():
     assert samples[0][1].source_timestamp == test_timestamp
 
 
-def test_write_handle():
-    system = utils.TestSystem("KeyedStringTopicType")
-    sample = dds.KeyedStringTopicType()
+def test_write_handle(shared_participant):
+    system = PubSubFixture(shared_participant, KeyedString)
+    sample = KeyedString()
     handle = system.writer.register_instance(sample)
     system.writer.write(sample, handle)
     wait.for_data(system.reader, 1)
     samples = system.reader.take()
-    assert samples[0].info.instance_handle == handle
+    assert samples[0][1].instance_handle == handle
 
 
-def test_write_handle_and_timestamp():
-    system = utils.TestSystem("KeyedStringTopicType")
-    sample = dds.KeyedStringTopicType()
+def test_write_handle_and_timestamp(shared_participant):
+    system = PubSubFixture(shared_participant, KeyedString)
+    sample = KeyedString()
     test_timestamp = dds.Time(123)
     handle = system.writer.register_instance(sample)
     system.writer.write(sample, handle, test_timestamp)
     wait.for_data(system.reader, 1)
     samples = system.reader.take()
-    assert samples[0].info.instance_handle == handle
-    assert samples[0].info.source_timestamp == test_timestamp
+    _, info = samples[0]
+    assert info.instance_handle == handle
+    assert info.source_timestamp == test_timestamp
 
 
-def test_write_timestamp_w_operator():
-    system = utils.TestSystem("StringTopicType")
+def test_write_timestamp_w_operator(shared_participant):
+    system = PubSubFixture(shared_participant, String)
     test_timestamp = dds.Time(123)
     system.writer << (String("hi"), test_timestamp)
     wait.for_data(system.reader, 1)
@@ -57,21 +57,21 @@ def test_write_timestamp_w_operator():
     assert samples[0][1].source_timestamp == test_timestamp
 
 
-def test_write_handle_w_operator():
-    system = utils.TestSystem("KeyedStringTopicType")
-    sample = dds.KeyedStringTopicType()
+def test_write_handle_w_operator(shared_participant):
+    system = PubSubFixture(shared_participant, KeyedString)
+    sample = KeyedString()
     handle = system.writer.register_instance(sample)
     system.writer << (sample, handle)
     wait.for_data(system.reader, 1)
     samples = system.reader.take()
-    assert samples[0].info.instance_handle == handle
+    assert samples[0][1].instance_handle == handle
 
 
-def test_write_w_operator_mix():
-    system = utils.TestSystem("KeyedStringTopicType")
-    sample = dds.KeyedStringTopicType()
+def test_write_w_operator_mix(shared_participant):
+    system = PubSubFixture(shared_participant, KeyedString)
+    sample = KeyedString()
     handle = system.writer.register_instance(sample)
-    system.writer << (sample, handle) << dds.KeyedStringTopicType("Hi", "Hi") << (
-        dds.KeyedStringTopicType("hello", "hello"),
+    system.writer << (sample, handle) << KeyedString("Hi", "Hi") << (
+        KeyedString("hello", "hello"),
         dds.Time(123),
     )

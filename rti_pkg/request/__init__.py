@@ -54,13 +54,13 @@ class SimpleReplier(_util.RequestReplyBase):
     def _create_data_available_callback(cls, handler):
         # type: (Callable[[object], object]) -> Callable[[SimpleReplier]]
         def callback(replier):
-            for sample in replier._reader.take():
-                if sample.info.valid:
-                    reply = handler(sample.data)
+            for data, info in replier._reader.take():
+                if info.valid:
+                    reply = handler(data)
                     _util.send_with_request_id(
                         replier._writer,
                         reply,
-                        sample.info.original_publication_virtual_sample_identity,
+                        info.original_publication_virtual_sample_identity,
                         True)
 
         return callback

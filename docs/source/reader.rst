@@ -24,6 +24,9 @@ we created in the :ref:`topic:Topics` section:
     subscriber = dds.Subscriber(participant)
     reader = dds.DataReader(subscriber, topic)
 
+A reader can be created with a :class:`ContentFilteredTopic`, instead of a regular
+Topic to define a content-based subscription with a filter on the data type.
+
 Reading data
 ------------
 
@@ -128,19 +131,20 @@ updates, including new data. This method is only recommended for lightweight
 processing, since the listener callback is executed in an internal Connext
 thread, and should not block or perform CPU-heavy operations.
 
-.. note::
-    **Differences between a regular DataReader and a DynamicData.DataReader**
 
-    Read this note if your application uses ``dds.DynamicData`` for your for
-    types.
+Special DataReaders
+-------------------
 
-    Unlike ``dds.DataReader``, ``dds.DynamicData.DataReader`` doesn't define
-    ``take_data()``, ``read_data()``, ``take_data_async()``, or ``take_async()``.
+This section applies to DataReaders for the :ref:`topic:Special Topics`, whose
+reading API is different from that of regular DataReaders.
 
-    Also, when you use a ``dds.DynamicData.DataReader``, the objects returned by
-    ``take()`` or ``read()`` are loaned; that is, they contain memory that is
-    owned by the *DataReader*, and they can't be used after the collection of
-    samples is destroyed.
+Unlike :class:`DataReader`, readers for the special topics (such as :class:`DynamicData.DataReader`)
+don't define ``take_data()``, ``read_data()``, ``take_data_async()``, or ``take_async()``.
 
-    A normal ``dds.DataReader`` on the other hand returns new objects with no
-    lifecycle restrictions.
+Also, when you read a special topic, the objects returned by
+``take()`` or ``read()`` are loaned; that is, they contain memory that is
+owned by the *DataReader*, and they can't be used after the collection of
+samples is destroyed.
+
+A normal :class:`DataReader` on the other hand returns new objects with no
+lifecycle restrictions.

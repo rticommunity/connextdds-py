@@ -23,5 +23,12 @@ The following code creates a *Topic* named "Car Position" for a type called
 
     topic = dds.Topic(participant, "Car Position", Point)
 
-A special topic, :class:`ContentFilteredTopic`, can be used for a content-based
-subscription with a filter on the data type.
+Special Topics
+--------------
+
+In addition to the class :class:`Topic`, there are a few separate Topic classes
+for certain types:
+
+* For ``DynamicData`` topics: :class:`DynamicData.Topic` (see :ref:`types:DynamicType and DynamicData`)
+* For the built-in Discovery Topics: :class:`ParticipantBuiltinTopicData.Topic`, :class:`SubscriptionBuiltinTopicData.Topic`, :class:`PublicationBuiltinTopicData.Topic`, :class:`TopicBuiltinTopicData.Topic`
+

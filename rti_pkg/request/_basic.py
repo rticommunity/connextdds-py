@@ -292,7 +292,9 @@ class Requester(_util.RequestReplyBase):
         """
         if isinstance(reply_info, rti.connextdds.SampleInfo):
             return rti.connextdds.SampleFlag.INTERMEDIATE_REPLY_SEQUENCE not in reply_info.flag
-        return rti.connextdds.SampleFlag.INTERMEDIATE_REPLY_SEQUENCE not in reply_info.info.flag
+
+        _, info = reply_info
+        return rti.connextdds.SampleFlag.INTERMEDIATE_REPLY_SEQUENCE not in info.flag
 
 class Replier(_util.RequestReplyBase):
     """A replier object for handling request-reply interactions with DDS.

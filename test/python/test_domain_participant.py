@@ -75,7 +75,7 @@ def test_set_qos_exception(participant):
     db = dds.Database()
     db.shutdown_cleanup_period = d
     qos << db
-    with pytest.raises(dds.ImmutablePolicyError):
+    with log_capture.expected_exception(dds.ImmutablePolicyError):
         participant.qos = qos
 
 
