@@ -40,25 +40,35 @@ Is defined in Python as follows:
 
     @idl.struct
     class Point:
-        x: int
-        y: int
+        x: int = 0
+        y: int = 0
 
 The ``@idl.struct`` decorator parses the type and generates the necessary type
 support routines that allow DDS to serialize and deserialize instances of this
 class. ``@idl.struct`` also applies ``@dataclass`` to the class, adding all
-its functionality.
-
-The decorated dataclass can be used to create a ``dds.Topic``:
+its functionality (``__init__``, ``__eq__``, ``__repr__``, ``__hash__``,
+``copy.deepcopy()`` support, etc.), for example:
 
 .. code-block:: python
 
-    topic = dds.Topic(participant, "Car Location", Point)
+    point1 = Point(x=1, y=2)
+    point2 = Point(y=2) # x=0, y=2
+    point3 = Point() # x=0, y=0
 
-(In :ref:`writer:Publications` and :ref:`reader:Subscriptions` we explained
-how to publish and subscribe to a topic.)
+    print(point1)
+    assert point1 != point2
 
-There are a few classes directly available to create Topics, for convenience,
-see "Built-in types" below.
+    point2.x = 1
+    assert point1 == point2
+
+    point4 = copy.deepcopy(point3)
+    assert point4 == point3
+
+``Point`` can be used to create a :class:`Topic` as we explained
+in :ref:`topic:Topics`.
+
+There are a few pre-defined classes available for convenience
+(see :ref:`types:Built-in types` below).
 
 The following sections explain how different IDL types map to Python.
 

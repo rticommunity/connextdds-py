@@ -16,12 +16,33 @@ each other through *Topics*. The data that the :class:`DataReader` and
 *Topics* are identified by a name, and they are associated with a type and a
 :class:`DomainParticipant`.
 
-The following code creates a *Topic* named "Car Position" for a type called
-``Point`` (:ref:`types:Data Types` explains how to define your types).
+The following code creates a *Topic* named "Car Position" for a type ``Point``:
 
 .. code-block:: python
 
     topic = dds.Topic(participant, "Car Position", Point)
+
+Where ``Point`` can be defined in IDL as:
+
+.. code-block:: idl
+
+    struct Point {
+        int64 x;
+        int64 y;
+    };
+
+And in Python as follows:
+
+.. code-block:: python
+
+    import rti.types as idl
+
+    @idl.struct
+    class Point:
+        x: int = 0
+        y: int = 0
+
+:ref:`types:Data Types` explains how to define your types in more detail.
 
 Special Topics
 --------------
