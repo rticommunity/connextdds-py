@@ -11,9 +11,9 @@ Python.
 .. attention::
 
     This release of the Connext Python API is experimental and provided as
-    buildable source. As an experimental release, it cannot
-    be used in production systems. A production-ready release is expected in
-    the future.
+    buildable source. As an experimental release, it cannot be used in
+    production systems and is subject to change. A production-ready release is
+    expected in the future.
 
 Getting Started
 ===============
