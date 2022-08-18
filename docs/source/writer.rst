@@ -29,4 +29,4 @@ To publish data, create a sample, set the values, and write it:
     writer.write(data)
 
 A special DataWriter type for DynamicData, :class:`DynamicData.DataWriter` is
-also available. More information in :ref:`types:DynamicType and DynamicData`.
+also available. Find more information in :ref:`types:DynamicType and DynamicData`.

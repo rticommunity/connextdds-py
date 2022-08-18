@@ -4,9 +4,9 @@ DomainParticipant
 ~~~~~~~~~~~~~~~~~
 
 *DomainParticipants* are the focal point for creating, destroying, and managing
-other *Connext DDS* objects. A DDS domain is a logical network of applications:
+other *Connext* objects. A DDS domain is a logical network of applications:
 only applications that belong to the same DDS domain may communicate using
-*Connext DDS*. A DDS domain is identified by a unique integer value known as a
+*Connext*. A DDS domain is identified by a unique integer value known as a
 domain ID. An application participates in a DDS domain by creating a
 *DomainParticipant* for that domain ID.
 
@@ -33,7 +33,7 @@ A *DomainParticipant* and its contained entities can also be created from an XML
 definition with the :meth:`QosProvider.create_participant_from_config` function.
 
 *DomainParticipants* (and all other *Entities*) get destroyed automatically
-when they are garbage collected; however to ensure that they are destroyed at a
+when they are garbage collected; however, to ensure that they are destroyed at a
 certain point in your application, you can call ``close()`` or create them
 within a ``with`` block:
 
