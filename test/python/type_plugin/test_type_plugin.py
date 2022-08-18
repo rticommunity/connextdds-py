@@ -236,15 +236,17 @@ def test_use_type_support_after_type(participant):
     writer.write(FooOut(4))
 
 
-def test_native_read(shared_participant):
+# Run test with selector and without selector
+@pytest.mark.parametrize("use_selector", [False, True])
+def test_native_read(shared_participant, use_selector):
     point_ts = idl.get_type_support(Point)
     fixture = PubSubFixture(shared_participant, Point)
-    fixture.writer.write(Point(3, 4))
-    wait.for_data(fixture.reader)
-    fixture.writer.write(Point(4, 5))
-    wait.for_data(fixture.reader)
+    fixture.writer.write([Point(3, 4), Point(4, 5)])
+    wait.for_data(fixture.reader, 2)
 
-    with fixture.reader._read_native() as samples:
+    reader = fixture.reader if not use_selector else fixture.reader.select()
+
+    with reader._read_native() as samples:
         assert len(samples) == 2
         assert samples[0].info.valid
         assert samples[0].info.state.sample_state == dds.SampleState.NOT_READ
@@ -253,7 +255,7 @@ def test_native_read(shared_participant):
         assert sample.x == 3
         assert sample.y == 4
 
-    with fixture.reader._take_native() as samples:
+    with reader._take_native() as samples:
         assert len(samples) == 2
         assert samples[0].info.valid
         assert samples[0].info.state.sample_state == dds.SampleState.READ
@@ -261,5 +263,5 @@ def test_native_read(shared_participant):
         assert sample.x == 3
         assert sample.y == 4
 
-    with fixture.reader._read_native() as samples:
+    with reader._read_native() as samples:
         assert len(samples) == 0

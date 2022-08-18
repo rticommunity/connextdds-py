@@ -998,7 +998,7 @@ void init_class_defs(
                  py::call_guard<py::gil_scoped_release>(),
                  "Test for inequality.")
             .doc() =
-            "Container for all Entity objects.\n"
+            "Container for all Entity objects.\n\n"
             "* It acts as a container for all other Entity objects.\n"
             "* It acts as a factory for the Publisher, Subscriber, Topic and "
             "Entity objects.\n"

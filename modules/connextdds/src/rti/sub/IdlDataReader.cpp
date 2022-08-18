@@ -187,6 +187,18 @@ static auto read_selector_data_and_info(PyDataReader<CSampleWrapper>::Selector& 
     return convert_data_w_info(dr, selector.read());
 }
 
+static auto read_selector_native(
+        PyDataReader<CSampleWrapper>::Selector& selector)
+{
+    return selector.read();
+}
+
+static auto take_selector_native(
+        PyDataReader<CSampleWrapper>::Selector& selector)
+{
+    return selector.take();
+}
+
 static py::object py_key_value(
         PyDataReader<CSampleWrapper>& reader,
         dds::core::InstanceHandle handle)
@@ -364,6 +376,17 @@ void init_dds_datareader_selector_read_methods<CSampleWrapper>(
             py::call_guard<py::gil_scoped_release>(),
             "Take copies of all available valid data based on Selector "
             "settings.");
+
+    selector.def(
+            "_read_native",
+            read_selector_native,
+            py::call_guard<py::gil_scoped_release>(),
+            "(Advanced) Read data in C format");
+    selector.def(
+            "_take_native",
+            take_selector_native,
+            py::call_guard<py::gil_scoped_release>(),
+            "(Advanced) Read data in C format");
 }
 
 static void init_csamplewrapper_loaned_samples(IdlDataReaderPyClass& cls)
