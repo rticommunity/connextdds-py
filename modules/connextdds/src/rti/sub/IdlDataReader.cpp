@@ -16,6 +16,8 @@
 #include <rti/core/EntityLock.hpp>
 #include "IdlDataReader.hpp"
 #include "IdlTypeSupport.hpp"
+#include "PyLoanedSample.hpp"
+#include "PyLoanedSamples.hpp"
 
 using namespace dds::core::xtypes;
 using namespace dds::topic;
@@ -111,26 +113,6 @@ static DataAndInfoVector convert_data_w_info(
     return py_samples;
 }
 
-static std::vector<size_t> get_native_ptrs(
-        PyDataReader<CSampleWrapper>&,
-        dds::sub::LoanedSamples<CSampleWrapper>&& samples)
-{
-    size_t max_length = samples.length();
-    auto valid_samples = rti::sub::valid_data(std::move(samples));
-    std::vector<size_t> py_samples(max_length);
-
-    py::gil_scoped_acquire acquire;
-    // This is the type support function that converts from C data
-    // to the user-facing python object.
-    size_t i = 0;
-    for (auto& sample : valid_samples) {
-        // py_samples.append(
-        py_samples[i++] = reinterpret_cast<size_t>(sample.data().sample());
-    }
-
-    return py_samples;
-}
-
 static auto take_data(PyDataReader<CSampleWrapper>& dr)
 {
     return convert_data(dr, dr.take());
@@ -170,10 +152,14 @@ static auto read_data_and_info(PyDataReader<CSampleWrapper>& dr)
     return convert_data_w_info(dr, dr.read());
 }
 
-static auto read_data_native(PyDataReader<CSampleWrapper>& dr)
+static auto read_native(PyDataReader<CSampleWrapper>& dr)
 {
-    // TODO PY-17: Initial implementation only.
-    return get_native_ptrs(dr, dr.read());
+    return dr.read();
+}
+
+static auto take_native(PyDataReader<CSampleWrapper>& dr)
+{
+    return dr.take();
 }
 
 static auto take_selector_data(PyDataReader<CSampleWrapper>::Selector& selector)
@@ -199,23 +185,6 @@ static auto read_selector_data_and_info(PyDataReader<CSampleWrapper>::Selector& 
 {
     PyDataReader<CSampleWrapper> dr(selector.reader());
     return convert_data_w_info(dr, selector.read());
-}
-
-// For testing purposes only
-static void test_native_reads(PyDataReader<CSampleWrapper>& dr)
-{
-    struct Point {
-        int32_t x;
-        int32_t y;
-    };
-    auto samples = rti::sub::valid_data(dr.read());
-    for (auto& sample : samples) {
-        auto point = reinterpret_cast<const Point*>(sample.data().sample());
-        if (point->x != point->y) {
-            throw std::runtime_error("Sample is not correct");
-        }
-
-    }
 }
 
 static py::object py_key_value(
@@ -397,6 +366,24 @@ void init_dds_datareader_selector_read_methods<CSampleWrapper>(
             "settings.");
 }
 
+static void init_csamplewrapper_loaned_samples(IdlDataReaderPyClass& cls)
+{
+    py::class_<rti::sub::LoanedSample<CSampleWrapper>> loaned_sample_cls(
+        cls,
+        "LoanedSample");
+
+    init_loaned_sample(loaned_sample_cls);
+
+    py::class_<
+            dds::sub::LoanedSamples<CSampleWrapper>,
+            std::unique_ptr<
+                    dds::sub::LoanedSamples<CSampleWrapper>,
+                    no_gil_delete<dds::sub::LoanedSamples<CSampleWrapper>>>>
+            loaned_samples_cls(cls, "LoanedSamples");
+
+    init_loaned_samples<CSampleWrapper>(loaned_samples_cls);
+}
+
 template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
@@ -488,16 +475,18 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
             "Retrieve the instance handle that corresponds to an instance "
             "key_holder");
 
-    cls.def("read_data_native",
-            read_data_native,
+
+    init_csamplewrapper_loaned_samples(cls);
+
+    cls.def("_take_native",
+            take_native,
+            py::call_guard<py::gil_scoped_release>(),
+            "(Advanced) Take data in C format");
+
+    cls.def("_read_native",
+            read_native,
             py::call_guard<py::gil_scoped_release>(),
             "(Advanced) Read data in C format");
-
-    // TODO PY-17: For testing purposes only. Remove in final version.
-    cls.def("_test_native_reads",
-            test_native_reads,
-            py::call_guard<py::gil_scoped_release>(),
-            "For testing purposes only");
 }
 
 } // namespace pyrti

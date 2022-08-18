@@ -626,6 +626,9 @@ class TypeSupport:
             src=c_sample, dst=py_sample)
         return py_sample
 
+    def get_c_data(self, c_sample_wrapper):
+        return ctypes.cast(c_sample_wrapper.get_ptr(), self.c_type_ptr).contents
+
     def serialize(self, sample):
         """Serialize a data sample into a cdr byte buffer"""
 

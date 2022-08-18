@@ -43,10 +43,7 @@ void init_loaned_sample_defs(py::class_<rti::sub::LoanedSample<T>>& cls)
                         auto data = ls.info().valid() ? py::cast(ls.data(), py::return_value_policy::reference_internal, py_ls) : py::none();
                         auto info = py::cast(ls.info(), py::return_value_policy::reference_internal, py_ls);
                         return py::make_tuple(data, info).attr("__iter__")();
-                    })
-            .def(py::self == py::self, "Check if two samples are equivalent")
-            .def(py::self != py::self,
-                 "Check if two samples are not equivalent.");
+                    });
 }
 
 template<typename T>
