@@ -8,7 +8,7 @@ applications with requirements for high performance and scalability.
 The **RTI Connext Python API** provides access to most Connext features from
 Python.
 
-.. note::
+.. attention::
 
     This release of the Connext Python API is experimental and provided as
     buildable source. As an experimental release, it cannot
@@ -40,6 +40,7 @@ Contents
    quick.rst
    API Reference <rti.rst>
    examples.rst
+   copyright.rst
 
 
 Additional documentation

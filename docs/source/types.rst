@@ -77,9 +77,9 @@ Primitive types
 The IDL types ``int64``, ``double``, and ``bool`` map directly to the Python
 built-in types ``int``, ``float``, and ``bool``.
 
-For IDL types of different sign or size, such as ``int32``, ``uint16``,
-``float``, type annotations are defined (``idl.int32``,
-``idl.uint16``, ``idl.float32``, respectively).
+For IDL types of different sign or size, type annotations are provided. For 
+example, the IDL types ``int32``, ``uint16``, and ``float`` map to the type 
+annotations ``idl.int32``, ``idl.uint16``, and ``idl.float32``, respectively.
 
 For example, the following IDL type:
 
