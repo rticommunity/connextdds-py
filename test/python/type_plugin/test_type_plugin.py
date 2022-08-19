@@ -234,3 +234,34 @@ def test_use_type_support_after_type(participant):
     # This verifies that the type support outlived FooIn and can be used as
     # long as the topic exists
     writer.write(FooOut(4))
+
+
+# Run test with selector and without selector
+@pytest.mark.parametrize("use_selector", [False, True])
+def test_native_read(shared_participant, use_selector):
+    point_ts = idl.get_type_support(Point)
+    fixture = PubSubFixture(shared_participant, Point)
+    fixture.writer.write([Point(3, 4), Point(4, 5)])
+    wait.for_data(fixture.reader, 2)
+
+    reader = fixture.reader if not use_selector else fixture.reader.select()
+
+    with reader._read_native() as samples:
+        assert len(samples) == 2
+        assert samples[0].info.valid
+        assert samples[0].info.state.sample_state == dds.SampleState.NOT_READ
+        sample_ptr = samples[0].data.get_ptr()
+        sample = ctypes.cast(sample_ptr, point_ts.c_type_ptr).contents
+        assert sample.x == 3
+        assert sample.y == 4
+
+    with reader._take_native() as samples:
+        assert len(samples) == 2
+        assert samples[0].info.valid
+        assert samples[0].info.state.sample_state == dds.SampleState.READ
+        sample = point_ts.get_c_data(samples[0].data)
+        assert sample.x == 3
+        assert sample.y == 4
+
+    with reader._read_native() as samples:
+        assert len(samples) == 0
