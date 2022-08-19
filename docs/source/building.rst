@@ -10,7 +10,7 @@ Requirements
 
 - Linux®, macOS®, or Windows® (with Visual Studio® 2015 or newer)
 - Python® 3.6 or newer
-- A *Connext DDS* 7.0.0 host and target installation (see the `Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ for instructions on how to install Connext).
+- A *Connext* 7.0.0 host and target installation (see the `Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ for instructions on how to install Connext).
 
 .. note::
 
@@ -53,7 +53,7 @@ Simple Installation
   on your machine, it make take a while to complete. You can increase the number
   of parallel jobs for the compilation (``--jobs`` option used above).
 
-4. The package is now installed and ready to use, you can import
+4. The package is now installed and ready to use; you can import
    the module ``rti.connextdds`` and others. See :ref:`hello:Hello World`, or
    enter the following on the python interpreter:
 
@@ -69,7 +69,7 @@ Redistributable Wheel Build
 ===========================
 
 In addition to installing the API on your machine, you can build a wheel file
-that you can use to install it on other machines. The wheel works on machines
+that you can use to install the API on other machines. The wheel works on machines
 with the same processor and OS, and the same major Python version. For example,
 you can build a wheel on a x64 Linux machine with Python 3.10 and then
 install it on other x64 Linux machines with Python 3.10.
@@ -100,7 +100,7 @@ install it on other x64 Linux machines with Python 3.10.
     $ pip install rti.connext-<version>-<platform>.whl
 
 
-Advanced configuration
+Advanced Configuration
 ======================
 
 The configure.py takes additional options.
@@ -133,7 +133,7 @@ specified in the following table.
       - Add the RTI Monitoring plugin
     * - -s
       - --secure
-      - Add the RTI DDS Secure plugin + openssl libraries
+      - Add the RTI Security Plugins + openssl libraries
     * - -p PLUGIN
       - --plugin PLUGIN
       - Add a user-defined plugin. This option can be specified multiple times

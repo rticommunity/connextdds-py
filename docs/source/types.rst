@@ -47,7 +47,7 @@ The ``@idl.struct`` decorator parses the type and generates the necessary type
 support routines that allow DDS to serialize and deserialize instances of this
 class. ``@idl.struct`` also applies ``@dataclass`` to the class, adding all
 its functionality (``__init__``, ``__eq__``, ``__repr__``, ``__hash__``,
-``copy.deepcopy()`` support, etc.), for example:
+``copy.deepcopy()`` support, etc.). For example:
 
 .. code-block:: python
 
@@ -74,12 +74,12 @@ The following sections explain how different IDL types map to Python.
 
 Primitive types
 ===============
-The IDL types ``int64``, ``double``, and ``bool`` map directly to the python
+The IDL types ``int64``, ``double``, and ``bool`` map directly to the Python
 built-in types ``int``, ``float``, and ``bool``.
 
-For IDL types of different sign or size, such as ``int32``, ``uint16``,
-``float``, type annotations are defined (``idl.int32``,
-``idl.uint16``, ``idl.float32``, respectively).
+For IDL types of different sign or size, type annotations are provided. For 
+example, the IDL types ``int32``, ``uint16``, and ``float`` map to the type 
+annotations ``idl.int32``, ``idl.uint16``, and ``idl.float32``, respectively.
 
 For example, the following IDL type:
 
@@ -224,7 +224,7 @@ must always have the same number of elements.
 The default creation of data samples with arrays populates them with the right
 number of elements.
 
-The write() operation will fail if a sample with an array containing an
+The ``write()`` operation will fail if a sample with an array containing an
 incorrect number of elements is written.
 
 .. warning ::
@@ -236,7 +236,7 @@ incorrect number of elements is written.
 Nested collections
 ==================
 
-In IDL you can define sequences of sequences, sequences of arrays, and
+In IDL, you can define sequences of sequences, sequences of arrays, and
 arrays of sequences.
 
 To do that, the inner collection must be aliased. For example:
@@ -260,7 +260,7 @@ By default, members of an IDL ``struct`` always contain a value and they are
 always published with a data sample. A member can be declared optional in IDL
 allowing it to not be sent with all data samples.
 
-In Python optional members receive the ``None`` value by default.
+In Python, optional members receive the ``None`` value by default.
 
 For example, the following IDL struct contains a required and an optional member:
 
@@ -441,7 +441,7 @@ defines a type without a module, and **Bar.idl** defines another module, **B**:
 IDL annotations
 ===============
 
-There are several IDL annotations that are passed to the ``struct``, ``union``
+There are several IDL annotations that are passed to the ``struct``, ``union``,
 or ``enum`` decorators in the ``type_annotations`` or ``member_annotations``
 arguments.
 
@@ -516,10 +516,10 @@ You can directly use these types in your application:
     writer.write(String("Hello World!"))
 
 
-Type Support
+Type support
 ------------
 
-Every ``@idl.struct``- or ``@idl.union``-decorated class has an
+Every ``@idl.struct``-decorated class or ``@idl.union``-decorated class has an
 associated ``TypeSupport`` object that can be obtained as follows:
 
 .. code:: python
@@ -553,7 +553,7 @@ and the method ``get_serialized_sample_size()``.
 DynamicType and DynamicData
 ---------------------------
 
-The *Connext DDS* Python API can dynamically load type definitions from XML and
+The *Connext* Python API can dynamically load type definitions from XML and
 create ``dds.DynamicData`` samples.
 
 .. code-block:: python

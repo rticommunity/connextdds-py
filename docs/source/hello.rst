@@ -58,7 +58,7 @@ Create a *DataReader* to subscribe to the HelloWorld Topic:
 
    rti.asyncio.run(print_data())
 
-Continue to the next sections to learn about
+Continue to the next sections to learn about a
 :ref:`participant:DomainParticipant`, :ref:`topic:Topics`,
 :ref:`writer:Publications`, :ref:`reader:Subscriptions`,
-and :ref:`types:Data Types`
+and :ref:`types:Data Types`.
