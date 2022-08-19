@@ -7,7 +7,9 @@ find_package(
 )
 
 find_package(
-    Python
+    Python${RTI_PYTHON_MAJOR_VERSION}
+    "${RTI_PYTHON_MAJOR_VERSION}.${RTI_PYTHON_MINOR_VERSION}"
+    EXACT
     REQUIRED
     COMPONENTS
         Interpreter
