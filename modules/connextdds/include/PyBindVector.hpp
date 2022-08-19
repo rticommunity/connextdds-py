@@ -115,7 +115,7 @@ template <typename T>
 std::vector<T> create_vector_from_py_bytes(py::bytes bytes)
 {
     char* buffer = nullptr;
-    ssize_t length = 0;
+    py::ssize_t length = 0;
     if (PYBIND11_BYTES_AS_STRING_AND_SIZE(bytes.ptr(), &buffer, &length)) {
         throw std::runtime_error("Failed to get bytes from py::bytes");
     }

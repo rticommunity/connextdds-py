@@ -37,7 +37,8 @@ namespace pyrti {
 template<typename T>
 static void validate_cdr_buffer_type(const py::buffer_info& info)
 {
-    if (info.ndim != 1 || info.strides[0] % static_cast<ssize_t>(sizeof(T))) {
+    if (info.ndim != 1
+            || info.strides[0] % static_cast<py::ssize_t>(sizeof(T))) {
         throw py::type_error(
                 "Bad buffer type: only valid 1D buffers are allowed");
     }
@@ -46,7 +47,7 @@ static void validate_cdr_buffer_type(const py::buffer_info& info)
         throw py::type_error("Bad buffer element type");
     }
 
-    if (info.strides[0] / static_cast<ssize_t>(sizeof(T)) != 1) {
+    if (info.strides[0] / static_cast<py::ssize_t>(sizeof(T)) != 1) {
         throw py::type_error(
                 "Bad buffer type: only valid 1D buffers are allowed");
     }
