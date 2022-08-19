@@ -169,6 +169,7 @@ class CMakeBuild(build_ext):
         
         # CMake will find same Python major version as the one used for setup
         major_version = sys.version_info.major
+        minor_version = sys.version_info.minor
 
         cfg = 'Debug' if (self.debug or get_debug()) else 'Release'
         cmake_args = ['-DBUILD_SHARED_LIBS=ON',
@@ -177,6 +178,7 @@ class CMakeBuild(build_ext):
                       '-DCMAKE_BUILD_TYPE=' + cfg,
                       '-Dpybind11_DIR=' + pybind11.get_cmake_dir(),
                       '-DRTI_PYTHON_MAJOR_VERSION=' + str(major_version),
+                      '-DRTI_PYTHON_MINOR_VERSION=' + str(minor_version),
                       '-DRTI_PLATFORM_DIR=' + lib_dir]
 
         cmake_toolchain = get_cmake_toolchain()
