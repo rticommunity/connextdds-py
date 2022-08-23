@@ -65,10 +65,13 @@ static std::vector<py::object> convert_data(
 {
     size_t max_length = samples.length();
     auto valid_samples = rti::sub::valid_data(std::move(samples));
+
+    py::gil_scoped_acquire acquire;
+    // Important: the vector of py::object is declared within the scoped acquire
+    // so that its destructor can also run within the scope of the GIL.
     std::vector<py::object> py_samples;
     py_samples.reserve(max_length);
 
-    py::gil_scoped_acquire acquire;
     // This is the type support function that converts from C data
     // to the user-facing python object.
     auto obj_cache = get_py_objects(dr);
