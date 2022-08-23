@@ -442,8 +442,8 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
             py::arg("condition") = py::none(),
             py::call_guard<py::gil_scoped_release>(),
             "Takes copies of data as it becomes available in an async "
-            "generator. Must ``import rti.asyncio``.\n"
-            "Example:\n"
+            "generator. Must ``import rti.asyncio``.\n\n"
+            "Example:\n\n"
             "  .. code-block:: python\n\n"
             "    async for data in reader.take_data_async():\n"
             "      print(data)\n"
@@ -455,7 +455,7 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
             py::arg("condition") = py::none(),
             py::call_guard<py::gil_scoped_release>(),
             "Takes copies of data, info tuples as data becomes available in an "
-            "async generator. Must ``import rti.asyncio``.\n"
+            "async generator. Must ``import rti.asyncio``.\n\n"
             "Example:\n\n"
             "  .. code-block:: python\n\n"
             "    async for data, info in reader.take_async():\n"
