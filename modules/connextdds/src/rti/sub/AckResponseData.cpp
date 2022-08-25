@@ -31,7 +31,7 @@ void init_class_defs(py::class_<AckResponseData>& cls)
                              uint8_t> & (AckResponseData::*) (std::vector<uint8_t>&) const)
                             & AckResponseData::value,
                     "Gets the subscription handle of the acknowledging "
-                    "DataReade");
+                    "DataReader");
 }
 
 

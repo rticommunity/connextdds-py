@@ -24,7 +24,7 @@ void init_class_defs(py::class_<OfferedDeadlineMissedStatus>& cls)
                &OfferedDeadlineMissedStatus::total_count,
                "The count of a DataWriter's failures to meet write deadlines.")
             .def_property_readonly(
-                    "total_change_count",
+                    "total_count_change",
                     &OfferedDeadlineMissedStatus::total_count_change,
                     "The delta in total_count since the last time the listener "
                     "was called or the status was read.")
