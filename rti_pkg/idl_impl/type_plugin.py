@@ -318,6 +318,10 @@ def create_dynamic_type_from_dataclass(
     for member_arg in member_args:
         type_factory.add_member(dynamic_type, *member_arg)
 
+    allowed_data_rep = annotations.find_annotation(
+        type_annotations, annotations.AllowedDataRepresentationAnnotation)
+    dynamic_type.set_allowed_data_representation_mask(allowed_data_rep.value)
+
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type
     if not is_public_type:
@@ -376,6 +380,10 @@ def create_dynamic_type_from_union_dataclass(
 
     for member_arg in member_args:
         type_factory.add_union_member(dynamic_type, *member_arg)
+
+    allowed_data_rep = annotations.find_annotation(
+        type_annotations, annotations.AllowedDataRepresentationAnnotation)
+    dynamic_type.set_allowed_data_representation_mask(allowed_data_rep.value)
 
     # Once finalized the type creation, this creates the plugin and assigns it
     # to dynamic_type

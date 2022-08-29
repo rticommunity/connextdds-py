@@ -350,7 +350,7 @@ class CopyPrimitiveSequenceToListInstruction(Instruction):
         py_member = getattr(dst, field_name)
         c_member = self.get_c_attr(src, field_name)
         c_elements = c_member.get_elements_ptr()
-        length = len(c_member)
+        length = c_member._length
 
         # extend() first is faster than N append() calls
         py_member.extend(itertools.repeat(0, length))
@@ -372,9 +372,9 @@ class CopyPrimitiveSequenceToExtendableBufferInstruction(Instruction):
         field_name = self.field_name
         py_member = getattr(dst, field_name)
         c_member = self.get_c_attr(src, field_name)
-        length = len(c_member)
+        length = c_member._length
         if length > 0:
-            elements_ptr = c_member.get_elements_raw_ptr()
+            elements_ptr = int(c_member._contiguous_buffer)
             py_member.extend(itertools.repeat(0, length))
             core_utils.memcpy_to_buffer_object(
                 py_member, elements_ptr, c_member._element_size * length)
@@ -394,9 +394,9 @@ class CopyPrimitiveSequenceToResizableBufferInstruction(Instruction):
         field_name = self.field_name
         py_member = getattr(dst, field_name)
         c_member = self.get_c_attr(src, field_name)
-        length = len(c_member)
+        length = c_member._length
         if length > 0:
-            elements_ptr = c_member.get_elements_raw_ptr()
+            elements_ptr = int(c_member._contiguous_buffer)
             py_member.resize(length)
             core_utils.memcpy_to_buffer_object(
                 py_member, elements_ptr, c_member._element_size * length)
@@ -414,9 +414,9 @@ class CopyPrimitiveSequenceToFixedSizeBufferInstruction(Instruction):
     def execute(self, dst: Any, src: Any) -> None:
         field_name = self.field_name
         c_member = self.get_c_attr(src, field_name)
-        length = len(c_member)
+        length = c_member._length
         if length > 0:
-            elements_ptr = c_member.get_elements_raw_ptr()
+            elements_ptr = int(c_member._contiguous_buffer)
             py_member = self.field_factory(length)
             core_utils.memcpy_to_buffer_object(
                 py_member, elements_ptr, c_member._element_size * length)
@@ -454,7 +454,7 @@ class CopyBufferToSequenceInstruction(CopyListToCInstruction):
         self.resize_sequence_member(dst, c_member, length)
 
         if length > 0:
-            elements_ptr = c_member.get_elements_raw_ptr()
+            elements_ptr = int(c_member._contiguous_buffer)
             core_utils.memcpy_from_buffer_object(
                 elements_ptr, py_member, c_member._element_size * length)
 
@@ -479,7 +479,7 @@ class CopyBufferOrListToSequenceInstruction(CopyListToCInstruction):
                 for i in range(length):
                     c_elements[i] = py_member[i]
             else:
-                elements_ptr = c_member.get_elements_raw_ptr()
+                elements_ptr = int(c_member._contiguous_buffer)
                 core_utils.memcpy_from_buffer_object(
                     elements_ptr, py_member, c_member._element_size * length)
 
@@ -510,7 +510,7 @@ class CopyConstructedSequenceToListInstruction(Instruction):
         py_member = getattr(dst, field_name)
         c_member = self.get_c_attr(src, field_name)
         c_elements = c_member.get_elements_ptr()
-        for i in range(len(c_member)):
+        for i in range(c_member._length):
             element = self.element_factory()
             self.element_program.execute(dst=element, src=c_elements[i])
             py_member.append(element)
@@ -569,7 +569,7 @@ class CopyStrSequenceToListInstruction(Instruction):
         field_name = self.field_name
         py_member = getattr(dst, field_name)
         c_member = self.get_c_attr(src, field_name)
-        length = len(c_member)
+        length = c_member._length
         py_member.extend(itertools.repeat(None, length))
         for i in range(length):
             self.element_instruction.execute_on_sequence(
