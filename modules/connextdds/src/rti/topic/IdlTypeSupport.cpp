@@ -205,6 +205,12 @@ void init_class_defs(py::class_<TypePlugin>& cls)
             },
             py::arg("member_index"),
             py::call_guard<py::gil_scoped_release>());
+
+    cls.def("set_allowed_data_representation_mask",
+        [](const TypePlugin& self, int32_t mask) {
+            self.type->native()._data._annotations._allowedDataRepresentationMask = mask;
+        },
+        py::arg("mask"));
 }
 
 template<>

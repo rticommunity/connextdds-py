@@ -85,7 +85,7 @@ class CharEncodingAnnotation:
 
 class AllowedDataRepresentationFlags(IntEnum):
     XCDR1 = 0x01
-    XCDR2 = 0x02
+    XCDR2 = 0x04
 
 
 @dataclass
