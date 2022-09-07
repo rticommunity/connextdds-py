@@ -204,6 +204,20 @@ void init_class_defs(
                     },
                     "Get the parent DomainParticipant for this Subscriber.")
             .def(
+                    "find_datareader",
+                    [](PySubscriber& sub, const std::string& name)
+                            -> dds::core::optional<PyAnyDataReader> {
+                        auto dr = rti::sub::find_datareader_by_name<
+                                dds::sub::AnyDataReader>(sub, name);
+                        if (dr == dds::core::null) {
+                            return {};
+                        }
+                        return PyAnyDataReader(dr);
+                    },
+                    py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find a DataReader in this Subscriber by its name.")
+            .def(
                     "find_datareaders",
                     [](PySubscriber& sub) {
                         std::vector<PyAnyDataReader> v;
@@ -235,6 +249,23 @@ void init_class_defs(
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Find all DataReaders for a given topic name")
+            .def(
+                    "find_datareader_by_topic_name",
+                    [](PySubscriber& sub, const std::string& topic_name)
+                            -> dds::core::optional<PyAnyDataReader> {
+                        auto dr = rti::sub::find_datareader_by_topic_name<
+                                dds::sub::AnyDataReader>(sub, topic_name);
+                        if (dr == dds::core::null) {
+                            return {};
+                        }
+                        return PyAnyDataReader(dr);
+                    },
+                    py::arg("topic_name"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find a DataReader in this Subscriber by its topic name. "
+                    "If "
+                    "more than one exists for this Topic, the first one found "
+                    "is returned.")
             .def(py::self == py::self,
                     py::call_guard<py::gil_scoped_release>(),
                     "Test for equality.")

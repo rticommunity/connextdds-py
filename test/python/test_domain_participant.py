@@ -351,3 +351,17 @@ def test_close_after_close():
         with create_participant() as p3:
             p3.close()
             p3.qos.participant_name.name
+
+
+def test_find_no_entity(participant):
+    # Testing issue from PY-49
+    assert participant.find_subscriber("foo") is None
+    assert participant.find_subscribers() == []
+    assert participant.find_publisher("foo") is None
+    assert participant.find_publishers() == []
+    assert participant.find_datawriter("foo") is None
+    assert participant.find_datareader("foo") is None
+    assert dds.Publisher(participant).find_datawriter("foo") is None
+    assert dds.Subscriber(participant).find_datareader("foo") is None
+    assert dds.Publisher(participant).find_datawriter_by_topic_name("foo") is None
+    assert dds.Subscriber(participant).find_datareader_by_topic_name("foo") is None

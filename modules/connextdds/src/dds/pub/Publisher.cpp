@@ -236,19 +236,27 @@ void init_class_defs(
                     "expires.")
             .def(
                     "find_datawriter",
-                    [](PyPublisher& pub, const std::string& name) {
+                    [](PyPublisher& pub, const std::string& name)
+                            -> dds::core::optional<PyAnyDataWriter> {
                         auto dw = rti::pub::find_datawriter_by_name<
                                 dds::pub::AnyDataWriter>(pub, name);
+                        if (dw == dds::core::null) {
+                            return {};
+                        }
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Find a DataWriter in this Publisher by its name.")
             .def(
-                    "find_topic_datawriter",
-                    [](PyPublisher& pub, const std::string& topic_name) {
+                    "find_datawriter_by_topic_name",
+                    [](PyPublisher& pub, const std::string& topic_name) 
+                            -> dds::core::optional<PyAnyDataWriter> {
                         auto dw = rti::pub::find_datawriter_by_topic_name<
                                 dds::pub::AnyDataWriter>(pub, topic_name);
+                        if (dw == dds::core::null) {
+                            return {};
+                        }
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("topic_name"),

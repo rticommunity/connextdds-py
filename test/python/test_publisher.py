@@ -11,7 +11,7 @@
 
 from test_utils.fixtures import *
 import rti.connextdds as dds
-
+from rti.types.builtin import String
 
 def test_publisher_listener_can_be_set(shared_participant):
 	listener = dds.NoOpPublisherListener()
@@ -27,3 +27,22 @@ def test_publisher_listener_can_be_set(shared_participant):
 
 	sub.listener = dds.NoOpPublisherListener()
 	assert type(sub.listener) == dds.NoOpPublisherListener
+
+
+def test_publisher_find_writers(shared_participant):
+
+	pub = dds.Publisher(shared_participant)
+	assert len(pub.find_datawriters()) == 0
+
+	topic = dds.Topic(shared_participant, 'Foo', String)
+	qos = dds.DataWriterQos()
+	qos.entity_name = dds.EntityName('foo')
+	writer = dds.DataWriter(pub, topic, qos)
+	assert len(pub.find_datawriters()) == 1
+	writer2 = dds.DataWriter(pub, topic)
+	assert len(pub.find_datawriters()) == 2
+	assert writer, writer2 in pub.find_datawriters()
+	assert pub.find_datawriter('foo') == writer
+	# find_datawriter_by_topic_names returns the first writer found
+	# so it could be writer or writer2
+	assert pub.find_datawriter_by_topic_name('Foo') in (writer, writer2)

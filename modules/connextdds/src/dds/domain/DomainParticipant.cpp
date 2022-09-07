@@ -649,8 +649,13 @@ void init_class_defs(
                     "application, it is not specified which will be returned.")
             .def(
                     "find_publisher",
-                    [](PyDomainParticipant& dp, const std::string& name) {
-                        return PyPublisher(rti::pub::find_publisher(dp, name));
+                    [](PyDomainParticipant& dp, const std::string& name)
+                            -> dds::core::optional<PyPublisher> {
+                        auto pub = rti::pub::find_publisher(dp, name);
+                        if (pub == dds::core::null) {
+                            return {};
+                        }
+                        return PyPublisher(pub);
                     },
                     py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -686,9 +691,13 @@ void init_class_defs(
                     "Get the built-in subscriber for the DomainParticipant.")
             .def(
                     "find_subscriber",
-                    [](PyDomainParticipant& dp, const std::string& name) {
-                        return PySubscriber(
-                                rti::sub::find_subscriber(dp, name));
+                    [](PyDomainParticipant& dp, const std::string& name)
+                            -> dds::core::optional<PySubscriber> {
+                        auto sub = rti::sub::find_subscriber(dp, name);
+                        if (sub == dds::core::null) {
+                            return {};
+                        }
+                        return PySubscriber(sub);
                     },
                     py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -854,9 +863,13 @@ void init_class_defs(
                     "Get information about all discovered topics.")
             .def(
                     "find_datawriter",
-                    [](PyDomainParticipant& dp, const std::string name) {
+                    [](PyDomainParticipant& dp, const std::string name)
+                            -> dds::core::optional<PyAnyDataWriter> {
                         auto dw = rti::pub::find_datawriter_by_name<
                                 dds::pub::AnyDataWriter>(dp, name);
+                        if (dw == dds::core::null) {
+                            return {};
+                        }
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("name"),
@@ -864,9 +877,13 @@ void init_class_defs(
                     "Find a DataWriter by its name.")
             .def(
                     "find_datareader",
-                    [](PyDomainParticipant& dp, const std::string name) {
+                    [](PyDomainParticipant& dp, const std::string name)
+                            -> dds::core::optional<PyAnyDataReader> {
                         auto dr = rti::sub::find_datareader_by_name<
                                 dds::sub::AnyDataReader>(dp, name);
+                        if (dr == dds::core::null) {
+                            return {};
+                        }
                         return PyAnyDataReader(dr);
                     },
                     py::arg("name"),
