@@ -21,8 +21,8 @@ for i in glob.glob('../../build/lib.*'):
 project = 'RTI Connext Python API'
 copyright = '2022, Real-Time Innovations, Inc'
 author = 'Real-Time Innovations, Inc.'
-version = '0.2.0'
-release = '0.2.0'
+version = '7.0.0'
+release = '7.0.0'
 
 # -- General configuration ---------------------------------------------------
 
