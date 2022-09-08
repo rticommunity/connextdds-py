@@ -10,6 +10,9 @@
  */
 
 #include "PyConnext.hpp"
+
+#include <string>
+
 #include <rti/core/ProductVersion.hpp>
 
 using namespace rti::core;
@@ -36,6 +39,12 @@ void init_class_defs(py::class_<ProductVersion>& cls)
                     "revision_version",
                     &ProductVersion::revision_version,
                     "The revision number of product.")
+            .def_property_readonly(
+                    "native_build_id",
+                    [](const ProductVersion& pv) {
+                        return std::string(NDDS_Config_Version_to_string());
+                    },
+                    "A string with the build ID of the native Connext libraries.")
             .def("__str__", &ProductVersion::to_string)
             .def_property_readonly_static(
                     "current",

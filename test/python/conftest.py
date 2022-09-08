@@ -9,14 +9,18 @@
 # damages arising out of the use or inability to use the software.
 #
 
-import pytest
 import leak_detector
 import rti.connextdds.heap_monitoring as heap_monitoring
+import rti.connextdds as dds
 
 # Enable heap monitoring for all tests. Heap monitoring is used to detect
 # memory leaks by the fixture below
 
 heap_monitoring.enable()
+
+print("\n>>> Python API built with connextdds version: \n",
+      dds.ProductVersion.current.native_build_id)
+
 
 def pytest_sessionfinish(session, exitstatus):
     # Disable heap monitoring after all tests run
