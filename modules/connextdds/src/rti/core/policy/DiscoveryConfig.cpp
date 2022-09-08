@@ -23,34 +23,24 @@ template<>
 void init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cls)
 {
     cls.def_property_readonly_static(
-               "ALL",
-               [](py::object&) {
-                    return DiscoveryConfigBuiltinPluginKindMask::all();
-               },
-               "Create a mask with all bits set.")
-            .def_property_readonly_static(
-                    "NONE",
-                    [](py::object&) {
-                        return DiscoveryConfigBuiltinPluginKindMask::none();
-                    },
-                    "Create a mask with no bits set.")
-            .def_property_readonly_static(
-                    "SDP",
-                    [](py::object&) {
-                        return DiscoveryConfigBuiltinPluginKindMask::SDP();
-                    },
-                    "Create a mask that selects the Simple Discovery Protocol "
-                    "(SDP).")
-            .def_property_readonly_static(
-                    "SPDP", 
-                    [](py::object&) {
-                        return DiscoveryConfigBuiltinPluginKindMask::SPDP();
-                    })
-            .def_property_readonly_static(
-                    "SEDP",
-                    [](py::object&) {
-                        return DiscoveryConfigBuiltinPluginKindMask::SEDP();
-                    });
+            "NONE",
+            [](py::object&) {
+                return DiscoveryConfigBuiltinPluginKindMask::none();
+            },
+            "Create a mask with no bits set.");
+    cls.def_property_readonly_static(
+            "SDP",
+            [](py::object&) {
+                return DiscoveryConfigBuiltinPluginKindMask::SDP();
+            },
+            "Create a mask that selects the Simple Discovery Protocol "
+            "(SDP).");
+    cls.def_property_readonly_static("SPDP", [](py::object&) {
+        return DiscoveryConfigBuiltinPluginKindMask::SPDP();
+    });
+    cls.def_property_readonly_static("SEDP", [](py::object&) {
+        return DiscoveryConfigBuiltinPluginKindMask::SEDP();
+    });
 }
 
 template<>
