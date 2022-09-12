@@ -1033,6 +1033,14 @@ void init_class_defs(
                     py::call_guard<py::gil_scoped_release>(),
                     "Returns the list of InstanceHandles corresponding to"
                     "participants with the given entity name.")
+            .def( 
+                    "banish_ignored_participants",
+                    [](PyDomainParticipant& dp) {
+                        rti::domain::banish_ignored_participants(dp);
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Prevents ignored remote DomainParticipants from receiving "
+                    "traffic from the local DomainParticipant.")
             .def(py::self == py::self,
                  py::call_guard<py::gil_scoped_release>(),
                  "Test for equality.")

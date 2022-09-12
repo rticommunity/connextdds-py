@@ -437,3 +437,9 @@ def test_discovered_participants_from_subject_name_contains_remote_participant(p
         "p3")
     assert p2.instance_handle in participant.discovered_participants_from_subject_name(
         None)
+
+
+def test_banish_ignored_participants(participant):
+    with log_capture.expected_exception(dds.PreconditionNotMetError) as errinfo:
+        participant.banish_ignored_participants()
+    assert "participant has not enabled security" in errinfo.logs
