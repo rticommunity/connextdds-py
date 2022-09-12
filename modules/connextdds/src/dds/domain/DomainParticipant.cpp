@@ -1008,6 +1008,31 @@ void init_class_defs(
                     py::call_guard<py::gil_scoped_release>(),
                     "Find a FlowController configured in this "
                     "DomainParticipant.")
+            .def(
+                    "discovered_participant_subject_name",
+                    [](PyDomainParticipant& dp, 
+                        const dds::core::InstanceHandle& handle) {                 
+                        return rti::domain::discovered_participant_subject_name(
+                                dp,
+                                handle);
+                    },
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Returns the entity name for the specified "
+                    "DomainParticipant InstanceHandle.")
+            .def(
+                    "discovered_participants_from_subject_name",
+                    [](PyDomainParticipant& dp, 
+                        const rti::core::optional_value<std::string>
+                                &subject_name) {
+                            return rti::domain::discovered_participants_from_subject_name(
+                                    dp,
+                                    subject_name);
+                    },
+                    py::arg("subject_name"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Returns the list of InstanceHandles corresponding to"
+                    "participants with the given entity name.")
             .def(py::self == py::self,
                  py::call_guard<py::gil_scoped_release>(),
                  "Test for equality.")

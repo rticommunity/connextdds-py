@@ -370,6 +370,10 @@ class Wait:
         except WaitError:
             raise WaitError(f"Expected {expected_value}, got {function()}")
 
+    def for_participants_to_match(self, p1: dds.DomainParticipant, p2: dds.DomainParticipant) -> None:
+        self.until(lambda: p2.instance_handle in p1.discovered_participants())
+        self.until(lambda: p1.instance_handle in p2.discovered_participants())
+    
     def for_discovery(self, reader: dds.DataReader, writer: dds.DataWriter) -> None:
         self.until(lambda: writer.instance_handle in reader.matched_publications)
         self.until(lambda: reader.instance_handle in writer.matched_subscriptions)
@@ -520,3 +524,4 @@ class PubSubFixture:
         received_data = self.reader.take_data()
         assert len(received_data) == len(data)
         assert all(d in received_data for d in data)
+
