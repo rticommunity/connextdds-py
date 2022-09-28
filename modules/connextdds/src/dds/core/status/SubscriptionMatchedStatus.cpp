@@ -42,7 +42,7 @@ void init_class_defs(py::class_<SubscriptionMatchedStatus>& cls)
                     "listener "
                     "fired or the status was read.")
             .def_property_readonly(
-                    "last_subscription_handle",
+                    "last_publication_handle",
                     &SubscriptionMatchedStatus::last_publication_handle,
                     "A handle to the DataWriter that caused the most recent "
                     "change to "
