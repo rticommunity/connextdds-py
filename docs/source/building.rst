@@ -10,6 +10,12 @@ Requirements
 
 - Linux®, macOS®, or Windows® (with Visual Studio® 2015 or newer)
 - Python® 3.6 or newer
+- The following Python packages:
+
+  * For all systems: ``wheel setuptools cmake pybind11==2.8.1``
+  * Additionally, for Linux systems: ``patchelf``
+  * And for mac OS systems: ``delocate``
+
 - A *Connext* 7.0.0 host and target installation (see the `Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ for instructions on how to install Connext).
 
 .. note::
