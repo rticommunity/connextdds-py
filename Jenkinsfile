@@ -5,6 +5,17 @@
 * This code contains trade secrets of Real-Time Innovations, Inc.
 */
 
+def getConnextddsBranch() {
+    def targetBranchName = env.CHANGE_TARGET ? env.CHANGE_TARGET : env.BRANCH_NAME
+    def match = (targetBranchName =~ /^release\/connextdds-py\/(.*)/)
+    if (match) {
+        def version = match.group(1)
+        return "*/release/connextdds/${version}"
+    } else {
+        return "develop"
+    }
+}
+
 pipeline{
     agent none
     options {
@@ -21,7 +32,7 @@ pipeline{
                         stage("Build Wheels"){
                             steps{
                                 checkout BbS(
-                                    branches: [[name: 'develop']],
+                                    branches: [[name: getConnextddsBranch()]],
                                     credentialsId: 'bitbucket-build-credentials',
                                     extensions: [
                                     [$class: 'RelativeTargetDirectory', relativeTargetDir: 'connextdds']
@@ -123,7 +134,7 @@ pipeline{
                     }
                     steps{
                         checkout BbS(
-                            branches: [[name: '*/develop']],
+                            branches: [[name: getConnextddsBranch()]],
                             credentialsId: 'bitbucket-build-credentials',
                             extensions: [
                                 [$class: 'CloneOption', honorRefspec: true, noTags: true, reference: '', shallow: true, timeout: 20],
@@ -178,7 +189,7 @@ pipeline{
                     }
                     steps{
                         checkout BbS(
-                            branches: [[name: 'develop']],
+                            branches: [[name: getConnextddsBranch()]],
                             credentialsId: 'bitbucket-build-credentials',
                             extensions: [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: 'connextdds']
@@ -232,7 +243,7 @@ pipeline{
                     }
                     steps{
                         checkout BbS(
-                            branches: [[name: 'develop']],
+                            branches: [[name: getConnextddsBranch()]],
                             credentialsId: 'bitbucket-build-credentials',
                             extensions: [
                             [$class: 'RelativeTargetDirectory', relativeTargetDir: 'connextdds']

@@ -2,7 +2,7 @@
 Sphinx==2.4.4
 m2r==0.2.1
 mistune==0.8.4
-docutils==0.17
+docutils==0.16
 sphinx-autodoc-typehints==1.10.3
 sphinxcontrib-programoutput==0.16
 sphinx-tabs==1.2.1
