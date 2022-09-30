@@ -110,11 +110,14 @@ pipeline{
                         }
                         stage('Upload documentation') {
                             when {
-                                branch 'develop'
+                                expression{
+                                    // Only upload documentation on release and develop branch
+                                    env.BRANCH_NAME =~ /^release\/connextdds-py\/(.*)/ || env.BRANCH_NAME == "develop"
+                                }
                             }
                             steps {
                                 sshagent(credentials: ['doozer-microservice-deploy-sshkey']) {
-                                    sh("rsync -arv --delete -e 'ssh -o StrictHostKeyChecking=no' docs/build/html/ doozer@sjc01kvm2:~/www-docs/docs/connext-py")
+                                    sh("rsync -arv --delete -e 'ssh -o StrictHostKeyChecking=no' docs/build/html/ doozer@sjc01kvm2:~/www-docs/docs/connext-py/${env.BRANCH_NAME}")
                                 }
                             }
                         }
