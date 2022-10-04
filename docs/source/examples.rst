@@ -3,22 +3,9 @@
 Examples
 ~~~~~~~~
 
-Getting Started Guide
-=====================
+In addition to the code snippets in the
+`RTI Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ 
+and the :ref:`overview:API Overview`, you can find more examples here:
 
-The RTI Connext DDS Getting Started Guide examples can be found
-`in this repository <https://github.com/rticommunity/rticonnextdds-getting-started>`_.
-
-Clone the repository. In ``2_hello_world/python`` (and ``3_streaming_data/python``,
-and so on), a **readme** includes instructions for how to go through the example.
-
-For a full walk-through, see the
-`Getting Started Guide for Modern C++ <https://community.rti.com/static/documentation/connext-dds/6.0.1/doc/manuals/connext_dds/getting_started/index.html>`_.
-The Python example is a translation
-of the Modern C++ version, so the Modern C++ Getting Started Guide is a great resource.
-
-Python Examples
-===============
-
-More Python examples can be found in the
-`connextdds-py repository <https://github.com/rticommunity/connextdds-py/tree/master/examples>`_.
+- `connextdds-py repository <https://github.com/rticommunity/connextdds-py/tree/master/examples>`_
+- `rticonnextdds-examples repository <https://github.com/rticommunity/rticonnextdds-examples/tree/master/examples/connext_dds>`_ 

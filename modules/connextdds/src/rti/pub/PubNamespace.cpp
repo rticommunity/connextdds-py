@@ -14,7 +14,7 @@
 
 using namespace rti::pub;
 
-void init_namespace_rti_pub(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
+void init_namespace_rti_pub(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&)
 {
     pyrti::process_inits<AcknowledgmentInfo>(m, l);
     pyrti::process_inits<FlowController>(m, l);

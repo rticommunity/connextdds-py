@@ -64,7 +64,7 @@ def get_or_create_topic_from_name(type_class, data_type, participant, topic_name
         if isinstance(data_type, rti.connextdds.DynamicType):
             topic = type_class.Topic(participant, topic_name, data_type)
         else:
-            topic = type_class.Topic(participant, topic_name)
+            topic = type_class.Topic(participant, topic_name, data_type)
     return topic
 
 
@@ -80,7 +80,7 @@ def get_topic(
     if isinstance(data_type, rti.connextdds.DynamicType):
         type_class = rti.connextdds.DynamicData
     else:
-        type_class = data_type
+        type_class = rti.connextdds
     if custom_topic is not None:
         # custom topic overrides service name
         if isinstance(custom_topic, str):
@@ -104,7 +104,7 @@ def get_listener_class(data_type):
         data_type = rti.connextdds.DynamicData
         base_class = rti.connextdds.DynamicData.NoOpDataReaderListener
     else:
-        base_class = data_type.NoOpDataReaderListener
+        base_class = rti.connextdds.NoOpDataReaderListener
     if data_type in reader_listeners:
         return reader_listeners[data_type.__repr__]
     listener_class = type(base_class.__name__ + 'Listener', (base_class,), {})
@@ -144,7 +144,7 @@ def create_writer(
     if isinstance(writer_type, rti.connextdds.DynamicType):
         writer = rti.connextdds.DynamicData.DataWriter(publisher, topic, datawriter_qos)
     else:
-        writer = writer_type.DataWriter(publisher, topic, datawriter_qos)
+        writer = rti.connextdds.DataWriter(publisher, topic, datawriter_qos)
     return writer
 
 
@@ -167,7 +167,7 @@ def create_reader(
     if isinstance(reader_type, rti.connextdds.DynamicType):
         reader_cls = rti.connextdds.DynamicData
     else:
-        reader_cls = reader_type
+        reader_cls = rti.connextdds
 
     # Create correlation CFT
     if cft_guid is not None:
@@ -204,7 +204,7 @@ def wait_for_samples(
     if min_count == rti.connextdds.LENGTH_UNLIMITED:
         min_count = INT_MAX
         
-    sample_count = reader.select().max_samples(min_count).condition(initial_condition).read().length
+    sample_count = len(reader.select().max_samples(min_count).condition(initial_condition).read())
     min_count -= sample_count
 
     participant = reader.subscriber.participant

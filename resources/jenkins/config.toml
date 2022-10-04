@@ -1,0 +1,21 @@
+[tool.cibuildwheel]
+build-verbosity = 3
+test-requires = ["pytest", "numpy"]
+
+[tool.cibuildwheel.windows]
+before-all = "resources\\jenkins\\buildconnext-win64.bat"
+build = "cp36-win* cp37-win* cp38-win* cp39-win* cp310-win*"
+test-command = "pytest -v {project}\\test || exit 0;"
+
+[tool.cibuildwheel.macos]
+before-all = "resources/jenkins/buildconnext.sh x64Darwin17clang9.0 && python configure.py -j 8 x86_64Darwin"
+build = "cp36-macos* cp37-macos* cp38-macos* cp39-macos* cp310-macos*"
+environment = "NDDSHOME=$PWD/stage/rti_connext_dds-7.0.0/ DYLD_LIBRARY_PATH=$PWD/stage/rti_connext_dds-7.0.0/lib/x86_64Darwin"
+repair-wheel-command = "export DYLD_LIBRARY_PATH=$PWD/stage/rti_connext_dds-7.0.0/lib/x86_64Darwin && delocate-listdeps {wheel} && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
+test-command = "pytest -v {project}/test || true"
+
+[tool.cibuildwheel.linux]
+before-all = "resources/jenkins/buildconnext.sh x64Linux4gcc7.3.0 && python configure.py -j 8 x86_64Linux"
+build = "cp36-many* cp37-many* cp38-many* cp39-many* cp310-many*"
+environment = "NDDSHOME=$PWD/stage/rti_connext_dds-7.0.0/ LD_LIBRARY_PATH=$PWD/stage/rti_connext_dds-7.0.0/lib/x86_64Linux"
+test-command = "pytest -v {project}/test || true"

@@ -76,12 +76,14 @@ def get_python_root():
 
 
 def get_cpu(arch):
-    if 'x64' in arch:
+    if 'x64' in arch or 'AMD64' in arch:
         cpu = 'x64'
     elif 'i86' in arch:
         cpu = 'Win32'
+    elif 'arm64' in arch:
+        cpu = 'arm64'
     else:
-        raise RuntimeError('Unsupported CPU in arch')
+        raise RuntimeError(f'Unsupported CPU in arch: {arch}')
     return cpu
 
 
@@ -167,6 +169,7 @@ class CMakeBuild(build_ext):
         
         # CMake will find same Python major version as the one used for setup
         major_version = sys.version_info.major
+        minor_version = sys.version_info.minor
 
         cfg = 'Debug' if (self.debug or get_debug()) else 'Release'
         cmake_args = ['-DBUILD_SHARED_LIBS=ON',
@@ -175,6 +178,7 @@ class CMakeBuild(build_ext):
                       '-DCMAKE_BUILD_TYPE=' + cfg,
                       '-Dpybind11_DIR=' + pybind11.get_cmake_dir(),
                       '-DRTI_PYTHON_MAJOR_VERSION=' + str(major_version),
+                      '-DRTI_PYTHON_MINOR_VERSION=' + str(minor_version),
                       '-DRTI_PLATFORM_DIR=' + lib_dir]
 
         cmake_toolchain = get_cmake_toolchain()
@@ -224,6 +228,10 @@ class CMakeBuild(build_ext):
         python_cmd = sys.executable
         stubgen = os.path.join(get_script_dir(), 'resources', 'scripts', 'stubgen.py')
         stubgen_args = ['--split-overload-docs', '--no-setup-py', '--root-module-suffix', '']
+
+        # TODO PY-17: remove this workaround when CSampleWrapper signatures
+        # are fixed.
+        stubgen_args += ['--ignore-invalid', 'signature']
         extdirs = set()
         for ext in self.extensions:
             extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))

@@ -121,14 +121,14 @@ static int calculate_multidimensional_offset(
     }
 
     int offset = 0;
-    for (int i = 0; i < index.size(); ++i) {
-        auto dim_index = index[i];
+    for (size_t i = 0; i < index.size(); ++i) {
+        uint32_t dim_index = index[i];
         if (dim_index >= array_type.dimension(i)) {
             throw py::index_error("Invalid index for dimension.");
         }
         if (dim_index != 0) {
             int product = dim_index;
-            for (int j = i + 1; j < index.size(); ++j) {
+            for (size_t j = i + 1; j < index.size(); ++j) {
                 product *= array_type.dimension(j);
             }
             offset += product;
@@ -163,7 +163,7 @@ static DynamicData& resolve_collection_member(
     char delimiter;
     std::vector<int> index_list;
     int found_index;
-    int dim_count = get_collection_dim_count(data);
+    uint32_t dim_count = get_collection_dim_count(data);
     DynamicData* current = &data;
 
     enum ParseState {
@@ -260,7 +260,6 @@ static DynamicData& resolve_nested_member(
     for (auto& token : tokens) {
         size_t pos = token.find('[');
         if (pos != std::string::npos) {
-            int index;
             id.loan_list.push_back(
                 current->loan_value(token.substr(0, pos)));
             current = &id.loan_list.back().get();
@@ -273,7 +272,6 @@ static DynamicData& resolve_nested_member(
 
     size_t pos = key_field.find('[');
     if (pos != std::string::npos) {
-        int index;
         id.loan_list.push_back(
             current->loan_value(key_field.substr(0, pos)));
         current = &id.loan_list.back().get();
@@ -414,64 +412,13 @@ void set_complex_values(DynamicData& data, const T& key, py::iterable& values)
 }
 
 
-/*
-    EXPERIMENTAL!!!
-
-    std::vector<T>::resize forces initialization of added elements. This
-    workaround relies on compiler optimizations to avoid this forced
-    initialization when the vector template type is a primitive.
- */
-template<typename T>
-static void resize_no_init(std::vector<T>& v, py::ssize_t newSize) {
-    /*
-        A continguous array of this struct must have the same memory layout
-        as a type T array or this optimization will not work (and the assert
-        following the struct definition will fail)
-    */
-    struct vector_no_init_elem {
-        typename std::vector<T>::value_type data;
-        vector_no_init_elem() {}
-    };
-    static_assert(
-        sizeof(vector_no_init_elem[10]) == sizeof(typename std::vector<T>::value_type[10]), 
-        "alignment error");
-
-    /*
-        To make use of this compiler optimization, we will use the allocator
-        from the primitive vector and rebind it for our struct with an empty
-        default constructor. The compiler will optimize away the overhead of
-        default initialization on calls to vector_no_init::resize.
-    */
-    using vector_allocator = 
-        typename std::vector<T>::allocator_type;
-
-    using vector_allocator_traits = 
-        std::allocator_traits<vector_allocator>;
-
-    using no_init_allocator = 
-        typename vector_allocator_traits::template rebind_alloc<vector_no_init_elem>;
-
-    using vector_no_init = std::vector<vector_no_init_elem, no_init_allocator>;
-
-    /*
-        Because the memory layout of std::vector<T> matches that of our vector_no_init
-        we can perform a reinterpret cast on our input argument and use the
-        optimized resize. Note that added vector entries will contain unitialized
-        values, but since this function will only be used when returning vectors filled
-        with values from an existing DynamicData collection, the unitialized values
-        should never be accessible to the calling application.
-    */
-    reinterpret_cast<vector_no_init&>(v).resize(newSize);
-}
-
-
 template<typename V, typename K>
 static std::vector<V> get_collection_buffer_member(
         const DynamicData& dd,
         const K& key) {
     std::vector<V> values;
     auto mi = get_member_info(dd, key);
-    resize_no_init(values, mi.element_count());
+    vector_resize_no_init(values, mi.element_count());
     dd.get_values<V>(key, values);
     return values;
 }
@@ -508,7 +455,7 @@ static py::object get_collection_member(
         auto& collection_type = static_cast<const CollectionType&>(collection.type());
         auto& enum_type = static_cast<const EnumType&>(collection_type.content_type());
         retval.reserve(collection.member_count());
-        for (int i = 1; i <= collection.member_count(); ++i) {
+        for (uint32_t i = 1; i <= collection.member_count(); ++i) {
             retval.push_back(
                 enum_type.member(
                     enum_type.find_member_by_ordinal(
@@ -522,9 +469,9 @@ static py::object get_collection_member(
     case TypeKind::UINT_32_TYPE:
         return py::cast(get_collection_buffer_member<uint32_t, T>(dd, key));
     case TypeKind::INT_64_TYPE:
-        return py::cast(get_collection_buffer_member<rti::core::int64, T>(dd, key));
+        return py::cast(get_collection_buffer_member<DDS_LongLong, T>(dd, key));
     case TypeKind::UINT_64_TYPE:
-        return py::cast(get_collection_buffer_member<rti::core::uint64, T>(dd, key));
+        return py::cast(get_collection_buffer_member<DDS_UnsignedLongLong, T>(dd, key));
     case TypeKind::FLOAT_32_TYPE:
         return py::cast(get_collection_buffer_member<float, T>(dd, key));
     case TypeKind::FLOAT_64_TYPE:
@@ -533,7 +480,7 @@ static py::object get_collection_member(
         std::vector<rti::core::LongDouble> retval;
         auto loaned_member = dd.loan_value(key);
         DynamicData& member = loaned_member.get();
-        for (int i = 1; i <= member.member_count(); ++i) {
+        for (uint32_t i = 1; i <= member.member_count(); ++i) {
             auto ld = member.value<rti::core::LongDouble>(i);
             retval.push_back(ld);
         }
@@ -555,7 +502,7 @@ static py::object get_collection_member(
         std::vector<std::string> retval;
         auto loaned_member = dd.loan_value(key);
         DynamicData& member = loaned_member.get();
-        for (int i = 1; i <= member.member_count(); ++i) {
+        for (uint32_t i = 1; i <= member.member_count(); ++i) {
             retval.push_back(member.value<std::string>(i));
         }
         return py::cast(retval);
@@ -564,7 +511,7 @@ static py::object get_collection_member(
         std::vector<std::wstring> retval;
         auto loaned_member = dd.loan_value(key);
         DynamicData& member = loaned_member.get();
-        for (int i = 1; i <= member.member_count(); ++i) {
+        for (uint32_t i = 1; i <= member.member_count(); ++i) {
             std::wstring val;
             auto dd_wstr = member.get_values<DDS_Wchar>(i);
             for (auto c : dd_wstr) {
@@ -637,6 +584,7 @@ static py::object get_member(
             return get_collection_member(dd, mi.element_kind().underlying(), key);
         }
     }
+    /* fallthrough */
     default:
         return py::cast(dd.value<DynamicData>(key));
     }
@@ -737,9 +685,9 @@ static bool set_buffer_collection_member(
     case TypeKind::UINT_32_TYPE:
         return set_buffer_values<uint32_t>(dd, key, info, DDS_DynamicData_set_ulong_array);
     case TypeKind::INT_64_TYPE:
-        return set_buffer_values<rti::core::int64>(dd, key, info, DDS_DynamicData_set_longlong_array);
+        return set_buffer_values<DDS_LongLong>(dd, key, info, DDS_DynamicData_set_longlong_array);
     case TypeKind::UINT_64_TYPE:
-        return set_buffer_values<rti::core::uint64>(dd, key, info, DDS_DynamicData_set_ulonglong_array);
+        return set_buffer_values<DDS_UnsignedLongLong>(dd, key, info, DDS_DynamicData_set_ulonglong_array);
     case TypeKind::FLOAT_32_TYPE:
         return set_buffer_values<float>(dd, key, info, DDS_DynamicData_set_float_array);
     case TypeKind::FLOAT_64_TYPE:
@@ -809,14 +757,14 @@ static void set_collection_member(
         dd.set_values<uint32_t>(key, py::cast<std::vector<uint32_t>>(values));
         break;
     case TypeKind::INT_64_TYPE:
-        dd.set_values<rti::core::int64>(
+        dd.set_values<DDS_LongLong>(
                 key,
-                py::cast<std::vector<rti::core::int64>>(values));
+                py::cast<std::vector<DDS_LongLong>>(values));
         break;
     case TypeKind::UINT_64_TYPE:
-        dd.set_values<rti::core::uint64>(
+        dd.set_values<DDS_UnsignedLongLong>(
                 key,
-                py::cast<std::vector<rti::core::uint64>>(values));
+                py::cast<std::vector<DDS_UnsignedLongLong>>(values));
         break;
     case TypeKind::FLOAT_32_TYPE:
         dd.set_values<float>(key, py::cast<std::vector<float>>(values));
@@ -851,7 +799,7 @@ static void set_collection_member(
         auto v = py::cast<std::vector<std::string>>(values);
         auto loan = dd.loan_value(key);
         DynamicData& member = loan.get();
-        for (int i = 0; i < v.size(); ++i) {
+        for (size_t i = 0; i < v.size(); ++i) {
             member.value<std::string>(i + 1, v[i]);
         }
         break;
@@ -860,7 +808,7 @@ static void set_collection_member(
         auto v = py::cast<std::vector<std::wstring>>(values);
         auto loan = dd.loan_value(key);
         DynamicData& member = loan.get();
-        for (int i = 0; i < v.size(); ++i) {
+        for (size_t i = 0; i < v.size(); ++i) {
             std::vector<DDS_Wchar> str;
             for (auto c : v[i]) {
                 str.push_back(static_cast<DDS_Wchar>(c));
@@ -1384,24 +1332,54 @@ void init_dds_typed_topic_template(
                          dds::core::status::StatusMask::all(),
                          "StatusMask.ALL"),
                  py::call_guard<py::gil_scoped_release>(),
-                 "Creates a new Topic.");;
+                 "Creates a new Topic.");
+}
+
+void init_dds_datawriter_key_value_methods(PyDataWriterClass<dds::core::xtypes::DynamicData>& cls)
+{
+    cls.def(
+            "key_value",
+            [](PyDataWriter<DynamicData>& dw,
+                    const dds::core::InstanceHandle& handle) {
+                DynamicData d(PyDynamicTypeMap::get(dw->type_name()));
+                dw.key_value(d, handle);
+                return d;
+            },
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Retrieve the instance key that corresponds to an instance "
+            "handle.");
+
+    cls.def("key_value",
+            (DynamicData
+                    & (PyDataWriter<DynamicData>::*) (DynamicData&, const dds::core::InstanceHandle&) )
+                    & PyDataWriter<DynamicData>::key_value,
+            py::arg("key_holder"),
+            py::arg("handle"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Set the instance key that corresponds to an instance "
+            "handle.");
 }
 
 template<>
 void init_dds_typed_datawriter_template(
-        py::class_<
-            PyDataWriter<DynamicData>,
-            PyIEntity,
-            PyIAnyDataWriter,
-            std::unique_ptr<PyDataWriter<DynamicData>, no_gil_delete<PyDataWriter<DynamicData>>>>& cls)
+        PyDataWriterClass<dds::core::xtypes::DynamicData>& cls)
 {
-    init_dds_typed_datawriter_base_template(cls);
+    using dds::core::xtypes::DynamicData;
+
+    init_dds_datawriter_constructors(cls);
+    init_dds_datawriter_untyped_methods(cls);
+    init_dds_datawriter_write_methods<
+            DynamicData,
+            DefaultWriteImpl<DynamicData>>(cls);
+    init_dds_datawriter_async_write_methods(cls);
+    init_dds_datawriter_key_value_methods(cls);
+
     cls.def(
                "write",
-               [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
-                  py::dict& dict) {
+               [](PyDataWriter<DynamicData>& dw, py::dict& dict) {
                    auto dt = PyDynamicTypeMap::get(dw->type_name());
-                   dds::core::xtypes::DynamicData sample(dt);
+                   DynamicData sample(dt);
                    update_dynamicdata_object(sample, dict);
                    {
                        py::gil_scoped_release release;
@@ -1413,14 +1391,13 @@ void init_dds_typed_datawriter_template(
                "dictionary containing field names as keys.")
             .def(
                     "write_async",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
-                       py::dict& dict) {
+                    [](PyDataWriter<DynamicData>& dw, py::dict& dict) {
                         return PyAsyncioExecutor::run<void>(
                                 std::function<void()>([&dw, &dict]() {
                                     py::gil_scoped_acquire acquire;
                                     auto dt = PyDynamicTypeMap::get(
                                             dw->type_name());
-                                    dds::core::xtypes::DynamicData sample(dt);
+                                    DynamicData sample(dt);
                                     update_dynamicdata_object(sample, dict);
                                     {
                                         py::gil_scoped_release release;
@@ -1436,8 +1413,8 @@ void init_dds_typed_datawriter_template(
                     "awaitable and is only for use with asyncio.")
             .def(
                     "create_data",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw) {
-                        return dds::core::xtypes::DynamicData(
+                    [](PyDataWriter<DynamicData>& dw) {
+                        return DynamicData(
                                 PyDynamicTypeMap::get(dw->type_name()));
                     },
                     py::call_guard<py::gil_scoped_release>(),
@@ -1445,9 +1422,9 @@ void init_dds_typed_datawriter_template(
                     "initialize it.")
             .def(
                     "key_value",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
-                       const dds::core::InstanceHandle& handle) {
-                        dds::core::xtypes::DynamicData d(
+                    [](PyDataWriter<DynamicData>& dw,
+                            const dds::core::InstanceHandle& handle) {
+                        DynamicData d(
                                 PyDynamicTypeMap::get(dw->type_name()));
                         dw.key_value(d, handle);
                         return d;
@@ -1458,12 +1435,12 @@ void init_dds_typed_datawriter_template(
                     "handle.")
             .def(
                     "topic_instance_key_value",
-                    [](PyDataWriter<dds::core::xtypes::DynamicData>& dw,
-                       const dds::core::InstanceHandle& handle) {
-                        dds::core::xtypes::DynamicData d(
+                    [](PyDataWriter<DynamicData>& dw,
+                            const dds::core::InstanceHandle& handle) {
+                        DynamicData d(
                                 PyDynamicTypeMap::get(dw->type_name()));
                         dds::topic::TopicInstance<
-                                dds::core::xtypes::DynamicData>
+                                DynamicData>
                                 ti(handle, d);
                         dw.key_value(ti, handle);
                         return ti;
@@ -1475,17 +1452,17 @@ void init_dds_typed_datawriter_template(
 }
 
 template<>
-void init_dds_typed_datareader_template(
-        py::class_<
-            PyDataReader<DynamicData>,
-            PyIDataReader,
-            std::unique_ptr<PyDataReader<DynamicData>, no_gil_delete<PyDataReader<DynamicData>>>>& cls)
+void init_dds_typed_datareader_template(PyDataReaderClass<DynamicData>& cls)
 {
+    init_dds_datareader_constructors(cls);
     init_dds_typed_datareader_base_template(cls);
+    init_dds_datareader_read_methods(cls);
+    init_dds_datareader_selector(cls);
+
     cls.def(
                "key_value",
                [](PyDataReader<dds::core::xtypes::DynamicData>& dr,
-                  const dds::core::InstanceHandle& handle) {
+                       const dds::core::InstanceHandle& handle) {
                    dds::core::xtypes::DynamicType dt(
                            PyDynamicTypeMap::get(dr->type_name()));
                    dds::core::xtypes::DynamicData dd(dt);
@@ -1499,7 +1476,7 @@ void init_dds_typed_datareader_template(
             .def(
                     "topic_instance_key_value",
                     [](PyDataReader<dds::core::xtypes::DynamicData>& dr,
-                       const dds::core::InstanceHandle& handle) {
+                            const dds::core::InstanceHandle& handle) {
                         dds::core::xtypes::DynamicType dt(
                                 PyDynamicTypeMap::get(dr->type_name()));
                         dds::core::xtypes::DynamicData dd(dt);
@@ -1627,12 +1604,12 @@ void add_field_type_collection(
                 if (id.index_type == DynamicDataNestedIndex::INT) 
                 {
                     auto mi = get_member_info(parent, id.int_index);
-                    resize_no_init(values, mi.element_count());
+                    vector_resize_no_init(values, mi.element_count());
                     parent.get_values<T>(id.int_index, values);
                 }
                 else {
                     auto mi = get_member_info(parent, id.string_index);
-                    resize_no_init(values, mi.element_count());
+                    vector_resize_no_init(values, mi.element_count());
                     parent.get_values<T>(id.string_index, values);
                 }
                 return values;
@@ -1646,7 +1623,7 @@ void add_field_type_collection(
                      }
                      std::vector<T> values;
                      auto mi = get_member_info(dd, index);
-                     resize_no_init(values, mi.element_count());
+                     vector_resize_no_init(values, mi.element_count());
                      dd.get_values<T>(index, values);
                      return values;
                  },
@@ -2254,12 +2231,24 @@ void init_class_defs(py::class_<DynamicData>& dd_class)
             .def(
                     "from_cdr_buffer",
                     [](dds::core::xtypes::DynamicData& sample,
+                       const std::vector<uint8_t>& buffer) {
+                        auto& signed_buffer = reinterpret_cast<const std::vector<char>&>(buffer);
+                        return rti::core::xtypes::from_cdr_buffer(
+                                sample,
+                                signed_buffer);
+                    },
+                    py::arg("buffer"),
+                    "Populates a DynamicData sample by deserializing a CDR "
+                    "buffer.")
+            .def(
+                    "from_cdr_buffer",
+                    [](dds::core::xtypes::DynamicData& sample,
                        const std::vector<char>& buffer) {
                         return rti::core::xtypes::from_cdr_buffer(
                                 sample,
                                 buffer);
                     },
-                    py::arg("buffer"),
+                    py::arg("signed_buffer"),
                     "Populates a DynamicData sample by deserializing a CDR "
                     "buffer.")
             .def("fields",

@@ -103,9 +103,8 @@ void init_class_defs(
                  "Create a publisher.")
             .def(py::init([](const PyDomainParticipant& dp,
                              const qos::PublisherQos& q,
-                             dds::core::optional<PyPublisherListenerPtr> l,
+                             PyPublisherListenerPtr listener,
                              const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
                      return PyPublisher(dp, q, listener, m);
                  }),
                  py::arg("participant"),
@@ -140,7 +139,8 @@ void init_class_defs(
                     "This property's getter returns a deep copy.")
             .def(
                     "__lshift__",
-                    [](PyPublisher& pub, const qos::PublisherQos& qos) -> PyPublisher& {
+                    [](PyPublisher& pub,
+                       const qos::PublisherQos& qos) -> PyPublisher& {
                         pub << qos;
                         return pub;
                     },
@@ -149,7 +149,8 @@ void init_class_defs(
                     "Set the PublisherQos.")
             .def(
                     "__rshift__",
-                    [](PyPublisher& pub, qos::PublisherQos& qos) -> PyPublisher& {
+                    [](PyPublisher& pub,
+                       qos::PublisherQos& qos) -> PyPublisher& {
                         pub >> qos;
                         return pub;
                     },
@@ -169,23 +170,32 @@ void init_class_defs(
                     "The default DataWriterQos."
                     "\n\n"
                     "This property's getter returns a deep copy.")
-            .def_property_readonly(
+            .def_property(
                     "listener",
                     [](const PyPublisher& pub) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PyPublisherListenerPtr> l;
-                        auto ptr = downcast_publisher_listener_ptr(get_publisher_listener(pub));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_publisher_listener_ptr(get_publisher_listener(pub));
                     },
-                    "Get the listener.")
-            .def(
-                    "bind_listener",
                     [](PyPublisher& pub,
-                       dds::core::optional<PyPublisherListenerPtr> l,
+                       PyPublisherListenerPtr listener) {
+                        py::gil_scoped_release guard;
+                        if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(listener).inc_ref();
+                        }
+                        auto old_listener = get_publisher_listener(pub);
+                        set_publisher_listener(pub, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
+                    },
+                    "Get/set the listener.")
+            .def(
+                    "set_listener",
+                    [](PyPublisher& pub,
+                       PyPublisherListenerPtr listener,
                        const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
@@ -201,25 +211,6 @@ void init_class_defs(
                     py::arg("listener"),
                     py::arg("event_mask"),
                     "Bind the listener and event mask to the Publisher.")
-            .def(
-                    "bind_listener",
-                    [](PyPublisher& pub,
-                       dds::core::optional<PyPublisherListenerPtr> l) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
-                        }
-                        auto old_listener = get_publisher_listener(pub);
-                        set_publisher_listener(pub, listener);
-                        if (nullptr != old_listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(old_listener).dec_ref();
-                        }
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    py::arg("listener"),
-                    "Bind the listener to the Publisher.")
             .def("wait_for_acknowledgments",
                  &PyPublisher::wait_for_acknowledgments,
                  py::arg("max_wait"),
@@ -245,19 +236,27 @@ void init_class_defs(
                     "expires.")
             .def(
                     "find_datawriter",
-                    [](PyPublisher& pub, const std::string& name) {
+                    [](PyPublisher& pub, const std::string& name)
+                            -> dds::core::optional<PyAnyDataWriter> {
                         auto dw = rti::pub::find_datawriter_by_name<
                                 dds::pub::AnyDataWriter>(pub, name);
+                        if (dw == dds::core::null) {
+                            return {};
+                        }
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("name"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Find a DataWriter in this Publisher by its name.")
             .def(
-                    "find_topic_datawriter",
-                    [](PyPublisher& pub, const std::string& topic_name) {
+                    "find_datawriter_by_topic_name",
+                    [](PyPublisher& pub, const std::string& topic_name) 
+                            -> dds::core::optional<PyAnyDataWriter> {
                         auto dw = rti::pub::find_datawriter_by_topic_name<
                                 dds::pub::AnyDataWriter>(pub, topic_name);
+                        if (dw == dds::core::null) {
+                            return {};
+                        }
                         return PyAnyDataWriter(dw);
                     },
                     py::arg("topic_name"),
@@ -274,14 +273,12 @@ void init_class_defs(
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Find all DataWriters in the Publisher.")
-            .def(
-                py::self == py::self,
-                py::call_guard<py::gil_scoped_release>(),
-                "Test for equality.")
-            .def(
-                py::self != py::self,
-                py::call_guard<py::gil_scoped_release>(),
-                "Test for inequality.");
+            .def(py::self == py::self,
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Test for equality.")
+            .def(py::self != py::self,
+                 py::call_guard<py::gil_scoped_release>(),
+                 "Test for inequality.");
 
     py::implicitly_convertible<PyIEntity, PyPublisher>();
 }

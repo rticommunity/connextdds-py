@@ -74,29 +74,29 @@ public:
 
 #if rti_connext_version_gte(6, 0, 0, 0)
     void on_destination_unreachable(
-            dds::pub::DataWriter<T>& writer,
-            const dds::core::InstanceHandle& handle,
-            const rti::core::Locator& locator) override
+            dds::pub::DataWriter<T>&,
+            const dds::core::InstanceHandle&,
+            const rti::core::Locator&) override
     {
     }
 
     void* on_data_request(
-            dds::pub::DataWriter<T>& writer,
-            const rti::core::Cookie& cookie) override
+            dds::pub::DataWriter<T>&,
+            const rti::core::Cookie&) override
     {
         return nullptr;
     }
 
     void on_data_return(
-            dds::pub::DataWriter<T>& writer,
-            void* data,
-            const rti::core::Cookie& cookie) override
+            dds::pub::DataWriter<T>&,
+            void*,
+            const rti::core::Cookie&) override
     {
     }
 
     void on_sample_removed(
-            dds::pub::DataWriter<T>& writer,
-            const rti::core::Cookie& cookie) override
+            dds::pub::DataWriter<T>&,
+            const rti::core::Cookie&) override
     {
     }
 #endif
@@ -118,60 +118,60 @@ public:
     using PyDataWriterListener<T>::on_service_request_accepted;
 
     void on_offered_deadline_missed(
-            PyDataWriter<T>& writer,
-            const dds::core::status::OfferedDeadlineMissedStatus& status)
+            PyDataWriter<T>&,
+            const dds::core::status::OfferedDeadlineMissedStatus&)
             override
     {
     }
 
     void on_offered_incompatible_qos(
-            PyDataWriter<T>& writer,
-            const dds::core::status::OfferedIncompatibleQosStatus& status)
+            PyDataWriter<T>&,
+            const dds::core::status::OfferedIncompatibleQosStatus&)
             override
     {
     }
 
     void on_liveliness_lost(
-            PyDataWriter<T>& writer,
-            const dds::core::status::LivelinessLostStatus& status) override
+            PyDataWriter<T>&,
+            const dds::core::status::LivelinessLostStatus&) override
     {
     }
 
     void on_publication_matched(
-            PyDataWriter<T>& writer,
-            const dds::core::status::PublicationMatchedStatus& status) override
+            PyDataWriter<T>&,
+            const dds::core::status::PublicationMatchedStatus&) override
     {
     }
 
     void on_reliable_writer_cache_changed(
-            PyDataWriter<T>& writer,
-            const rti::core::status::ReliableWriterCacheChangedStatus& status)
+            PyDataWriter<T>&,
+            const rti::core::status::ReliableWriterCacheChangedStatus&)
             override
     {
     }
 
     void on_reliable_reader_activity_changed(
-            PyDataWriter<T>& writer,
-            const rti::core::status::ReliableReaderActivityChangedStatus&
-                    status) override
+            PyDataWriter<T>&,
+            const rti::core::status::ReliableReaderActivityChangedStatus&)
+            override
     {
     }
 
     void on_instance_replaced(
-            PyDataWriter<T>& writer,
-            const dds::core::InstanceHandle& handle) override
+            PyDataWriter<T>&,
+            const dds::core::InstanceHandle&) override
     {
     }
 
     void on_application_acknowledgment(
-            PyDataWriter<T>& writer,
-            const rti::pub::AcknowledgmentInfo& acknowledgment_info) override
+            PyDataWriter<T>&,
+            const rti::pub::AcknowledgmentInfo&) override
     {
     }
 
     void on_service_request_accepted(
-            PyDataWriter<T>& writer,
-            const rti::core::status::ServiceRequestAcceptedStatus& status)
+            PyDataWriter<T>&,
+            const rti::core::status::ServiceRequestAcceptedStatus&)
             override
     {
     }
@@ -501,9 +501,10 @@ public:
 };
 
 template<typename T>
-void init_class_defs(
-        py::class_<PyDataWriterListener<T>, PyDataWriterListenerTrampoline<T>, std::shared_ptr<PyDataWriterListener<T>>>&
-                cls)
+void init_class_defs(py::class_<
+                     PyDataWriterListener<T>,
+                     PyDataWriterListenerTrampoline<T>,
+                     std::shared_ptr<PyDataWriterListener<T>>>& cls)
 {
     cls.def(py::init<>())
             .def("on_offered_deadline_missed",

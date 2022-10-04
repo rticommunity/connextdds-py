@@ -22,52 +22,63 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<dds::core::KeyedBytesTopicType>& cls)
 {
-    cls.def(py::init<>(), "Creates a sample with an empty array of bytes.")
-            .def(py::init<const std::string&, const std::vector<uint8_t>&>(),
-                 py::arg("key"),
-                 py::arg("value"),
-                 "Creates a sample from the provided key and value.")
-            .def(py::init([](const std::pair<std::string, std::vector<uint8_t>>&
-                                     p) {
-                     return dds::core::KeyedBytesTopicType(p.first, p.second);
-                 }),
-                 py::arg("pair"),
-                 "Creates a sample from the provided key and value.")
-            .def_property(
-                    "key",
-                    [](const dds::core::KeyedBytesTopicType& s) {
-                        return s.key().to_std_string();
-                    },
-                    [](dds::core::KeyedBytesTopicType& s,
-                       const std::string& value) {
-                        s.key(dds::core::string(value));
-                    },
-                    "The instance key.")
-            .def_property(
-                    "value",
-                    (std::vector<uint8_t>(dds::core::KeyedBytesTopicType::*)()
-                             const)
-                            & dds::core::KeyedBytesTopicType::value,
-                    (void (dds::core::KeyedBytesTopicType::*)(
-                            const std::vector<uint8_t>&))
-                            & dds::core::KeyedBytesTopicType::value,
-                    "The byte sequence."
-                    "\n\n"
-                    "This property's getter returns a deep copy.")
-            .def("length",
-                 &dds::core::KeyedBytesTopicType::length,
-                 "Get the number of bytes.")
-            .def("__getitem__",
-                 [](const dds::core::KeyedBytesTopicType& b, uint32_t index) {
-                     return b[index];
-                 })
-            .def("__setitem__",
-                 [](dds::core::KeyedBytesTopicType& b,
+    cls.def(py::init([]() {
+                emit_deprecation_warning(
+                        "rti.connextdds.KeyedBytesTopicType",
+                        "rti.types.builtin.KeyedBytes");
+                return dds::core::KeyedBytesTopicType();
+            }),
+            "(Deprecated) Creates a sample with an empty array of bytes.");
+    cls.def(py::init([](const std::string& key, const std::vector<uint8_t>& value) {
+                emit_deprecation_warning(
+                        "rti.connextdds.KeyedBytesTopicType",
+                        "rti.types.builtin.KeyedBytes");
+                return dds::core::KeyedBytesTopicType(key, value);
+            }),
+            py::arg("key"),
+            py::arg("value"),
+            "(Deprecated) Creates a sample from the provided key and value.");
+    cls.def(py::init([](const std::pair<std::string, std::vector<uint8_t>>& p) {
+                emit_deprecation_warning(
+                        "rti.connextdds.KeyedBytesTopicType",
+                        "rti.types.builtin.KeyedBytes");
+                return dds::core::KeyedBytesTopicType(p.first, p.second);
+            }),
+            py::arg("pair"),
+            "(Deprecated) Creates a sample from the provided key and value.");
+    cls.def_property(
+            "key",
+            [](const dds::core::KeyedBytesTopicType& s) {
+                return s.key().to_std_string();
+            },
+            [](dds::core::KeyedBytesTopicType& s, const std::string& value) {
+                s.key(dds::core::string(value));
+            },
+            "The instance key.");
+    cls.def_property(
+            "value",
+            (std::vector<uint8_t>(dds::core::KeyedBytesTopicType::*)() const)
+                    & dds::core::KeyedBytesTopicType::value,
+            (void(dds::core::KeyedBytesTopicType::*)(
+                    const std::vector<uint8_t>&))
+                    & dds::core::KeyedBytesTopicType::value,
+            "The byte sequence."
+            "\n\n"
+            "This property's getter returns a deep copy.");
+    cls.def("length",
+            &dds::core::KeyedBytesTopicType::length,
+            "Get the number of bytes.");
+    cls.def("__getitem__",
+            [](const dds::core::KeyedBytesTopicType& b, uint32_t index) {
+                return b[index];
+            });
+    cls.def("__setitem__",
+            [](dds::core::KeyedBytesTopicType& b,
                     uint32_t index,
-                    uint8_t value) { b[index] = value; })
-            .def("__len__", &dds::core::KeyedBytesTopicType::length)
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
+                    uint8_t value) { b[index] = value; });
+    cls.def("__len__", &dds::core::KeyedBytesTopicType::length);
+    cls.def(py::self == py::self, "Test for equality.");
+    cls.def(py::self != py::self, "Test for inequality.");
 
     py::implicitly_convertible<
             std::pair<std::string, std::vector<uint8_t>>,

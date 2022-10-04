@@ -26,7 +26,8 @@ void init_class_defs(
             "Creates a bounded string.")
             .def(py::init([]() {
                     return StringType(UnidimensionalCollectionTypeImpl::UNBOUNDED);
-                }))
+                }),
+            "Creates an unbounded string.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

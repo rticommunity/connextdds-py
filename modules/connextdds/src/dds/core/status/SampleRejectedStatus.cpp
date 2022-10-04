@@ -24,7 +24,7 @@ void init_class_defs(py::class_<SampleRejectedStatus>& cls)
                &SampleRejectedStatus::total_count,
                "Total count of samples rejected by the DataReader.")
             .def_property_readonly(
-                    "total_count_delta",
+                    "total_count_change",
                     &SampleRejectedStatus::total_count_change,
                     "The delta number of samples rejected since the last time "
                     "the "

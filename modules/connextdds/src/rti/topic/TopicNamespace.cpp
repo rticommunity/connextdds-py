@@ -11,14 +11,22 @@
 
 #include "PyConnext.hpp"
 #include <rti/rti.hpp>
+#include <rti/topic/cdr/GenericTypePluginFactory.hpp>
+#include <rti/topic/cdr/GenericTypePlugin.hpp>
 
 using namespace rti::topic;
 
-void init_namespace_rti_topic(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v)
+void init_namespace_rti_topic(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&)
 {
     pyrti::process_inits<ContentFilterBase>(m, l);
     pyrti::process_inits<ExpressionProperty>(m, l);
     pyrti::process_inits<FilterSampleInfo>(m, l);
     pyrti::process_inits<PrintFormatProperty>(m, l);
     pyrti::process_inits<ServiceRequest>(m, l);
+
+    // Factory used to create the DynamicTypes used by the IDL type plugins.
+    pyrti::process_inits<rti::topic::cdr::GenericTypePluginFactory>(m, l);
+
+    // Define the IDL-based dds.Topic, dds.DataWriter, dds.DataReader types
+    pyrti::process_inits<rti::topic::cdr::CSampleWrapper>(m, l);
 }

@@ -75,13 +75,13 @@ void init_class_defs(py::class_<Duration>& cls)
             .def(uint32_t() * py::self,
                  "Multiply a Duration by an unsigned int.")
             .def(py::self / uint32_t(), "Divide a Duration by an unsigned int.")
-            .def("to_milliseconds",
+            .def("to_millisecs",
                  &Duration::to_millisecs,
                  "Returns Duration in milliseconds.")
-            .def("to_microseconds",
+            .def("to_microsecs",
                  &Duration::to_microsecs,
                  "Returns Duration in microseconds.")
-            .def("to_seconds",
+            .def("to_secs",
                  &Duration::to_secs,
                  "Return the Duration in seconds.")
             .def("to_timedelta",

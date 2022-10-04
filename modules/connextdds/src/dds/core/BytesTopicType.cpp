@@ -22,35 +22,44 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<dds::core::BytesTopicType>& cls)
 {
-    cls.def(py::init<>(), "Creates a sample with an empty array of bytes.")
-            .def(py::init<const std::vector<uint8_t>&>(),
-                 py::arg("data"),
-                 "Creates a sample from the provided byte sequence.")
-            .def_property(
-                    "data",
-                    (std::vector<uint8_t>(dds::core::BytesTopicType::*)() const)
-                            & dds::core::BytesTopicType::data,
-                    (void (dds::core::BytesTopicType::*)(
-                            const std::vector<uint8_t>&))
-                            & dds::core::BytesTopicType::data,
-                    "The byte sequence."
-                    "\n\n"
-                    "This property's getter returns a deep copy.")
-            .def("length",
-                 &dds::core::BytesTopicType::length,
-                 "Get the number of bytes.")
-            .def("__getitem__",
-                 [](const dds::core::BytesTopicType& b, uint32_t index) {
-                     return b[index];
-                 })
-            .def("__setitem__",
-                 [](dds::core::BytesTopicType& b,
-                    uint32_t index,
-                    uint8_t value) { b[index] = value; })
-            .def("__len__", &dds::core::BytesTopicType::length)
-            .def(py::self == py::self, "Test for equality.")
-            .def(py::self != py::self, "Test for inequality.");
-    ;
+    cls.def(py::init([]() {
+                emit_deprecation_warning(
+                        "rti.connextdds.BytesTopicType",
+                        "rti.types.builtin.Bytes");
+                return dds::core::BytesTopicType();
+            }),
+            "(Deprecated) Creates a sample with an empty array of bytes.");
+    cls.def(py::init([](const std::vector<uint8_t>& bytes) {
+                emit_deprecation_warning(
+                        "rti.connextdds.BytesTopicType",
+                        "rti.types.builtin.Bytes");
+                return dds::core::BytesTopicType(bytes);
+            }),
+            py::arg("data"),
+            "(Deprecated) Creates a sample from the provided byte sequence.");
+    cls.def_property(
+            "data",
+            (std::vector<uint8_t>(dds::core::BytesTopicType::*)() const)
+                    & dds::core::BytesTopicType::data,
+            (void(dds::core::BytesTopicType::*)(const std::vector<uint8_t>&))
+                    & dds::core::BytesTopicType::data,
+            "The byte sequence."
+            "\n\n"
+            "This property's getter returns a deep copy.");
+    cls.def("length",
+            &dds::core::BytesTopicType::length,
+            "Get the number of bytes.");
+    cls.def("__getitem__",
+            [](const dds::core::BytesTopicType& b, uint32_t index) {
+                return b[index];
+            });
+    cls.def("__setitem__",
+            [](dds::core::BytesTopicType& b, uint32_t index, uint8_t value) {
+                b[index] = value;
+            });
+    cls.def("__len__", &dds::core::BytesTopicType::length);
+    cls.def(py::self == py::self, "Test for equality.");
+    cls.def(py::self != py::self, "Test for inequality.");
 
     py::implicitly_convertible<
             std::vector<uint8_t>,

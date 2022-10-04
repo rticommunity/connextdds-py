@@ -7,8 +7,9 @@ API Overview
    :maxdepth: 2
    :caption: Contents:
 
-   participant.rst
-   types.rst
-   topic.rst
-   writer.rst
-   reader.rst
+   hello
+   participant
+   topic
+   writer
+   reader
+   types

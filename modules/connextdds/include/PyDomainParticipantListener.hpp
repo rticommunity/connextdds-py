@@ -49,63 +49,68 @@ public:
     using PyNoOpPublisherListener::on_reliable_reader_activity_changed;
     using PyNoOpPublisherListener::on_reliable_writer_cache_changed;
     using PyNoOpPublisherListener::on_service_request_accepted;
+    using PyNoOpPublisherListener::on_sample_removed;
 
     void on_offered_deadline_missed(
-            PyAnyDataWriter& writer,
-            const dds::core::status::OfferedDeadlineMissedStatus& status)
+            PyAnyDataWriter&,
+            const dds::core::status::OfferedDeadlineMissedStatus&)
             override
     {
     }
 
     void on_offered_incompatible_qos(
-            PyAnyDataWriter& writer,
-            const dds::core::status::OfferedIncompatibleQosStatus& status)
+            PyAnyDataWriter&,
+            const dds::core::status::OfferedIncompatibleQosStatus&)
             override
     {
     }
 
     void on_liveliness_lost(
-            PyAnyDataWriter& writer,
-            const dds::core::status::LivelinessLostStatus& status) override
+            PyAnyDataWriter&,
+            const dds::core::status::LivelinessLostStatus&) override
     {
     }
 
     void on_publication_matched(
-            PyAnyDataWriter& writer,
-            const dds::core::status::PublicationMatchedStatus& status) override
+            PyAnyDataWriter&,
+            const dds::core::status::PublicationMatchedStatus&) override
     {
     }
 
     void on_reliable_writer_cache_changed(
-            PyAnyDataWriter& writer,
-            const rti::core::status::ReliableWriterCacheChangedStatus& status)
+            PyAnyDataWriter&,
+            const rti::core::status::ReliableWriterCacheChangedStatus&)
             override
     {
     }
 
     void on_reliable_reader_activity_changed(
-            PyAnyDataWriter& writer,
-            const rti::core::status::ReliableReaderActivityChangedStatus&
-                    status) override
+            PyAnyDataWriter&,
+            const rti::core::status::ReliableReaderActivityChangedStatus&)
+            override
     {
     }
 
     void on_instance_replaced(
-            PyAnyDataWriter& writer,
-            const dds::core::InstanceHandle& handle) override
+            PyAnyDataWriter&,
+            const dds::core::InstanceHandle&) override
     {
     }
 
     void on_application_acknowledgment(
-            PyAnyDataWriter& writer,
-            const rti::pub::AcknowledgmentInfo& acknowledgment_info) override
+            PyAnyDataWriter&,
+            const rti::pub::AcknowledgmentInfo&) override
     {
     }
 
     void on_service_request_accepted(
-            PyAnyDataWriter& writer,
-            const rti::core::status::ServiceRequestAcceptedStatus& status)
+            PyAnyDataWriter&,
+            const rti::core::status::ServiceRequestAcceptedStatus&)
             override
+    {
+    }
+
+    void on_sample_removed(PyAnyDataWriter&, const rti::core::Cookie&) override
     {
     }
 
@@ -119,56 +124,56 @@ public:
     using PyNoOpSubscriberListener::on_subscription_matched;
 
     void on_requested_deadline_missed(
-            PyAnyDataReader& reader,
-            const dds::core::status::RequestedDeadlineMissedStatus& status)
+            PyAnyDataReader&,
+            const dds::core::status::RequestedDeadlineMissedStatus&)
             override
     {
     }
 
     void on_requested_incompatible_qos(
-            PyAnyDataReader& reader,
-            const dds::core::status::RequestedIncompatibleQosStatus& status)
+            PyAnyDataReader&,
+            const dds::core::status::RequestedIncompatibleQosStatus&)
             override
     {
     }
 
     void on_sample_rejected(
-            PyAnyDataReader& reader,
-            const dds::core::status::SampleRejectedStatus& status) override
+            PyAnyDataReader&,
+            const dds::core::status::SampleRejectedStatus&) override
     {
     }
 
     void on_liveliness_changed(
-            PyAnyDataReader& reader,
-            const dds::core::status::LivelinessChangedStatus& status) override
+            PyAnyDataReader&,
+            const dds::core::status::LivelinessChangedStatus&) override
     {
     }
 
-    void on_data_available(PyAnyDataReader& reader) override
+    void on_data_available(PyAnyDataReader&) override
     {
     }
 
     void on_subscription_matched(
-            PyAnyDataReader& reader,
-            const dds::core::status::SubscriptionMatchedStatus& status) override
+            PyAnyDataReader&,
+            const dds::core::status::SubscriptionMatchedStatus&) override
     {
     }
 
     void on_sample_lost(
-            PyAnyDataReader& reader,
-            const dds::core::status::SampleLostStatus& status) override
+            PyAnyDataReader&,
+            const dds::core::status::SampleLostStatus&) override
     {
     }
 
-    void on_data_on_readers(PySubscriber& sub) override
+    void on_data_on_readers(PySubscriber&) override
     {
     }
 
     using PyNoOpAnyTopicListener::on_inconsistent_topic;
 
     void on_inconsistent_topic(
-            PyAnyTopic& topic,
-            const dds::core::status::InconsistentTopicStatus& status) override
+            PyAnyTopic&,
+            const dds::core::status::InconsistentTopicStatus&) override
     {
     }
 
@@ -257,6 +262,14 @@ public:
     {
         auto adw = PyAnyDataWriter(writer);
         this->on_service_request_accepted(adw, status);
+    }
+
+    void on_sample_removed(
+            dds::pub::AnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        auto adw = PyAnyDataWriter(writer);
+        this->on_sample_removed(adw, cookie);
     }
 
     void on_offered_deadline_missed(
@@ -370,6 +383,18 @@ public:
                 on_service_request_accepted,
                 writer,
                 status);
+    }
+
+    void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        PYBIND11_OVERLOAD_PURE(
+                void,
+                DPLBase,
+                on_sample_removed,
+                writer,
+                cookie);
     }
 
     void on_requested_incompatible_qos(
@@ -647,6 +672,13 @@ public:
                 on_service_request_accepted,
                 writer,
                 status);
+    }
+
+    void on_sample_removed(
+            PyAnyDataWriter& writer,
+            const rti::core::Cookie& cookie) override
+    {
+        PYBIND11_OVERLOAD(void, DPLBase, on_sample_removed, writer, cookie);
     }
 
     void on_requested_deadline_missed(

@@ -10,16 +10,18 @@
  #
 
 import rti.connextdds as dds
-import utils
+from test_utils.fixtures import create_participant
 import pytest
+
+from rti.types.builtin import String
 
 
 @pytest.mark.parametrize("implicit_sub", [True, False])
 def test_close_subscriber_contained_entities(implicit_sub):
-    p = utils.create_participant()
-    topic1 = dds.StringTopicType.Topic(p, "test topic1")
-    topic2 = dds.StringTopicType.Topic(p, "test topic2")
-    topic3 = dds.StringTopicType.Topic(p, "test topic3")
+    p = create_participant()
+    topic1 = dds.Topic(p, "test topic1", String)
+    topic2 = dds.Topic(p, "test topic2", String)
+    topic3 = dds.Topic(p, "test topic3", String)
 
     sub1 = None
     sub2 = dds.Subscriber(p)
@@ -28,11 +30,11 @@ def test_close_subscriber_contained_entities(implicit_sub):
     else:
         sub1 = p.implicit_subscriber
 
-    reader10 = dds.StringTopicType.DataReader(sub1, topic1)
-    reader11 = dds.StringTopicType.DataReader(sub1, topic1)
-    reader20 = dds.StringTopicType.DataReader(sub1, topic2)
-    reader30 = dds.StringTopicType.DataReader(sub1, topic3)
-    reader31 = dds.StringTopicType.DataReader(sub2, topic3)
+    reader10 = dds.DataReader(sub1, topic1)
+    reader11 = dds.DataReader(sub1, topic1)
+    reader20 = dds.DataReader(sub1, topic2)
+    reader30 = dds.DataReader(sub1, topic3)
+    reader31 = dds.DataReader(sub2, topic3)
 
     topic_query1 = dds.TopicQuery(
         dds.AnyDataReader(reader10),
@@ -55,10 +57,10 @@ def test_close_subscriber_contained_entities(implicit_sub):
 
 @pytest.mark.parametrize("implicit_pub", [True, False])
 def test_close_publisher_contained_entities(implicit_pub):
-    p = utils.create_participant()
-    topic1 = dds.StringTopicType.Topic(p, "test topic1")
-    topic2 = dds.StringTopicType.Topic(p, "test topic2")
-    topic30 = dds.StringTopicType.Topic(p, "test topic3")
+    p = create_participant()
+    topic1 = dds.Topic(p, "test topic1", String)
+    topic2 = dds.Topic(p, "test topic2", String)
+    topic30 = dds.Topic(p, "test topic3", String)
 
     pub1 = None
     pub2 = dds.Publisher(p)
@@ -67,11 +69,11 @@ def test_close_publisher_contained_entities(implicit_pub):
     else:
         pub1 = p.implicit_publisher
 
-    writer10 = dds.StringTopicType.DataWriter(pub1, topic1)
-    writer11 = dds.StringTopicType.DataWriter(pub1, topic1)
-    writer20 = dds.StringTopicType.DataWriter(pub1, topic2)
-    writer30 = dds.StringTopicType.DataWriter(pub1, topic30)
-    writer31 = dds.StringTopicType.DataWriter(pub2, topic30)
+    writer10 = dds.DataWriter(pub1, topic1)
+    writer11 = dds.DataWriter(pub1, topic1)
+    writer20 = dds.DataWriter(pub1, topic2)
+    writer30 = dds.DataWriter(pub1, topic30)
+    writer31 = dds.DataWriter(pub2, topic30)
 
     pub1.close()
 
@@ -89,19 +91,19 @@ def test_close_publisher_contained_entities(implicit_pub):
     "implicit_pub,test_retain", [(False, False), (False, True), (True, False)]
 )
 def test_close_participant_contained_entities(implicit_pub, test_retain):
-    p1 = utils.create_participant()
-    p2 = utils.create_participant()
-    topic1 = dds.StringTopicType.Topic(p1, "test_topic1")
-    topic2 = dds.StringTopicType.Topic(p1, "test topic2")
-    topic30 = dds.StringTopicType.Topic(p1, "test topic3")
-    topic31 = dds.StringTopicType.Topic(p2, "test topic3")
-    cft10 = dds.StringTopicType.ContentFilteredTopic(
+    p1 = create_participant()
+    p2 = create_participant()
+    topic1 = dds.Topic(p1, "test_topic1", String)
+    topic2 = dds.Topic(p1, "test topic2", String)
+    topic30 = dds.Topic(p1, "test topic3", String)
+    topic31 = dds.Topic(p2, "test topic3", String)
+    cft10 = dds.ContentFilteredTopic(
         topic1, "cft10", dds.Filter("value = '1'")
     )
-    cft11 = dds.StringTopicType.ContentFilteredTopic(
+    cft11 = dds.ContentFilteredTopic(
         topic1, "cft11", dds.Filter("value = '1'")
     )
-    cft20 = dds.StringTopicType.ContentFilteredTopic(
+    cft20 = dds.ContentFilteredTopic(
         topic31, "cft20", dds.Filter("value = '1'")
     )
 
@@ -121,18 +123,18 @@ def test_close_participant_contained_entities(implicit_pub, test_retain):
         sub1 = p1.implicit_subscriber
         sub2 = p2.implicit_subscriber
 
-    writer10 = dds.StringTopicType.DataWriter(pub1, topic1)
-    writer11 = dds.StringTopicType.DataWriter(pub1, topic1)
-    writer20 = dds.StringTopicType.DataWriter(pub1, topic2)
-    writer30 = dds.StringTopicType.DataWriter(pub1, topic30)
-    writer31 = dds.StringTopicType.DataWriter(pub2, topic31)
+    writer10 = dds.DataWriter(pub1, topic1)
+    writer11 = dds.DataWriter(pub1, topic1)
+    writer20 = dds.DataWriter(pub1, topic2)
+    writer30 = dds.DataWriter(pub1, topic30)
+    writer31 = dds.DataWriter(pub2, topic31)
 
-    reader10 = dds.StringTopicType.DataReader(sub1, topic1)
-    reader11 = dds.StringTopicType.DataReader(sub1, topic2)
-    reader20 = dds.StringTopicType.DataReader(sub1, cft10)
-    reader30 = dds.StringTopicType.DataReader(sub1, topic30)
-    reader31 = dds.StringTopicType.DataReader(sub2, topic31)
-    reader32 = dds.StringTopicType.DataReader(sub2, cft20)
+    reader10 = dds.DataReader(sub1, topic1)
+    reader11 = dds.DataReader(sub1, topic2)
+    reader20 = dds.DataReader(sub1, cft10)
+    reader30 = dds.DataReader(sub1, topic30)
+    reader31 = dds.DataReader(sub2, topic31)
+    reader32 = dds.DataReader(sub2, cft20)
 
     flow_controller10 = dds.FlowController(p1, "fc10")
     flow_controller11 = dds.FlowController(p1, "fc11")
@@ -197,10 +199,10 @@ def test_close_participant_contained_entities(implicit_pub, test_retain):
 
 @pytest.mark.parametrize("retain", [True, False])
 def test_close_datareader_contained_entity(retain):
-    p = utils.create_participant()
-    topic = dds.StringTopicType.Topic(p, "test_topic")
+    p = create_participant()
+    topic = dds.Topic(p, "test_topic", String)
     sub = dds.Subscriber(p)
-    reader = dds.StringTopicType.DataReader(sub, topic)
+    reader = dds.DataReader(sub, topic)
     topic_query = dds.TopicQuery(
         dds.AnyDataReader(reader),
         dds.TopicQuerySelection(dds.Filter("foo = 1 or foo = 3")),

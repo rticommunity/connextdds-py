@@ -9,6 +9,8 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <sstream>
+
 #include "PyConnext.hpp"
 #include <dds/sub/SampleInfo.hpp>
 
@@ -160,20 +162,25 @@ void init_class_defs(py::class_<SampleInfo>& cls)
                     "topic_query_guid",
                     [](const SampleInfo& s) { return s->topic_query_guid(); },
                     "The GUID of the TopicQuery that is related to the sample.")
-#if rti_connext_version_gte(6, 0, 0, 0)
+            .def("__repr__",
+                    [](const SampleInfo& s) -> std::string {
+                        std::ostringstream os;
+                        os << "SampleInfo(state=" << s.state()
+                           << ", source_timestamp="
+                           << s.source_timestamp().to_microsecs() << "us"
+                           << ", ...)";
+                        return os.str();
+                    })
             .def_property_readonly(
                     "encapsulation_id",
                     [](const SampleInfo& s) { return s->encapsulation_id(); },
                     "The encapsulation kind.")
-#endif
-#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property_readonly(
                     "coherent_set_info",
                     [](const SampleInfo& s) { return s->coherent_set_info(); },
+                    py::return_value_policy::copy,
                     "TWhen set, this field provides the information about "
-                    "the coherent set associated with the sample.")
-#endif
-            ;
+                    "the coherent set associated with the sample.");
 }
 
 template<>

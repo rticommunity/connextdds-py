@@ -46,6 +46,11 @@ public:
                     name + std::string("not found in type map."));
         return it->second;
     }
+
+    static void finalize()
+    {
+        type_map.clear();
+    }
 };
 
 }  // namespace pyrti

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+(c) 2005-2015 Copyright, Real-Time Innovations.  All rights reserved.
+No duplications, whole or partial, manual or electronic, may be made
+without express written permission.  Any such copies, or revisions thereof,
+must display this notice unaltered.
+This code contains trade secrets of Real-Time Innovations, Inc.
+ -->
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/6.0.1/rti_dds_profiles.xsd">
+<types>
+<struct name= "Point">
+  <member name="x" type="int32"/>
+  <member name="y" type="int32"/>
+</struct>
+</types>
+</dds>

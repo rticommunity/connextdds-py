@@ -27,13 +27,13 @@ void init_class_defs(
                      auto gc = c.get_condition();
                      return dds::core::polymorphic_cast<PyGuardCondition>(gc);
                  }),
-                 py::arg("condition"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a GuardCondition from a Condition.")
+                    py::arg("condition"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Create a GuardCondition from a Condition.")
             .def(
                     "set_handler",
                     [](PyGuardCondition& gc,
-                       std::function<void(PyICondition*)>& func) {
+                            std::function<void(PyICondition*)>& func) {
                         gc->handler([func](dds::core::cond::Condition c) {
                             py::gil_scoped_acquire acquire;
                             auto py_c = dds::core::polymorphic_cast<
@@ -43,11 +43,22 @@ void init_class_defs(
                     },
                     py::arg("func"),
                     py::call_guard<py::gil_scoped_release>(),
-                    "Set a handler function for this GuardCondition.")
+                    "Set a handler function receiving the Condition as its only argument.")
+            .def(
+                    "set_handler_no_args",
+                    [](PyGuardCondition& gc, std::function<void()>& func) {
+                        gc->handler([func]() {
+                            py::gil_scoped_acquire acquire;
+                            func();
+                        });
+                    },
+                    py::arg("func"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Set a handler function with no arguments.")
             .def("reset_handler",
-                 &PyGuardCondition::reset_handler,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Resets the handler for this GuardCondition.")
+                    &PyGuardCondition::reset_handler,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Resets the handler for this GuardCondition.")
             .def_property(
                     "trigger_value",
                     [](PyGuardCondition& gc) {
@@ -60,11 +71,11 @@ void init_class_defs(
                     },
                     "Get/set the trigger value for this GuardCondition")
             .def(py::self == py::self,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Compare DataStateEx objects for equality.")
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Compare DataStateEx objects for equality.")
             .def(py::self != py::self,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Compare DataStateEx objects for inequality.");
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Compare DataStateEx objects for inequality.");
 }
 
 template<>

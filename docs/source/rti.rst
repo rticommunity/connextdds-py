@@ -1,30 +1,18 @@
 rti package
 ===========
 
-Subpackages
------------
+The ``rti`` package contains the following packages and modules:
 
 .. toctree::
-   :maxdepth: 4
+   :hidden:
 
+   rti.connextdds
+   rti.types
+   rti.asyncio
    rti.logging
 
-Submodules
-----------
+- :ref:`rti.connextdds:rti.connextdds` - the main package, containing the DDS API.
+- :ref:`rti.types:rti.types` - allows defining user types to be published and subscribed to.
+- :ref:`rti.asyncio:rti.asyncio` - adds support for asynchronous operations.
+- :ref:`rti.logging:rti.logging` - provides logging utilities.
 
-rti.connextdds Module
----------------------
-
-.. automodule:: rti.connextdds
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module Contents
----------------
-
-.. automodule:: rti
-   :members:
-   :undoc-members:
-   :show-inheritance:

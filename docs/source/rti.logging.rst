@@ -1,11 +1,11 @@
-rti.logging package
-===================
+rti.logging
+~~~~~~~~~~~
 
 Submodules
 ----------
 
 rti.logging.distlog module
---------------------------
+==========================
 
 .. automodule:: rti.logging.distlog
    :members:
@@ -13,7 +13,7 @@ rti.logging.distlog module
    :show-inheritance:
 
 rti.logging.handler module
---------------------------
+==========================
 
 .. automodule:: rti.logging.handler
    :members:

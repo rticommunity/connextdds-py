@@ -95,57 +95,65 @@ void init_class_defs(
             std::unique_ptr<PySubscriber, no_gil_delete<PySubscriber>>>& cls)
 {
     cls.def(py::init<const PyDomainParticipant&>(),
-            py::arg("participant"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Create a subscriber under a DomainParticipant.")
+               py::arg("participant"),
+               py::call_guard<py::gil_scoped_release>(),
+               "Create a subscriber under a DomainParticipant.")
             .def(py::init([](const PyDomainParticipant& dp,
-                             const qos::SubscriberQos& q,
-                             dds::core::optional<PySubscriberListenerPtr> l,
-                             const dds::core::status::StatusMask& m) {
-                     auto listener = has_value(l) ? get_value(l) : nullptr;
+                                  const qos::SubscriberQos& q,
+                                  PySubscriberListenerPtr listener,
+                                  const dds::core::status::StatusMask& m) {
                      return PySubscriber(dp, q, listener, m);
                  }),
-                 py::arg("participant"),
-                 py::arg("qos"),
-                 py::arg("listener") = py::none(),
-                 py::arg_v(
-                         "mask",
-                         dds::core::status::StatusMask::all(),
-                         "StatusMask.ALL"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Create a Subscriber under a DomainParticipant with a "
-                 "listener.")
+                    py::arg("participant"),
+                    py::arg("qos"),
+                    py::arg("listener") = py::none(),
+                    py::arg_v(
+                            "mask",
+                            dds::core::status::StatusMask::all(),
+                            "StatusMask.ALL"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Create a Subscriber under a DomainParticipant with a "
+                    "listener.")
             .def(py::init([](PyIEntity& e) {
                      auto entity = e.get_entity();
                      return dds::core::polymorphic_cast<PySubscriber>(entity);
                  }),
-                 py::arg("entity"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Cast an Entity to a Subscriber.")
+                    py::arg("entity"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Cast an Entity to a Subscriber.")
             .def("notify_datareaders",
-                 &PySubscriber::notify_datareaders,
-                 py::call_guard<py::gil_scoped_release>(),
-                 "This operation invokes the operation on_data_available on "
-                 "the DataReaderListener objects attached to contained "
-                 "DataReader entities with a DATA_AVAILABLE status that is "
-                 "considered changed")
-            .def_property_readonly(
+                    &PySubscriber::notify_datareaders,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "This operation invokes the operation on_data_available on "
+                    "the DataReaderListener objects attached to contained "
+                    "DataReader entities with a DATA_AVAILABLE status that is "
+                    "considered changed")
+            .def_property(
                     "listener",
                     [](const PySubscriber& sub) {
                         py::gil_scoped_release guard;
-                        dds::core::optional<PySubscriberListenerPtr> l;
-                        auto ptr = downcast_subscriber_listener_ptr(get_subscriber_listener(sub));
-                        if (nullptr != ptr)
-                            l = ptr;
-                        return l;
+                        return downcast_subscriber_listener_ptr(
+                                get_subscriber_listener(sub));
+                    },
+                    [](PySubscriber& sub, PySubscriberListenerPtr listener) {
+                        py::gil_scoped_release guard;
+                        if (nullptr != listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(listener).inc_ref();
+                        }
+                        auto old_listener = get_subscriber_listener(sub);
+                        set_subscriber_listener(sub, listener);
+                        if (nullptr != old_listener) {
+                            py::gil_scoped_acquire acquire;
+                            py::cast(old_listener).dec_ref();
+                        }
                     },
                     "Get the listener.")
             .def(
-                    "bind_listener",
+                    "set_listener",
                     [](PySubscriber& sub,
-                       dds::core::optional<PySubscriberListenerPtr> l,
-                       const dds::core::status::StatusMask& m) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
+                            PySubscriberListenerPtr listener,
+                            const dds::core::status::StatusMask& m) {
                         if (nullptr != listener) {
                             py::gil_scoped_acquire acquire;
                             py::cast(listener).inc_ref();
@@ -161,25 +169,6 @@ void init_class_defs(
                     py::arg("event_mask"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Bind the listener and event mask to the Subscriber.")
-            .def(
-                    "bind_listener",
-                    [](PySubscriber& sub,
-                       dds::core::optional<PySubscriberListenerPtr> l) {
-                        auto listener = has_value(l) ? get_value(l) : nullptr;
-                        if (nullptr != listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(listener).inc_ref();
-                        }
-                        auto old_listener = get_subscriber_listener(sub);
-                        set_subscriber_listener(sub, listener);
-                        if (nullptr != old_listener) {
-                            py::gil_scoped_acquire acquire;
-                            py::cast(old_listener).dec_ref();
-                        }
-                    },
-                    py::arg("listener"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Bind the listener to the Subscriber.")
             .def_property(
                     "qos",
                     [](const PySubscriber& sub) {
@@ -215,6 +204,20 @@ void init_class_defs(
                     },
                     "Get the parent DomainParticipant for this Subscriber.")
             .def(
+                    "find_datareader",
+                    [](PySubscriber& sub, const std::string& name)
+                            -> dds::core::optional<PyAnyDataReader> {
+                        auto dr = rti::sub::find_datareader_by_name<
+                                dds::sub::AnyDataReader>(sub, name);
+                        if (dr == dds::core::null) {
+                            return {};
+                        }
+                        return PyAnyDataReader(dr);
+                    },
+                    py::arg("name"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find a DataReader in this Subscriber by its name.")
+            .def(
                     "find_datareaders",
                     [](PySubscriber& sub) {
                         std::vector<PyAnyDataReader> v;
@@ -225,21 +228,50 @@ void init_class_defs(
                     "Find all DataReaders in the Subscriber.")
             .def(
                     "find_datareaders",
-                    [](const PySubscriber& sub, const dds::sub::status::DataState& ds) {
+                    [](const PySubscriber& sub,
+                            const dds::sub::status::DataState& ds) {
                         std::vector<PyAnyDataReader> v;
                         dds::sub::find(sub, ds, std::back_inserter(v));
                         return v;
                     },
                     py::call_guard<py::gil_scoped_release>(),
-                    "Find all DataReaders that contain samples of the given DataState in the Subscriber.")
+                    "Find all DataReaders that contain samples of the given "
+                    "DataState in the Subscriber.")
             .def(
-                py::self == py::self,
-                py::call_guard<py::gil_scoped_release>(),
-                "Test for equality.")
+                    "find_datareaders",
+                    [](const PySubscriber& sub, const std::string& topic_name) {
+                        std::vector<PyAnyDataReader> v;
+                        dds::sub::find<dds::sub::AnyDataReader>(
+                                sub,
+                                topic_name,
+                                std::back_inserter(v));
+                        return v;
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find all DataReaders for a given topic name")
             .def(
-                py::self != py::self,
-                py::call_guard<py::gil_scoped_release>(),
-                "Test for inequality.");
+                    "find_datareader_by_topic_name",
+                    [](PySubscriber& sub, const std::string& topic_name)
+                            -> dds::core::optional<PyAnyDataReader> {
+                        auto dr = rti::sub::find_datareader_by_topic_name<
+                                dds::sub::AnyDataReader>(sub, topic_name);
+                        if (dr == dds::core::null) {
+                            return {};
+                        }
+                        return PyAnyDataReader(dr);
+                    },
+                    py::arg("topic_name"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Find a DataReader in this Subscriber by its topic name. "
+                    "If "
+                    "more than one exists for this Topic, the first one found "
+                    "is returned.")
+            .def(py::self == py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for equality.")
+            .def(py::self != py::self,
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Test for inequality.");
 
     py::implicitly_convertible<PyIEntity, PySubscriber>();
 }

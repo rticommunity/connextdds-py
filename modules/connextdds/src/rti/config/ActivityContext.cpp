@@ -112,7 +112,7 @@ void process_inits<AttributeKindMask>(py::module& m, ClassInitList& l)
 
 }  // namespace pyrti
 
-void init_activity_context(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector& v) {
+void init_activity_context(py::module& m, pyrti::ClassInitList& l, pyrti::DefInitVector&) {
     pyrti::process_inits<AttributeKindMask>(m, l);
 }
 

@@ -9,6 +9,8 @@
  * damages arising out of the use or inability to use the software.
  */
 
+#include <sstream>
+
 #include "PyConnext.hpp"
 #include <dds/sub/status/DataState.hpp>
 #include "PyMaskType.hpp"
@@ -252,7 +254,14 @@ void init_class_defs(py::class_<DataState>& cls)
                         return DataState::new_instance();
                     },
                     "Create a DataState with InstanceState.ALIVE, "
-                    "ViewState.NEW_VIEW, and SampleState.ANY");
+                    "ViewState.NEW_VIEW, and SampleState.ANY")
+            .def(
+                "__repr__",
+                [](const DataState& s) -> std::string {
+                    std::ostringstream os;
+                    os << s;
+                    return os.str();
+                });
 
         py::implicitly_convertible<SampleState, DataState>();
         py::implicitly_convertible<ViewState, DataState>();

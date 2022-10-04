@@ -22,7 +22,8 @@ void init_dds_stl_bindings(py::module& m)
 {
     pyrti::bind_vector<bool>(m, "BoolSeq");
     pyrti::bind_buffer_vector<uint8_t>(m, "Uint8Seq", "OctetSeq");
-    pyrti::bind_buffer_vector<char>(m, "Int8Seq", "CharSeq");
+    pyrti::bind_buffer_vector<char>(m, "CharSeq");
+    pyrti::bind_buffer_vector<int8_t>(m, "Int8Seq");
     pyrti::bind_buffer_vector<uint16_t>(m, "Uint16Seq", "UshortSeq");
     pyrti::bind_buffer_vector<int16_t>(m, "Int16Seq", "ShortSeq");
     pyrti::bind_buffer_vector<uint32_t>(m, "Uint32Seq", "ULongSeq");
@@ -40,6 +41,7 @@ void init_dds_stl_bindings(py::module& m)
 
     py::implicitly_convertible<py::buffer, std::vector<uint8_t>>();
     py::implicitly_convertible<py::buffer, std::vector<char>>();
+    py::implicitly_convertible<py::buffer, std::vector<int8_t>>();
     py::implicitly_convertible<py::buffer, std::vector<uint16_t>>();
     py::implicitly_convertible<py::buffer, std::vector<int16_t>>();
     py::implicitly_convertible<py::buffer, std::vector<uint32_t>>();
@@ -51,6 +53,7 @@ void init_dds_stl_bindings(py::module& m)
     py::implicitly_convertible<py::iterable, std::vector<bool>>();
     py::implicitly_convertible<py::iterable, std::vector<uint8_t>>();
     py::implicitly_convertible<py::iterable, std::vector<char>>();
+    py::implicitly_convertible<py::iterable, std::vector<int8_t>>();
     py::implicitly_convertible<py::iterable, std::vector<uint16_t>>();
     py::implicitly_convertible<py::iterable, std::vector<int16_t>>();
     py::implicitly_convertible<py::iterable, std::vector<uint32_t>>();

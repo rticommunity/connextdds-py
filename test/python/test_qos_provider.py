@@ -9,9 +9,9 @@
  # damages arising out of the use or inability to use the software.
  #
 
-import rti.connextdds as dds
-import pytest
 import pathlib
+import rti.connextdds as dds
+from test_utils import log_capture
 
 LOCATION = str(pathlib.Path(__file__).parent.absolute()) + "/"
 
@@ -32,9 +32,9 @@ def test_file_uri_creation():
 
 
 def test_invalid_creation():
-    with pytest.raises(dds.Error):
+    with log_capture.expected_exception(dds.Error):
         dds.QosProvider("invalid_file.xml")
-    with pytest.raises(dds.Error):
+    with log_capture.expected_exception(dds.Error):
         dds.QosProvider(LOCATION + "../xml/InvalidXml.xml")
 
 

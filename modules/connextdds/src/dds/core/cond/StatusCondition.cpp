@@ -27,7 +27,7 @@ void init_class_defs(
             }),
             py::arg("entity"),
             py::keep_alive<1, 2>(),
-            "Obtain a referene to an entity's StatusCondition object")
+            "Obtain a reference to an entity's StatusCondition object")
             .def(py::init([](PyICondition& c) {
                      auto sc = c.get_condition();
                      return dds::core::polymorphic_cast<PyStatusCondition>(sc);

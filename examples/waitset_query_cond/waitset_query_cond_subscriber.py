@@ -1,36 +1,38 @@
-"""
- (c) 2020 Copyright, Real-Time Innovations, Inc.  All rights reserved.
- RTI grants Licensee a license to use, modify, compile, and create derivative
- works of the Software.  Licensee has the right to distribute object form only
- for use with RTI products.  The Software is provided "as is", with no warranty
- of any type, including any warranty for fitness for any purpose. RTI is under
- no obligation to maintain or support the Software.  RTI shall not be liable for
- any incidental or consequential damages arising out of the use or inability to
- use the software.
- """
+#  (c) 2020 Copyright, Real-Time Innovations, Inc.  All rights reserved.
+#  RTI grants Licensee a license to use, modify, compile, and create derivative
+#  works of the Software.  Licensee has the right to distribute object form only
+#  for use with RTI products.  The Software is provided "as is", with no warranty
+#  of any type, including any warranty for fitness for any purpose. RTI is under
+#  no obligation to maintain or support the Software.  RTI shall not be liable for
+#  any incidental or consequential damages arising out of the use or inability to
+#  use the software.
 
-import rti.connextdds as dds
+
+# This example uses a WaitSet to wait for data that matches the query.
+# See async_take_query_condition.py for an equivalent example that uses
+# async operations (take_data_async).
+
 import textwrap
 import time
 import argparse
 
+import rti.connextdds as dds
+
+from waitset_query_cond import waitset_query_cond
+
 
 def query_handler(reader, query_cond):
-    with reader.select().condition(query_cond).take() as samples:
-        for sample in samples:
-            output = sample.data if sample.info.valid else "Got metadata"
-            print(output)
+    for data in reader.select().condition(query_cond).take_data():
+        print(data)
 
 
 def subscriber_main(domain_id, sample_count):
     participant = dds.DomainParticipant(domain_id)
 
-    wsqc_type = dds.QosProvider("waitset_query_cond.xml").type(
-        "wsqc_lib", "waitset_query_cond"
-    )
-    topic = dds.DynamicData.Topic(participant, "Example waitset_query_cond", wsqc_type)
+    topic = dds.Topic(
+        participant, "Example waitset_query_cond", waitset_query_cond)
     reader_qos = dds.QosProvider.default.datareader_qos
-    reader = dds.DynamicData.DataReader(dds.Subscriber(participant), topic, reader_qos)
+    reader = dds.DataReader(dds.Subscriber(participant), topic, reader_qos)
 
     # Query against even samples at the start
     query_parameters = ["'EVEN'"]

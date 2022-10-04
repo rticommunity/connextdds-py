@@ -1,5 +1,5 @@
 find_package(
-    RTIConnextDDS "5.3.1"
+    RTIConnextDDS "7.0.0"
     REQUIRED
     COMPONENTS
         core
@@ -7,10 +7,12 @@ find_package(
 
 find_package(
     Python${RTI_PYTHON_MAJOR_VERSION}
+    "${RTI_PYTHON_MAJOR_VERSION}.${RTI_PYTHON_MINOR_VERSION}"
+    EXACT
     REQUIRED
     COMPONENTS
         Interpreter
-        Development
+        Development.Module
 )
 
 find_package(
@@ -32,7 +34,7 @@ if(APPLE)
 endif()
 
 add_library(
-    connextdds 
+    connextdds
     SHARED
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"
@@ -139,15 +141,19 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/TopicNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/PrintFormatProperty.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/ServiceRequest.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/IdlTypeSupport.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/topic/GenericTypePluginFactory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/status/StatusNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/status/DataStateEx.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/AckResponseData.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/TopicQuery.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/SubNamespace.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/sub/IdlDataReader.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/AcknowledgmentInfo.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/PubNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/FlowController.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/WriteParams.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/pub/IdlDataWriter.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/domain/DomainNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/domain/DomainParticipantConfigParams.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/rti/RTINamespace.cpp"
@@ -189,6 +195,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/xtypes/PrimitiveType.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/xtypes/XtypesNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/LatencyBudget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/QosPolicy.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/QosPolicyCount.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/TopicData.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/policy/DataTag.cpp"
@@ -273,6 +280,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/domain/DomainParticipant.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/domain/DomainParticipantListener.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/DDSNamespace.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core_utils/core_utils.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/connextdds.cpp"
 )
 
@@ -328,7 +336,11 @@ if (RTI_LINK_OPTIMIZATIONS_ON)
 endif()
 
 pybind11_extension(connextdds)
-pybind11_strip(connextdds)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    # Only strip if it is a release build
+    pybind11_strip(connextdds)
+endif()
 
 target_compile_definitions(
     connextdds
@@ -362,3 +374,16 @@ else()
     )
 endif()
 
+if(MSVC)
+  target_compile_options(connextdds PRIVATE /W4)
+else()
+  target_compile_options(connextdds PRIVATE 
+        -Wall  
+        -Wempty-body 
+        -Wignored-qualifiers 
+        -Wmissing-field-initializers  
+        -Wsign-compare  
+        -Wtype-limits  
+        -Wuninitialized  
+        -Wunused-parameter)
+endif()

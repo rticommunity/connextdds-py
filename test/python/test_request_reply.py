@@ -11,9 +11,12 @@
 
 import rti.connextdds as dds
 import rti.request as request
+from rti.types.builtin import KeyedString
 import pytest
 import queue
 import time
+
+from test_utils.fixtures import *
 
 TEST_DOMAIN_ID = 100
 
@@ -36,37 +39,33 @@ def parse_dynamic_rr_data(data):
 
 
 def create_rr_data(k, v):
-    data = dds.KeyedStringTopicType()
-    data.key = k
-    data.value = v
-    return data
+    return KeyedString(key=k, value=v)
 
 
 def parse_rr_data(data):
     return data.key, data.value
-    
+
 
 def create_dynamic_topic(participant, name):
     return dds.DynamicData.Topic(participant, name, get_keyed_string_dynamic_type())
 
 
 def create_topic(participant, name):
-    return dds.KeyedStringTopicType.Topic(participant, name)
+    return dds.Topic(participant, name, KeyedString)
 
 
 def copy_dynamic_sample(loaned_sample):
     return dds.DynamicData.Sample(loaned_sample)
 
 
-def copy_sample(loaned_sample):
-    return dds.KeyedStringTopicType.Sample(loaned_sample)
+def copy_sample(sample):
+    # Samples for dds.Topics are not loaned
+    return sample
 
 
 class RequestReplyTester:
-    def __init__(self, domain_id, use_dynamic_data, use_qos_object, use_custom_topic, use_replier_cft, use_pub_sub_args, use_callback_funcs, use_simple_replier):
-        qos = dds.DomainParticipantQos()
-        qos.database.shutdown_cleanup_period = dds.Duration.from_milliseconds(100)
-        self._participant = dds.DomainParticipant(domain_id, qos)
+    def __init__(self, participant, use_dynamic_data, use_qos_object, use_custom_topic, use_replier_cft, use_pub_sub_args, use_callback_funcs, use_simple_replier):
+        self._participant = participant
         if use_dynamic_data:
             self._type = get_keyed_string_dynamic_type()
             self.create_data_fnc = create_dynamic_rr_data
@@ -74,7 +73,7 @@ class RequestReplyTester:
             self.copy_sample_fnc = copy_dynamic_sample
             create_topic_func = create_dynamic_topic
         else:
-            self._type = type_cls = dds.KeyedStringTopicType
+            self._type = type_cls = KeyedString
             self.create_data_fnc = create_rr_data
             self.parse_data_fnc = parse_rr_data
             self.copy_sample_fnc = copy_sample
@@ -104,7 +103,7 @@ class RequestReplyTester:
             if isinstance(self._type, dds.DynamicType):
                 request_reader_topic = dds.DynamicData.ContentFilteredTopic(request_reader_topic, 'request_cft', replier_filter)
             else:
-                request_reader_topic = dds.KeyedStringTopicType.ContentFilteredTopic(request_reader_topic, 'request_cft', replier_filter)
+                request_reader_topic = dds.ContentFilteredTopic(request_reader_topic, 'request_cft', replier_filter)
         else:
             request_reader_topic = request_topic
 
@@ -118,13 +117,25 @@ class RequestReplyTester:
         self._request_queue = queue.Queue()
         self._reply_queue = queue.Queue()
         if use_callback_funcs:
-            def replier_callback(replier):
-                for sample in (s for s in replier.take_requests() if s.info.valid):
-                    self._request_queue.put(self.copy_sample_fnc(sample))
-                
-            def requester_callback(requester):
-                for sample in (s for s in requester.take_replies() if s.info.valid):
-                    self._reply_queue.put(self.copy_sample_fnc(sample))
+            if self._type is KeyedString:
+
+                def replier_callback(replier):
+                    for data, info in replier.take_requests():
+                        if info.valid:
+                            self._request_queue.put((data, info))
+
+                def requester_callback(requester):
+                    for data, info in requester.take_replies():
+                        if info.valid:
+                            self._reply_queue.put((data, info))
+            else:
+                def replier_callback(replier):
+                    for sample in (s for s in replier.take_requests() if s.info.valid):
+                        self._request_queue.put(self.copy_sample_fnc(sample))
+
+                def requester_callback(requester):
+                    for sample in (s for s in requester.take_replies() if s.info.valid):
+                        self._reply_queue.put(self.copy_sample_fnc(sample))
         else:
             replier_callback = requester_callback = None
 
@@ -180,7 +191,7 @@ class RequestReplyTester:
     def close(self):
         self.requester.close()
         self.replier.close()
-        self.participant.close()
+        # self.participant.close()
     
     
     def wait_for_requests(self, count, timeout):
@@ -198,13 +209,16 @@ class RequestReplyTester:
                     waited_time += sleep_interval
         else:
             if self._replier.wait_for_requests(float(timeout), count):
-                with self._replier.take_requests() as loaned_samples:
-                    for sample in (s for s in loaned_samples if s.info.valid):
-                        requests.append(self.copy_sample_fnc(sample))
+                if self.create_data_fnc == create_dynamic_rr_data:
+                    with self._replier.take_requests() as loaned_samples:
+                        for sample in (s for s in loaned_samples if s.info.valid):
+                            requests.append(self.copy_sample_fnc(sample))
+                else:
+                    requests += self._replier.take_requests()
 
         if len(requests) < count:
             raise dds.TimeoutError('Did not receive expected request count within timeout')
-        
+
         return requests
 
 
@@ -216,16 +230,20 @@ class RequestReplyTester:
             while waited_time < timeout and len(replies) < count:
                 while not self._reply_queue.empty():
                     reply = self._reply_queue.get()
-                    if request.Requester.is_related_reply(id, reply.info):
+                    _, info = reply
+                    if request.Requester.is_related_reply(id, info):
                         replies.append(reply)
                 if len(replies) < count:
                     time.sleep(sleep_interval)
                     waited_time += sleep_interval
         else:
             if self._requester.wait_for_replies(timeout, count):
-                with self._requester.take_replies(id) as loaned_samples:
-                    for sample in (s for s in loaned_samples if s.info.valid):
-                        replies.append(self.copy_sample_fnc(sample))
+                if self.create_data_fnc == create_dynamic_rr_data:
+                    with self._requester.take_replies(id) as loaned_samples:
+                        for sample in (s for s in loaned_samples if s.info.valid):
+                            replies.append(self.copy_sample_fnc(sample))
+                else:
+                    replies += self._requester.take_replies(id)
 
         if len(replies) < count:
             raise dds.TimeoutError('Did not receive expected reply count within timeout')
@@ -261,21 +279,16 @@ class RequestReplyTester:
         return self._participant
 
 
-@pytest.mark.parametrize('use_dynamic_data', (True, False))
-@pytest.mark.parametrize('use_qos_object', (True, False))
-@pytest.mark.parametrize('use_custom_topic', (True, False))
-@pytest.mark.parametrize('use_replier_cft', (True, False))
-@pytest.mark.parametrize('use_pub_sub_args', (True, False))
-@pytest.mark.parametrize('use_callback_funcs', (True, False))
-def test_request_single_reply(
-        use_dynamic_data,
-        use_qos_object,
-        use_custom_topic,
-        use_replier_cft,
-        use_pub_sub_args,
-        use_callback_funcs):
+def request_single_reply_test_impl(
+        shared_participant,
+        use_dynamic_data=False,
+        use_qos_object=False,
+        use_custom_topic=False,
+        use_replier_cft=False,
+        use_pub_sub_args=False,
+        use_callback_funcs=False):
     test_object = RequestReplyTester(
-        TEST_DOMAIN_ID,
+        shared_participant,
         use_dynamic_data,
         use_qos_object,
         use_custom_topic,
@@ -298,19 +311,24 @@ def test_request_single_reply(
     id = test_object.requester.send_request(req)
     requests = test_object.wait_for_requests(1, 1.0)
     assert len(requests) == 1
-    reply_key, reply_val = test_object.parse_data(requests[0].data)
-    test_object.replier.send_reply(test_object.create_data(reply_key, reply_val + ' reply'), requests[0].info)
-    replies = test_object.wait_for_replies(id, 1, 1.0)
+    data, info = requests[0]
+    reply_key, reply_val = test_object.parse_data(data)
+    test_object.replier.send_reply(test_object.create_data(
+        reply_key, reply_val + ' reply'), info)
+    replies = test_object.wait_for_replies(id, 1, 4.0)
     assert len(replies) == 1
+    data, info = replies[0]
     assert request.Requester.is_final_reply(replies[0])
-    assert request.Requester.is_final_reply(replies[0].info)
-    reply_key, reply_val = test_object.parse_data(replies[0].data)
+    assert request.Requester.is_final_reply(info)
+    reply_key, reply_val = test_object.parse_data(data)
     assert reply_key == key
     assert reply_val == val + ' reply'
-    test_object.requester.request_datawriter.dispose_instance(req)
-    test_object.requester.request_datawriter.unregister_instance(req)
-    test_object.replier.reply_datawriter.dispose_instance(req)
-    test_object.replier.reply_datawriter.unregister_instance(req)
+
+    instance = test_object.requester.request_datawriter.lookup_instance(req)
+    test_object.requester.request_datawriter.dispose_instance(instance)
+    test_object.requester.request_datawriter.unregister_instance(instance)
+    test_object.replier.reply_datawriter.dispose_instance(instance)
+    test_object.replier.reply_datawriter.unregister_instance(instance)
     test_object.close()
 
 
@@ -319,16 +337,38 @@ def test_request_single_reply(
 @pytest.mark.parametrize('use_custom_topic', (True, False))
 @pytest.mark.parametrize('use_replier_cft', (True, False))
 @pytest.mark.parametrize('use_pub_sub_args', (True, False))
-@pytest.mark.parametrize('use_callback_funcs', (True, False))
-def test_request_simple_reply(
+def test_request_single_reply(
+        shared_participant,
         use_dynamic_data,
         use_qos_object,
         use_custom_topic,
         use_replier_cft,
-        use_pub_sub_args,
-        use_callback_funcs):
+        use_pub_sub_args):
+    request_single_reply_test_impl(
+        shared_participant,
+        use_dynamic_data,
+        use_qos_object,
+        use_custom_topic,
+        use_replier_cft,
+        use_pub_sub_args)
+
+
+def test_request_single_reply_callback(shared_participant):
+    request_single_reply_test_impl(
+        shared_participant,
+        use_callback_funcs=True)
+
+
+def request_simple_reply_test_impl(
+        shared_participant,
+        use_dynamic_data=False,
+        use_qos_object=False,
+        use_custom_topic=False,
+        use_replier_cft=False,
+        use_pub_sub_args=False,
+        use_callback_funcs=False):
     test_object = RequestReplyTester(
-        TEST_DOMAIN_ID,
+        shared_participant,
         use_dynamic_data,
         use_qos_object,
         use_custom_topic,
@@ -351,10 +391,37 @@ def test_request_simple_reply(
     id = test_object.requester.send_request(req)
     replies = test_object.wait_for_replies(id, 1, 1.0)
     assert len(replies) == 1
-    reply_key, reply_val = test_object.parse_data(replies[0].data)
+    data, _ = replies[0]
+    reply_key, reply_val = test_object.parse_data(data)
     assert reply_key == key
     assert reply_val == val + ' reply'
     test_object.close()
+
+@pytest.mark.parametrize('use_dynamic_data', (True, False))
+@pytest.mark.parametrize('use_qos_object', (True, False))
+@pytest.mark.parametrize('use_custom_topic', (True, False))
+@pytest.mark.parametrize('use_replier_cft', (True, False))
+@pytest.mark.parametrize('use_pub_sub_args', (True, False))
+def test_request_simple_reply(
+        shared_participant,
+        use_dynamic_data,
+        use_qos_object,
+        use_custom_topic,
+        use_replier_cft,
+        use_pub_sub_args):
+    request_simple_reply_test_impl(
+        shared_participant,
+        use_dynamic_data,
+        use_qos_object,
+        use_custom_topic,
+        use_replier_cft,
+        use_pub_sub_args)
+
+
+def test_request_simple_reply_callback(shared_participant):
+    request_simple_reply_test_impl(
+        shared_participant,
+        use_callback_funcs=True)
 
 
 asyncio = pytest.importorskip("asyncio")
@@ -379,24 +446,28 @@ class RequestReplyTesterAsync(RequestReplyTester):
     async def wait_for_replies_async(self, id, count, timeout):
         replies = []
         if await self._requester.wait_for_replies_async(timeout, count):
-            with self._requester.take_replies(id) as loaned_samples:
-                for sample in (s for s in loaned_samples if s.info.valid):
-                    replies.append(self.copy_sample_fnc(sample))
+            if self.create_data_fnc == create_dynamic_rr_data:
+                with self._requester.take_replies(id) as loaned_samples:
+                    for sample in (s for s in loaned_samples if s.info.valid):
+                        replies.append(self.copy_sample_fnc(sample))
+            else:
+                replies += self._requester.take_replies(id)
 
         if len(replies) < count:
             raise dds.TimeoutError('Did not receive expected reply count within timeout')
-        
+
         return replies
 
 
 async def request_reply_async(
+        shared_participant,
         use_dynamic_data,
         use_qos_object,
         use_custom_topic,
         use_replier_cft,
         use_pub_sub_args):
     test_object = RequestReplyTesterAsync(
-        TEST_DOMAIN_ID,
+        shared_participant,
         use_dynamic_data,
         use_qos_object,
         use_custom_topic,
@@ -417,13 +488,15 @@ async def request_reply_async(
     id = await test_object.requester.send_request_async(req)
     requests = await test_object.wait_for_requests_async(1, 1.0)
     assert len(requests) == 1
-    reply_key, reply_val = test_object.parse_data(requests[0].data)
-    test_object.replier.send_reply(test_object.create_data(reply_key, reply_val + ' reply'), requests[0].info)
+    data, info = requests[0]
+    reply_key, reply_val = test_object.parse_data(data)
+    test_object.replier.send_reply(test_object.create_data(reply_key, reply_val + ' reply'), info)
     replies = await test_object.wait_for_replies_async(id, 1, 1.0)
     assert len(replies) == 1
+    data, info = replies[0]
     assert request.Requester.is_final_reply(replies[0])
-    assert request.Requester.is_final_reply(replies[0].info)
-    reply_key, reply_val = test_object.parse_data(replies[0].data)
+    assert request.Requester.is_final_reply(info)
+    reply_key, reply_val = test_object.parse_data(data)
     assert reply_key == key
     assert reply_val == val + ' reply'
     await test_object.requester.request_datawriter.dispose_instance_async(req)
@@ -441,10 +514,11 @@ def event_loop():
 
 
 @pytest.mark.skipif(not hasattr(asyncio, 'get_running_loop'), reason='Python 3.7+ needed to use asyncio functionality')
-@pytest.mark.parametrize('use_dynamic_data', (True, False))
+@pytest.mark.parametrize('use_dynamic_data', (True,)) # PY-45: IDL types not supported for async request-reply
 @pytest.mark.parametrize('use_qos_object', (True, False))
 @pytest.mark.parametrize('use_custom_topic', (True, False))
 @pytest.mark.parametrize('use_replier_cft', (True, False))
 @pytest.mark.parametrize('use_pub_sub_args', (True, False))
-def test_request_reply_async(event_loop, use_dynamic_data, use_qos_object, use_custom_topic, use_replier_cft, use_pub_sub_args):
-    event_loop.run_until_complete(request_reply_async(use_dynamic_data, use_qos_object, use_custom_topic, use_replier_cft, use_pub_sub_args))
+def test_request_reply_async(shared_participant, event_loop, use_dynamic_data, use_qos_object, use_custom_topic, use_replier_cft, use_pub_sub_args):
+    event_loop.run_until_complete(request_reply_async(
+        shared_participant, use_dynamic_data, use_qos_object, use_custom_topic, use_replier_cft, use_pub_sub_args))

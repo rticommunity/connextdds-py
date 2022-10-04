@@ -11,37 +11,27 @@
 
 import rti.connextdds as dds
 import pytest
-import utils
-import pathlib
-
-FILE = str(pathlib.Path(__file__).parent.absolute()) + "/../xml/PerformanceTester.xml"
-
-PROVIDER = dds.QosProvider(FILE)
-PRIMITIVE_ARRAY_TYPE_4 = PROVIDER.type("PrimitiveArrayType4")
-NON_PRIMITIVE_TYPE = PROVIDER.type("NonPrimitiveType")
 
 
-def test_sequence():
-    sample = dds.DynamicData(PRIMITIVE_ARRAY_TYPE_4)
+def test_sequence(types):
+    sample = dds.DynamicData(types["PrimitiveArrayType4"])
     sample["longArray"] = list(range(0, 4))
-    print(sample["longArray"])
+    assert "[0, 1, 2, 3]" in str(sample["longArray"])
     for i in range(0, 4):
         assert i == sample["longArray"][i]
 
-
-def test_non_primitive_type():
-    sample = dds.DynamicData(NON_PRIMITIVE_TYPE)
+def test_non_primitive_type(types):
+    sample = dds.DynamicData(types["NonPrimitiveType"])
     sample["x"] = 5
     sample["y"] = 9
     assert sample["x"] == 5
     assert sample["y"] == 9
 
-
-def test_nested_struct():
+def test_nested_struct(types):
     # Here we create a nested type. It has two members, both are the simple non-primitive type
     nested_type = dds.StructType("nested_type")
-    nested_type.add_member(dds.Member("a", NON_PRIMITIVE_TYPE))
-    nested_type.add_member(dds.Member("b", NON_PRIMITIVE_TYPE))
+    nested_type.add_member(dds.Member("a", types["NonPrimitiveType"]))
+    nested_type.add_member(dds.Member("b", types["NonPrimitiveType"]))
     sample = dds.DynamicData(nested_type)
 
     # Fill in the values
@@ -57,10 +47,10 @@ def test_nested_struct():
     assert sample["b.y"] == 4
 
 
-def test_nested_struct_copy():
+def test_nested_struct_copy(types):
     nested_type = dds.StructType("nested_type")
-    nested_type.add_member(dds.Member("a", NON_PRIMITIVE_TYPE))
-    nested_type.add_member(dds.Member("b", NON_PRIMITIVE_TYPE))
+    nested_type.add_member(dds.Member("a", types["NonPrimitiveType"]))
+    nested_type.add_member(dds.Member("b", types["NonPrimitiveType"]))
     sample = dds.DynamicData(nested_type)
 
     # Fill in the values
@@ -77,10 +67,10 @@ def test_nested_struct_copy():
     assert nested["x"] == x
 
 
-def test_nested_struct_loan():
+def test_nested_struct_loan(types):
     nested_type = dds.StructType("nested_type")
-    nested_type.add_member(dds.Member("a", NON_PRIMITIVE_TYPE))
-    nested_type.add_member(dds.Member("b", NON_PRIMITIVE_TYPE))
+    nested_type.add_member(dds.Member("a", types["NonPrimitiveType"]))
+    nested_type.add_member(dds.Member("b", types["NonPrimitiveType"]))
     sample = dds.DynamicData(nested_type)
 
     # Fill in the values
@@ -100,11 +90,22 @@ def test_nested_struct_loan():
     assert sample["a.y"] == 234235
 
 
+def test_dictionary_access(types):
+    s1 = dds.DynamicData(types["NonPrimitiveType"])
+    s1["x"] = 1
+    s1["y"] = 2
+
+    my_dict = {"x": 1, "y": 2}
+    s2 = dds.DynamicData(types["NonPrimitiveType"], my_dict)
+
+    assert s1 == s2
+
+
 @pytest.mark.parametrize("size", [1, 4, 16])
-def test_squence_of_nested_structs(size):
+def test_squence_of_nested_structs(size, types):
     nested_type = dds.StructType("nested_type")
-    nested_type.add_member(dds.Member("a", NON_PRIMITIVE_TYPE))
-    nested_type.add_member(dds.Member("b", NON_PRIMITIVE_TYPE))
+    nested_type.add_member(dds.Member("a", types["NonPrimitiveType"]))
+    nested_type.add_member(dds.Member("b", types["NonPrimitiveType"]))
 
     array_of_nested_type = dds.SequenceType(nested_type, size)
 
@@ -190,9 +191,7 @@ def test_documentation_examples():
             point.data["y"] = 222
     print(sample["path[2].x"]) # prints 111
 
-    with pytest.raises(dds.InvalidArgumentError) as excinfo:
+    with pytest.raises(dds.InvalidArgumentError):
         sample["bad_member"] = "bad value"
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError):
         sample["location"] = "bad value"
-
-test_sequence()

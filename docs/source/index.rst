@@ -1,38 +1,50 @@
-.. connextdds-py documentation master file, created by
-   sphinx-quickstart on Thu Jun 18 14:23:12 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+######################################
+Welcome to the RTI Connext Python API!
+######################################
 
-Welcome to the RTI Connext DDS Python API!
-==========================================
+**RTI® Connext®** is a connectivity framework for building distributed
+applications with requirements for high performance and scalability.
 
-*RTI® Connext® DDS* is a connectivity software framework for integrating data sources of all types.
-At its core is the world’s leading ultra-high performance, distributed networking databus.
+The **RTI Connext Python API** provides access to most Connext features from
+Python.
 
-This is the documentation for the *Connext DDS* Python API, an **experimental** product.
+.. attention::
 
-If you are new, you should read the :ref:`intro:Introduction`,
-the :ref:`building:Building and Installing` section, and the
-:ref:`overview:API Overview`.
+    This release of the Connext Python API is experimental and provided as
+    buildable source. As an experimental release, it cannot be used in
+    production systems and is subject to change. A production-ready release is
+    expected in the future.
 
-If you're looking for specific documentation, check out the :ref:`quick:Quick reference`,
+Getting Started
+===============
+
+The `RTI Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_
+helps you install the software and run your first RTI Connext Python application
+while learning general concepts of Connext.
+
+To learn more about the Python API, see :ref:`overview:API Overview`; you can
+start with the :ref:`hello:Hello World` example.
+
+If you're looking for specific documentation, check out the :ref:`quick:Quick Reference`,
 or the full :ref:`API reference <rti:rti package>`.
+
+Contents
+========
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   intro.rst
    building.rst
-   quick.rst
    overview.rst
+   quick.rst
    API Reference <rti.rst>
    examples.rst
+   copyright.rst
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Additional documentation
+========================
+
+For more documentation, including the Connext User's Manual and the reference 
+for the C, C++, Java and C# APIs, see `RTI Community <https://community.rti.com/documentation>`_.

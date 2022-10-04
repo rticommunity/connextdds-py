@@ -43,6 +43,7 @@ public:
     using PyNoOpAnyDataWriterListener::on_reliable_reader_activity_changed;
     using PyNoOpAnyDataWriterListener::on_reliable_writer_cache_changed;
     using PyNoOpAnyDataWriterListener::on_service_request_accepted;
+    using PyNoOpAnyDataWriterListener::on_sample_removed;
 
     virtual ~PyNoOpPublisherListener()
     {
