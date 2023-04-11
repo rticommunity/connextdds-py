@@ -16,4 +16,5 @@ rti_connext_dds-6.1.0/
 platform/
 package.cfg
 pyproject.toml
+!templates/pyproject.toml
 MANIFEST.in

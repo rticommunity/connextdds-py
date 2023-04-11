@@ -19,7 +19,6 @@
 #include <dds/pub/find.hpp>
 #include "PyEntity.hpp"
 #include "PyAnyDataWriter.hpp"
-#include "PyDynamicTypeMap.hpp"
 #include "PyTopic.hpp"
 #include "PyDataWriterListener.hpp"
 #include "PyAsyncioExecutor.hpp"
@@ -508,6 +507,20 @@ void init_dds_datawriter_untyped_methods(PyDataWriterClass<T>& cls)
             "Indicates if a sample is considered application-acknowledged.");
 
     cls.def(
+            "_wait_for_sample_acknowledgment",
+            [](PyDataWriter& writer,
+                    const rti::core::SampleIdentity& sample_id,
+                    const dds::core::Duration& timeout) {
+                return writer->wait_for_sample_acknowledgment(
+                        sample_id,
+                        timeout);
+            }, 
+            py::arg("sample_id"),
+            py::arg("timeout"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Wait for a sample to be acknowledged by the application.");
+
+    cls.def(
             "wait_for_asynchronous_publishing",
             [](PyDataWriter& writer, const dds::core::Duration& max_wait) {
                 writer->wait_for_asynchronous_publishing(max_wait);
@@ -963,16 +976,6 @@ template<typename T>
 void init_dds_datawriter_key_value_methods(PyDataWriterClass<T> cls)
 {
     using PyDataWriter = PyDataWriter<T>;
-    using GilPolicy = py::gil_scoped_release;
-    
-    cls.def("key_value",
-            (T & (PyDataWriter::*) (T&, const dds::core::InstanceHandle&) )
-                    & PyDataWriter::key_value,
-            py::arg("key_holder"),
-            py::arg("handle"),
-            py::call_guard<GilPolicy>(),
-            "Set the instance key that corresponds to an instance "
-            "handle.");
 
     cls.def(
             "key_value",

@@ -22,15 +22,11 @@ void init_class_defs(py::class_<StatusMask>& cls)
 {
     cls.def_property_readonly_static(
                "ALL",
-               [](py::object&) {
-                    return StatusMask::all();
-               },
+               [](py::object&) { return StatusMask::all(); },
                "Create a StatusMask with all status bits set.")
             .def_property_readonly_static(
                     "NONE",
-                    [](py::object&) {
-                        return StatusMask::none();
-                    },
+                    [](py::object&) { return StatusMask::none(); },
                     "Create a StatusMask with no status bits set.")
             .def_property_readonly_static(
                     "INCONSISTENT_TOPIC",
@@ -74,36 +70,26 @@ void init_class_defs(py::class_<StatusMask>& cls)
                     "what is offered.")
             .def_property_readonly_static(
                     "SAMPLE_LOST",
-                    [](py::object&) {
-                        return StatusMask::sample_lost();
-                    },
+                    [](py::object&) { return StatusMask::sample_lost(); },
                     "Create a StatusMask for samples that are lost (i.e. never "
                     "received).")
             .def_property_readonly_static(
                     "SAMPLE_REJECTED",
-                    [](py::object&) {
-                        return StatusMask::sample_rejected();
-                    },
+                    [](py::object&) { return StatusMask::sample_rejected(); },
                     "Create a StatusMask for received samples that are "
                     "rejected.")
             .def_property_readonly_static(
                     "DATA_ON_READERS",
-                    [](py::object&) {
-                        return StatusMask::data_on_readers();
-                    },
+                    [](py::object&) { return StatusMask::data_on_readers(); },
                     "Create a StatusMask for new data available.")
             .def_property_readonly_static(
                     "DATA_AVAILABLE",
-                    [](py::object&) {
-                        return StatusMask::data_available();
-                    },
+                    [](py::object&) { return StatusMask::data_available(); },
                     "Create a StatusMask for one or more new data samples "
                     "received.")
             .def_property_readonly_static(
                     "LIVELINESS_LOST",
-                    [](py::object&) {
-                        return StatusMask::liveliness_lost();
-                    },
+                    [](py::object&) { return StatusMask::liveliness_lost(); },
                     "Create a StatusMask for a DataWriter not respecting "
                     "Liveliness, "
                     "thus DataReader entities will consider the writer as no "
@@ -153,9 +139,7 @@ void init_class_defs(py::class_<StatusMask>& cls)
                     "active or inactive.")
             .def_property_readonly_static(
                     "DATAWRITER_CACHE",
-                    [](py::object&) {
-                        return StatusMask::datawriter_cache();
-                    },
+                    [](py::object&) { return StatusMask::datawriter_cache(); },
                     "Create a StatusMask for the status of the writer's cache.")
             .def_property_readonly_static(
                     "DATAWRITER_PROTOCOL",
@@ -167,9 +151,7 @@ void init_class_defs(py::class_<StatusMask>& cls)
                     "metrics.")
             .def_property_readonly_static(
                     "DATAREADER_CACHE",
-                    [](py::object&) {
-                        return StatusMask::datareader_cache();
-                    },
+                    [](py::object&) { return StatusMask::datareader_cache(); },
                     "Create a StatusMask for the status of the reader's cache.")
             .def_property_readonly_static(
                     "DATAREADER_PROTOCOL",
@@ -199,12 +181,9 @@ void init_class_defs(py::class_<StatusMask>& cls)
                     },
                     "Create a StatusMask for a service request that has been "
                     "received for a DataWriter")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property_readonly_static(
                     "SAMPLE_REMOVED",
-                    [](py::object&) {
-                        return StatusMask::sample_removed();
-                    },
+                    [](py::object&) { return StatusMask::sample_removed(); },
                     "Create a StatusMask for a sample that has been removed "
                     "from a "
                     "DataWriter.")
@@ -215,7 +194,14 @@ void init_class_defs(py::class_<StatusMask>& cls)
                     },
                     "Create a StatusMask for a locator is unreachable from a "
                     "DataWriter.")
-#endif
+            .def_property_readonly_static(
+                    "INVALID_LOCAL_IDENTITY_ADVANCE_NOTICE",
+                    [](py::object&) {
+                        return StatusMask::
+                                invalid_local_identity_advance_notice();
+                    },
+                    "Create a StatusMask for a local identity that is invalid "
+                    "or about to be invalid")
             .doc() = "A set of statuses.";
 }
 

@@ -21,8 +21,8 @@ void init_class_defs(py::class_<TopicData>& cls)
 {
     cls.def(py::init<>(), "Create an empty TopicData QoS policy.")
             .def(py::init<const std::vector<uint8_t>>(),
-                 py::arg("data"),
-                 "Create a TopicData object from a data sequence.")
+                    py::arg("data"),
+                    "Create a TopicData object from a data sequence.")
             .def_property(
                     "value",
                     (const std::vector<uint8_t> (TopicData::*)() const)
@@ -31,6 +31,12 @@ void init_class_defs(py::class_<TopicData>& cls)
                         return td.value(v.begin(), v.end());
                     },
                     "Get/set a copy of the TopicData value.")
+            .def(
+                    "__iter__",
+                    [](const TopicData& td) {
+                        return py::make_iterator(td.begin(), td.end());
+                    },
+                    py::keep_alive<0, 1>())
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

@@ -41,7 +41,7 @@ void init_class_defs(py::class_<ProductVersion>& cls)
                     "The revision number of product.")
             .def_property_readonly(
                     "native_build_id",
-                    [](const ProductVersion& pv) {
+                    [](const ProductVersion&) {
                         return std::string(NDDS_Config_Version_to_string());
                     },
                     "A string with the build ID of the native Connext libraries.")

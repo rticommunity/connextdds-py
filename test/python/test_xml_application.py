@@ -12,7 +12,7 @@
 import rti.connextdds as dds
 import pytest
 import pathlib
-from test_utils.fixtures import wait
+from test_utils.fixtures import wait, get_test_domain
 
 FILE = (
     str(pathlib.Path(__file__).parent.absolute())
@@ -34,7 +34,7 @@ def write_dynamic_sample(writer, value):
 
 
 def setup_qos_provider_create_participant(name):
-    params = dds.DomainParticipantConfigParams(0)
+    params = dds.DomainParticipantConfigParams(get_test_domain())
     provider_params = dds.QosProviderParams()
     provider_params.url_profile = FILE
 
@@ -64,7 +64,7 @@ def setup_qos_provider_create_participant(name):
         ),
     ],
 )
-def test_xml_app_pub_sub(pub_p_name, sub_p_name, writer_name, reader_name, filtered):
+def test_xml_app_pub_sub_dd(pub_p_name, sub_p_name, writer_name, reader_name, filtered):
     pub_participant = setup_qos_provider_create_participant(pub_p_name)
     sub_participant = setup_qos_provider_create_participant(sub_p_name)
 

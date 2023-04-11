@@ -78,6 +78,13 @@ def get_sample_value(type: type, not_selected=False):
         raise TypeError(f"Unsupported type: {type}")
 
 
+def get_info(sample):
+    if "info" in dir(sample):
+        return sample.info
+    else:
+        return sample[1]
+
+
 def get_sample_keys(type: type):
     if type is PointIDL:
         return PointIDL(x=1, y=0)
@@ -126,6 +133,13 @@ def check_expected_data(reader: dds.DataReader, expected_samples: list):
     wait.for_data(reader, count=len(expected_samples))
     received = reader.take()
     assert same_elements([data for (data, _) in received], expected_samples)
+
+
+def get_ns(t: type):
+    if t is dds.StructType:
+        return dds.DynamicData
+    else:
+        return dds
 
 
 @pytest.fixture(scope="function", params=get_test_types_generator())
@@ -276,6 +290,118 @@ def test_datareader_on_requested_incompatible_qos_listener_is_invoked(shared_par
 # --- Reader tests -------------------------------------------------------------
 
 
+@pytest.mark.parametrize("data_type", get_test_types_generator())
+def test_datareader_alt_constructors(shared_participant, data_type):
+    ns = get_ns(type(data_type()))
+
+    topic = ns.Topic(shared_participant, "TestTopic", data_type())
+    dr = ns.DataReader(dds.Subscriber(shared_participant), topic)
+
+    sc = dds.StatusCondition(dr)
+    assert ns.DataReader(sc.entity) == dr
+    cft = ns.ContentFilteredTopic(topic, "TestCFT", dds.Filter("1 = 1"))
+    dr_with_cft = ns.DataReader(dds.Subscriber(shared_participant), cft)
+    assert dr_with_cft.topic_name == "TestCFT"
+
+
+def test_datareader_equality(pubsub_idl_dd_builtin_no_samples):
+    pubsub = pubsub_idl_dd_builtin_no_samples
+    assert pubsub.reader == pubsub.reader
+    other_reader = pubsub.reader
+    assert pubsub.reader == other_reader
+    ns = get_ns(type(pubsub.data_type))
+    other_reader = ns.DataReader(pubsub.participant, pubsub.topic)
+    assert pubsub.reader != other_reader
+
+
+def test_datareader_read_take(pubsub_idl_dd_builtin_no_samples):
+    pubsub = pubsub_idl_dd_builtin_no_samples
+    reader = pubsub.reader
+    writer = pubsub.writer
+    sample = get_sample_value(pubsub.data_type)
+    writer.write(sample)
+    wait.for_data(reader, 1)
+    assert len(reader.take()) == 1
+    assert len(reader.read()) == 0
+    writer.write(sample)
+    wait.for_data(reader, 1)
+    assert len(reader.read()) == 1
+    if pubsub.data_type == dds.StructType:
+        # Only Dynamic Data has read_valid
+        assert len(reader.read_valid()) == 1
+        assert len(reader.take_valid()) == 1
+        assert len(reader.take_valid()) == 0
+        writer.write(sample)
+        wait.for_data(reader, 1)
+    assert len(reader.take()) == 1
+    assert len(reader.take()) == 0
+
+
+def test_datareader_getters(pubsub_idl_dd_builtin_no_samples):
+    pubsub = pubsub_idl_dd_builtin_no_samples
+    reader = pubsub.reader
+    assert reader.topic_name == pubsub.topic.name
+    assert reader.type_name in ["PointIDL", "PointIDLForDD", "String"]
+    assert reader.type_name == reader.topic_description.type_name
+    assert reader.topic_description == pubsub.topic
+    assert reader.subscriber == pubsub.subscriber
+
+
+def test_datareaders_qos(pubsub_idl_dd_builtin_no_samples):
+    pubsub = pubsub_idl_dd_builtin_no_samples
+    reader = pubsub.reader
+    reader_qos = dds.DataReaderQos()
+    reader >> reader_qos
+    reader_qos << dds.LatencyBudget(dds.Duration(12, 23))
+    reader.qos = reader_qos
+    assert reader.qos == reader_qos
+    assert reader.qos.latency_budget.duration == dds.Duration(12, 23)
+    reader_qos.latency_budget.duration = dds.Duration(45, 67)
+    reader << reader_qos
+    assert reader.qos.latency_budget.duration == dds.Duration(45, 67)
+
+
+def test_datareader_default_filter_state(pubsub_idl_dd_builtin_no_samples):
+    reader = pubsub_idl_dd_builtin_no_samples.reader
+    assert reader.default_filter_state.sample_state == dds.SampleState.ANY
+    reader.default_filter_state = dds.SampleState.NOT_READ
+    assert reader.default_filter_state.sample_state == dds.SampleState.NOT_READ
+
+
+def test_datareader_matched_publication_data(pubsub_idl_dd_builtin_no_samples):
+    pubsub = pubsub_idl_dd_builtin_no_samples
+    reader = pubsub.reader
+    writer = pubsub.writer
+    assert len(reader.matched_publications) == 1
+    assert reader.matched_publications[0] == writer.instance_handle
+    assert reader.is_matched_publication_alive(writer.instance_handle)
+    with create_participant() as other_participant:
+        dp_data = reader.matched_publication_participant_data(
+            other_participant.instance_handle)
+        assert dp_data is not None
+        assert dp_data.domain_id == get_test_domain()
+
+
+def test_datareader_find_functions(pubsub_idl_dd_builtin_no_samples):
+    pubsub = pubsub_idl_dd_builtin_no_samples
+    reader = pubsub.reader
+    writer = pubsub.writer
+    ns = get_ns(type(pubsub.data_type))
+    assert ns.DataReader.find_all_by_topic(
+        pubsub.subscriber, pubsub.topic.name) == [reader]
+    assert ns.DataReader.find_by_topic(
+        pubsub.subscriber, pubsub.topic.name) == reader
+
+    qos = dds.DataReaderQos()
+    qos << dds.EntityName("TestReader")
+    named_reader = ns.DataReader(pubsub.subscriber, pubsub.topic, qos)
+    assert ns.DataReader.find_by_name(
+        pubsub.subscriber, "TestReader") == named_reader
+    readers = ns.DataReader.find_all_by_topic(
+        pubsub.subscriber, pubsub.topic.name)
+    assert named_reader, reader in readers
+
+
 def test_datareader_key_value_and_lookup_instance(pubsub_keyed_idl_dd_builtin_no_samples):
     pubsub = pubsub_keyed_idl_dd_builtin_no_samples
     sample = get_sample_value(pubsub.data_type)
@@ -288,6 +414,108 @@ def test_datareader_key_value_and_lookup_instance(pubsub_keyed_idl_dd_builtin_no
     assert keys_equal(result, key_holder)
     assert instance == pubsub.reader.lookup_instance(result)
     assert hash(instance) == hash(pubsub.reader.lookup_instance(result))
+
+
+@pytest.mark.parametrize("test_type_fn", get_test_types_generator())
+def test_datareader_acknowledge_all(shared_participant, test_type_fn):
+    test_type = test_type_fn()
+    reader_protocol = dds.DataReaderProtocol()
+    reader_protocol.rtps_reliable_reader.app_ack_period = dds.Duration.from_milliseconds(
+        100)
+
+    reliability = dds.Reliability()
+    reliability.kind = dds.ReliabilityKind.RELIABLE
+    reliability.acknowledgment_kind = dds.AcknowledgmentKind.APPLICATION_EXPLICIT
+
+    pubsub = PubSubFixture(
+        shared_participant,
+        test_type,
+        writer_policies=[reliability],
+        reader_policies=[reliability, reader_protocol])
+    seq = dds.Uint8Seq()
+    seq.append(250)
+    response_data = dds.AckResponseData(seq)
+    received_response_data = []
+
+    ns = get_ns(type(pubsub.data_type))
+
+    class Listener(ns.NoOpDataWriterListener):
+        def on_application_acknowledgment(self, writer, ack_info):
+            nonlocal received_response_data
+            received_response_data.append(ack_info.response_data)
+
+    pubsub.writer.listener = Listener()
+    sample = get_sample_value(test_type)
+    pubsub.writer.write(sample)
+    pubsub.writer.write(sample)
+
+    wait.for_data(pubsub.reader, 2)
+    sample_identities = [get_info(
+        x).original_publication_virtual_sample_identity for x in pubsub.reader.read()]
+    assert not pubsub.writer.is_sample_app_acknowledged(sample_identities[0])
+    assert not pubsub.writer.is_sample_app_acknowledged(sample_identities[1])
+
+    pubsub.reader.acknowledge_all(response_data)
+    wait.until(lambda: received_response_data != [])
+    pubsub.writer.wait_for_acknowledgments(dds.Duration.from_seconds(10))
+    # This is the easiest way to check the elements of the lists
+    assert list(received_response_data)[0].value == response_data.value
+    assert list(received_response_data)[1].value == response_data.value
+
+    assert pubsub.writer.is_sample_app_acknowledged(sample_identities[0])
+    assert pubsub.writer.is_sample_app_acknowledged(sample_identities[1])
+
+    pubsub.writer.listener = None
+
+
+@pytest.mark.parametrize("test_type_fn", get_test_types_generator())
+def test_datareader_acknowledge_sample(shared_participant, test_type_fn):
+    test_type = test_type_fn()
+    reader_protocol = dds.DataReaderProtocol()
+    reader_protocol.rtps_reliable_reader.app_ack_period = dds.Duration.from_milliseconds(
+        100)
+
+    reliability = dds.Reliability()
+    reliability.kind = dds.ReliabilityKind.RELIABLE
+    reliability.acknowledgment_kind = dds.AcknowledgmentKind.APPLICATION_EXPLICIT
+
+    pubsub = PubSubFixture(
+        shared_participant,
+        test_type,
+        writer_policies=[reliability],
+        reader_policies=[reliability, reader_protocol])
+    seq = dds.Uint8Seq()
+    seq.append(250)
+    response_data = dds.AckResponseData(seq)
+    saved_writer = None
+    ns = get_ns(type(pubsub.data_type))
+
+    class Listener(ns.NoOpDataWriterListener):
+        def on_application_acknowledgment(self, writer, ack_info):
+            nonlocal saved_writer
+            saved_writer = writer
+
+    pubsub.writer.listener = Listener()
+    sample = get_sample_value(test_type)
+    pubsub.writer.write(sample)
+    pubsub.writer.write(sample)
+
+    wait.for_data(pubsub.reader, 2)
+    sample_infos = [get_info(x) for x in pubsub.reader.read()]
+    assert not pubsub.writer.is_sample_app_acknowledged(
+        sample_infos[0].original_publication_virtual_sample_identity)
+    assert not pubsub.writer.is_sample_app_acknowledged(
+        sample_infos[1].original_publication_virtual_sample_identity)
+
+    pubsub.reader.acknowledge_sample(sample_infos[1])
+    wait.until(lambda: saved_writer is not None)
+
+    assert not pubsub.writer.is_sample_app_acknowledged(
+        sample_infos[0].original_publication_virtual_sample_identity)
+    assert pubsub.writer.is_sample_app_acknowledged(
+        sample_infos[1].original_publication_virtual_sample_identity)
+
+    pubsub.writer.listener = None
 
 
 def test_selector(pubsub_idl_dd_builtin_no_samples):
@@ -425,6 +653,7 @@ def test_selector_allows_iterating_by_next_instance_with_state(pubsub_idl_point_
     next_instance = dds.InstanceHandle.nil()
     x_is_1_or_5 = dds.QueryCondition(
         dds.Query(pubsub.reader, "x = 1 or x = 5"), dds.DataState.any)
+    wait.for_data(pubsub.reader, 3)
     while True:
         samples = pubsub.reader.select().condition(
             x_is_1_or_5).next_instance(next_instance).read()
@@ -550,3 +779,54 @@ def test_reader_cast(pubsub_idl_point_no_samples):
     reader = pubsub_idl_point_no_samples.reader
     any_reader = dds.AnyDataReader(reader)
     assert reader == dds.DataReader(any_reader)
+
+
+def read_valid_and_invalid_data_test_impl(pubsub, values, use_selector):
+    writer = pubsub.writer
+    writer.write(values[0:2])
+    writer.dispose_instance(writer.lookup_instance(values[1]))
+    writer.write(values[2:])
+
+    reader = pubsub.reader if not use_selector else pubsub.reader.select()
+    wait.for_samples(reader, 5)
+    data = reader.read_data()
+    assert 4 == len(data)
+    assert data == values
+
+    samples = reader.read()
+    assert 5 == len(samples)
+    d, i = samples[2]
+    assert d is None
+    assert not i.valid
+    assert [d for d, i in samples if i.valid] == values
+    assert [s.data for s in samples if s.info.valid] == values
+
+    with reader.read_loaned() as samples:
+        assert 5 == len(samples)
+        d, i = samples[2]
+        assert d is None
+        assert not i.valid
+
+    assert reader.take_data() == values
+    assert len(reader.read()) == 0
+    assert len(reader.read_data()) == 0
+    assert len(reader.read_loaned()) == 0
+    assert len(reader.take()) == 0
+    assert len(reader.take_data()) == 0
+    assert len(reader.take_loaned()) == 0
+
+@pytest.mark.parametrize("use_selector", [False, True])
+def test_read_valid_and_invalid_data(shared_participant, use_selector):
+    fixture = PubSubFixture(shared_participant, PointIDL)
+    values = [PointIDL(x=1), PointIDL(x=2), PointIDL(x=3), PointIDL(x=3, y=2)]
+    read_valid_and_invalid_data_test_impl(fixture, values, use_selector)
+
+
+@pytest.mark.parametrize("use_selector", [True, False])
+def test_read_valid_and_invalid_data_dd(shared_participant, use_selector):
+    type_support = idl.get_type_support(PointIDLForDD)
+    fixture = PubSubFixture(shared_participant, type_support.dynamic_type)
+    values = [type_support.to_dynamic_data(value) for value in [
+        PointIDLForDD(x=1), PointIDLForDD(x=2), PointIDLForDD(x=3), PointIDLForDD(x=3, y=2)]]
+    read_valid_and_invalid_data_test_impl(fixture, values, use_selector)
+

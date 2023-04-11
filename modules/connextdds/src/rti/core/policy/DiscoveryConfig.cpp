@@ -44,6 +44,34 @@ void init_class_defs(py::class_<DiscoveryConfigBuiltinPluginKindMask>& cls)
 }
 
 template<>
+void init_class_defs(py::class_<DiscoveryConfigBuiltinChannelKindMask>& cls)
+{
+    cls.def_property_readonly_static(
+            "NONE",
+            [](py::object&) {
+                return DiscoveryConfigBuiltinChannelKindMask::none();
+            },
+            "Create a mask with no bits set.");
+    cls.def_property_readonly_static(
+            "ALL",
+            [](py::object&) {
+                return DiscoveryConfigBuiltinChannelKindMask::all();
+            },
+            "Create a mask with all bits set");
+    cls.def_property_readonly_static(
+            "SERVICE_REQUEST",
+            [](py::object&) {
+                return DiscoveryConfigBuiltinChannelKindMask::service_request();
+            },
+            "Enables the ServiceRequest channel, which is required "
+            "by the TopicQuery and locator reachability features. "
+            "Disabling the ServiceRequest channel reduces resource "
+            "consumption including network bandwidth, CPU "
+            "utilization, and memory.");
+}
+
+
+template<>
 void init_class_defs(py::class_<DiscoveryConfig>& cls)
 {
     cls.def(py::init<>(), "Creates the default policy.")
@@ -69,6 +97,17 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                     "The period to assert liveliness for the participant."
                     "\n\n"
                     "This property's getter returns a deep copy.")
+            .def_property(
+                    "participant_announcement_period",
+                    (dds::core::Duration(DiscoveryConfig::*)() const)
+                            & DiscoveryConfig::participant_announcement_period,
+                    (DiscoveryConfig
+                        & (DiscoveryConfig::*) (const dds::core::Duration&) )
+                                & DiscoveryConfig::participant_announcement_period,
+                    "The period at which a participant announces itself to " 
+                    "potential peers when using the Simple Participant " 
+                    "Discovery Protocol 2.0 (SPDP2)"
+                )
             .def_property(
                     "remote_participant_purge_kind",
                     (RemoteParticipantPurgeKind(DiscoveryConfig::*)() const)
@@ -105,6 +144,16 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                     "participant is "
                     "first enabled or when a remote participant is newly "
                     "discovered.")
+            .def_property(
+                    "new_remote_participant_announcements",
+                    (int32_t(DiscoveryConfig::*)() const)
+                            & DiscoveryConfig::
+                                    new_remote_participant_announcements,
+                    (DiscoveryConfig & (DiscoveryConfig::*) (int32_t))
+                            & DiscoveryConfig::
+                                    new_remote_participant_announcements,
+                    "The number of participant announcements sent when a " 
+                    "remote participant is newly discovered.")
             .def_property(
                     "min_initial_participant_announcement_period",
                     (dds::core::Duration(DiscoveryConfig::*)() const)
@@ -238,6 +287,15 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                      & (DiscoveryConfig::*) (const DiscoveryConfigBuiltinPluginKindMask&) )
                             & DiscoveryConfig::builtin_discovery_plugins,
                     "The kind mask for built-in discovery plugins.")
+            .def_property(
+                    "enabled_builtin_channels",
+                    (DiscoveryConfigBuiltinChannelKindMask(DiscoveryConfig::*)()
+                             const)
+                            & DiscoveryConfig::enabled_builtin_channels,
+                    (DiscoveryConfig
+                     & (DiscoveryConfig::*) (const DiscoveryConfigBuiltinChannelKindMask&) )
+                            & DiscoveryConfig::enabled_builtin_channels,
+                    "The mask specifying which built-in channels should be enabled.")
             .def_property(
                     "participant_message_reader_reliability_kind",
                     (dds::core::policy::ReliabilityKind(DiscoveryConfig::*)()
@@ -408,7 +466,16 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                     "locators are reachable from other DomainParticipants."
                     "\n\n"
                     "This property's getter returns a deep copy.")
-#if rti_connext_version_gte(6, 0, 0, 0)
+            .def_property(
+                    "secure_volatile_writer",
+                    (RtpsReliableWriterProtocol & (DiscoveryConfig::*) ())
+                            & DiscoveryConfig::secure_volatile_writer,
+                    (DiscoveryConfig
+                        & (DiscoveryConfig::*) (const RtpsReliableWriterProtocol&) )
+                                & DiscoveryConfig::secure_volatile_writer,
+                    "RTPS protocol-related configuration settings for the RTPS "
+                    "reliable writer associated with the built-in secure "
+                    "volatile writer.")
             .def_property(
                     "secure_volatile_writer_publish_mode",
                     (PublishMode & (DiscoveryConfig::*) ())
@@ -421,6 +488,15 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                     "Publish mode policy for the built-in secure volatile "
                     "writer.")
             .def_property(
+                    "secure_volatile_reader",
+                    (RtpsReliableReaderProtocol & (DiscoveryConfig::*) ())
+                            & DiscoveryConfig::secure_volatile_reader,
+                    (DiscoveryConfig
+                        & (DiscoveryConfig::*) (const RtpsReliableReaderProtocol&) )
+                                & DiscoveryConfig::secure_volatile_reader,
+                    "RTPS reliable reader protocol-related configuration "
+                    "settings for the built-in secure volatile reader.")
+            .def_property(
                     "endpoint_type_object_lb_serialization_threshold",
                     (int32_t(DiscoveryConfig::*)() const)
                             & DiscoveryConfig::
@@ -431,7 +507,17 @@ void init_class_defs(py::class_<DiscoveryConfig>& cls)
                     "Option to reduce the size required to propagate a "
                     "TypeObject "
                     "in Simple Endpoint Discovery.")
-#endif
+            .def_property(
+                    "dns_tracker_polling_period",
+                    (dds::core::Duration(DiscoveryConfig::*)() const)
+                            & DiscoveryConfig::dns_tracker_polling_period,
+                    (DiscoveryConfig
+                        & (DiscoveryConfig::*) (const dds::core::Duration&) )
+                                & DiscoveryConfig::dns_tracker_polling_period,
+                    "Duration that specifies the period used by the DNS "
+                    "tracker to poll the DNS service and check for changes in "
+                    "the hostnames."
+            )
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }
@@ -523,6 +609,20 @@ void process_inits<DiscoveryConfig>(py::module& m, ClassInitList& l)
                 "DiscoveryConfigBuiltinPluginKindMask.NONE");
         return [cls]() mutable {
             init_class_defs<DiscoveryConfigBuiltinPluginKindMask>(cls);
+        };
+    });
+
+    l.push_back([m]() mutable {
+        auto cls = init_mask_type<
+                DiscoveryConfigBuiltinChannelKindMask,
+                uint64_t>(
+                m,
+                "DiscoveryConfigBuiltinChannelKindMask",
+                "Create a DiscoveryConfigBuiltinChannelKindMask equivalent "
+                "to "
+                "DiscoveryConfigBuiltinChannelKindMask.NONE");
+        return [cls]() mutable {
+            init_class_defs<DiscoveryConfigBuiltinChannelKindMask>(cls);
         };
     });
 

@@ -173,7 +173,6 @@ void init_class_defs(py::class_<DataWriterResourceLimits>& cls)
                                     max_active_topic_queries,
                     "Represents the maximum number of active topic queries a "
                     "DataWriter will manage.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "writer_loaned_sample_allocation",
                     (rti::core::AllocationSettings
@@ -198,7 +197,6 @@ void init_class_defs(py::class_<DataWriterResourceLimits>& cls)
                                     initialize_writer_loaned_sample,
                     "Whether or not to initialize loaned samples returned by a "
                     "DataWriter.")
-#endif
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }
@@ -208,12 +206,12 @@ void process_inits<DataWriterResourceLimits>(py::module& m, ClassInitList& l)
 {
     init_dds_safe_enum<DataWriterResourceLimitsInstanceReplacementKind_def>(
             m,
-            "DataWriterResourceLimitsInstaceReplacementKind",
+            "DataWriterResourceLimitsInstanceReplacementKind",
             [](py::object& o) {
                 py::enum_<
                         DataWriterResourceLimitsInstanceReplacementKind::type>(
                         o,
-                        "DataWriterResourceLimitsInstaceReplacementKind")
+                        "DataWriterResourceLimitsInstanceReplacementKind")
                         .value("UNREGISTERED",
                                DataWriterResourceLimitsInstanceReplacementKind::
                                        type::UNREGISTERED,

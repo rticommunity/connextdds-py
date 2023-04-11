@@ -28,8 +28,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_writer_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     local_writer_allocation,
                     "Allocation settings applied to local DataWriters."
@@ -42,8 +42,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_reader_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     local_reader_allocation,
                     "Allocation settings applied to local DataReaders."
@@ -56,8 +56,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_publisher_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     local_publisher_allocation,
                     "Allocation settings applied to local Publisher."
@@ -70,8 +70,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_subscriber_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     local_subscriber_allocation,
                     "Allocation settings applied to local Subscriber."
@@ -84,8 +84,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_topic_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     local_topic_allocation,
                     "Allocation settings applied to local Topic."
@@ -98,8 +98,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_writer_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     remote_writer_allocation,
                     "Allocation settings applied to remote DataWriters."
@@ -112,8 +112,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_reader_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     remote_reader_allocation,
                     "Allocation settings applied to remote DataReaders."
@@ -126,8 +126,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_participant_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     remote_participant_allocation,
                     "Allocation settings applied to remote DomainParticipants."
@@ -140,8 +140,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     matching_writer_reader_pair_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     matching_writer_reader_pair_allocation,
                     "Allocation settings applied to matching local writer and "
@@ -155,8 +155,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     matching_reader_writer_pair_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     matching_reader_writer_pair_allocation,
                     "Allocation settings applied to matching local reader and "
@@ -170,8 +170,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     ignored_entity_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     ignored_entity_allocation,
                     "Allocation settings applied to ignored entities."
@@ -184,8 +184,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     content_filtered_topic_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     content_filtered_topic_allocation,
                     "Allocation settings applied to content filtered topic."
@@ -198,8 +198,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     content_filter_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     content_filter_allocation,
                     "Allocation settings applied to content filter."
@@ -212,8 +212,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     read_condition_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     read_condition_allocation,
                     "Allocation settings applied to read condition pool."
@@ -226,8 +226,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     query_condition_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     query_condition_allocation,
                     "Allocation settings applied to query condition pool."
@@ -240,8 +240,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     outstanding_asynchronous_sample_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     outstanding_asynchronous_sample_allocation,
                     "Allocation settings applied to the maximum number of "
@@ -256,8 +256,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     flow_controller_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     flow_controller_allocation,
                     "Allocation settings applied to flow controllers."
@@ -269,7 +269,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_writer_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     local_writer_hash_buckets,
                     "Hash buckets settings applied to local DataWriters.")
@@ -279,7 +279,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_reader_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     local_reader_hash_buckets,
                     "Hash buckets settings applied to local DataReaders.")
@@ -289,7 +289,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_publisher_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     local_publisher_hash_buckets,
                     "Number of hash buckets for local Publisher.")
@@ -299,7 +299,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_subscriber_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     local_subscriber_hash_buckets,
                     "Number of hash buckets for local Subscriber.")
@@ -309,7 +309,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     local_topic_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     local_topic_hash_buckets,
                     "Number of hash buckets for local Topic.")
@@ -319,7 +319,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_writer_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     remote_writer_hash_buckets,
                     "Number of hash buckets for remote DataWriters.")
@@ -329,7 +329,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_reader_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     remote_reader_hash_buckets,
                     "Number of hash buckets for remote DataReaders.")
@@ -339,7 +339,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_participant_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     remote_participant_hash_buckets,
                     "Number of hash buckets for remote DomainParticipants.")
@@ -349,7 +349,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     matching_writer_reader_pair_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     matching_writer_reader_pair_hash_buckets,
                     "Number of hash buckets for matching local writer and "
@@ -360,7 +360,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     matching_reader_writer_pair_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     matching_reader_writer_pair_hash_buckets,
                     "Number of hash buckets for matching local reader and "
@@ -371,7 +371,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     ignored_entity_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     ignored_entity_hash_buckets,
                     "Number of hash buckets for ignored entities.")
@@ -381,7 +381,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     content_filtered_topic_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     content_filtered_topic_hash_buckets,
                     "Number of hash buckets for content filtered topics.")
@@ -391,7 +391,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     content_filter_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     content_filter_hash_buckets,
                     "Number of hash buckets for content filters.")
@@ -401,7 +401,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     flow_controller_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     flow_controller_hash_buckets,
                     "Number of hash buckets for flow controllers.")
@@ -411,7 +411,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     max_gather_destinations,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     max_gather_destinations,
                     "Maximum number of destinations per RTI Connext send.")
@@ -421,7 +421,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     participant_user_data_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     participant_user_data_max_length,
                     "Maximum length of user data in DomainParticipantQos and "
@@ -432,7 +432,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     topic_data_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     topic_data_max_length,
                     "Maximum length of topic data in TopicQos, "
@@ -445,7 +445,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     publisher_group_data_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     publisher_group_data_max_length,
                     "Maximum length of group data in PublisherQos and "
@@ -456,7 +456,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     subscriber_group_data_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     subscriber_group_data_max_length,
                     "Maximum length of group data in SubscriberQos and "
@@ -467,7 +467,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     writer_user_data_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     writer_user_data_max_length,
                     "Maximum length of user data in DataWriterQos and "
@@ -478,7 +478,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     reader_user_data_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     reader_user_data_max_length,
                     "Maximum length of user data in DataReaderQos and "
@@ -488,7 +488,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                     (int32_t(DomainParticipantResourceLimits::*)() const)
                             & DomainParticipantResourceLimits::max_partitions,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::max_partitions,
                     "Maximum number of partition name strings allowable in a "
                     "Partition.")
@@ -498,7 +498,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     max_partition_cumulative_characters,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     max_partition_cumulative_characters,
                     "Maximum number of combined characters allowable in all "
@@ -510,7 +510,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     type_code_max_serialized_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     type_code_max_serialized_length,
                     "Maximum size of serialized string for type code.")
@@ -520,19 +520,30 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     type_object_max_serialized_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     type_object_max_serialized_length,
                     "The maximum length, in bytes, that the buffer to "
                     "serialize a "
                     "TypeObject can consume.")
             .def_property(
+                    "serialized_type_object_dynamic_allocation_threshold",
+                    (int32_t(DomainParticipantResourceLimits::*)() const)
+                            & DomainParticipantResourceLimits::
+                                    serialized_type_object_dynamic_allocation_threshold,
+                    (DomainParticipantResourceLimits
+                            & (DomainParticipantResourceLimits::*) (int32_t))
+                            & DomainParticipantResourceLimits::
+                                    serialized_type_object_dynamic_allocation_threshold,
+                    "A threshold, in bytes, for dynamic memory allocation for "
+                    "the serialized TypeObject.")
+            .def_property(
                     "type_object_max_deserialized_length",
                     (int32_t(DomainParticipantResourceLimits::*)() const)
                             & DomainParticipantResourceLimits::
                                     type_object_max_deserialized_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     type_object_max_deserialized_length,
                     "The maximum number of bytes that a deserialized "
@@ -544,7 +555,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     deserialized_type_object_dynamic_allocation_threshold,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     deserialized_type_object_dynamic_allocation_threshold,
                     "A threshold, in bytes, for dynamic memory allocation for "
@@ -556,7 +567,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     contentfilter_property_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     contentfilter_property_max_length,
                     "This field is the maximum length of all data related to a "
@@ -567,7 +578,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     channel_seq_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     channel_seq_max_length,
                     "Maximum number of channels that can be specified in "
@@ -579,7 +590,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     channel_filter_expression_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     channel_filter_expression_max_length,
                     "Maximum length of a channel "
@@ -591,7 +602,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     participant_property_list_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     participant_property_list_max_length,
                     "Maximum number of properties associated with the "
@@ -602,7 +613,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     participant_property_string_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     participant_property_string_max_length,
                     "Maximum string length of the properties associated with "
@@ -614,7 +625,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     writer_property_list_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     writer_property_list_max_length,
                     "Maximum number of properties associated with a "
@@ -625,7 +636,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     writer_property_string_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     writer_property_string_max_length,
                     "Maximum string length of the properties associated with a "
@@ -636,7 +647,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     reader_property_list_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     reader_property_list_max_length,
                     "Maximum number of properties associated with a "
@@ -647,7 +658,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     reader_property_string_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     reader_property_string_max_length,
                     "Maximum string length of the properties associated with a "
@@ -658,7 +669,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     max_endpoint_groups,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     max_endpoint_groups,
                     "Maximum number of EndpointGroup allowable in a "
@@ -669,7 +680,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     max_endpoint_group_cumulative_characters,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     max_endpoint_group_cumulative_characters,
                     "Maximum number of combined role_name characters allowed "
@@ -681,7 +692,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     transport_info_list_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     transport_info_list_max_length,
                     "Maximum number of installed transports to send and "
@@ -695,7 +706,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     ignored_entity_replacement_kind,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (IgnoredEntityReplacementKind))
+                            & (DomainParticipantResourceLimits::*) (IgnoredEntityReplacementKind))
                             & DomainParticipantResourceLimits::
                                     ignored_entity_replacement_kind,
                     "Replacement policy for the ignored entities. It sets what "
@@ -711,8 +722,8 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_topic_query_allocation,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (const rti::core::
-                                                                     AllocationSettings&) )
+                            & (DomainParticipantResourceLimits::*) (const rti::
+                                            core::AllocationSettings&) )
                             & DomainParticipantResourceLimits::
                                     remote_topic_query_allocation,
                     "Allocation settings applied to remote TopicQueries."
@@ -724,18 +735,17 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     remote_topic_query_hash_buckets,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     remote_topic_query_hash_buckets,
                     "Number of hash buckets for remote TopicQueries.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "writer_data_tag_list_max_length",
                     (int32_t(DomainParticipantResourceLimits::*)() const)
                             & DomainParticipantResourceLimits::
                                     writer_data_tag_list_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     writer_data_tag_list_max_length,
                     "Maximum number of data tags associated with a DataWriter.")
@@ -745,7 +755,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     writer_data_tag_string_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     writer_data_tag_string_max_length,
                     "Maximum string length of the data tags associated with a "
@@ -756,7 +766,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     reader_data_tag_list_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     reader_data_tag_list_max_length,
                     "Maximum number of data tags associated with a DataReader.")
@@ -766,7 +776,7 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     reader_data_tag_string_max_length,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (int32_t))
+                            & (DomainParticipantResourceLimits::*) (int32_t))
                             & DomainParticipantResourceLimits::
                                     reader_data_tag_string_max_length,
                     "Maximum string length of the data tags associated with a "
@@ -777,13 +787,12 @@ void init_class_defs(py::class_<DomainParticipantResourceLimits>& cls)
                             & DomainParticipantResourceLimits::
                                     shmem_ref_transfer_mode_max_segments,
                     (DomainParticipantResourceLimits
-                     & (DomainParticipantResourceLimits::*) (uint32_t))
+                            & (DomainParticipantResourceLimits::*) (uint32_t))
                             & DomainParticipantResourceLimits::
                                     shmem_ref_transfer_mode_max_segments,
                     "Maximum number of segments created by all DataWriters "
                     "belonging "
                     "to a DomainParticipant.")
-#endif
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

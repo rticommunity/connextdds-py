@@ -22,7 +22,6 @@
 #include "PyDataWriter.hpp"
 #include "PyDataWriterListener.hpp"
 #include "PyTopic.hpp"
-#include "PyTopicInstance.hpp"
 #include "PyTopicListener.hpp"
 #include "PySample.hpp"
 #include "PySharedSamples.hpp"
@@ -126,29 +125,6 @@ DefInitFunc init_type_class(
         py::implicitly_convertible<py::iterable, std::vector<PyTopic<T>>>();
 
         return ([itd, td, t]() mutable { init_topic<T>(itd, td, t); });
-    });
-
-    l.push_back([cls] {
-        py::class_<dds::topic::TopicInstance<T>> ti(cls, "TopicInstance");
-        pyrti::bind_vector<dds::topic::TopicInstance<T>>(
-                cls,
-                "TopicInstanceSeq");
-        py::implicitly_convertible<
-                py::iterable,
-                std::vector<dds::topic::TopicInstance<T>>>();
-
-        return ([ti, cls]() mutable {
-            pyrti::bind_vector<
-                    std::pair<dds::topic::TopicInstance<T>, dds::core::Time>>(
-                    cls,
-                    "TopicInstanceTimestampedSeq");
-            py::implicitly_convertible<
-                    py::iterable,
-                    std::vector<std::pair<
-                            dds::topic::TopicInstance<T>,
-                            dds::core::Time>>>();
-            init_topic_instance<T>(ti);
-        });
     });
 
     l.push_back([cls] {

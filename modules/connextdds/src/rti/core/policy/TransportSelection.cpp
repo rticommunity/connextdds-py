@@ -22,9 +22,9 @@ void init_class_defs(py::class_<TransportSelection>& cls)
     cls.def(py::init<>(), "Creates the default policy.")
             .def(py::init<const std::vector<std::string>&>(),
                  py::arg("enabled_transports"),
-                 "Creates an instance with the sepcified transport aliases.")
+                 "Creates an instance with the specified transport aliases.")
             .def_property(
-                    "enabled_transports",
+                    "value",
                     (std::vector<std::string>(TransportSelection::*)() const)
                             & TransportSelection::enabled_transports,
                     (TransportSelection

@@ -171,6 +171,27 @@ static dds::pub::qos::DataWriterQos get_modified_qos(
     return modified_qos;
 }
 
+IdlDataWriter create_idl_py_writer(
+        const PyPublisher& publisher,
+        const PyTopic<CSampleWrapper>& topic,
+        const dds::pub::qos::DataWriterQos* qos,
+        PyDataWriterListenerPtr<CSampleWrapper>* listener,
+        dds::core::status::StatusMask mask)
+{
+    // This function performs a few additional initialization steps compared to
+    // the C++ constructor:
+    // - Configures support for unbounded types via Qos
+    // - Caches the Python objects required for writing python samples
+    dds::pub::qos::DataWriterQos modified_qos = get_modified_qos(
+            publisher,
+            topic,
+            qos != nullptr ? *qos : publisher.default_datawriter_qos());
+    auto writer = listener == nullptr
+            ? IdlDataWriter(publisher, topic, modified_qos)
+            : IdlDataWriter(publisher, topic, modified_qos, *listener, mask);
+    CPySampleConverter::cache_idl_entity_py_objects(writer, writer.topic());
+    return writer;
+}
 
 static py::object py_key_value(
         IdlDataWriter& writer,
@@ -191,16 +212,10 @@ void init_dds_idl_datawriter_constructors(IdlDataWriterPyClass& cls)
     // - They automatically configure the Qos for unbounded support, if needed
     // - They cache the python objects needed for the py-to-C data conversions
 
-    cls.def(py::init([](const PyPublisher& p,
-                             const PyTopic<CSampleWrapper>& t) {
-                dds::pub::qos::DataWriterQos modified_qos =
-                        get_modified_qos(p, t, p.default_datawriter_qos());
-                auto writer = IdlDataWriter(p, t, modified_qos);
-                CPySampleConverter::cache_idl_entity_py_objects(
-                        writer,
-                        writer.topic());
-                return writer;
-            }),
+    cls.def(py::init(
+                    [](const PyPublisher& p, const PyTopic<CSampleWrapper>& t) {
+                        return create_idl_py_writer(p, t);
+                    }),
             py::arg("pub"),
             py::arg("topic"),
             py::call_guard<py::gil_scoped_release>(),
@@ -211,13 +226,7 @@ void init_dds_idl_datawriter_constructors(IdlDataWriterPyClass& cls)
                              const dds::pub::qos::DataWriterQos& q,
                              PyDataWriterListenerPtr<CSampleWrapper> listener,
                              const dds::core::status::StatusMask& m) {
-                dds::pub::qos::DataWriterQos modified_qos =
-                        get_modified_qos(p, t, q);
-                auto writer = IdlDataWriter(p, t, modified_qos, listener, m);
-                CPySampleConverter::cache_idl_entity_py_objects(
-                        writer,
-                        writer.topic());
-                return writer;
+                return create_idl_py_writer(p, t, &q, &listener, m);
             }),
             py::arg("pub"),
             py::arg("topic"),

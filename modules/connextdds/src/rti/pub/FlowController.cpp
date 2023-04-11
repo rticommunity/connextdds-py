@@ -21,17 +21,17 @@ template<>
 void init_class_defs(py::class_<FlowController>& cls)
 {
     cls.def(py::init([](PyDomainParticipant& dp,
-                        std::string& n,
-                        const FlowControllerProperty& fcp) {
+                             std::string& n,
+                             const FlowControllerProperty& fcp) {
                 return FlowController(dp, n, fcp);
             }),
-            py::arg("participant"),
-            py::arg("name"),
-            py::arg_v(
-                    "token_bucket",
-                    FlowControllerProperty(),
-                    "FlowControllerProperty()"),
-            "Creates a FlowController with specific properties.")
+               py::arg("participant"),
+               py::arg("name"),
+               py::arg_v(
+                       "token_bucket",
+                       FlowControllerProperty(),
+                       "FlowControllerProperty()"),
+               "Creates a FlowController with specific properties.")
             .def_property_readonly(
                     "name",
                     &FlowController::name,
@@ -61,6 +61,10 @@ void init_class_defs(py::class_<FlowController>& cls)
                     "closed",
                     &FlowController::closed,
                     "Whether this FlowController has been closed.")
+            .def_property_readonly_static(
+                    "DEFAULT_FLOW_CONTROLLER_NAME",
+                    [](py::object&) { return FlowController::DEFAULT_NAME; },
+                    "The name of the default FlowController.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

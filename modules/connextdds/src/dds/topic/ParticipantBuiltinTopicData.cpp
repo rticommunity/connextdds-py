@@ -123,6 +123,14 @@ void init_class_defs(py::class_<ParticipantBuiltinTopicData>& cls)
                     "Bitmap of vendor-specific builtin endpoints supported by "
                     "the "
                     "participant.")
+            .def_property_readonly(
+                    "partial_configuration",
+                    [](const ParticipantBuiltinTopicData& p) {
+                        return p->partial_configuration();
+                    },
+                    "Indicates whether the "
+                    "ParticipantBuiltinTopicData only contains bootstrapping "
+                    "information.")
             .def_property_readonly_static(
                     "topic_name",
                     [](py::object&) {

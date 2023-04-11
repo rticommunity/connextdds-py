@@ -207,7 +207,7 @@ def test_idl_types_interoperate_with_dynamic_data(type_fixture: IdlTypeFixture, 
     dd_participant = create_participant()
 
     dd_topic = dds.DynamicData.Topic(
-        dd_participant, f"Example {type_fixture.sample_type}", type_fixture.dynamic_type)
+        dd_participant, f"Example {type_fixture.dynamic_type.name}", type_fixture.dynamic_type)
 
     writer_qos = dd_participant.implicit_publisher.default_datawriter_qos
     writer_qos << dds.Reliability.reliable()
@@ -230,9 +230,8 @@ def test_idl_types_interoperate_with_dynamic_data(type_fixture: IdlTypeFixture, 
 
     # Using this since python doesn't have multiline lambdas
     def get_sent_value():
-        with dd_reader.read() as samples:
-            for sample, _ in samples:
-                return sample
+        data = dd_reader.read_data()
+        return data[0] if len(data) > 0 else None
 
     wait.until_equal(
         ts.to_dynamic_data(type_fixture.default_value), get_sent_value)

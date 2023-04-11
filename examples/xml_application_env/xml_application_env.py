@@ -24,12 +24,11 @@ KVP_TYPE_NAME = "KeyValuePair"
 
 class MyDataReaderListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
-        with reader.take() as samples:
-            for (data, info) in samples:
-                if info.valid:
-                    print(data)
-                else:
-                    print("  Received metadata")
+        for data, info in reader.take():
+            if info.valid:
+                print(data)
+            else:
+                print("  Received metadata")
 
 
 def publish_env(id, writer, kvp_type, env):

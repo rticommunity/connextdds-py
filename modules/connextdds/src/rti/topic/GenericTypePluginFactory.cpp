@@ -14,7 +14,6 @@
 #include <rti/core/constants.hpp>
 
 #include "IdlTypeSupport.hpp"
-#include "PyDynamicTypeMap.hpp"
 
 using namespace rti::core::xtypes;
 using namespace rti::topic::cdr;
@@ -33,27 +32,7 @@ static dds::core::xtypes::ArrayType* create_array_type(
                 "Array type must have at least one dimension");
     }
 
-    dds::core::xtypes::ArrayType *type =
-            factory.create_array(element_type, dimensions[0]);
-
-    if (size > 1) {
-        // PY-41: This is a workaround because GenericTypePluginFactory currently
-        // doesn't have a create_array taking a vector of dimensions.
-        DDS_TypeCode& tc = type->native();
-        tc._data._dimensionsCount = size;
-        RTIOsapiHeap_allocateArray(&tc._data._dimensions, size, DDS_UnsignedLong);
-        if (tc._data._dimensions == NULL) {
-            throw dds::core::OutOfResourcesError(
-                    "Failure to allocate array dimensions");
-        }
-
-        RTIOsapiMemory_copy(
-                (void*) tc._data._dimensions,
-                (const void*) &dimensions[0],
-                size * sizeof(DDS_UnsignedLong));
-    }
-
-    return type;
+    return factory.create_array(element_type, dimensions);
 }
 
 template<>
@@ -300,7 +279,6 @@ void init_class_defs(py::class_<GenericTypePluginFactory>& cls)
 
     cls.def_static("delete_instance", []() {
         GenericTypePluginFactory::delete_instance();
-        PyDynamicTypeMap::finalize();
         DDS_TypeCodeFactory_finalize_instance();
     });
 }

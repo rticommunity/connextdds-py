@@ -62,7 +62,7 @@ def test_big_sub_receives_correct_default_values_from_small_pub(shared_participa
                              topic_name="Mutability", create_reader=False)
     wait.for_discovery(big_fx.reader, small_fx.writer)
 
-    big_sample = BigType(common_member=5, extended_primitive=10,
+    big_sample = BigType(common_member=5, extended_primitive=305419896,
                          extended_optional=20,
                          extended_complex=create_sequence_sample(),
                          extended_enum=Shape.SQUARE)
@@ -94,7 +94,7 @@ def test_union_big_sub_receives_correct_default_values_from_small_pub(shared_par
                              topic_name="Mutability", create_reader=False)
     wait.for_discovery(big_fx.reader, small_fx.writer)
 
-    big_sample = BigUnion(b=BigType(common_member=5, extended_primitive=10,
+    big_sample = BigUnion(b=BigType(common_member=5, extended_primitive=305419896,
                          extended_optional=20,
                          extended_complex=create_sequence_sample(),
                          extended_enum=Shape.SQUARE))

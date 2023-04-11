@@ -1,5 +1,5 @@
 find_package(
-    RTIConnextDDS "7.0.0"
+    RTIConnextDDS "7.1.0"
     REQUIRED
     COMPONENTS
         core

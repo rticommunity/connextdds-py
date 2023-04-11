@@ -38,12 +38,7 @@ void init_class_defs(
     cls.def(
             "set_handler_no_args",
             [](PyReadCondition& rc, std::function<void()>& func) {
-                // PY-41: Temporary workaround until handler() is exposed
-                // in ReadCondition
-                auto workaround_gc =
-                        reinterpret_cast<rti::core::cond::GuardCondition*>(
-                                rc.delegate().get());
-                workaround_gc->handler([func]() {
+                rc.extensions().handler([func]() {
                     py::gil_scoped_acquire acquire;
                     func();
                 });
@@ -54,12 +49,7 @@ void init_class_defs(
     cls.def(
             "reset_handler",
             [](PyReadCondition& rc) {
-                // PY-41: Temporary workaround until reset_handler is exposed
-                // in ReadCondition
-                auto workaround_gc =
-                        reinterpret_cast<rti::core::cond::GuardCondition*>(
-                                rc.delegate().get());
-                workaround_gc->reset_handler();
+                rc.extensions().reset_handler();
             },
             py::call_guard<py::gil_scoped_release>(),
             "Resets the handler for this ReadCondition.");

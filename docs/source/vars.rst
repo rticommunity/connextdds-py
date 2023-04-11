@@ -4,7 +4,7 @@
 
 .. |CONNEXT| replace:: *Connext*
 .. |CONNEXT_HEADING| replace:: Connext
-.. |CONNEXT_currentVersion| replace:: 7.0.0
+.. |CONNEXT_currentVersion| replace:: 7.1.0
 .. |CONNEXT_700Version| replace:: 7.0.0
 .. |RTI_CONNEXT| replace:: *RTI* |CONNEXT|
 .. |RTI_CONNEXT_TM| replace:: *RTI Connext®*

@@ -33,7 +33,6 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls)
                      & (TypeConsistencyEnforcement::*) (TypeConsistencyEnforcementKind))
                             & TypeConsistencyEnforcement::kind,
                     "The enforcement kind.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "ignore_sequence_bounds",
                     (bool (TypeConsistencyEnforcement::*)() const)
@@ -93,7 +92,6 @@ void init_class_defs(py::class_<TypeConsistencyEnforcement>& cls)
                     },
                     "Creates an instance with "
                     "TypeConsistencyEnforcementKind.AUTO_TYPE_COERCION.")
-#endif
             .def_property_readonly_static(
                     "allow_type_coercion",
                     [](py::object&) {
@@ -134,7 +132,6 @@ static void init_type_consistency_enforcement_kind(py::module& m)
                                "as the "
                                "DataReader's type is assignable from the "
                                "DataWriter's type.")
-#if rti_connext_version_gte(6, 0, 0, 0)
                         .value("AUTO_TYPE_COERCION",
                                TypeConsistencyEnforcementKind::type::
                                        AUTO_TYPE_COERCION,
@@ -147,7 +144,6 @@ static void init_type_consistency_enforcement_kind(py::module& m)
                                "other cases, this "
                                "AUTO value will be applied as "
                                "TypeConsistencyKind.ALLOW_TYPE_COERCION.")
-#endif
                         .export_values();
             });
 }

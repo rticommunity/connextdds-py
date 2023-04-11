@@ -311,4 +311,25 @@ def test_multidim_array(types):
     info = data.member_info("myMultiDimArray[0,0,1]")
     assert(info.index == 1)
 
+# Test for PY-30: accessing an enum member defined in a base class failed
+def test_access_enum_in_base_type():
+    enum_type = dds.EnumType("TestEnum", dds.EnumMemberSeq(
+        [dds.EnumMember("A", 0), dds.EnumMember("B", 2)]))
+    base_type = dds.StructType(
+        "Base", dds.MemberSeq([dds.Member("a", enum_type)]))
+    derived_type = dds.StructType(
+        "Derived", base_type, dds.MemberSeq([
+            dds.Member("b", enum_type),
+            dds.Member("enum_array", dds.ArrayType(enum_type, 2))]))
+
+    sample = dds.DynamicData(derived_type)
+    sample["a"] = enum_type["B"] # This failed without the fix for PY-30
+    sample["b"] = enum_type["A"]
+    assert sample["a"] == 2 # This failed without the fix for PY-30
+    assert sample["b"] == 0
+
+    sample["enum_array[0]"] = enum_type["A"]
+    sample["enum_array[1]"] = enum_type["B"]
+    assert sample["enum_array[0]"] == 0
+    assert sample["enum_array[1]"] == 2
 

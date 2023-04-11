@@ -20,6 +20,20 @@ template<>
 void init_class_defs(py::class_<Property>& cls)
 {
     cls.def(py::init<>(), "Creates an empty Property container.")
+            .def(py::init([](py::dict& d,
+                             bool propagate) {
+                     Property p;
+                     for (auto it : d) {
+                         p.set({py::cast<std::string>(it.first),
+                                py::cast<std::string>(it.second)}, 
+                                propagate);
+                     }
+                     return p;
+                 }),
+                 py::arg("entries"),
+                 py::arg("propagate") = false,
+                 "Creates a Property container with entries from a dictionary "
+                 "of entries")
             .def(py::init([](const std::vector<
                                      std::pair<std::string, std::string>>
                                      init_list,
@@ -56,10 +70,8 @@ void init_class_defs(py::class_<Property>& cls)
                     [](Property& p,
                        const std::string& k,
                        const std::string& v,
-                       bool prop) {
-                        return p.set(
-                                std::pair<std::string, std::string>(k, v),
-                                prop);
+                       bool propagate) {
+                        return p.set({k, v}, propagate);
                     },
                     py::arg("key"),
                     py::arg("value"),
@@ -71,7 +83,20 @@ void init_class_defs(py::class_<Property>& cls)
                        const std::vector<std::pair<std::string, std::string>> v,
                        bool prop) { return p.set(v.begin(), v.end(), prop); },
                     py::arg("entries"),
-                    py::arg("propagate"),
+                    py::arg("propagate") = false,
+                    "Adds a range of properties.")
+            .def(
+                    "set",
+                    [](Property& p, py::dict& entries, bool propagate) {
+                        for (auto kv : entries) {
+                            std::string key = py::cast<std::string>(kv.first);
+                            std::string value =
+                                    py::cast<std::string>(kv.second);
+                            p.set({key, value}, propagate);
+                        }
+                    },
+                    py::arg("entries"),
+                    py::arg("propagate") = false,
                     "Adds a range of properties.")
             .def("remove",
                  &Property::remove,
@@ -92,15 +117,13 @@ void init_class_defs(py::class_<Property>& cls)
             .def("__getitem__", &Property::get)
             .def("__setitem__",
                  [](Property& p, const std::string& k, const std::string& v) {
-                     return p.set(std::pair<std::string, std::string>(k, v));
+                     return p.set({k, v});
                  })
             .def("__setitem__",
                  [](Property& p,
                     const std::string& k,
                     const std::pair<std::string, bool>& v) {
-                     return p.set(
-                             std::pair<std::string, std::string>(k, v.first),
-                             v.second);
+                     return p.set({k, v.first}, v.second);
                  })
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");

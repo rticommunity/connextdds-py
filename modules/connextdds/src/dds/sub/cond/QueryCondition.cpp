@@ -29,7 +29,6 @@ void init_class_defs(
             py::arg("query"),
             py::arg("status"),
             "Create a QueryCondition.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](const dds::sub::Query& q,
                              const dds::sub::status::DataState& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -48,7 +47,6 @@ void init_class_defs(
                  py::arg("handler"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Create a QueryCondition.")
-#endif
             .def(py::init([](const dds::sub::Query& q,
                              const rti::sub::status::DataStateEx& ds) {
                      return PyQueryCondition(
@@ -58,7 +56,6 @@ void init_class_defs(
                  py::arg("status_ex"),
                  py::call_guard<py::gil_scoped_release>(),
                  "Create a QueryCondition.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def(py::init([](const dds::sub::Query& q,
                              const rti::sub::status::DataStateEx& ds,
                              std::function<void(PyICondition*)>& func) {
@@ -87,21 +84,6 @@ void init_class_defs(
                  }),
                  py::arg("condition"),
                  "Cast a condition to a QueryCondition.")
-#else
-            .def(py::init([](PyICondition& py_c) {
-                     auto c = py_c.get_condition();
-                     auto qcd = rtiboost::dynamic_pointer_cast<
-                             rti::sub::cond::QueryConditionImpl>(c.delegate());
-                     if (qcd.get() == nullptr)
-                         throw dds::core::InvalidDowncastError(
-                                 "Could not create QueryCondtion from "
-                                 "Condition");
-                     return PyQueryCondition(qcd.get());
-                 }),
-                 py::arg("condition"),
-                 py::call_guard<py::gil_scoped_release>(),
-                 "Cast a condition to a QueryCondition.")
-#endif
             .def_property_readonly(
                     "expression",
                     [](PyQueryCondition& qc) {
@@ -141,14 +123,22 @@ void init_class_defs(
                     "Test for inequality.");
 
     cls.def(
+            "set_handler",
+            [](PyQueryCondition& qc, std::function<void(PyICondition*)>& func) {
+                qc->handler([func](dds::core::cond::Condition c) {
+                    py::gil_scoped_acquire acquire;
+                    auto py_c =
+                            dds::core::polymorphic_cast<PyQueryCondition>(c);
+                    func(&py_c);
+                });
+            },
+            py::arg("func"),
+            py::call_guard<py::gil_scoped_release>(),
+            "Set a handler function for this QueryCondition.");
+    cls.def(
             "set_handler_no_args",
             [](PyQueryCondition& rc, std::function<void()>& func) {
-                // PY-41: Temporary workaround until handler() is exposed
-                // in ReadCondition
-                auto workaround_gc =
-                        reinterpret_cast<rti::core::cond::GuardCondition*>(
-                                rc.delegate().get());
-                workaround_gc->handler([func]() {
+                rc.extensions().handler([func]() {
                     py::gil_scoped_acquire acquire;
                     func();
                 });
@@ -159,12 +149,7 @@ void init_class_defs(
     cls.def(
             "reset_handler",
             [](PyQueryCondition& rc) {
-                // PY-41: Temporary workaround until reset_handler is exposed
-                // in ReadCondition
-                auto workaround_gc =
-                        reinterpret_cast<rti::core::cond::GuardCondition*>(
-                                rc.delegate().get());
-                workaround_gc->reset_handler();
+                rc.extensions().reset_handler();
             },
             py::call_guard<py::gil_scoped_release>(),
             "Resets the handler for this QueryCondition.");

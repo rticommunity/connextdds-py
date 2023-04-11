@@ -61,7 +61,7 @@ void init_class_defs(py::class_<TransportUnicast>& cls)
                  py::arg("settings"),
                  "Creates an instance with the specified settings.")
             .def_property(
-                    "settings",
+                    "value",
                     (std::vector<TransportUnicastSettings>(
                             TransportUnicast::*)() const)
                             & TransportUnicast::settings,

@@ -43,7 +43,8 @@ async def publisher_run(fixture: PubSubFixture, num_samples: int = 100000):
 async def take_data_async_base(
     reader: dds.DataReader,
     condition = None,
-    num_samples: int = 10
+    num_samples: int = 10,
+    get_x = lambda data: data.x
 ):
     count = 0
     saved_x = -1
@@ -51,8 +52,8 @@ async def take_data_async_base(
     expected_increment = 1 if condition is None else 2
     async for data in reader.take_data_async(condition=condition):
         if saved_x != -1:
-            assert data.x == saved_x + expected_increment
-        saved_x = data.x
+            assert get_x(data) == saved_x + expected_increment
+        saved_x = get_x(data)
         count += expected_increment
         if count == num_samples:
             break
@@ -69,6 +70,31 @@ async def take_data_async_basic(shared_participant):
 # async fixtures (extra packages are required)
 def test_take_data_async_basic(shared_participant):
     rti.asyncio.run(take_data_async_basic(shared_participant))
+
+
+# Basic test for DynamicData
+async def take_data_async_basic_dd(participant1, participant2):
+    dd_fixture = PubSubFixture(
+        participant1,
+        idl.get_type_support(Point).dynamic_type,
+        create_writer=False)
+    regular_fixture = PubSubFixture(
+        participant2,
+        Point,
+        create_reader=False)
+
+    wait.for_discovery(dd_fixture.reader, regular_fixture.writer)
+    pub_task = asyncio.create_task(publisher_run(regular_fixture))
+    await take_data_async_base(dd_fixture.reader, get_x=lambda data: data['x'])
+    pub_task.cancel()
+
+# For each async test we define a function that can run it synchronously. If
+# many more async tests are added, we can use one of pytest's
+# async fixtures (extra packages are required)
+
+
+def test_take_data_async_basic_dd(shared_participant, participant):
+    rti.asyncio.run(take_data_async_basic_dd(participant, shared_participant))
 
 
 async def take_data_async_w_selector(shared_participant):

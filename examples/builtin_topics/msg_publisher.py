@@ -29,23 +29,23 @@ class BuiltinParticipantListener(
 
     def on_data_available(self, reader):
         # only process previously unseen Participants
-        with reader.select().state(dds.DataState.new_instance).take() as samples:
-            for sample in filter(lambda s: s.info.valid, samples):
-                # Convert Participant user data to a string
-                user_data = sample.data.user_data.value
-                user_auth = "".join((chr(c) for c in user_data))
-                key = sample.data.key
+        samples = reader.select().state(dds.DataState.new_instance).take()
+        for sample in filter(lambda s: s.info.valid, samples):
+            # Convert Participant user data to a string
+            user_data = sample.data.user_data.value
+            user_auth = "".join((chr(c) for c in user_data))
+            key = sample.data.key
 
-                print("Built-in Reader: found participant")
-                print("\tkey->'{:08X} {:08X} {:08X}'".format(*key.value[:3]))
-                print("\tuser_data->'{}'".format(user_auth))
-                print("\tinstance_handle: {}".format(sample.info.instance_handle))
+            print("Built-in Reader: found participant")
+            print("\tkey->'{:08X} {:08X} {:08X}'".format(*key.value[:3]))
+            print("\tuser_data->'{}'".format(user_auth))
+            print("\tinstance_handle: {}".format(sample.info.instance_handle))
 
-                # Check if the password match.Otherwise, ignore the participant.
-                if user_auth != self.expected_password:
-                    print("Bad authorization, ignoring participant")
-                    participant = reader.subscriber.participant
-                    participant.ignore_participant(sample.info.instance_handle)
+            # Check if the password match. Otherwise, ignore the participant.
+            if user_auth != self.expected_password:
+                print("Bad authorization, ignoring participant")
+                participant = reader.subscriber.participant
+                participant.ignore_participant(sample.info.instance_handle)
 
 
 # Create a Subscription listener, print discovered DataReader information
@@ -57,19 +57,19 @@ class BuiltinSubscriptionListener(
 
     def on_data_available(self, reader):
         # only process previously unseen DataReaders
-        with reader.select().state(dds.DataState.new_instance).take() as samples:
-            for sample in filter(lambda s: s.info.valid, samples):
-                participant_key = sample.data.participant_key
-                key = sample.data.key
+        samples = reader.select().state(dds.DataState.new_instance).take()
+        for sample in filter(lambda s: s.info.valid, samples):
+            participant_key = sample.data.participant_key
+            key = sample.data.key
 
-                print("Built-in Reader: found subscriber")
-                print(
-                    "\tparticipant_key->'{:08X} {:08X} {:08X}'".format(
-                        *participant_key.value[0:3]
-                    )
+            print("Built-in Reader: found subscriber")
+            print(
+                "\tparticipant_key->'{:08X} {:08X} {:08X}'".format(
+                    *participant_key.value[0:3]
                 )
-                print("\tkey->'{:08X} {:08X} {:08X}'".format(*key.value[0:3]))
-                print("instance_handle: {}".format(sample.info.instance_handle))
+            )
+            print("\tkey->'{:08X} {:08X} {:08X}'".format(*key.value[0:3]))
+            print("instance_handle: {}".format(sample.info.instance_handle))
 
 
 def publisher_main(domain_id, sample_count):

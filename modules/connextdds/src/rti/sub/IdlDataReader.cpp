@@ -59,7 +59,7 @@ py::object invoke_py_sample_function(
     return py_function(type_support, sample_ptr);
 }
 
-static std::vector<py::object> convert_data(
+static py::list convert_data(
         PyDataReader<CSampleWrapper>& dr,
         dds::sub::LoanedSamples<CSampleWrapper>&& samples)
 {
@@ -67,19 +67,23 @@ static std::vector<py::object> convert_data(
     auto valid_samples = rti::sub::valid_data(std::move(samples));
 
     py::gil_scoped_acquire acquire;
-    // Important: the vector of py::object is declared within the scoped acquire
-    // so that its destructor can also run within the scope of the GIL.
-    std::vector<py::object> py_samples;
-    py_samples.reserve(max_length);
-
-    // This is the type support function that converts from C data
-    // to the user-facing python object.
+    py::list py_samples(max_length);
     auto obj_cache = get_py_objects(dr);
+    size_t i = 0;
     for (auto& sample : valid_samples) {
-        py_samples.push_back(invoke_py_sample_function(
+        // Create a Python sample from the C one
+        py_samples[i++] = invoke_py_sample_function(
                 obj_cache->create_py_sample_func,
                 obj_cache->type_support,
-                sample.data()));
+                sample.data());
+    }
+
+    if (i < max_length) {
+        // If any samples had invalid data, we need to shrink the list;
+        // SetSlice with a null itemlist argument does that.
+        if (PyList_SetSlice(py_samples.ptr(), i, max_length, nullptr) != 0) {
+            throw py::error_already_set();
+        }
     }
 
     return py_samples;
@@ -88,21 +92,24 @@ static std::vector<py::object> convert_data(
 using DataAndInfoVector =
         std::vector<std::pair<py::object, dds::sub::SampleInfo>>;
 
-static DataAndInfoVector convert_data_w_info(
+static py::list convert_data_w_info(
         PyDataReader<CSampleWrapper>& dr,
         dds::sub::LoanedSamples<CSampleWrapper>&& samples)
 {
-    size_t max_length = samples.length();
-    DataAndInfoVector py_samples;
-    py_samples.reserve(max_length);
-
+    size_t length = samples.length();
     py::gil_scoped_acquire acquire;
+    py::list py_samples(length);
+    //     py_samples.reserve(max_length);
+
     // This is the type support function that converts from C data
     // to the user-facing python object.
     auto obj_cache = get_py_objects(dr);
+
+    size_t i = 0;
     for (auto& sample : samples) {
+        const auto& info = sample.info();
         py::object py_data;
-        if (sample.info().valid()) {
+        if (info.valid()) {
             py_data = invoke_py_sample_function(
                     obj_cache->create_py_sample_func,
                     obj_cache->type_support,
@@ -110,7 +117,7 @@ static DataAndInfoVector convert_data_w_info(
         } else {
             py_data = py::none();
         }
-        py_samples.push_back({ py_data , sample.info() });
+        py_samples[i++] = obj_cache->create_py_data_info_sample(py_data, info);
     }
 
     return py_samples;
@@ -262,6 +269,52 @@ static dds::sub::qos::DataReaderQos get_modified_qos(
     return modified_qos;
 }
 
+PyIdlDataReader create_idl_py_reader(
+        const PySubscriber& subscriber,
+        const PyTopic<CSampleWrapper>& topic,
+        const PyContentFilteredTopic<CSampleWrapper>& cft,
+        const dds::sub::qos::DataReaderQos* qos,
+        PyDataReaderListenerPtr<CSampleWrapper>* listener,
+        const dds::core::status::StatusMask& mask)
+{
+    // This function performs a few additional initialization steps compared to
+    // the C++ constructors:
+    // - Configures support for unbounded types via Qos
+    // - Caches the Python objects required for converting Python/C samples in
+    //   the reader read operations (and other operations)
+
+    auto modified_qos = get_modified_qos(
+            subscriber,
+            cft == dds::core::null ? topic : cft.topic(),
+            qos != nullptr ? *qos : subscriber.default_datareader_qos());
+
+    PyIdlDataReader reader = dds::core::null;
+    if (cft == dds::core::null) {
+        reader = listener != nullptr
+                ? PyIdlDataReader(
+                        subscriber,
+                        topic,
+                        modified_qos,
+                        *listener,
+                        mask)
+                : PyIdlDataReader(subscriber, topic, modified_qos);
+    } else {
+        reader = listener != nullptr
+                ? PyIdlDataReader(
+                        subscriber,
+                        cft,
+                        modified_qos,
+                        *listener,
+                        mask)
+                : PyIdlDataReader(subscriber, cft, modified_qos);
+    }
+
+    CPySampleConverter::cache_idl_entity_py_objects(
+            reader,
+            reader.topic_description());
+    return reader;
+}
+
 
 void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
 {
@@ -271,13 +324,7 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
     // - They cache the python objects needed for the C-to-py data conversions
     cls.def(py::init([](const PySubscriber& s,
                              const PyTopic<CSampleWrapper>& t) {
-                auto modified_qos =
-                        get_modified_qos(s, t, s.default_datareader_qos());
-                auto reader = PyIdlDataReader(s, t, modified_qos);
-                CPySampleConverter::cache_idl_entity_py_objects(
-                        reader,
-                        reader.topic_description());
-                return reader;
+                return create_idl_py_reader(s, t);
             }),
             py::arg("sub"),
             py::arg("topic"),
@@ -289,13 +336,13 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
                              const dds::sub::qos::DataReaderQos& q,
                              PyDataReaderListenerPtr<CSampleWrapper> listener,
                              const dds::core::status::StatusMask& m) {
-                auto modified_qos = get_modified_qos(s, t, q);
-                auto reader =
-                        PyIdlDataReader(s, t, modified_qos, listener, m);
-                CPySampleConverter::cache_idl_entity_py_objects(
-                        reader,
-                        reader.topic_description());
-                return reader;
+                return create_idl_py_reader(
+                        s,
+                        t,
+                        dds::core::null,
+                        &q,
+                        &listener,
+                        m);
             }),
             py::arg("sub"),
             py::arg("topic"),
@@ -311,16 +358,7 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
     cls.def(py::init(
                     [](const PySubscriber& s,
                             const PyContentFilteredTopic<CSampleWrapper>& cft) {
-                        auto modified_qos = get_modified_qos(
-                                s,
-                                cft.topic(),
-                                s.default_datareader_qos());
-                        auto reader =
-                                PyIdlDataReader(s, cft, modified_qos);
-                        CPySampleConverter::cache_idl_entity_py_objects(
-                                reader,
-                                reader.topic_description());
-                        return reader;
+                        return create_idl_py_reader(s, dds::core::null, cft);
                     }),
             py::arg("sub"),
             py::arg("cft"),
@@ -332,13 +370,13 @@ void init_dds_idl_datareader_constructors(IdlDataReaderPyClass& cls)
                              const dds::sub::qos::DataReaderQos& q,
                              PyDataReaderListenerPtr<CSampleWrapper> listener,
                              const dds::core::status::StatusMask& m) {
-                auto modified_qos = get_modified_qos(s, cft.topic(), q);
-                auto reader =
-                        PyIdlDataReader(s, cft, modified_qos, listener, m);
-                CPySampleConverter::cache_idl_entity_py_objects(
-                        reader,
-                        reader.topic_description());
-                return reader;
+                return create_idl_py_reader(
+                        s,
+                        dds::core::null,
+                        cft,
+                        &q,
+                        &listener,
+                        m);
             }),
             py::arg("sub"),
             py::arg("cft"),
@@ -381,15 +419,17 @@ void init_dds_datareader_selector_read_methods<CSampleWrapper>(
             "settings.");
 
     selector.def(
-            "_read_native",
+            "read_loaned",
             read_selector_native,
             py::call_guard<py::gil_scoped_release>(),
-            "(Advanced) Read data in C format");
+            "(Advanced) Read data as a collection of loaned data in C "
+            "format and info objects based on Selector settings");
     selector.def(
-            "_take_native",
+            "take_loaned",
             take_selector_native,
             py::call_guard<py::gil_scoped_release>(),
-            "(Advanced) Read data in C format");
+            "(Advanced) Take data as a collection of loaned data in C "
+            "format and info objects based on Selector settings");
 }
 
 static void init_csamplewrapper_loaned_samples(IdlDataReaderPyClass& cls)
@@ -413,6 +453,8 @@ static void init_csamplewrapper_loaned_samples(IdlDataReaderPyClass& cls)
 template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
 {
+    init_csamplewrapper_loaned_samples(cls);
+
     // These constructors have a specific implementation for IDL types
     init_dds_idl_datareader_constructors(cls);
 
@@ -501,18 +543,17 @@ void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls)
             "Retrieve the instance handle that corresponds to an instance "
             "key_holder");
 
-
-    init_csamplewrapper_loaned_samples(cls);
-
-    cls.def("_take_native",
+    cls.def("take_loaned",
             take_native,
             py::call_guard<py::gil_scoped_release>(),
-            "(Advanced) Take data in C format");
+            "(Advanced) Take all data as a collection of loaned data in C "
+            "format and info objects");
 
-    cls.def("_read_native",
+    cls.def("read_loaned",
             read_native,
             py::call_guard<py::gil_scoped_release>(),
-            "(Advanced) Read data in C format");
+            "(Advanced) Read all data as a collection of loaned data in C format "
+            "and info objects");
 }
 
 } // namespace pyrti

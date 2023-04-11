@@ -7,7 +7,7 @@ IDL to Python mapping
 ---------------------
 
 If you're not familiar with IDL and DDS data types, you can read and complete the
-exercises in the `RTI Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_,
+exercises in the `RTI Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_,
 chapter "3. Data Types".
 
 You can generate your Python data types from IDL (or XML) using **rtiddsgen**:

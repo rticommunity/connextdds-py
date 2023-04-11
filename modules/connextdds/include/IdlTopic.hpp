@@ -45,6 +45,7 @@ inline PyIdlTopic create_idl_py_topic(
         PyDomainParticipant& participant,
         const ::std::string& topic_name,
         py::object& type,
+        const char *type_name = nullptr,
         const dds::topic::qos::TopicQos* qos = nullptr,
         PyTopicListenerPtr<rti::topic::cdr::CSampleWrapper> listener = nullptr,
         const dds::core::status::StatusMask& mask =
@@ -59,8 +60,15 @@ inline PyIdlTopic create_idl_py_topic(
     rti::topic::cdr::CTypePlugin* plugin =
             get_type_plugin_from_type_support(type_support);
 
+    // release the GIL for the coming Core operations
+    py::gil_scoped_release release;
+
     // Register the plugin with this Topic's participant
-    plugin->register_type(participant);
+    if (type_name == nullptr) {
+        plugin->register_type(participant);
+    } else {
+        plugin->register_type(participant, type_name);
+    }
 
     auto topic = PyIdlTopic(
             dds::core::construct_from_native_tag_t(),
@@ -68,13 +76,13 @@ inline PyIdlTopic create_idl_py_topic(
                     rti::topic::detail::no_register_tag_t(),
                     participant,
                     topic_name,
-                    plugin->type_name().c_str(),
+                    type_name != nullptr ? type_name : plugin->type_name().c_str(),
                     qos,
                     listener,
                     mask));
 
+    py::gil_scoped_acquire acquire;
     if (listener != nullptr) {
-        py::gil_scoped_acquire acquire;
         py::cast(listener).inc_ref();
     }
 

@@ -21,6 +21,8 @@ namespace pyrti {
 template<>
 void init_class_defs(py::class_<Cookie>& cls)
 {
+    cls.def(py::init<>(), "Creates an empty Cookie.");
+
     cls.def(py::init<dds::core::vector<uint8_t>&>(), py::arg("bytes"), "Cookie from bytes.")
             .def_property_readonly(
                     "value",

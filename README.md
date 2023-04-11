@@ -11,15 +11,15 @@
 <p align="center">
   <em>A full Connext DDS binding for Python</em>
   <br />
-  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/index.html"><strong>Explore the documentation »</strong></a>
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/api/connext_dds/api_python/index.html"><strong>Explore the documentation »</strong></a>
   <br />
-  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html">Getting Started</a>
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html">Getting Started</a>
   ·
-  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/building.html">Install</a>
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/api/connext_dds/api_python/building.html">Install</a>
   ·
-  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/overview.html">API Overview</a>
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/api/connext_dds/api_python/overview.html">API Overview</a>
   ·
-  <a href="https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/quick.html">API Reference</a>
+  <a href="https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/api/connext_dds/api_python/quick.html">API Reference</a>
   ·
   <a href="https://github.com/rticommunity/rticonnextdds-examples">Examples</a>
 </p>
@@ -28,13 +28,13 @@
 
 ## Documentation
 
-- The [Connext Getting Started Guide](https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html)
+- The [Connext Getting Started Guide](https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html)
 helps you install the software and run your first RTI Connext Python application while learning general concepts of Connext.
 
-- The [Connext Python API Reference](https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/index.html)
+- The [Connext Python API Reference](https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/api/connext_dds/api_python/index.html)
 provides additional examples, an overview of the API and the API reference.
 
-- Additional Connext DDS documentation, including the User's Manual is available at the [Connext Community Portal](https://community.rti.com/static/documentation/).
+- Additional Connext DDS documentation, including the User's Manual is available at the [Connext Community Portal](https://community.rti.com/documentation/).
 
 ## Hello World Example
 
@@ -110,6 +110,6 @@ rti.asyncio.run(print_data())
 ## Building and Installing
 
 The Connext Python API is currently provided as buildable source. See
-[Building and Installing](https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/api/connext_dds/api_python/building.html) in the Connext DDS API Reference for instructions.
+[Building and Installing](https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/api/connext_dds/api_python/building.html) in the Connext DDS API Reference for instructions.
 
 A future release will provide a pre-built pip distribution.

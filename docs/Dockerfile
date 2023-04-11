@@ -9,6 +9,6 @@ ARG USER_UID
 
 RUN adduser $USER_NAME -u $USER_UID
 COPY requirements.txt .
-RUN /opt/python/cp36-cp36m/bin/pip install -r requirements.txt
+RUN /opt/python/cp38-cp38/bin/pip install -r requirements.txt
 
-ENV PATH=/home/jenkins/.local/bin:/opt/python/cp36-cp36m/bin:$PATH
+ENV PATH=/home/jenkins/.local/bin:/opt/python/cp38-cp38/bin:$PATH

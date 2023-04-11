@@ -35,7 +35,11 @@ void init_class_defs(py::class_<AcknowledgmentInfo>& cls)
             .def_property_readonly(
                     "response_data",
                     &AcknowledgmentInfo::response_data,
-                    "User data payload of application-level acknowledgment.");
+                    "User data payload of application-level acknowledgment.")
+            .def_property_readonly(
+                    "cookie",
+                    &AcknowledgmentInfo::cookie,
+                    "Cookie value of the acknowledgment.");
 }
 
 template<>

@@ -16,6 +16,7 @@
 #include "PyAnyDataReader.hpp"
 #include "PyDataReader.hpp"
 #include "PyDomainParticipantListener.hpp"
+#include "IdlTypeSupport.hpp"
 #include <rti/rti.hpp>
 
 using namespace dds::domain;
@@ -453,6 +454,14 @@ void init_class_defs(
                     py::call_guard<py::gil_scoped_release>(),
                     "Registers a DynamicType with specific serialization "
                     "properties.")
+            .def_static(
+                    "register_idl_type",
+                    register_idl_type,
+                    py::arg("type"),
+                    py::arg("registered_type_name"),
+                    py::call_guard<py::gil_scoped_acquire>(),
+                    "Registers a python class so it can be used in XML-based "
+                    "applications and referred to by its registered name.")
             .def(
                     "unregister_type",
                     [](PyDomainParticipant& dp, const std::string& name) {
@@ -793,7 +802,6 @@ void init_class_defs(
                     py::arg("handles"),
                     py::call_guard<py::gil_scoped_release>(),
                     "Ignore a list of DataReaders specified by their handles.")
-#ifndef _MSC_VER
             .def(
                     "find_topics",
                     [](PyDomainParticipant& dp) {
@@ -803,7 +811,6 @@ void init_class_defs(
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Find all Topics in the DomainParticipant.")
-#endif
             .def(
                     "discovered_topics",
                     [](const PyDomainParticipant& dp) {
@@ -1008,6 +1015,39 @@ void init_class_defs(
                     py::call_guard<py::gil_scoped_release>(),
                     "Find a FlowController configured in this "
                     "DomainParticipant.")
+            .def(
+                    "discovered_participant_subject_name",
+                    [](PyDomainParticipant& dp, 
+                        const dds::core::InstanceHandle& handle) {                 
+                        return rti::domain::discovered_participant_subject_name(
+                                dp,
+                                handle);
+                    },
+                    py::arg("handle"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Returns the entity name for the specified "
+                    "DomainParticipant InstanceHandle.")
+            .def(
+                    "discovered_participants_from_subject_name",
+                    [](PyDomainParticipant& dp, 
+                        const rti::core::optional_value<std::string>
+                                &subject_name) {
+                            return rti::domain::discovered_participants_from_subject_name(
+                                    dp,
+                                    subject_name);
+                    },
+                    py::arg("subject_name"),
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Returns the list of InstanceHandles corresponding to"
+                    "participants with the given entity name.")
+            .def( 
+                    "banish_ignored_participants",
+                    [](PyDomainParticipant& dp) {
+                        rti::domain::banish_ignored_participants(dp);
+                    },
+                    py::call_guard<py::gil_scoped_release>(),
+                    "Prevents ignored remote DomainParticipants from receiving "
+                    "traffic from the local DomainParticipant.")
             .def(py::self == py::self,
                  py::call_guard<py::gil_scoped_release>(),
                  "Test for equality.")

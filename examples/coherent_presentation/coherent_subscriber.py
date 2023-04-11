@@ -11,11 +11,9 @@ except NameError:
 # The listener for a coherent set will only output when a set is received
 class CoherentListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
-        with reader.take() as samples:
-            print("Received updates:")
-            for sample in filter(lambda s: s.info.valid, samples):
-                data = sample.data
-                print(" {} = {};".format(data["field"], data["value"]))
+        print("Received updates:")
+        for data in reader.take_data():
+            print(" {} = {};".format(data["field"], data["value"]))
 
 
 def subscriber_main(domain_id, sample_count):

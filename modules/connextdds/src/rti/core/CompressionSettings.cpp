@@ -12,8 +12,6 @@
 
 #include "PyConnext.hpp"
 
-#if rti_connext_version_gte(6, 1, 0, 0)
-
 #include <rti/core/PolicySettings.hpp>
 #include "PySafeEnum.hpp"
 #include "PyMaskType.hpp"
@@ -74,41 +72,62 @@ template<>
 void init_class_defs(py::class_<CompressionSettings>& cls)
 {
     cls.def(py::init<>(),
-            "Create a CompressionSettings object with default settings.")
-            .def(
-                    py::init<const CompressionIdMask>(),
+               "Create a CompressionSettings object with default settings.")
+            .def(py::init<const CompressionIdMask>(),
                     py::arg("compression_ids"),
                     "Creates an instance with the given compression_ids.")
-            .def(
-                    py::init<const CompressionIdMask,
-                        const uint32_t,
-                        const int32_t>(),
+            .def(py::init<
+                         const CompressionIdMask,
+                         const uint32_t,
+                         const int32_t>(),
                     py::arg("compression_ids"),
                     py::arg("writer_compression_level"),
                     py::arg("writer_compression_threshold"),
                     "Creates an instance with the given compression_ids, "
-                    " writer_compression_level and writer_compression_threshold.")
+                    " writer_compression_level and "
+                    "writer_compression_threshold.")
             .def_property(
                     "compression_ids",
-                    (CompressionIdMask (CompressionSettings::*)() const)
+                    (CompressionIdMask(CompressionSettings::*)() const)
                             & CompressionSettings::compression_ids,
-                    (CompressionSettings (CompressionSettings::*) (CompressionIdMask))
+                    (CompressionSettings(CompressionSettings::*)(
+                            CompressionIdMask))
                             & CompressionSettings::compression_ids,
                     "Compression ID settings.")
             .def_property(
                     "writer_compression_level",
-                    (uint32_t (CompressionSettings::*)() const)
+                    (uint32_t(CompressionSettings::*)() const)
                             & CompressionSettings::writer_compression_level,
-                    (CompressionSettings (CompressionSettings::*) (uint32_t))
+                    (CompressionSettings(CompressionSettings::*)(uint32_t))
                             & CompressionSettings::writer_compression_level,
                     "Writer compression level.")
             .def_property(
                     "writer_compression_threshold",
-                    (int32_t (CompressionSettings::*)() const)
+                    (int32_t(CompressionSettings::*)() const)
                             & CompressionSettings::writer_compression_threshold,
-                    (CompressionSettings (CompressionSettings::*) (int32_t))
+                    (CompressionSettings(CompressionSettings::*)(int32_t))
                             & CompressionSettings::writer_compression_threshold,
                     "Writer compression threshold")
+            .def_property_readonly_static(
+                    "COMPRESSION_LEVEL_DEFAULT",
+                    [](py::object&) {
+                        return CompressionSettings::compression_level_default();
+                    },
+                    "Default compression settings.")
+            .def_property_readonly_static(
+                    "COMPRESSION_LEVEL_BEST_COMPRESSION",
+                    [](py::object&) {
+                        return CompressionSettings::
+                                compression_level_best_compression();
+                    },
+                    "Best compression settings.")
+            .def_property_readonly_static(
+                    "COMPRESSION_LEVEL_BEST_SPEED",
+                    [](py::object&) {
+                        return CompressionSettings::
+                                compression_level_best_speed();
+                    },
+                    "Best speed settings.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }
@@ -132,5 +151,3 @@ void process_inits<CompressionSettings>(py::module& m, ClassInitList& l)
 }
 
 }  // namespace pyrti
-
-#endif

@@ -27,16 +27,16 @@ void init_class_defs(py::class_<GroupData>& cls)
                     "value",
                     (const std::vector<uint8_t> (GroupData::*)() const)
                             & GroupData::value,
-                    (std::vector<
-                             uint8_t> & (GroupData::*) (std::vector<uint8_t>&) const)
-                            & GroupData::value,
+                    [](GroupData& gd, const std::vector<uint8_t>& v) {
+                       return gd.value(v.begin(), v.end());
+                    },
                     "The byte sequence of this GroupData.")
             .def(
                     "__iter__",
                     [](const GroupData& gd) {
                         return py::make_iterator(
-                                gd.value().begin(),
-                                gd.value().end());
+                                gd.begin(),
+                                gd.end());
                     },
                     py::keep_alive<0, 1>())
             .def(py::self == py::self, "Test for equality.")

@@ -28,7 +28,7 @@ void init_class_defs(py::class_<ReaderDataLifecycle>& cls)
                  "Creates an instance with the specified nowriter and "
                  "disposed-samples purge delays.")
             .def_property(
-                    "autopurge_unregistered_instances_delay",
+                    "autopurge_nowriter_samples_delay",
                     (dds::core::Duration(ReaderDataLifecycle::*)() const)
                             & ReaderDataLifecycle::
                                     autopurge_nowriter_samples_delay,
@@ -69,6 +69,19 @@ void init_class_defs(py::class_<ReaderDataLifecycle>& cls)
                     "InstanceStateKind.NOT_ALIVE_DISPOSED."
                     "\n\n"
                     "This property's getter returns a deep copy.")
+            .def_property(
+                    "autopurge_nowriter_instances_delay",
+                    [](const ReaderDataLifecycle& rdl) {
+                        return rdl->autopurge_nowriter_instances_delay();
+                    },
+                    [](ReaderDataLifecycle& rdl, const dds::core::Duration& d) {
+                        rdl->autopurge_nowriter_instances_delay(d);
+                    },
+                    "Minimum duration for which the DDSDataReader will " 
+                    "maintain information about a received instance once its "
+                    "instance_state becomes "
+                    "DDS_NOT_ALIVE_NO_WRITERS_INSTANCE_STATE and there are no "
+                    "samples for the instance in the DataReader queue.")
             .def_property_readonly_static(
                     "no_auto_purge",
                     [](py::object&) {

@@ -25,7 +25,7 @@ void init_class_defs(py::class_<DataWriterProtocol>& cls)
                     (rti::core::Guid(DataWriterProtocol::*)() const)
                             & DataWriterProtocol::virtual_guid,
                     (DataWriterProtocol
-                     & (DataWriterProtocol::*) (const rti::core::Guid&) )
+                            & (DataWriterProtocol::*) (const rti::core::Guid&) )
                             & DataWriterProtocol::virtual_guid,
                     "The virtual GUID of the DataWriter. This property uses "
                     "value "
@@ -39,14 +39,14 @@ void init_class_defs(py::class_<DataWriterProtocol>& cls)
                     "The RTPS object ID of the DataWriter.")
             .def_property(
                     "push_on_write",
-                    (bool (DataWriterProtocol::*)() const)
+                    (bool(DataWriterProtocol::*)() const)
                             & DataWriterProtocol::push_on_write,
                     (DataWriterProtocol & (DataWriterProtocol::*) (bool) )
                             & DataWriterProtocol::push_on_write,
                     "Determines whether a sample is pushed on a call to write.")
             .def_property(
                     "disable_positive_acks",
-                    (bool (DataWriterProtocol::*)() const)
+                    (bool(DataWriterProtocol::*)() const)
                             & DataWriterProtocol::disable_positive_acks,
                     (DataWriterProtocol & (DataWriterProtocol::*) (bool) )
                             & DataWriterProtocol::disable_positive_acks,
@@ -54,7 +54,7 @@ void init_class_defs(py::class_<DataWriterProtocol>& cls)
                     "acknowledgments from matched DataReaders.")
             .def_property(
                     "disable_inline_keyhash",
-                    (bool (DataWriterProtocol::*)() const)
+                    (bool(DataWriterProtocol::*)() const)
                             & DataWriterProtocol::disable_inline_keyhash,
                     (DataWriterProtocol & (DataWriterProtocol::*) (bool) )
                             & DataWriterProtocol::disable_inline_keyhash,
@@ -63,7 +63,7 @@ void init_class_defs(py::class_<DataWriterProtocol>& cls)
                     "sample.")
             .def_property(
                     "serialize_key_with_dispose",
-                    (bool (DataWriterProtocol::*)() const)
+                    (bool(DataWriterProtocol::*)() const)
                             & DataWriterProtocol::serialize_key_with_dispose,
                     (DataWriterProtocol & (DataWriterProtocol::*) (bool) )
                             & DataWriterProtocol::serialize_key_with_dispose,
@@ -72,7 +72,7 @@ void init_class_defs(py::class_<DataWriterProtocol>& cls)
                     "wire with dispose samples.")
             .def_property(
                     "propagate_app_ack_with_no_response",
-                    (bool (DataWriterProtocol::*)() const)
+                    (bool(DataWriterProtocol::*)() const)
                             & DataWriterProtocol::
                                     propagate_app_ack_with_no_response,
                     (DataWriterProtocol & (DataWriterProtocol::*) (bool) )
@@ -87,13 +87,24 @@ void init_class_defs(py::class_<DataWriterProtocol>& cls)
                     (RtpsReliableWriterProtocol & (DataWriterProtocol::*) ())
                             & DataWriterProtocol::rtps_reliable_writer,
                     (DataWriterProtocol
-                     & (DataWriterProtocol::*) (const RtpsReliableWriterProtocol&) )
+                            & (DataWriterProtocol::*) (const RtpsReliableWriterProtocol&) )
                             & DataWriterProtocol::rtps_reliable_writer,
                     "RTPS protocol-related configuration settings for the RTPS "
                     "reliable writer associated to a DataWriter. This "
                     "parameter only "
                     "has effect if both the writer and the matching reader are "
                     "configured with ReliabilityKind.RELIABLE.")
+            .def_property(
+                    "initial_virtual_sequence_number",
+                    (rti::core::SequenceNumber(DataWriterProtocol::*)())
+                            & DataWriterProtocol::
+                                    initial_virtual_sequence_number,
+                    (DataWriterProtocol
+                            & (DataWriterProtocol::*) (const rti::core::
+                                            SequenceNumber&) )
+                            & DataWriterProtocol::
+                                    initial_virtual_sequence_number,
+                    "The initial virtual sequence number of the DataWriter.")
             .def(py::self == py::self)
             .def(py::self != py::self);
 }

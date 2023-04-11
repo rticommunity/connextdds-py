@@ -21,7 +21,7 @@ template<>
 void init_class_defs(py::class_<PublishMode>& cls)
 {
     cls.def(py::init<>(),
-            "Creates a PublishMode qos policy of synchronous kind.")
+               "Creates a PublishMode qos policy of synchronous kind.")
             .def_property(
                     "kind",
                     (PublishModeKind(PublishMode::*)() const)
@@ -47,9 +47,7 @@ void init_class_defs(py::class_<PublishMode>& cls)
             .def(py::self != py::self, "Test for inequality.")
             .def_property_readonly_static(
                     "synchronous",
-                    [](py::object&) {
-                        return PublishMode::Synchronous();
-                    },
+                    [](py::object&) { return PublishMode::Synchronous(); },
                     "Creates a PublishMode qos policy of synchronous kind.")
             .def_static(
                     "asynchronous",
@@ -73,7 +71,13 @@ void init_class_defs(py::class_<PublishMode>& cls)
                     py::arg("priority"),
                     "Creates a PublishMode qos policy of asynchronous kind "
                     "with "
-                    "specific flow controller and priority.");
+                    "specific flow controller and priority.")
+            .def_property_readonly_static(
+                    "PUBLICATION_PRIORITY_UNDEFINED",
+                    [](py::object&) {
+                        return DDS_PUBLICATION_PRIORITY_UNDEFINED;
+                    },
+                    "The default value for the priority.");
 }
 
 template<>

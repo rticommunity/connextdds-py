@@ -54,6 +54,17 @@ void init_class_defs(py::class_<Presentation>& cls)
                             & Presentation::ordered_access,
                     "Controls whether ordered access is supported within the "
                     "access_scope.")
+            .def_property(
+                    "drop_incomplete_coherent_set",
+                    [](const Presentation& p) {
+                        return p.extensions().drop_incomplete_coherent_set();
+                    },
+                    [](Presentation& p, bool b) {
+                        p.extensions().drop_incomplete_coherent_set(b);
+                    },
+                    "Indicates whether or not a DataReader should drop samples "
+                    "from an incomplete coherent set"
+            )
             .def_static(
                     "group_access_scope",
                     &Presentation::GroupAccessScope,

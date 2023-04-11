@@ -39,7 +39,6 @@ void init_class_defs(py::class_<Durability>& cls)
                     "Get/set whether a DataReader should receive samples "
                     "directly "
                     "from a TRANSIENT or PERSISTENT DataWriter.")
-#if rti_connext_version_gte(6, 1, 0, 0)
             .def_property(
                     "writer_depth",
                     [](Durability& d) { return d->writer_depth(); },
@@ -54,7 +53,6 @@ void init_class_defs(py::class_<Durability>& cls)
                         return rti::core::policy::auto_writer_depth();
                     },
                     "The default value for Durability.writer_depth.")
-#endif
             .def_property_readonly_static(
                     "volatile",
                     [](py::object&) {

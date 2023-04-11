@@ -43,8 +43,10 @@ def same_elements(a, b):
 
 def check_expected_data(reader: dds.DataReader, expected_samples: list):
     wait.for_data(reader, count=len(expected_samples))
-    samples = reader.take_valid()
-    assert same_elements([s.data for s in samples], expected_samples)
+    samples = reader.read_data()
+    assert same_elements([s for s in samples], expected_samples)
+    samples = reader.take_data()
+    assert same_elements([s for s in samples], expected_samples)
 
 
 def get_point_from_idl_type():
@@ -115,5 +117,11 @@ def test_dynamic_data_pub_sub_create_entities(type_fixture):
 
 def test_dynamic_data_pub_sub(pubsub):
     sample = get_sample_point(pubsub.data_type)
+    pubsub.writer.write(sample)
+    check_expected_data(pubsub.reader, [sample])
+
+
+def test_writer_create_data(pubsub):
+    sample = pubsub.writer.create_data()
     pubsub.writer.write(sample)
     check_expected_data(pubsub.reader, [sample])

@@ -16,7 +16,7 @@ each other through *Topics*. The data that the :class:`DataReader` and
 *Topics* are identified by a name, and they are associated with a type and a
 :class:`DomainParticipant`.
 
-The following code creates a *Topic* named "Car Position" for a type ``Point``:
+The following code creates a :class:`Topic` named "Car Position" for a type ``Point``:
 
 .. code-block:: python
 

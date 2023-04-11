@@ -83,26 +83,26 @@ template<>
 void init_class_defs(py::class_<ThreadSettings>& cls)
 {
     cls.def(py::init<>(),
-            "Create a ThreadSettings object with default settings.")
+               "Create a ThreadSettings object with default settings.")
             .def(py::init<
                          ThreadSettingsKindMask,
                          int32_t,
                          int32_t,
                          dds::core::vector<int32_t>,
                          ThreadSettingsCpuRotationKind::type>(),
-                 py::arg("mask"),
-                 py::arg("priority"),
-                 py::arg("stack_size"),
-                 py::arg("cpu_list"),
-                 py::arg("cpu_rotation"),
-                 "Create a ThreadSettings object with the specified "
-                 "parameters.")
+                    py::arg("mask"),
+                    py::arg("priority"),
+                    py::arg("stack_size"),
+                    py::arg("cpu_list"),
+                    py::arg("cpu_rotation"),
+                    "Create a ThreadSettings object with the specified "
+                    "parameters.")
             .def_property(
                     "mask",
                     (ThreadSettingsKindMask(ThreadSettings::*)() const)
                             & ThreadSettings::mask,
                     (ThreadSettings
-                     & (ThreadSettings::*) (ThreadSettingsKindMask))
+                            & (ThreadSettings::*) (ThreadSettingsKindMask))
                             & ThreadSettings::mask,
                     "Get/set a copy of the thread settings mask.")
             .def_property(
@@ -134,9 +134,11 @@ void init_class_defs(py::class_<ThreadSettings>& cls)
                     (ThreadSettingsCpuRotationKind(ThreadSettings::*)() const)
                             & ThreadSettings::cpu_rotation,
                     (ThreadSettings
-                     & (ThreadSettings::*) (ThreadSettingsCpuRotationKind))
+                            & (ThreadSettings::*) (ThreadSettingsCpuRotationKind))
                             & ThreadSettings::cpu_rotation,
-                    "Get/set a copy of the thread settings mask.");
+                    "Get/set a copy of the thread settings mask.")
+            .def(py::self == py::self)
+            .def(py::self != py::self);
 }
 
 template<>

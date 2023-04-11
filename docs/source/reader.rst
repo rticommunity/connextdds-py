@@ -43,7 +43,6 @@ and ``read_data`` keeps it so it can be accessed again.)
 To also access the meta-data associated with each data sample, use
 :meth:`DataReader.take`  or :meth:`DataReader.read`:
 
-
 .. code-block:: python
 
     for data, info in reader.take():
@@ -135,16 +134,8 @@ thread, and should not block or perform CPU-heavy operations.
 Special DataReaders
 -------------------
 
-This section applies to *DataReaders* for the :ref:`topic:Special Topics`, whose
-reading API is different from that of regular *DataReaders*.
+In addition to the class :class:`DataReader`, there are a few separate
+ *DataReader* classes for certain types:
 
-Unlike :class:`DataReader`, *DataReaders* for the special *Topics* (such as :class:`DynamicData.DataReader`)
-don't define ``take_data()``, ``read_data()``, ``take_data_async()``, or ``take_async()``.
-
-Also, when you read a special *Topic*, the objects returned by
-``take()`` or ``read()`` are loaned; that is, they contain memory that is
-owned by the *DataReader*, and they can't be used after the collection of
-samples is destroyed.
-
-A normal :class:`DataReader` on the other hand returns new objects with no
-lifecycle restrictions.
+* For ``DynamicData`` *DataReaders*: :class:`DataReader.Topic` (see :ref:`types:DynamicType and DynamicData`)
+* For the built-in discovery *Topics*: :class:`ParticipantBuiltinTopicData.DataReader`, :class:`SubscriptionBuiltinTopicData.DataReader`, :class:`PublicationBuiltinTopicData.DataReader`, :class:`TopicBuiltinTopicData.DataReader`

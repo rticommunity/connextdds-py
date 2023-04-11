@@ -35,17 +35,17 @@ class Sequence(ctypes.Structure):
     valid sequence type with an element type"""
 
     _fields_ = [
-        ("_owned", DDS_Boolean),
         ("_contiguous_buffer", ctypes.c_void_p),
         ("_discontiguous_buffer", ctypes.c_void_p),
+        ("_read_token1", ctypes.c_void_p),
+        ("_read_token2", ctypes.c_void_p),
         ("_maximum", ctypes.c_uint32),
         ("_length", ctypes.c_uint32),
         ("_sequence_init", ctypes.c_int32),
-        ("_read_token1", ctypes.c_void_p),
-        ("_read_token2", ctypes.c_void_p),
+        ("_owned", DDS_Boolean),
         ("_elementAllocParams", DDS_SeqElementTypeAllocationParams_t),
-        ("_elementAllocParams", DDS_SeqElementTypeDeallocationParams_t),
         ("_absolute_maximum", ctypes.c_uint32),
+        ("_elementAllocParams", DDS_SeqElementTypeDeallocationParams_t),
     ]
 
     def __getitem__(self, index: int):

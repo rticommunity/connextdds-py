@@ -53,17 +53,11 @@ void init_namespace_rti_core(py::module& m, pyrti::ClassInitList& l, pyrti::DefI
     pyrti::process_inits<TransportInfo>(m, l);
     pyrti::process_inits<TransportMulticastSettings>(m, l);
     pyrti::process_inits<VendorId>(m, l);
-#if rti_connext_version_gte(6, 0, 0, 0)
     pyrti::process_inits<pyrti::PyThreadContext>(m, l);
-#endif
-#if rti_connext_version_gte(6, 1, 0, 0)
-#ifndef _MSC_VER
     pyrti::process_inits<DataReaderResourceLimitsInstanceReplacementSettings>(m, l);
-#endif
     pyrti::process_inits<CompressionSettings>(m, l);
     pyrti::process_inits<CoherentSetInfo>(m, l);
     pyrti::process_inits<QosPrintFormat>(m, l);
-#endif
 
     init_namespace_rti_core_cond(m, l, v);
     init_namespace_rti_core_policy(m, l, v);

@@ -133,6 +133,17 @@ void init_class_defs(py::class_<BuiltinTopicReaderResourceLimits>& cls)
                     "store "
                     "fragments.")
             .def_property(
+                    "max_fragmented_samples_per_remote_writer",
+                    (int32_t(BuiltinTopicReaderResourceLimits::*)() const)
+                            & BuiltinTopicReaderResourceLimits::
+                                    max_fragmented_samples_per_remote_writer,
+                    (BuiltinTopicReaderResourceLimits
+                     & (BuiltinTopicReaderResourceLimits::*) (int32_t))
+                            & BuiltinTopicReaderResourceLimits::
+                                    max_fragmented_samples_per_remote_writer,
+                    "The maximum number of samples per remote writer for which "
+                    "a built-in topic reader may store fragments.")
+            .def_property(
                     "max_fragments_per_sample",
                     (int32_t(BuiltinTopicReaderResourceLimits::*)() const)
                             & BuiltinTopicReaderResourceLimits::

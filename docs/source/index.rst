@@ -18,7 +18,7 @@ Python.
 Getting Started
 ===============
 
-The `RTI Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_
+The `RTI Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_
 helps you install the software and run your first RTI Connext Python application
 while learning general concepts of Connext.
 

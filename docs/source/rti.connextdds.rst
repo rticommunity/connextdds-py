@@ -11,4 +11,4 @@ list of the most relevant ones, see :ref:`quick:Quick Reference`.
    :members:
    :undoc-members:
    :show-inheritance:
-
+   :special-members:

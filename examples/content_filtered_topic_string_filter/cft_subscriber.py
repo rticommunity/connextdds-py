@@ -18,9 +18,8 @@ import textwrap
 # Process data with a listener
 class CftListener(dds.DynamicData.NoOpDataReaderListener):
     def on_data_available(self, reader):
-        with reader.take() as samples:
-            for sample in filter(lambda s: s.info.valid, samples):
-                print(sample.data)
+        for data in reader.take_data():
+            print(data)
 
 
 def subscriber_main(domain_id, sample_count, is_cft):

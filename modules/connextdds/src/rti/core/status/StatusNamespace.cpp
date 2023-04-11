@@ -27,4 +27,5 @@ void init_namespace_rti_core_status(py::module& m, pyrti::ClassInitList& l, pyrt
     pyrti::process_inits<ReliableWriterCacheChangedStatus>(m, l);
     pyrti::process_inits<SampleLostState>(m, l);
     pyrti::process_inits<ServiceRequestAcceptedStatus>(m, l);
+    pyrti::process_inits<InvalidLocalIdentityAdvanceNoticeStatus>(m, l);
 }

@@ -1,5 +1,5 @@
 find_package(
-    RTIConnextDDS "7.0.0"
+    RTIConnextDDS "7.1.0"
     REQUIRED
     COMPONENTS
         core
@@ -37,7 +37,6 @@ add_library(
     connextdds
     SHARED
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/Constants.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyDynamicTypeMap.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/PyAsyncioExecutor.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/InitMisc.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/misc/DDSSTLBinds.cpp"
@@ -171,6 +170,7 @@ add_library(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/status/SampleRejectedState.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/status/StatusMask.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/status/LivelinessLostStatus.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/status/InvalidLocalIdentityAdvanceNoticeStatus.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/cond/Condition.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/cond/CondNamespace.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/dds/core/cond/StatusCondition.cpp"

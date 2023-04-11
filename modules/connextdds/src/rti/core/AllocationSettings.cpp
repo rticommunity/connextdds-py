@@ -61,6 +61,8 @@ void init_class_defs(py::class_<AllocationSettings>& cls)
                     "from a "
                     "different Qos value.")
 #endif
+            .def(py::self == py::self)
+            .def(py::self != py::self)
             ;
 }
 

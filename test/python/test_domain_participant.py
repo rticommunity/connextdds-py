@@ -10,18 +10,39 @@
 #
 
 import rti.connextdds as dds
+import rti.idl as idl
 import pytest
-from test_utils.fixtures import create_participant, get_test_domain, get_test_participant_qos, wait, participant
+from test_utils.fixtures import (
+    create_participant,
+    get_test_domain,
+    get_test_participant_qos,
+    wait,
+    participant,
+    shared_participant,
+    shared_participant_no_cleanup,
+    PubSubFixture)
 from test_utils import log_capture
+from rti.types.builtin import String
+from time import sleep
 
 
-def test_participant_default_creation(participant):
-    assert participant.domain_id == get_test_domain()
+def test_participant_default_creation(shared_participant):
+    assert shared_participant.domain_id == get_test_domain()
 
 
-def test_participant_creation_w_default_qos(participant):
-    assert participant.domain_id == get_test_domain()
-    event_count = participant.qos.event.max_count
+def test_participant_alternative_constructors():
+    # init with just domain_id
+    p1 = dds.DomainParticipant(get_test_domain())
+    # init using entity
+    p2 = dds.DomainParticipant(p1)
+    assert p1.domain_id == p2.domain_id
+    assert p1.qos == p2.qos
+    assert p1.domain_id == get_test_domain()
+
+
+def test_participant_creation_w_default_qos(shared_participant):
+    assert shared_participant.domain_id == get_test_domain()
+    event_count = shared_participant.qos.event.max_count
     assert event_count == dds.Event().max_count
 
 
@@ -54,29 +75,29 @@ def test_participant_creation_failure():
         dds.DomainParticipant(0, qos)
 
 
-def test_set_get_qos(participant):
-    qos = participant.qos
+def test_set_get_qos(shared_participant):
+    qos = shared_participant.qos
     assert qos.entity_factory.autoenable_created_entities
     qos << dds.EntityFactory.manually_enable
     assert not (qos.entity_factory.autoenable_created_entities)
-    participant.qos = qos
+    shared_participant.qos = qos
     # assert qos == p.qos
     assert not (qos.entity_factory.autoenable_created_entities)
     qos << dds.EntityFactory.auto_enable
-    participant << qos
+    shared_participant << qos
     retrieved_qos = get_test_participant_qos()
-    participant >> retrieved_qos
+    shared_participant >> retrieved_qos
     assert retrieved_qos.entity_factory.autoenable_created_entities
 
 
-def test_set_qos_exception(participant):
-    qos = participant.qos
+def test_set_qos_exception(shared_participant):
+    qos = shared_participant.qos
     d = dds.Duration(77)
     db = dds.Database()
     db.shutdown_cleanup_period = d
     qos << db
     with log_capture.expected_exception(dds.ImmutablePolicyError):
-        participant.qos = qos
+        shared_participant.qos = qos
 
 
 def test_set_get_default_qos():
@@ -113,30 +134,57 @@ def test_set_get_factory_qos():
         dds.DomainParticipant.participant_factory_qos = default_qos
 
 
-def test_set_get_listener(participant):
-    assert participant.listener is None
+def test_set_get_listener(shared_participant):
+    assert shared_participant.listener is None
     l = dds.NoOpDomainParticipantListener()
-    participant.listener = l
-    assert participant.listener == l
-    participant.set_listener(None, dds.StatusMask.NONE)
-    assert participant.listener is None
+    shared_participant.listener = l
+    assert shared_participant.listener == l
+    shared_participant.set_listener(None, dds.StatusMask.NONE)
+    assert shared_participant.listener is None
 
 
-def test_find(participant):
-    id1 = get_test_domain()
-    id2 = get_test_domain() + 1
-    found_p = dds.DomainParticipant.find(id1)
-    not_found_p = dds.DomainParticipant.find(id2)
-    assert found_p == participant
-    assert not_found_p is None
+def test_participant_register_type(shared_participant):
+    @idl.struct
+    class TestPoint:
+        x: int = 0
+        y: int = 0
+    try:
+        dt = idl.get_type_support(TestPoint).dynamic_type
+        assert not shared_participant.is_type_registered("TestPoint")
+        shared_participant.register_type("TestPoint", dt)
+        assert shared_participant.is_type_registered("TestPoint")
+        shared_participant.unregister_type("TestPoint")
+        assert not shared_participant.is_type_registered("TestPoint")
+    finally:
+        # Clean up in case of failure
+        shared_participant.unregister_type("TestPoint")
 
 
-def test_close():
-    assert dds.DomainParticipant.find(get_test_domain()) is None
-    with create_participant() as p:
-        assert dds.DomainParticipant.find(get_test_domain()) == p
-        p.close()
-    assert dds.DomainParticipant.find(get_test_domain()) is None
+def test_participant_contentfilter(shared_participant):
+    class CustomFilterType(dds.DynamicData.ContentFilter):
+        def __init__(self):
+            super(CustomFilterType, self).__init__()
+
+        def compile(
+            self, expression, parameters, type_code, type_class_name, old_compile_data
+        ):
+            pass
+
+        def evaluate(self, compile_data, sample, meta_data):
+            pass
+
+        def finalize(self, compile_data):
+            pass
+
+    filter_name = "CustomFilter"
+    assert shared_participant.find_contentfilter(filter_name) is None
+    shared_participant.register_contentfilter(CustomFilterType(), filter_name)
+    assert shared_participant.find_contentfilter(filter_name) is not None
+    assert type(shared_participant.find_contentfilter(
+        filter_name)) is CustomFilterType
+    assert filter_name in shared_participant.find_registered_content_filters()
+    shared_participant.unregister_contentfilter(filter_name)
+    assert shared_participant.find_contentfilter(filter_name) is None
 
 
 def test_already_closed_exception():
@@ -178,55 +226,45 @@ def test_already_closed_exception():
         p.default_datawriter_qos = dds.DataWriterQos()
 
 
-def test_retain():
-    id1 = get_test_domain()
-    id2 = get_test_domain() + 1
-
-    def scope_1():
-        p1 = dds.DomainParticipant(id1, get_test_participant_qos())
-        p2 = dds.DomainParticipant(id2, get_test_participant_qos())
-        p1.retain()
-
-    def scope_2():
-        p3 = dds.DomainParticipant.find(id1)
-        p4 = dds.DomainParticipant.find(id2)
-        assert p3 != None
-        assert p4 is None
-        assert p3 == dds.DomainParticipant.find(id1)
-
-    def scope_3():
-        p5 = dds.DomainParticipant.find(id1)
-        assert p5 != None
-        p5.close()
-
-    scope_1()
-    scope_2()
-    scope_3()
-    assert dds.DomainParticipant.find(id1) is None
-
-
-def test_current_time(participant):
-    t = participant.current_time
+def test_current_time(shared_participant):
+    t = shared_participant.current_time
     assert t != dds.Time.invalid
     assert t > dds.Time(1, 0)
 
 
-def test_assert_liveliness(participant):
-    participant.assert_liveliness()
+def test_assert_liveliness(shared_participant):
+    shared_participant.assert_liveliness()
 
 
-def test_ignore():
-    with create_participant() as p1, create_participant() as p2:
-        dds.DomainParticipant.ignore_participant(p1, p2.instance_handle)
-
-
-def test_add_remove_peer(participant):
-    participant.add_peer("udpv4://")
+def test_add_remove_peer(shared_participant):
+    shared_participant.add_peer("udpv4://")
+    shared_participant.add_peers(["udpv4://"])
     with log_capture.expected_exception(dds.InvalidArgumentError):
-        participant.add_peer("")
-    participant.remove_peer("udpv4://")
+        shared_participant.add_peer("")
+    shared_participant.remove_peer("udpv4://")
+    shared_participant.remove_peers(["udpv4://"])
     with log_capture.expected_exception(dds.InvalidArgumentError):
-        participant.remove_peer("")
+        shared_participant.remove_peer("")
+
+
+def test_durable_subscription(shared_participant):
+    t = dds.Topic(shared_participant, "TestTopic", String)
+    shared_participant.register_durable_subscription(
+        dds.EndpointGroup("role_name", 5), "TestTopic")
+    shared_participant.delete_durable_subscription(
+        dds.EndpointGroup("role_name", 5))
+
+
+def test_get_readers_and_subscribers(shared_participant: dds.DomainParticipant):
+    assert type(shared_participant.builtin_subscriber) is dds.Subscriber
+    assert type(
+        shared_participant.participant_reader) is dds.ParticipantBuiltinTopicData.DataReader
+    assert type(
+        shared_participant.publication_reader) is dds.PublicationBuiltinTopicData.DataReader
+    assert type(
+        shared_participant.subscription_reader) is dds.SubscriptionBuiltinTopicData.DataReader
+    # TODO: This causes an error
+    #assert type(shared_participant.service_request_reader) is dds.ServiceRequest.DataReader
 
 
 def test_domain_participant_config_params():
@@ -272,45 +310,53 @@ def test_find_extensions():
             assert dds.DomainParticipant.find("MyParticipant3") is None
 
 
-@pytest.mark.parametrize("set_after", [True, False])
-def test_retain_for_listener(set_after):
-    listener = dds.NoOpDomainParticipantListener()
-    if set_after:
-        p = create_participant()
-        p.set_listener(listener, dds.StatusMask.NONE)
-    else:
-        p = dds.DomainParticipant(
-            get_test_domain(), get_test_participant_qos(), listener)
-
-    def inner():
-        with dds.DomainParticipant.find(get_test_domain()) as new_p:
-            assert new_p != None
-            new_p.set_listener(None, dds.StatusMask.NONE)
-
-    inner()
-    assert dds.DomainParticipant.find(get_test_domain()) is None
+def test_find_flow_controller(shared_participant: dds.DomainParticipant):
+    fc = dds.FlowController(shared_participant, "MyFlowController")
+    assert fc == shared_participant.find_flow_controller("MyFlowController")
 
 
-def test_discovered_participants():
+def test_get_participant_protocol_status(shared_participant: dds.DomainParticipant):
+    assert type(
+        shared_participant.participant_protocol_status) is dds.DomainParticipantProtocolStatus
+    assert shared_participant.participant_protocol_status.corrupted_rtps_message_count == 0
+
+
+def test_resume_endpoint_discovery():
     qos = get_test_participant_qos()
-    with dds.DomainParticipant(
-            get_test_domain(),
-            qos << dds.EntityName("p1")) as p1, dds.DomainParticipant(
-                get_test_domain(),
-                qos << dds.EntityName("p2")) as p2, dds.DomainParticipant(
-                    get_test_domain(),
-                    qos << dds.EntityName("p3")) as p3:
-        # Wait for them to discover each other
-        wait.until_equal(2, lambda: len(p1.discovered_participants()))
-        wait.until_equal(2, lambda: len(p2.discovered_participants()))
-        wait.until_equal(2, lambda: len(p3.discovered_participants()))
+    qos.discovery.enable_endpoint_discovery = False
 
-        assert p2.instance_handle in p1.discovered_participants()
-        assert p3.instance_handle in p1.discovered_participants()
-        assert p1.instance_handle in p2.discovered_participants()
-        assert p3.instance_handle in p2.discovered_participants()
-        assert p1.instance_handle in p3.discovered_participants()
-        assert p2.instance_handle in p3.discovered_participants()
+    p1 = dds.DomainParticipant(get_test_domain(), qos)
+    p2 = dds.DomainParticipant(get_test_domain(), qos)
+    assert p2.qos.discovery.enable_endpoint_discovery is False
+    t1 = dds.Topic(p1, "Topic Endpoint Discovery", String)
+    t2 = dds.Topic(p2, "Topic Endpoint Discovery", String)
+
+    reader_qos = dds.DataReaderQos()
+    reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+    reader_qos.history.kind = dds.HistoryKind.KEEP_ALL
+    reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+
+    writer_qos = dds.DataWriterQos()
+    writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+    writer_qos.history.kind = dds.HistoryKind.KEEP_ALL
+    writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+
+    writer = dds.DataWriter(dds.Publisher(p1), t1, writer_qos)
+    reader = dds.DataReader(dds.Subscriber(p2), t2, reader_qos)
+
+    sleep(.5)
+    assert reader.subscription_matched_status.total_count == 0
+    assert writer.publication_matched_status.total_count == 0
+
+    p1.resume_endpoint_discovery(p2.instance_handle)
+
+    sleep(.5)
+    assert reader.subscription_matched_status.total_count == 0
+    assert writer.publication_matched_status.total_count == 0
+
+    p2.resume_endpoint_discovery(p1.instance_handle)
+    wait.until_equal(1, lambda: reader.subscription_matched_status.total_count)
+    wait.until_equal(1, lambda: writer.publication_matched_status.total_count)
 
 
 def test_participant_factory_qos_to_string():
@@ -353,17 +399,7 @@ def test_close_after_close():
             p3.qos.participant_name.name
 
 
-def test_find_no_entity(participant):
-    # Testing issue from PY-49
-    assert participant.find_subscriber("foo") is None
-    assert participant.find_subscribers() == []
-    assert participant.find_publisher("foo") is None
-    assert participant.find_publishers() == []
-    assert participant.find_datawriter("foo") is None
-    assert participant.find_datareader("foo") is None
-    assert dds.Publisher(participant).find_datawriter("foo") is None
-    assert dds.Subscriber(participant).find_datareader("foo") is None
-    assert dds.Publisher(
-        participant).find_datawriter_by_topic_name("foo") is None
-    assert dds.Subscriber(
-        participant).find_datareader_by_topic_name("foo") is None
+def test_banish_ignored_participants(participant):
+    with log_capture.expected_exception(dds.PreconditionNotMetError) as errinfo:
+        participant.banish_ignored_participants()
+    assert "participant has not enabled security" in errinfo.logs

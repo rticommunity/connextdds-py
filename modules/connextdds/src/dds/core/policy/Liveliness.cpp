@@ -46,7 +46,6 @@ void init_class_defs(py::class_<Liveliness>& cls)
                     "is considered not alive."
                     "\n\n"
                     "This property's getter returns a deep copy.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "assertions_per_lease_duration",
                     [](const Liveliness& l) {
@@ -57,22 +56,6 @@ void init_class_defs(py::class_<Liveliness>& cls)
                     },
                     "The number of assertions to send during the lease "
                     "duration.")
-#else
-            .def_property(
-                    "assertions_per_lease_duration",
-                    [](const Liveliness& l) {
-                        return l.delegate()
-                                .native()
-                                .assertions_per_lease_duration;
-                    },
-                    [](Liveliness& l, int32_t a) {
-                        return l.delegate()
-                                       .native()
-                                       .assertions_per_lease_duration = a;
-                    },
-                    "The number of assertions to send during the lease "
-                    "duration.")
-#endif
             .def_property_readonly_static(
                     "automatic",
                     [](py::object&) {

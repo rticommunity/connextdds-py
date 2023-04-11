@@ -24,6 +24,14 @@ void init_class_defs(py::class_<
                      std::shared_ptr<PyDomainParticipantListener>>& cls)
 {
     cls.def(py::init<>());
+    cls.def("on_invalid_local_identity_status_advance_notice",
+            (void(PyDomainParticipantListener::*)(
+                    PyDomainParticipant&,
+                    const rti::core::status::
+                            InvalidLocalIdentityAdvanceNoticeStatus&))
+                    & PyDomainParticipantListener::
+                            on_invalid_local_identity_status_advance_notice,
+            "On invalid local identity status advance notice callback");
 }
 
 template<>
@@ -34,6 +42,14 @@ void init_class_defs(py::class_<
                      std::shared_ptr<PyNoOpDomainParticipantListener>>& cls)
 {
     cls.def(py::init<>());
+    cls.def("on_invalid_local_identity_status_advance_notice",
+            (void(PyNoOpDomainParticipantListener::*)(
+                    PyDomainParticipant&,
+                    const rti::core::status::
+                            InvalidLocalIdentityAdvanceNoticeStatus&))
+                    & PyNoOpDomainParticipantListener::
+                            on_invalid_local_identity_status_advance_notice,
+            "On invalid local identity status advance notice callback");
 }
 
 template<>

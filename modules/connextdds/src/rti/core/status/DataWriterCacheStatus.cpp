@@ -20,15 +20,43 @@ template<>
 void init_class_defs(py::class_<DataWriterCacheStatus>& cls)
 {
     cls.def_property_readonly(
-               "sample_count",
-               &DataWriterCacheStatus::sample_count,
-               "Number of samples in the DataWriter's queue, including "
-               "unregister and dispose samples.")
-            .def_property_readonly(
-                    "sample_count_peak",
-                    &DataWriterCacheStatus::sample_count_peak,
-                    "Highest number of samples in the writer's queue over the "
-                    "lifetime of the writer.");
+            "sample_count",
+            &DataWriterCacheStatus::sample_count,
+            "Number of samples in the DataWriter's queue, including "
+            "unregister and dispose samples.");
+    cls.def_property_readonly(
+            "sample_count_peak",
+            &DataWriterCacheStatus::sample_count_peak,
+            "Highest number of samples in the writer's queue over the "
+            "lifetime of the writer.");
+    cls.def_property_readonly(
+            "alive_instance_count",
+            &DataWriterCacheStatus::alive_instance_count,
+            "Number of alive instances in the DataWriter's queue.");
+    cls.def_property_readonly(
+            "alive_instance_count_peak",
+            &DataWriterCacheStatus::alive_instance_count_peak,
+            "Highest number of alive instances in the writer's queue over the "
+            "lifetime of the writer.");
+    cls.def_property_readonly(
+            "disposed_instance_count",
+            &DataWriterCacheStatus::disposed_instance_count,
+            "Number of disposed instances in the DataWriter's queue.");
+    cls.def_property_readonly(
+            "disposed_instance_count_peak",
+            &DataWriterCacheStatus::disposed_instance_count_peak,
+            "Highest number of disposed instances in the writer's queue "
+            "over the lifetime of the writer.");
+    cls.def_property_readonly(
+            "unregistered_instance_count",
+            &DataWriterCacheStatus::unregistered_instance_count,
+            "Number of unregistered instances in the DataWriter's queue.");
+    cls.def_property_readonly(
+            "unregistered_instance_count_peak",
+            &DataWriterCacheStatus::unregistered_instance_count_peak,
+            "Highest number of unregistered instances in the writer's "
+            "queue over the lifetime of the writer.");
+    
 }
 
 template<>

@@ -15,7 +15,6 @@
 #include <dds/core/xtypes/DynamicData.hpp>
 #include <dds/core/QosProvider.hpp>
 #include "PyInitType.hpp"
-#include "PyDynamicTypeMap.hpp"
 #include "PyInitOpaqueTypeContainers.hpp"
 
 using namespace dds::core::xtypes;
@@ -291,40 +290,26 @@ EnumMember resolve_enum_member_in_type(const EnumType& enum_type, int32_t ordina
 }
 
 
-static 
-UnionMember get_union_member(const UnionType& ut, const std::string& key) {
-    return ut.member(key);
-}
-
-
-static 
-UnionMember get_union_member(const UnionType& ut, const int32_t discriminator) {
-    return ut.member(ut.find_member_by_label(discriminator));
-}
-
-
 template<typename T>
 static
 EnumMember get_enum_member_base(const DynamicData& dd, const T& key, int32_t ordinal) {
     switch(dd.type_kind().underlying()) {
+    case TypeKind::UNION_TYPE:
     case TypeKind::STRUCTURE_TYPE: {
-        auto& struct_type = static_cast<const StructType&>(dd.type());
+        auto&& member_type = dd.member_type(key);
+        if (member_type.kind() != TypeKind::ENUMERATION_TYPE) {
+            // this shouldn't happen
+            throw dds::core::IllegalOperationError("expected enum type");
+        }
         return resolve_enum_member_in_type(
-            static_cast<const EnumType&>(struct_type.member(key).type()),
-            ordinal);
+                static_cast<const EnumType&>(member_type),
+                ordinal);
     }
     case TypeKind::ARRAY_TYPE:
     case TypeKind::SEQUENCE_TYPE: {
         auto& collection_type = static_cast<const CollectionType&>(dd.type());
         return resolve_enum_member_in_type(
             static_cast<const EnumType&>(collection_type.content_type()),
-            ordinal);
-    }
-    case TypeKind::UNION_TYPE: {
-        auto& union_type = static_cast<const UnionType&>(dd.type());
-        return resolve_enum_member_in_type(
-            static_cast<const EnumType&>(
-                get_union_member(union_type, key).type()),
             ordinal);
     }
     default:
@@ -1082,6 +1067,23 @@ static void set_values(DynamicData& dd, const T& key, py::object& values)
     set_collection_member(dd, elem_kind, key, values);
 }
 
+// Creates a DynamicData object using the writer's topic and participant to
+// obtain the type name and DynamicType respectively
+static DynamicData create_data(dds::pub::DataWriter<DynamicData>& writer)
+{
+    return DynamicData(rti::domain::find_type(
+            writer.publisher().participant(),
+            writer.topic().type_name()));
+}
+
+// Creates a DynamicData object using the reader's topic and participant to
+// obtain the type name and DynamicType respectively
+static DynamicData create_data(dds::sub::DataReader<DynamicData>& reader)
+{
+    return DynamicData(rti::domain::find_type(
+            reader.subscriber().participant(),
+            reader.topic_description().type_name()));
+}
 
 class PyDynamicDataFieldsIterator {
 public:
@@ -1280,9 +1282,7 @@ void init_dds_typed_topic_template(
     cls.def(py::init([](PyDomainParticipant& dp,
                         const ::std::string& name,
                         const dds::core::xtypes::DynamicType& type) {
-                PyTopic<dds::core::xtypes::DynamicData> t(dp, name, type);
-                PyDynamicTypeMap::add(t.type_name(), type);
-                return t;
+                return PyTopic<dds::core::xtypes::DynamicData>(dp, name, type);
             }),
             py::arg("participant"),
             py::arg("topic_name"),
@@ -1297,10 +1297,13 @@ void init_dds_typed_topic_template(
                                      l,
                              const dds::core::status::StatusMask& mask) {
                      auto listener = has_value(l) ? get_value(l) : nullptr;
-                     PyTopic<dds::core::xtypes::DynamicData>
-                             t(dp, name, type, qos, listener, mask);
-                     PyDynamicTypeMap::add(t.type_name(), type);
-                     return t;
+                     return PyTopic<dds::core::xtypes::DynamicData>(
+                             dp,
+                             name,
+                             type,
+                             qos,
+                             listener,
+                             mask);
                  }),
                  py::arg("participant"),
                  py::arg("topic_name"),
@@ -1341,23 +1344,13 @@ void init_dds_datawriter_key_value_methods(PyDataWriterClass<dds::core::xtypes::
             "key_value",
             [](PyDataWriter<DynamicData>& dw,
                     const dds::core::InstanceHandle& handle) {
-                DynamicData d(PyDynamicTypeMap::get(dw->type_name()));
+                DynamicData d = create_data(dw);
                 dw.key_value(d, handle);
                 return d;
             },
             py::arg("handle"),
             py::call_guard<py::gil_scoped_release>(),
             "Retrieve the instance key that corresponds to an instance "
-            "handle.");
-
-    cls.def("key_value",
-            (DynamicData
-                    & (PyDataWriter<DynamicData>::*) (DynamicData&, const dds::core::InstanceHandle&) )
-                    & PyDataWriter<DynamicData>::key_value,
-            py::arg("key_holder"),
-            py::arg("handle"),
-            py::call_guard<py::gil_scoped_release>(),
-            "Set the instance key that corresponds to an instance "
             "handle.");
 }
 
@@ -1378,8 +1371,7 @@ void init_dds_typed_datawriter_template(
     cls.def(
                "write",
                [](PyDataWriter<DynamicData>& dw, py::dict& dict) {
-                   auto dt = PyDynamicTypeMap::get(dw->type_name());
-                   DynamicData sample(dt);
+                   DynamicData sample = create_data(dw);
                    update_dynamicdata_object(sample, dict);
                    {
                        py::gil_scoped_release release;
@@ -1395,8 +1387,7 @@ void init_dds_typed_datawriter_template(
                         return PyAsyncioExecutor::run<void>(
                                 std::function<void()>([&dw, &dict]() {
                                     py::gil_scoped_acquire acquire;
-                                    auto dt = PyDynamicTypeMap::get(
-                                            dw->type_name());
+                                    auto dt = create_data(dw);
                                     DynamicData sample(dt);
                                     update_dynamicdata_object(sample, dict);
                                     {
@@ -1414,8 +1405,7 @@ void init_dds_typed_datawriter_template(
             .def(
                     "create_data",
                     [](PyDataWriter<DynamicData>& dw) {
-                        return DynamicData(
-                                PyDynamicTypeMap::get(dw->type_name()));
+                        return create_data(dw);
                     },
                     py::call_guard<py::gil_scoped_release>(),
                     "Create data of the writer's associated type and "
@@ -1424,26 +1414,9 @@ void init_dds_typed_datawriter_template(
                     "key_value",
                     [](PyDataWriter<DynamicData>& dw,
                             const dds::core::InstanceHandle& handle) {
-                        DynamicData d(
-                                PyDynamicTypeMap::get(dw->type_name()));
-                        dw.key_value(d, handle);
-                        return d;
-                    },
-                    py::arg("handle"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Retrieve the instance key that corresponds to an instance "
-                    "handle.")
-            .def(
-                    "topic_instance_key_value",
-                    [](PyDataWriter<DynamicData>& dw,
-                            const dds::core::InstanceHandle& handle) {
-                        DynamicData d(
-                                PyDynamicTypeMap::get(dw->type_name()));
-                        dds::topic::TopicInstance<
-                                DynamicData>
-                                ti(handle, d);
-                        dw.key_value(ti, handle);
-                        return ti;
+                        auto data = create_data(dw);
+                        dw.key_value(data, handle);
+                        return data;
                     },
                     py::arg("handle"),
                     py::call_guard<py::gil_scoped_release>(),
@@ -1463,76 +1436,14 @@ void init_dds_typed_datareader_template(PyDataReaderClass<DynamicData>& cls)
                "key_value",
                [](PyDataReader<dds::core::xtypes::DynamicData>& dr,
                        const dds::core::InstanceHandle& handle) {
-                   dds::core::xtypes::DynamicType dt(
-                           PyDynamicTypeMap::get(dr->type_name()));
-                   dds::core::xtypes::DynamicData dd(dt);
+                   dds::core::xtypes::DynamicData dd = create_data(dr);
                    dr.key_value(dd, handle);
                    return dd;
                },
                py::arg("handle"),
                py::call_guard<py::gil_scoped_release>(),
                "Retrieve the instance key that corresponds to an instance "
-               "handle.")
-            .def(
-                    "topic_instance_key_value",
-                    [](PyDataReader<dds::core::xtypes::DynamicData>& dr,
-                            const dds::core::InstanceHandle& handle) {
-                        dds::core::xtypes::DynamicType dt(
-                                PyDynamicTypeMap::get(dr->type_name()));
-                        dds::core::xtypes::DynamicData dd(dt);
-                        dds::topic::TopicInstance<
-                                dds::core::xtypes::DynamicData>
-                                ti(handle, dd);
-                        dr.key_value(ti, handle);
-                        return ti;
-                    },
-                    py::arg("handle"),
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Retrieve the instance key that corresponds to an instance "
-                    "handle.")
-            .def(
-                    "read_next",
-                    [](PyDataReader<dds::core::xtypes::DynamicData>& dr) {
-                        dds::core::optional<dds::sub::Sample<
-                                dds::core::xtypes::DynamicData>>
-                                retval;
-                        dds::core::xtypes::DynamicData data(
-                                PyDynamicTypeMap::get(dr->type_name()));
-                        dds::sub::SampleInfo info;
-                        if (dr->read(data, info)) {
-                            retval = dds::sub::Sample<
-                                    dds::core::xtypes::DynamicData>(data, info);
-                        }
-                        return retval;
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Copy the next not-previously-accessed data value from the "
-                    "DataReader via a read operation.")
-            .def(
-                    "take_next",
-                    [](PyDataReader<dds::core::xtypes::DynamicData>& dr) {
-                        dds::core::optional<dds::sub::Sample<
-                                dds::core::xtypes::DynamicData>>
-                                retval;
-                        dds::core::xtypes::DynamicData data(
-                                PyDynamicTypeMap::get(dr->type_name()));
-                        dds::sub::SampleInfo info;
-                        if (dr->take(data, info)) {
-                            retval = dds::sub::Sample<
-                                    dds::core::xtypes::DynamicData>(data, info);
-                        }
-                        return retval;
-                    },
-                    py::call_guard<py::gil_scoped_release>(),
-                    "Copy the next not-previously-accessed data value from the "
-                    "DataReader via a take operation.");
-}
-
-template<>
-void init_dds_typed_topic_instance_template(
-        py::class_<dds::topic::TopicInstance<DynamicData>>& cls)
-{
-    init_dds_typed_topic_instance_base_template(cls);
+               "handle.");
 }
 
 template<>

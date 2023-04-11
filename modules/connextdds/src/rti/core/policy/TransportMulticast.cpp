@@ -30,7 +30,7 @@ void init_class_defs(py::class_<TransportMulticast>& cls)
                  py::arg("kind"),
                  "Creates an instance with the speicfied multicast settings.")
             .def_property(
-                    "settings",
+                    "value",
                     (std::vector<TransportMulticastSettings>(
                             TransportMulticast::*)() const)
                             & TransportMulticast::settings,
@@ -136,7 +136,7 @@ void init_class_defs(py::class_<TransportMulticastMapping>& cls)
                  py::arg("mappings"),
                  "Creates an object with with specified mappings.")
             .def_property(
-                    "mappings",
+                    "value",
                     (std::vector<MulticastMapping>(
                             TransportMulticastMapping::*)() const)
                             & TransportMulticastMapping::mappings,

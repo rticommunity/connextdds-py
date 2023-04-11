@@ -59,11 +59,11 @@ void init_class_defs(py::class_<Filter>& cls)
                     [](Filter& f, std::string& name) { return f->name(name); },
                     "The name of the type of Filter.")
             .def_property_readonly_static(
-                    "sql_filter_name",
+                    "SQL_FILTER_NAME",
                     [](py::object&) { return rti::topic::sql_filter_name(); },
                     "The name of the SQL filter.")
             .def_property_readonly_static(
-                    "stringmatch_filter_name",
+                    "STRINGMATCH_FILTER_NAME",
                     [](py::object&) {
                         return rti::topic::stringmatch_filter_name();
                     },

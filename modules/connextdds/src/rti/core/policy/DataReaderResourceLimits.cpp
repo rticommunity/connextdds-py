@@ -21,14 +21,14 @@ template<>
 void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
 {
     cls.def(py::init<>(),
-            "Create a default DataReaderResourceLimits policy with default "
-            "settings.")
+               "Create a default DataReaderResourceLimits policy with default "
+               "settings.")
             .def_property(
                     "max_remote_writers",
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_remote_writers,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_remote_writers,
                     "The maximum number of remote writers from which a "
                     "DataReader "
@@ -39,7 +39,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_remote_writers_per_instance,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_remote_writers_per_instance,
                     "The maximum number of remote writers from which a "
@@ -51,7 +51,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_samples_per_remote_writer,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_samples_per_remote_writer,
                     "The maximum number of out-of-order samples from a given "
@@ -63,7 +63,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_infos,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_infos,
                     "The maximum number of info units that a DataReader can "
                     "use to "
@@ -74,7 +74,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     initial_remote_writers_per_instance,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     initial_remote_writers_per_instance,
                     "The initial number of remote writers from which a "
@@ -85,7 +85,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::initial_remote_writers,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::initial_remote_writers,
                     "The initial number of remote writers from which a "
                     "DataReader "
@@ -95,7 +95,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::initial_infos,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::initial_infos,
                     "The initial number of info units that a DataReader can "
                     "use to "
@@ -106,7 +106,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     initial_outstanding_reads,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     initial_outstanding_reads,
                     "The initial number of outstanding calls to read/take (or "
@@ -119,7 +119,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_outstanding_reads,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_outstanding_reads,
                     "The max number of outstanding calls to read/take (or one "
                     "of "
@@ -131,7 +131,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_samples_per_read,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_samples_per_read,
                     "The maximum number of data samples that the application "
                     "can "
@@ -143,11 +143,11 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     "read/take calls.")
             .def_property(
                     "disable_fragmentation_support",
-                    (bool (DataReaderResourceLimits::*)() const)
+                    (bool(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::
                                     disable_fragmentation_support,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (bool) )
+                            & (DataReaderResourceLimits::*) (bool) )
                             & DataReaderResourceLimits::
                                     disable_fragmentation_support,
                     "Determines whether the DataReader can receive fragmented "
@@ -157,7 +157,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_fragmented_samples,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_fragmented_samples,
                     "The maximum number of samples for which the DataReader "
                     "may "
@@ -168,7 +168,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     initial_fragmented_samples,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     initial_fragmented_samples,
                     "The initial number of samples for which a DataReader may "
@@ -180,7 +180,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_fragmented_samples_per_remote_writer,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_fragmented_samples_per_remote_writer,
                     "The maximum number of samples per remote writer for which "
@@ -192,17 +192,17 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_fragments_per_sample,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_fragments_per_sample,
                     "Maximum number of fragments for a single sample.")
             .def_property(
                     "dynamically_allocate_fragmented_samples",
-                    (bool (DataReaderResourceLimits::*)() const)
+                    (bool(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::
                                     dynamically_allocate_fragmented_samples,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (bool) )
+                            & (DataReaderResourceLimits::*) (bool) )
                             & DataReaderResourceLimits::
                                     dynamically_allocate_fragmented_samples,
                     "Determines whether the DataReader pre-allocates storage "
@@ -213,7 +213,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_total_instances,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_total_instances,
                     "Maximum number of instances for which a DataReader will "
                     "keep "
@@ -224,7 +224,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_remote_virtual_writers,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_remote_virtual_writers,
                     "The maximum number of remote virtual writers from which a "
@@ -235,7 +235,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     initial_remote_virtual_writers,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     initial_remote_virtual_writers,
                     "The initial number of remote virtual writers from which a "
@@ -246,7 +246,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_remote_virtual_writers_per_instance,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_remote_virtual_writers_per_instance,
                     "The maximum number of virtual remote writers that can be "
@@ -257,7 +257,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     initial_remote_virtual_writers_per_instance,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     initial_remote_virtual_writers_per_instance,
                     "The initial number of virtual remote writers that can be "
@@ -268,7 +268,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_remote_writers_per_sample,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_remote_writers_per_sample,
                     "The maximum number of remote writers allowed to write the "
@@ -280,7 +280,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_query_condition_filters,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_query_condition_filters,
                     "The maximum number of query condition filters a reader is "
@@ -291,18 +291,18 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                             & DataReaderResourceLimits::
                                     max_app_ack_response_length,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::
                                     max_app_ack_response_length,
                     "Maximum length of application-level acknowledgment "
                     "response data.")
             .def_property(
                     "keep_minimum_state_for_instances",
-                    (bool (DataReaderResourceLimits::*)() const)
+                    (bool(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::
                                     keep_minimum_state_for_instances,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (bool) )
+                            & (DataReaderResourceLimits::*) (bool) )
                             & DataReaderResourceLimits::
                                     keep_minimum_state_for_instances,
                     "Whether or not keep a minimum instance state for up to "
@@ -312,7 +312,7 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::initial_topic_queries,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::initial_topic_queries,
                     "The initial number of TopicQueries allocated by a "
                     "DataReader.")
@@ -321,11 +321,10 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     (int32_t(DataReaderResourceLimits::*)() const)
                             & DataReaderResourceLimits::max_topic_queries,
                     (DataReaderResourceLimits
-                     & (DataReaderResourceLimits::*) (int32_t))
+                            & (DataReaderResourceLimits::*) (int32_t))
                             & DataReaderResourceLimits::max_topic_queries,
                     "The maximum number of TopicQueries allocated by a "
                     "DataReader.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def_property(
                     "shmem_ref_transfer_mode_attached_segment_allocation",
                     (AllocationSettings & (DataReaderResourceLimits::*) ())
@@ -337,20 +336,23 @@ void init_class_defs(py::class_<DataReaderResourceLimits>& cls)
                     },
                     "The initial number of TopicQueries allocated by a "
                     "DataReader.")
-#endif
-#if rti_connext_version_gte(6, 1, 0, 0)
-#ifndef _MSC_VER
             .def_property(
                     "instance_replacement",
-                    (DataReaderResourceLimitsInstanceReplacementSettings& (DataReaderResourceLimits::*) ())
-                            & DataReaderResourceLimits::
-                                    instance_replacement,
-                    [](DataReaderResourceLimits& drrl, DataReaderResourceLimitsInstanceReplacementSettings& ir) {
-                        drrl.instance_replacement() = ir;
-                    },
+                    (DataReaderResourceLimitsInstanceReplacementSettings
+                            & (DataReaderResourceLimits::*) ())
+                            & DataReaderResourceLimits::instance_replacement,
+                    [](DataReaderResourceLimits& drrl,
+                            DataReaderResourceLimitsInstanceReplacementSettings&
+                                    ir) { drrl.instance_replacement() = ir; },
                     "The instance replacement policy.")
-#endif
-#endif
+            .def_property_readonly_static(
+                    "AUTO_MAX_TOTAL_INSTANCES",
+                    [](py::object&) {
+                        return DataReaderResourceLimits::
+                                auto_max_total_instances();
+                    },
+                    "The value used to make max total instance equal to "
+                    "ResourceLimits.max_instances policy.")
             .def(py::self == py::self)
             .def(py::self != py::self);
 }

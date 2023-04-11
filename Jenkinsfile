@@ -19,7 +19,11 @@ def getConnextddsBranch() {
 pipeline{
     agent none
     options {
-      disableConcurrentBuilds()
+        disableConcurrentBuilds()
+        timeout(time: 8, unit: 'HOURS')
+    }
+    parameters {
+        booleanParam(defaultValue: false, description: 'Skip tests after building the wheel.', name: 'SKIP_TESTS')
     }
     stages{
         stage("Build Wheels"){
@@ -27,6 +31,9 @@ pipeline{
                 stage("Build Linux Wheels"){
                     agent {
                         label "docker"
+                    }
+                    environment {
+                        CIBW_TEST_SKIP = "${params.SKIP_TESTS ? "*" : ""}"
                     }
                     stages{
                         stage("Build Wheels"){
@@ -55,7 +62,7 @@ pipeline{
                                         onlyIfSuccessful: true
                                     )
                                     script{
-                                        if (env.BRANCH_NAME == 'develop') {
+                                        if (env.BRANCH_NAME =~ /(develop|release\/connextdds-py\/.*)/) {
                                             docker.image('apihackers/twine').inside() {
                                                 withCredentials([
                                                     usernamePassword(
@@ -76,7 +83,7 @@ pipeline{
                             steps{
                                 script {
                                     docker.build("doc-image", '--build-arg USER_UID=$UID docs/').inside() {
-                                        sh('pip install wheelhouse/rti.connext-*-cp36*')
+                                        sh('pip install wheelhouse/rti.connext-*-cp38*')
                                         sh('make -C docs html')
                                         recordIssues(
                                             qualityGates: [
@@ -108,11 +115,48 @@ pipeline{
                                 }
                             }
                         }
-                        stage('Upload documentation') {
+                        stage('Upload Documentation') {
                             when {
-                                expression{
-                                    // Only upload documentation on release and develop branch
-                                    env.BRANCH_NAME =~ /^release\/connextdds-py\/(.*)/ || env.BRANCH_NAME == "develop"
+                                anyOf {
+                                    branch comparator: 'REGEXP', pattern: 'release/.*'
+                                    branch comparator: 'REGEXP', pattern: 'develop'
+                                    branch comparator: 'REGEXP', pattern: 'support/.*'
+                                }
+                            }
+                            steps {
+                                script {
+                                    def props = readProperties  file: 'setup.cfg'
+                                    def version = props['version']
+                                    def zipName = "connext-py-docs-${version}.zip"
+                                    zip zipFile: zipName, dir: "docs/build/html/"
+
+                                    // We add a .0 to the version to match connextdds version on artifactory
+                                    def artifactoryDirectory = "connext-ci/documentation/${version}.0/"
+                                    rtUpload (
+                                        serverId: getRtiArtifactoryServerId(),
+                                        spec:
+                                            """{
+                                            "files": [
+                                                {
+                                                    "pattern": "${zipName}",
+                                                    "target": "${artifactoryDirectory}",
+                                                    "props": "rti.artifact.kind=documentation;rti.product.name=connext-py;rti.product.version=${version}.0"
+                                                }
+                                            ]
+                                            }""",
+                                        failNoOp: true
+                                    )
+                                }
+
+                            }
+                        }
+                        stage('Publish Documentation') {
+                            // We also upload the documentation to the internal docserver.
+                            when {
+                                anyOf {
+                                    branch comparator: 'REGEXP', pattern: 'release/.*'
+                                    branch comparator: 'REGEXP', pattern: 'develop'
+                                    branch comparator: 'REGEXP', pattern: 'support/.*'
                                 }
                             }
                             steps {
@@ -130,17 +174,18 @@ pipeline{
                 }
                 stage("Build Darwin Wheels"){
                     agent {
-                        label "darwin17-ci"
+                        label "ci && darwin && clang12"
                     }
                     environment {
                         CI = 'true'
+                        CIBW_TEST_SKIP = "${params.SKIP_TESTS ? "*" : ""}"
                     }
                     steps{
                         checkout BbS(
                             branches: [[name: getConnextddsBranch()]],
                             credentialsId: 'bitbucket-build-credentials',
                             extensions: [
-                                [$class: 'CloneOption', honorRefspec: true, noTags: true, reference: '', shallow: true, timeout: 20],
+                                [$class: 'CloneOption', honorRefspec: true, noTags: true, reference: '', shallow: true, timeout: 50],
                                 [$class: 'RelativeTargetDirectory', relativeTargetDir: 'connextdds']
                             ],
                             id: '6a11cf7f-10be-4997-b48f-e9eebb9ddc2f',
@@ -164,7 +209,7 @@ pipeline{
                                 onlyIfSuccessful: true
                             )
                             script{
-                                if (env.BRANCH_NAME == 'develop') {
+                                if (env.BRANCH_NAME =~ /(develop|release\/connextdds-py\/.*)/) {
                                     withPythonEnv("python3") {
                                         sh "pip install twine"
                                         withCredentials([
@@ -189,6 +234,9 @@ pipeline{
                             label 'docker-win'
                             alwaysPull true
                         }
+                    }
+                    environment {
+                        CIBW_TEST_SKIP = "${params.SKIP_TESTS ? "*" : ""}"
                     }
                     steps{
                         checkout BbS(
@@ -218,7 +266,7 @@ pipeline{
                                 onlyIfSuccessful: true
                             )
                             script{
-                                if (env.BRANCH_NAME == 'develop') {
+                                if (env.BRANCH_NAME =~ /(develop|release\/connextdds-py\/.*)/) {
                                     withPythonEnv("python") {
                                         bat "pip install twine"
                                         withCredentials([
@@ -243,6 +291,9 @@ pipeline{
                             label 'docker-win'
                             alwaysPull true
                         }
+                    }
+                    environment {
+                        CIBW_TEST_SKIP = "${params.SKIP_TESTS ? "*" : ""}"
                     }
                     steps{
                         checkout BbS(
@@ -272,7 +323,7 @@ pipeline{
                                 onlyIfSuccessful: true
                             )
                             script{
-                                if (env.BRANCH_NAME == 'develop') {
+                                if (env.BRANCH_NAME =~ /(develop|release\/connextdds-py\/.*)/) {
                                     withPythonEnv("python") {
                                         bat "pip install twine"
                                         withCredentials([

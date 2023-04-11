@@ -161,6 +161,8 @@ def take_async(reader: dds.DataReader, condition: Optional[dds.ReadCondition] = 
 # Inject async functions to DataReader
 dds.DataReader.take_data_async = take_data_async
 dds.DataReader.take_async = take_async
+dds.DynamicData.DataReader.take_data_async = take_data_async
+dds.DynamicData.DataReader.take_async = take_async
 
 async def close():
     global _DEFAULT_DISPATCHER

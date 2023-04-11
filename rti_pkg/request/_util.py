@@ -204,7 +204,8 @@ def wait_for_samples(
     if min_count == rti.connextdds.LENGTH_UNLIMITED:
         min_count = INT_MAX
         
-    sample_count = len(reader.select().max_samples(min_count).condition(initial_condition).read())
+    sample_count = len(reader.select().max_samples(
+        min_count).condition(initial_condition).read_loaned())
     min_count -= sample_count
 
     participant = reader.subscriber.participant
@@ -224,7 +225,8 @@ def wait_for_samples(
             return False
 
         if min_count > 1:
-            sample_count = reader.select().max_samples(min_count).condition(condition).read().length
+            sample_count = len(reader.select().max_samples(
+                min_count).condition(condition).read_loaned())
             min_count -= sample_count
         else:
             min_count -= 1

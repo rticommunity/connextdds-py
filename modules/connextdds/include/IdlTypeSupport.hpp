@@ -187,8 +187,10 @@ inline static py::handle get_py_type_support_from_topic(
 // Here we change the visibility because the py::objects have lower visibility
 // and without this we will get compiler warnings
 struct PYRTI_SYMBOL_HIDDEN CPySampleConverter {
-    py::handle type_support;
+    py::handle type_support; // TypeSupport object associated to the user type
     rti::topic::cdr::CTypePlugin* type_plugin;
+    // The following are direct references to attributes of type_support
+    py::handle sample_tuple_type;
     py::handle create_py_sample_func;
     py::handle create_c_sample_func;
     py::handle convert_to_c_sample_func;
@@ -202,6 +204,7 @@ struct PYRTI_SYMBOL_HIDDEN CPySampleConverter {
               type_plugin(py::cast<TypePlugin>(
                                   type_support.attr("_plugin_dynamic_type"))
                                   .type_plugin),
+              sample_tuple_type(type_support.attr("sample_type")),
               create_py_sample_func(
                       py::type::of(type_support).attr("_create_py_sample")),
               create_c_sample_func(py::type::of(type_support)
@@ -251,6 +254,13 @@ struct PYRTI_SYMBOL_HIDDEN CPySampleConverter {
         return create_py_sample_func(type_support, sample_ptr);
     }
 
+    py::object create_py_data_info_sample(
+        py::object& py_data,
+        const dds::sub::SampleInfo& info)
+    {
+        return sample_tuple_type(py_data, py::cast(info));
+    }
+
     static void cache_idl_entity_py_objects(
             dds::core::Entity entity,
             const dds::topic::TopicDescription<
@@ -277,5 +287,51 @@ struct PYRTI_SYMBOL_HIDDEN CPySampleConverter {
         }
     }
 };
+
+// Implements the creation of IDL endpoints for XML App Creation
+class OMG_DDS_API PyFactoryIdlPluginSupport 
+    : private rti::domain::FactoryPluginSupport {
+public:
+    using rti::domain::FactoryPluginSupport::is_set;
+
+    static DDS_Topic* create_topic(
+            DDS_DomainParticipant* cParticipant,
+            const char* topic_name,
+            const char* type_name,
+            const struct DDS_TopicQos* qos,
+            const ListenerInfo listenerInfo,
+            DDS_StatusMask mask);
+
+    static DDS_TopicDescription* create_content_filtered_topic(
+            DDS_DomainParticipant* participant,
+            const char* name,
+            DDS_Topic* related_topic,
+            const char* filter_expression,
+            const struct DDS_StringSeq* filter_parameters,
+            const char* filter_name);
+
+    static DDS_DataWriter* create_datawriter(
+            DDS_Publisher* publisher,
+            DDS_Topic* topic,
+            const struct DDS_DataWriterQos* qos,
+            const ListenerInfo listenerInfo,
+            DDS_StatusMask mask);
+
+    static DDS_DataReader* create_datareader(
+            DDS_Subscriber* subscriber,
+            DDS_TopicDescription* topicDescription,
+            const struct DDS_DataReaderQos* qos,
+            const ListenerInfo listenerInfo,
+            DDS_StatusMask mask);
+
+    static void create_factory_plugin_support(
+            DDS_FactoryPluginSupport* plugin_support);
+};
+
+// Registers a Python class with the DPF so it can be referenced in XML-defined
+// topics
+void register_idl_type(
+        py::object& type,
+        const std::string& type_name);
 
 }  // namespace pyrti

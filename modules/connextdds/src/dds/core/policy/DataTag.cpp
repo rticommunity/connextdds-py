@@ -12,8 +12,6 @@
 #include "PyConnext.hpp"
 #include <dds/core/policy/CorePolicy.hpp>
 
-#if rti_connext_version_gte(6, 0, 0, 0)
-
 namespace py = pybind11;
 
 using namespace dds::core::policy;
@@ -30,17 +28,11 @@ void init_class_defs(py::class_<DataTag>& cls)
                  }),
                  py::arg("entries"),
                  "Adds tags from a list.")
-            .def(py::init([](std::map<std::string, std::string>& entries) {
-                     return DataTag(entries.begin(), entries.end());
-                 }),
-                 py::arg("entries"),
-                 "Adds tags from a dictionary.")
             .def(py::init([](py::dict& d) {
                      DataTag dt;
                      for (auto it : d) {
-                         dt.set(std::pair<std::string, std::string>(
-                                 py::cast<std::string>(it.first),
-                                 py::cast<std::string>(it.second)));
+                         dt.set({py::cast<std::string>(it.first),
+                                 py::cast<std::string>(it.second)});
                      }
                      return dt;
                  }),
@@ -62,9 +54,7 @@ void init_class_defs(py::class_<DataTag>& cls)
                             std::string key = py::cast<std::string>(kv.first);
                             std::string value =
                                     py::cast<std::string>(kv.second);
-                            dt.set(std::pair<std::string, std::string>(
-                                    key,
-                                    value));
+                            dt.set({key, value});
                         }
                     },
                     py::arg("entry_map"),
@@ -81,7 +71,7 @@ void init_class_defs(py::class_<DataTag>& cls)
                     [](DataTag& dt,
                        const std::string& key,
                        const std::string& value) {
-                        dt.set(std::pair<std::string, std::string>(key, value));
+                        dt.set({key, value});
                     },
                     "Adds or assigns a tag from a key string and a value "
                     "string.")
@@ -115,7 +105,7 @@ void init_class_defs(py::class_<DataTag>& cls)
                  [](DataTag& dt,
                     const std::string& key,
                     const std::string& value) {
-                     dt.set(std::pair<std::string, std::string>(key, value));
+                     dt.set({key, value});
                  })
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
@@ -128,5 +118,3 @@ void process_inits<DataTag>(py::module& m, ClassInitList& l)
 }
 
 }  // namespace pyrti
-
-#endif

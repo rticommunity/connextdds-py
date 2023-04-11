@@ -12,9 +12,8 @@
 import os
 import time
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from dataclasses import fields, MISSING
-import inspect
 import rti.idl as idl
 import rti.idl_impl.reflection_utils as reflection_utils
 from rti.idl_impl.reflection_utils import remove_classvar
@@ -417,20 +416,13 @@ def create_participant():
     return dds.DomainParticipant(get_test_domain(), get_test_participant_qos())
 
 
-def create_topic(participant: dds.DomainParticipant, type: type, topic_name: Optional[str] = None):
-    name = f'Example {type}' if topic_name is None else topic_name
-    # TODO PY-21: these helpers wouldn't be necessary if all topics were
-    # unified under dds.Topic.
-
-    # For non-IDL types, such as dds.StringTopicType, dds.DynamicData:
-    if not _is_idl_type(type):
-        if type.__class__ in (dds.StructType, dds.UnionType, dds.DynamicData):
-            return dds.DynamicData.Topic(participant, name, type)
-        else:
-            return type.Topic(participant, name)
-
-    # For IDL types:
+def create_topic(participant: dds.DomainParticipant, type: Union[dds.DynamicType, type], topic_name: Optional[str] = None):
+    if isinstance(type, dds.DynamicType):
+        name = topic_name or f'Example {type.name}'
+        return dds.DynamicData.Topic(participant, name, type)
     else:
+        # For IDL types
+        name = topic_name or f'Example {type.__name__}'
         return dds.Topic(participant, name, type)
 
 # Gets the "namespace" that contains this topic. When type is an IDL type,
@@ -444,21 +436,23 @@ def _get_topic_namespace(topic, type):
     elif isinstance(topic, dds.DynamicData.Topic):
         return dds.DynamicData
     else:
-        return type
+        raise Exception(f"Unknown topic type: {type}")
 
 
-def _create_reader(topic, type, reader_qos):
+def _create_reader(topic, type, reader_qos, subscriber=None):
     ns = _get_topic_namespace(topic, type)
-    return ns.DataReader(topic.participant, topic, reader_qos)
+    if subscriber is None:
+        return ns.DataReader(topic.participant, topic, reader_qos)
+    else:
+        return ns.DataReader(subscriber, topic, reader_qos)
 
 
-def _create_writer(topic, type, writer_qos):
+def _create_writer(topic, type, writer_qos, publisher=None):
     ns = _get_topic_namespace(topic, type)
-    return ns.DataWriter(topic.participant, topic, writer_qos)
-
-
-def _is_idl_type(type):
-    return inspect.getmodule(type).__name__ != "rti.connextdds"
+    if publisher is None:
+        return ns.DataWriter(topic.participant, topic, writer_qos)
+    else:
+        return ns.DataWriter(publisher, topic, writer_qos)
 
 
 class PubSubFixture:
@@ -479,6 +473,8 @@ class PubSubFixture:
         self.participant = participant or create_participant()
         self.topic = topic or create_topic(
             self.participant, data_type, topic_name)
+        self.publisher = dds.Publisher(self.participant)
+        self.subscriber = dds.Subscriber(self.participant)
 
         if create_writer:
             writer_qos = self.participant.implicit_publisher.default_datawriter_qos
@@ -486,7 +482,8 @@ class PubSubFixture:
             writer_qos << dds.History.keep_all
             for policy in writer_policies:
                 writer_qos << policy
-            self.writer = _create_writer(self.topic, data_type, writer_qos)
+            self.writer = _create_writer(
+                self.topic, data_type, writer_qos, publisher=self.publisher)
 
         if create_reader:
             reader_qos = self.participant.implicit_subscriber.default_datareader_qos
@@ -505,9 +502,11 @@ class PubSubFixture:
                 else:
                     raise TypeError(
                         f"Expected str or tuple, given {type(content_filter)}")
-                self.reader = _create_reader(cft, data_type, reader_qos)
+                self.reader = _create_reader(
+                    cft, data_type, reader_qos, self.subscriber)
             else:
-                self.reader = _create_reader(self.topic, data_type, reader_qos)
+                self.reader = _create_reader(
+                    self.topic, data_type, reader_qos, self.subscriber)
 
         if create_reader and create_writer:
             wait.for_discovery(self.reader, self.writer)

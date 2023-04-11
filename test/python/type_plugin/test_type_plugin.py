@@ -70,6 +70,31 @@ def test_idl_topic_with_qos(shared_participant):
     assert topic.qos.history.depth == 13
 
 
+def test_idl_topic_with_type_name(participant: dds.DomainParticipant):
+    assert not participant.is_type_registered("MyTypeName")
+    assert not participant.is_type_registered("Point")
+    topic = dds.Topic(participant, "MyPoint", Point, type_name="MyTypeName")
+    assert participant.is_type_registered("MyTypeName")
+    assert not participant.is_type_registered("Point")
+    assert topic.type_name == "MyTypeName"
+
+
+def test_idl_topic_with_all_args(shared_participant: dds.DomainParticipant):
+    qos = dds.TopicQos()
+    qos.history.kind = dds.HistoryKind.KEEP_LAST
+    qos.history.depth = 13
+    listener = dds.NoOpTopicListener()
+    assert not shared_participant.is_type_registered("MyTypeName2")
+    topic = dds.Topic(shared_participant, "MyPoint",
+                      Point, 
+                      type_name="MyTypeName2",
+                      qos=qos,
+                      listener=listener,
+                      mask=dds.StatusMask.INCONSISTENT_TOPIC)
+    assert topic.type_name == "MyTypeName2"
+    assert topic.qos.history.depth == 13
+    assert topic.listener is listener
+
 def test_idl_any_topic(shared_participant):
     topic = dds.Topic(shared_participant, "MyPoint", Point)
 
@@ -246,16 +271,16 @@ def test_native_read(shared_participant, use_selector):
 
     reader = fixture.reader if not use_selector else fixture.reader.select()
 
-    with reader._read_native() as samples:
+    with reader.read_loaned() as samples:
         assert len(samples) == 2
         assert samples[0].info.valid
         assert samples[0].info.state.sample_state == dds.SampleState.NOT_READ
-        sample_ptr = samples[0].data.get_ptr()
+        sample_ptr = samples[0].data._get_ptr()
         sample = ctypes.cast(sample_ptr, point_ts.c_type_ptr).contents
         assert sample.x == 3
         assert sample.y == 4
 
-    with reader._take_native() as samples:
+    with reader.take_loaned() as samples:
         assert len(samples) == 2
         assert samples[0].info.valid
         assert samples[0].info.state.sample_state == dds.SampleState.READ
@@ -263,5 +288,5 @@ def test_native_read(shared_participant, use_selector):
         assert sample.x == 3
         assert sample.y == 4
 
-    with reader._read_native() as samples:
+    with reader.read_loaned() as samples:
         assert len(samples) == 0

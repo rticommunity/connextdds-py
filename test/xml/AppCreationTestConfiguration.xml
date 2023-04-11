@@ -1,5 +1,4 @@
-<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:noNamespaceSchemaLocation="../../../dds_c.1.0/resource/xsd/rti_dds_profiles.xsd">
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://community.rti.com/schema/6.1.1/rti_dds_profiles.xsd">
 
     <!-- Qos Library -->
     <qos_library name="qosLibrary">
@@ -57,6 +56,12 @@
                 </topic>
         </domain>
 
+        <domain name="IdlTestDomain" domain_id="0">
+            <register_type name="MyIdlType"/>
+            <topic name="IdlTestTopic" register_type_ref="MyIdlType">
+                <topic_qos base_name="qosLibrary::DefaultProfile"/>
+            </topic>
+        </domain>
     </domain_library>
 
     <!-- Participant library -->
@@ -83,13 +88,32 @@
                     <datareader_qos base_name="qosLibrary::DefaultProfile"/>
                 </data_reader>
                 <data_reader name="XMLAppCreationTestReaderWithFilter" topic_ref="XMLAppCreationDynamicTestTopic">
+                    <content_filter name="XMLAppCreationDynamicTestCft" kind="builtin.sql">
+                        <expression> foo &gt; 5 </expression>
+                    </content_filter>
                      <datareader_qos base_name="qosLibrary::DefaultProfile"/>
-                     <filter name="XMLAppCreationDynamicTestCft" kind="builtin.sql">
-                         <expression> foo &gt; 5 </expression>
-                     </filter>
                 </data_reader>
              </subscriber>
+        </domain_participant>
 
+        <!-- Participants using Idl-based types -->
+        <domain_participant name="IdlParticipant" domain_ref="TestDomainLibrary::IdlTestDomain">
+            <participant_qos base_name="qosLibrary::DefaultProfile"/>
+
+            <data_writer name="TestWriter" topic_ref="IdlTestTopic">
+                <datawriter_qos base_name="qosLibrary::DefaultProfile"/>
+            </data_writer>
+
+            <data_reader name="TestReader" topic_ref="IdlTestTopic">
+                <datareader_qos base_name="qosLibrary::DefaultProfile"/>
+            </data_reader>
+
+            <data_reader name="TestCftReader" topic_ref="IdlTestTopic">
+                <content_filter name="TestCft" kind="builtin.sql">
+                    <expression>vertices[0].x &gt; 10</expression>
+                </content_filter>
+                <datareader_qos base_name="qosLibrary::DefaultProfile"/>
+            </data_reader>
         </domain_participant>
 
     </domain_participant_library>

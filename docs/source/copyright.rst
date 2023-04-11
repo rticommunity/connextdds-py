@@ -39,21 +39,6 @@ This product includes cryptographic software written by Eric Young
 
 .. rubric:: Notices
 
-*Deprecations and Removals*
-
-Any deprecations or removals noted in this document serve as notice under 
-the Real-Time Innovations, Inc. Maintenance Policy #4220 and/or any other 
-agreements by and between RTI and customer regarding maintenance and support 
-of RTI's software.
-
-*Deprecated* means that the item is still supported in the release, but will 
-be removed in a future release. *Removed* means that the item is discontinued 
-or no longer supported. By specifying that an item is deprecated in a release, 
-RTI hereby provides customer notice that RTI reserves the right after one year 
-from the date of such release and, with or without further notice, to immediately 
-terminate maintenance (including without limitation, providing updates and 
-upgrades) for the item, and no longer support the item, in a future release.
-
 *Early Access Software*
 
 “Real-Time Innovations, Inc. (“RTI”) licenses this Early Access release software 
@@ -88,6 +73,21 @@ upgrades) for the item, and no longer support the item, in a future release.
     STRICT PRODUCT LIABILITY OR OTHERWISE, WHETHER ARISING OUT OF OR RELATING 
     TO THE USE OR INABILITY TO USE THE SOFTWARE, EVEN IF RTI HAS BEEN ADVISED 
     OF THE POSSIBILITY OF SUCH DAMAGES.”
+
+*Deprecations and Removals*
+
+Any deprecations or removals noted in this document serve as notice under 
+the Real-Time Innovations, Inc. Maintenance Policy #4220 and/or any other 
+agreements by and between RTI and customer regarding maintenance and support 
+of RTI's software.
+
+*Deprecated* means that the item is still supported in the release, but will 
+be removed in a future release. *Removed* means that the item is discontinued 
+or no longer supported. By specifying that an item is deprecated in a release, 
+RTI hereby provides customer notice that RTI reserves the right after one year 
+from the date of such release and, with or without further notice, to immediately 
+terminate maintenance (including without limitation, providing updates and 
+upgrades) for the item, and no longer support the item, in a future release.
 
 Technical Support |br|
 Real-Time Innovations, Inc. |br|
@@ -131,4 +131,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Please also refer to the file .github/CONTRIBUTING.md, which clarifies licensing of
 external contributions to this project including patches, pull requests, etc.
+
+.. rubric:: RTI Labs License
+
+Revised: October 19, 2022
+
+© 2022 Copyright, Real-Time Innovations, Inc. (RTI). All rights reserved.
+
+RTI grants Licensee a license to use, modify, compile, and create derivative
+works of the accompanying software (“Software”) solely for use with a validly
+licensed copy of RTI Connext DDS.  The Software is not open source but Licensee
+may redistribute copies of the Software provided that all such copies are subject
+to this license.  All redistributions of the Software must retain the above
+copyright notice, the conditions specified herein, and the following disclaimers.
+
+The Software is provided "as is", and RTI disclaims, to the maximum extent permitted
+by applicable law, all express and implied representations, warranties and guarantees,
+including without limitation, the implied warranties of merchantability, fitness for
+any particular purpose, satisfactory quality, and non-infringement of third-party rights.
+RTI is under no obligation to maintain or support the software. 
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL RTI BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+WITHOUT LIMITATION, NEGLIGENCE OR OTHERWISE) ARISING OUT OF THE USE OR INABILITY
+TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The Software may contain independent, third-party code that are subject to open
+source license terms and conditions (such code, “Open Source Software”, and the
+respective open source license terms and conditions, the “OSS License”). To the
+extent applicable, copies of the OSS License and any required notices for such
+Open Source Software are included in the legal_notices.txt file, other
+accompanying notices file, or the accompanying documentation.  Nothing herein 
+limits your rights under, or grants you rights that supersede, the OSS License 
+applicable to the corresponding Open Source Software.  It is your responsibility 
+to ensure that your use of Open Source Software contained in the Software complies 
+with the corresponding OSS License.
 

@@ -64,18 +64,6 @@ void init_class_defs(py::class_<WriterDataLifecycle>& cls)
                     "instance."
                     "\n\n"
                     "This property's getter returns a deep copy.")
-            .def_property_readonly_static(
-                    "auto_dispose_unregistered_instances",
-                    [](py::object&) {
-                        return WriterDataLifecycle::AutoDisposeUnregisteredInstances();
-                    },
-                    "Creates WriterDataLifecycle(true).")
-            .def_property_readonly_static(
-                    "manually_dispose_unregistered_instances",
-                    [](py::object&) {
-                        return WriterDataLifecycle::ManuallyDisposeUnregisteredInstances();
-                    },
-                    "Creates WriterDataLifecycle(false).")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

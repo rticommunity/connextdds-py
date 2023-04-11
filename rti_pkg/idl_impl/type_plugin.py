@@ -22,6 +22,8 @@ from rti.idl_impl.unions import Case, union_cases, union_discriminator
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.annotations as annotations
 
+from rti.idl_impl.type_utils import Sample
+
 #
 # This module contains the implementation details of the IDL Type Support
 #
@@ -546,6 +548,7 @@ class TypeSupport:
         elif kind == TypeSupportKind.STRUCT:
             self.c_type = create_ctype_from_dataclass(
                 idl_type, member_annotations)
+            self.sample_type = Sample
         elif kind == TypeSupportKind.UNION:
             is_union = True
 
@@ -557,6 +560,7 @@ class TypeSupport:
             cases = union_cases(idl_type)
             self.c_type = create_ctype_from_union_dataclass(
                 idl_type, discriminator, cases, member_annotations)
+            self.sample_type = Sample
         else:
             raise ValueError(f'Unknown type kind {kind}')
 
@@ -635,7 +639,7 @@ class TypeSupport:
         return py_sample
 
     def get_c_data(self, c_sample_wrapper):
-        return ctypes.cast(c_sample_wrapper.get_ptr(), self.c_type_ptr).contents
+        return ctypes.cast(c_sample_wrapper._get_ptr(), self.c_type_ptr).contents
 
     def serialize(self, sample):
         """Serialize a data sample into a cdr byte buffer"""

@@ -27,10 +27,18 @@ class PyDomainParticipantListener
           public PyAnyTopicListener {
 public:
     using dds::domain::DomainParticipantListener::DomainParticipantListener;
+    using dds::domain::DomainParticipantListener::
+            on_invalid_local_identity_status_advance_notice;
+
 
     virtual ~PyDomainParticipantListener()
     {
     }
+
+    virtual void on_invalid_local_identity_status_advance_notice(
+            PyDomainParticipant&,
+            const rti::core::status::
+                    InvalidLocalIdentityAdvanceNoticeStatus&) = 0;
 };
 
 class PyNoOpDomainParticipantListener : public PyDomainParticipantListener,
@@ -40,6 +48,13 @@ class PyNoOpDomainParticipantListener : public PyDomainParticipantListener,
 public:
     using PyDomainParticipantListener::PyDomainParticipantListener;
 
+    void on_invalid_local_identity_status_advance_notice(
+            PyDomainParticipant&,
+            const rti::core::status::InvalidLocalIdentityAdvanceNoticeStatus&)
+            override
+    {
+    }
+
     using PyNoOpPublisherListener::on_application_acknowledgment;
     using PyNoOpPublisherListener::on_instance_replaced;
     using PyNoOpPublisherListener::on_liveliness_lost;
@@ -48,20 +63,18 @@ public:
     using PyNoOpPublisherListener::on_publication_matched;
     using PyNoOpPublisherListener::on_reliable_reader_activity_changed;
     using PyNoOpPublisherListener::on_reliable_writer_cache_changed;
-    using PyNoOpPublisherListener::on_service_request_accepted;
     using PyNoOpPublisherListener::on_sample_removed;
+    using PyNoOpPublisherListener::on_service_request_accepted;
 
     void on_offered_deadline_missed(
             PyAnyDataWriter&,
-            const dds::core::status::OfferedDeadlineMissedStatus&)
-            override
+            const dds::core::status::OfferedDeadlineMissedStatus&) override
     {
     }
 
     void on_offered_incompatible_qos(
             PyAnyDataWriter&,
-            const dds::core::status::OfferedIncompatibleQosStatus&)
-            override
+            const dds::core::status::OfferedIncompatibleQosStatus&) override
     {
     }
 
@@ -79,8 +92,7 @@ public:
 
     void on_reliable_writer_cache_changed(
             PyAnyDataWriter&,
-            const rti::core::status::ReliableWriterCacheChangedStatus&)
-            override
+            const rti::core::status::ReliableWriterCacheChangedStatus&) override
     {
     }
 
@@ -105,8 +117,7 @@ public:
 
     void on_service_request_accepted(
             PyAnyDataWriter&,
-            const rti::core::status::ServiceRequestAcceptedStatus&)
-            override
+            const rti::core::status::ServiceRequestAcceptedStatus&) override
     {
     }
 
@@ -125,15 +136,13 @@ public:
 
     void on_requested_deadline_missed(
             PyAnyDataReader&,
-            const dds::core::status::RequestedDeadlineMissedStatus&)
-            override
+            const dds::core::status::RequestedDeadlineMissedStatus&) override
     {
     }
 
     void on_requested_incompatible_qos(
             PyAnyDataReader&,
-            const dds::core::status::RequestedIncompatibleQosStatus&)
-            override
+            const dds::core::status::RequestedIncompatibleQosStatus&) override
     {
     }
 
@@ -270,6 +279,15 @@ public:
     {
         auto adw = PyAnyDataWriter(writer);
         this->on_sample_removed(adw, cookie);
+    }
+
+    void on_invalid_local_identity_status_advance_notice(
+            dds::domain::DomainParticipant& dp,
+            const rti::core::status::InvalidLocalIdentityAdvanceNoticeStatus& s)
+            override
+    {
+        PyDomainParticipant py_dp(dp);
+        this->on_invalid_local_identity_status_advance_notice(py_dp, s);
     }
 
     void on_offered_deadline_missed(
@@ -558,6 +576,19 @@ public:
                 status);
     }
 
+    void on_invalid_local_identity_status_advance_notice(
+            PyDomainParticipant& dp,
+            const rti::core::status::InvalidLocalIdentityAdvanceNoticeStatus& s)
+            override
+    {
+        PYBIND11_OVERLOAD_PURE(
+                void,
+                DPLBase,
+                on_invalid_local_identity_status_advance_notice,
+                dp,
+                s);
+    }
+
     virtual ~PyDomainParticipantListenerTrampoline()
     {
     }
@@ -755,6 +786,28 @@ public:
             const dds::core::status::InconsistentTopicStatus& status) override
     {
         PYBIND11_OVERLOAD(void, DPLBase, on_inconsistent_topic, topic, status);
+    }
+
+    void on_invalid_local_identity_status_advance_notice(
+            dds::domain::DomainParticipant& dp,
+            const rti::core::status::InvalidLocalIdentityAdvanceNoticeStatus& s)
+            override
+    {
+        PyDomainParticipant py_dp(dp);
+        this->on_invalid_local_identity_status_advance_notice(py_dp, s);
+    }
+
+    void on_invalid_local_identity_status_advance_notice(
+            PyDomainParticipant& dp,
+            const rti::core::status::InvalidLocalIdentityAdvanceNoticeStatus& s)
+            override
+    {
+        PYBIND11_OVERLOAD(
+                void,
+                DPLBase,
+                on_invalid_local_identity_status_advance_notice,
+                dp,
+                s);
     }
 
     virtual ~PyNoOpDomainParticipantListenerTrampoline()

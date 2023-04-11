@@ -12,11 +12,11 @@ Requirements
 - Python® 3.6 or newer
 - The following Python packages:
 
-  * For all systems: ``wheel setuptools cmake pybind11==2.8.1``
-  * Additionally, for Linux systems: ``patchelf``
-  * And for mac OS systems: ``delocate``
+  * For all systems: ``pip install wheel setuptools cmake pybind11==2.9.0``
+  * Additionally, for Linux systems: ``pip install patchelf``
+  * And for mac OS systems: ``pip install delocate``
 
-- A *Connext* 7.0.0 host and target installation (see the `Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.0.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ for instructions on how to install Connext).
+- A *Connext* 7.1.0 host and target installation (see the `Connext Getting Started Guide <https://community.rti.com/static/documentation/connext-dds/7.1.0/doc/manuals/connext_dds_professional/getting_started_guide/index.html>`_ for instructions on how to install Connext).
 
 .. note::
 
@@ -45,7 +45,7 @@ Simple Installation
 
   .. code-block:: shell
 
-      $ python configure.py --nddshome /opt/rti_connext_dds-7.0.0 --jobs 4 x64Linux4gcc7.3.0
+      $ python configure.py --nddshome /opt/rti_connext_dds-7.1.0 --jobs 4 x64Linux4gcc7.3.0
 
   See :ref:`building:Advanced configuration` below for more options.
 

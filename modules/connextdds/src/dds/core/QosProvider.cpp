@@ -11,7 +11,7 @@
 
 #include "PyConnext.hpp"
 #include <dds/core/QosProvider.hpp>
-#include "PyDynamicTypeMap.hpp"
+#include "IdlTypeSupport.hpp"
 
 using namespace dds::core;
 using namespace dds::domain::qos;
@@ -217,33 +217,19 @@ void init_class_defs(py::class_<QosProvider>& cls)
                        const std::string& type_lib_name,
                        const std::string& type_name) {
                         auto dt = qp->type(type_lib_name, type_name);
-                        PyDynamicTypeMap::add(type_name, dt);
                         return py_cast_type(dt);
                     },
                     py::arg("library"),
                     py::arg("name"),
                     "Get a DynamicType from a type library in the QosProvider.")
-#if rti_connext_version_gte(6, 0, 0, 0)
             .def(
                     "type",
                     [](const QosProvider& qp, const std::string& type_name) {
                         auto dt = qp->type(type_name);
-                        PyDynamicTypeMap::add(type_name, dt);
                         return py_cast_type(dt);
                     },
                     py::arg("name"),
                     "Get a DynamicType from the QosProvider.")
-#else
-            .def(
-                    "type",
-                    [](const QosProvider& qp, const std::string& type_name) {
-                        auto dt = qp->type(qp->type_libraries()[0], type_name);
-                        PyDynamicTypeMap::add(type_name, dt);
-                        return py_cast_type(dt);
-                    },
-                    py::arg("name"),
-                    "Get a DynamicType from the default type library of the QosProvider.")
-#endif
             .def_property_readonly(
                     "type_libraries",
                     [](const QosProvider& qp) { return qp->type_libraries(); },
@@ -274,6 +260,10 @@ void init_class_defs(py::class_<QosProvider>& cls)
                     "create_participant_from_config",
                     [](QosProvider& qp,
                        const std::string& config) {
+                        // Ensure that the Python PluginSupport is used for
+                        // XML App creation
+                        rti::domain::detail::set_factory_plugin_support<
+                                PyFactoryIdlPluginSupport>();
                         return PyDomainParticipant(
                                 qp->create_participant_from_config(
                                         config));
@@ -290,6 +280,10 @@ void init_class_defs(py::class_<QosProvider>& cls)
                        const std::string& config,
                        const rti::domain::DomainParticipantConfigParams&
                                params) {
+                        // Ensure that the Python PluginSupport is used for
+                        // XML App creation
+                        rti::domain::detail::set_factory_plugin_support<
+                                PyFactoryIdlPluginSupport>();
                         return PyDomainParticipant(
                                 qp->create_participant_from_config(
                                         config,

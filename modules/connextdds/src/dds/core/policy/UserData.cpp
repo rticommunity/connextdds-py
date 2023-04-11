@@ -20,16 +20,16 @@ template<>
 void init_class_defs(py::class_<UserData>& cls)
 {
     cls.def(py::init<>(),
-            "Creates an instance with an empty sequence of bytes.")
+               "Creates an instance with an empty sequence of bytes.")
             .def(py::init<const std::vector<uint8_t>&>(),
-                 py::arg("data"),
-                 "Creates an instance with a sequence of bytes.")
+                    py::arg("data"),
+                    "Creates an instance with a sequence of bytes.")
             .def_property(
                     "value",
                     (const std::vector<uint8_t> (UserData::*)() const)
                             & UserData::value,
                     [](UserData& ud, const std::vector<uint8_t>& v) {
-                        return ud.value(v.begin(), v.end());
+                       return ud.value(v.begin(), v.end());
                     },
                     "The user data.")
             .def(

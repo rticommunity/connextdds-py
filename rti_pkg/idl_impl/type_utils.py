@@ -10,13 +10,19 @@
 #
 
 from dataclasses import dataclass
-from typing import Any, Callable, Sequence, Union, ClassVar, List
+from typing import Any, Callable, Sequence, Union, ClassVar, List, NamedTuple
 import array
 import itertools
 import rti.idl_impl.type_hints as type_hints
 import rti.idl_impl.annotations as annotations
 import rti.idl_impl.reflection_utils as reflection_utils
 import rti.connextdds as dds
+
+
+class Sample(NamedTuple):
+    """A tuple containing the user data and the SampleInfo"""
+    data: Any
+    info: dds.SampleInfo
 
 @dataclass
 class PrimitiveArrayFactory:

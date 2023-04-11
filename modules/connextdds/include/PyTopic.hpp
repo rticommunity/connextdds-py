@@ -16,7 +16,6 @@
 #include <dds/topic/Topic.hpp>
 #include <dds/topic/find.hpp>
 #include "PyEntity.hpp"
-#include "PyDynamicTypeMap.hpp"
 #include "PyTopicListener.hpp"
 #include "PyAnyTopic.hpp"
 

@@ -12,4 +12,4 @@ cmake --build %BUILD_DIR% --config Release --target install -j 8
 rmdir /q /s %SOURCE_DIR%
 rmdir /q /s %BUILD_DIR%
 
-python configure.py -j 8 -n stage\\rti_connext_dds-7.0.0 AMD64Windows
+python configure.py -j 8 -n stage\\rti_connext_dds-7.1.0 AMD64Windows

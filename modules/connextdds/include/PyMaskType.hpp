@@ -27,6 +27,8 @@ py::class_<T> init_mask_type_no_int_constructor(
                 "Creates a mask with no bits set.",
         bool default_string_conversion = true)
 {
+    using MaskType = typename T::MaskType;
+
     py::class_<T> mt(m, name.c_str());
     mt.def(py::init<>(), noarg_constructor_doc_str.c_str())
             .def(
@@ -42,25 +44,29 @@ py::class_<T> init_mask_type_no_int_constructor(
                     },
                     "Set individual mask bit")
             .def("__contains__",
-                 [](T& mask, T& other) { return (mask & other) == other; })
+                    [](T& mask, T& other) { return (mask & other) == other; })
             .def(
                     "test",
                     [](const T& mask, size_t pos) { return mask.test(pos); },
                     py::arg("pos"),
-                    "Test whether the mask bit at postition \"pos\" is set.")
+                    "Test whether the mask bit at position \"pos\" is set.")
             .def(
                     "test_all",
-                    [](const T& mask) {
-                        return mask.all();
+                    [](const T& mask) -> bool {
+                        return static_cast<const MaskType&>(mask).all();
                     },
                     "Test if all bits are set.")
             .def(
                     "test_any",
-                    [](const T& mask) { return mask.any(); },
+                    [](const T& mask) -> bool {
+                        return static_cast<const MaskType&>(mask).any();
+                    },
                     "Test if any bits are set.")
             .def(
                     "test_none",
-                    [](const T& mask) { return mask.none(); },
+                    [](const T& mask) -> bool {
+                        return static_cast<const MaskType&>(mask).none();
+                    },
                     "Test if none of the bits are set.")
             .def_property_readonly(
                     "count",
@@ -155,7 +161,7 @@ py::class_<T> init_mask_type_no_int_constructor(
             .def(
                     "__irshift__",
                     [](T& mask, std::size_t value) -> T& {
-                        mask <<= value;
+                        mask >>= value;
                         return mask;
                     },
                     py::is_operator(),
@@ -195,6 +201,10 @@ py::class_<T> init_mask_type_no_int_constructor(
                     },
                     py::is_operator(),
                     "Right shift bits in mask.")
+            .def(
+                    "__bool__",
+                    [](const T& mask) { return mask.any(); },
+                    "Test if any bits are set.")
             .def("__int__", &T::to_ullong, "Convert mask to int.");
 
     if (default_string_conversion) {
@@ -202,6 +212,11 @@ py::class_<T> init_mask_type_no_int_constructor(
             "__str__",
             [](T& mask) { return mask.to_string(); },
             "Convert mask to string.");
+
+        mt.def(
+                "__repr__",
+                [](T& mask) { return mask.to_string(); },
+                "Convert mask to string.");
     }
 
     return mt;

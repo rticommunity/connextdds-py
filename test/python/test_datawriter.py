@@ -14,7 +14,7 @@ import rti.idl as idl
 
 import pytest
 from test_utils.fixtures import *
-from rti.types.builtin import String, KeyedString
+from rti.types.builtin import String, KeyedString, Bytes
 
 
 # --- Helpers and fixtures ----------------------------------------------------
@@ -94,7 +94,7 @@ def pubsub_keyed_types(request, shared_participant):
 def pub(request, shared_participant):
     data_type = request.param()
     fixture = PubSubFixture(
-        shared_participant, data_type, create_reader=False)
+        shared_participant, data_type, create_reader=False, writer_policies=[dds.EntityName("writer")])
     yield fixture
     fixture.participant.close_contained_entities()
 
@@ -176,7 +176,46 @@ def get_writer_w_listeners(participant, topic, type, listener):
     return ns.DataWriter(participant, topic, dds.DataWriterQos(), listener)
 
 
+# --- Getter and setter tests -------------------------------------------------
+
+
+def test_writer_get_set_qos(pub):
+    qos = dds.DataWriterQos()
+    pub.writer >> qos
+    assert qos == pub.writer.qos
+    qos.availability.max_endpoint_availability_waiting_time = dds.Duration(
+        2, 2)
+    pub.writer.qos = qos
+    assert pub.writer.qos.availability.max_endpoint_availability_waiting_time == dds.Duration(
+        2, 2)
+    qos.availability.max_endpoint_availability_waiting_time = dds.Duration(
+        1, 1)
+    pub.writer << qos
+    assert pub.writer.qos.availability.max_endpoint_availability_waiting_time == dds.Duration(
+        1, 1)
+
+
+def test_writer_readonly_properties(pub):
+    assert pub.writer.topic == pub.topic
+    assert pub.writer.publisher == pub.publisher
+    assert pub.writer.topic_name == pub.topic.name
+    assert pub.writer.type_name == pub.topic.type_name
+
+
+def test_writer_find(pub):
+    assert pub.writer.find_all_by_topic(
+        pub.publisher, pub.topic.name) == [pub.writer]
+    assert pub.writer.find_by_name(
+        pub.publisher, pub.writer.qos.entity_name.name) == pub.writer
+    assert pub.writer.find_by_topic(
+        pub.publisher, pub.topic.name) == pub.writer
+
+
+def test_writer_assert_liveliness(pub):
+    pub.writer.assert_liveliness()
+
 # --- Write tests -------------------------------------------------------------
+
 
 def test_write(pubsub):
     sample = get_sample_value(pubsub.data_type)
@@ -394,6 +433,42 @@ def test_pubsub_with_timestamp(pubsub_keyed_types):
     assert info.source_timestamp == dds.Time(124)
 
 
+# --- Matched tests ----------------------------------------------------------
+
+def test_writer_matched_subscription_active(pubsub):
+    assert pubsub.writer.is_matched_subscription_active(
+        pubsub.reader.instance_handle)
+    for locator in pubsub.writer.matched_subscriptions_locators:
+        assert locator.port >= 7400
+
+
+def test_writer_matched_subscription_data(pubsub):
+    data = pubsub.writer.matched_subscription_data(
+        pubsub.reader.instance_handle)
+    assert data is not None
+    assert data.topic_name == pubsub.reader.topic_name
+    assert data.type_name == pubsub.reader.type_name
+
+
+@pytest.mark.parametrize("test_type", get_test_types_generator())
+def test_writer_matched_subscription_participant_data(shared_participant, test_type):
+    p1 = shared_participant
+    p2 = create_participant()
+    publisher = dds.Publisher(p1)
+    test_type = test_type()
+    ns = dds.DynamicData if type(test_type) is dds.StructType else dds
+    pub_topic = ns.Topic(p1, "TestTopic", test_type)
+    sub_topic = ns.Topic(p2, "TestTopic", test_type)
+    writer = ns.DataWriter(publisher, pub_topic)
+    reader = ns.DataReader(dds.Subscriber(p2), sub_topic)
+    wait.for_discovery(reader, writer)
+    subscriptions = writer.matched_subscriptions
+    assert subscriptions[0] == reader.instance_handle
+    data = writer.matched_subscription_participant_data(subscriptions[0])
+    assert data is not None
+    assert data.domain_id == p2.domain_id
+
+
 # --- Key Value tests ---------------------------------------------------------
 
 def test_key_value(pub):
@@ -408,8 +483,147 @@ def test_key_value(pub):
 # --- Other tests -------------------------------------------------------------
 
 
+@pytest.mark.parametrize("test_type", get_test_types_generator())
+def test_wait_for_ack_returns_after_ack(shared_participant, test_type):
+    writer_protocol = dds.DataWriterProtocol()
+    writer_protocol.rtps_reliable_writer.fast_heartbeat_period = dds.Duration.from_milliseconds(
+        10)
+    writer_protocol.rtps_reliable_writer.heartbeat_period = dds.Duration.from_milliseconds(
+        10)
+    writer_protocol.rtps_reliable_writer.late_joiner_heartbeat_period = dds.Duration.from_milliseconds(
+        10)
+    pubsub = PubSubFixture(
+        shared_participant,
+        test_type(),
+        writer_policies=[writer_protocol])
+
+    pubsub.writer.write(get_sample_value(pubsub.data_type))
+    pubsub.writer.wait_for_acknowledgments(dds.Duration(10, 0))
+
+
+@pytest.mark.parametrize("ack_response_data", [True, False])
+def test_is_sample_app_acknowledged(ack_response_data, shared_participant):
+    callback_count = 0
+    received_ack_info: dds.AcknowledgmentInfo = None
+
+    class AppAckListener(dds.NoOpDataWriterListener):
+        def on_application_acknowledgment(self, writer, info):
+            nonlocal callback_count, received_ack_info
+            callback_count += 1
+            received_ack_info = info
+
+    topic = dds.Topic(shared_participant, "TestTopic", KeyedString)
+
+    app_ack_reliability = dds.Reliability.reliable()
+    app_ack_reliability.acknowledgment_kind = dds.AcknowledgmentKind.APPLICATION_EXPLICIT
+    writer_qos = dds.DataWriterQos()
+
+    writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+    writer_qos.history.kind = dds.HistoryKind.KEEP_ALL
+    writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+    writer_qos << app_ack_reliability
+
+    writer_property = dds.Property()
+    writer_property.set(
+        "dds.data_writer.ack_mode_in_wait_for_acknowledgments", "APP_ACK")
+    writer_qos.property = writer_property
+    writer = dds.DataWriter(
+        dds.Publisher(shared_participant),
+        topic,
+        writer_qos,
+        AppAckListener(),
+        dds.StatusMask.DATAWRITER_APPLICATION_ACKNOWLEDGMENT)
+
+    reader_qos = dds.DataReaderQos()
+    reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+    reader_qos.history.kind = dds.HistoryKind.KEEP_ALL
+    reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+    reader_qos << app_ack_reliability
+    reader_qos.data_reader_resource_limits.max_app_ack_response_length = 10
+
+    reader = dds.DataReader(dds.Subscriber(
+        shared_participant), topic, reader_qos)
+    wait.for_discovery(reader, writer)
+    writer.write([KeyedString("key1", "value1"), KeyedString(
+        "key2", "value2"), KeyedString("key3", "value3")])
+    wait.for_data(reader, 3)
+    samples = reader.take()
+    assert len(samples) == 3
+    assert not writer.is_sample_app_acknowledged(
+        samples[1][1].original_publication_virtual_sample_identity)
+
+    response_data = Bytes()
+    response_data.value.append(3)
+    response_data.value.append(4)
+    response_data.value.append(8)
+    response_data.value.append(9)
+    response = dds.AckResponseData()
+    response.value = response_data.value
+
+    if ack_response_data:
+        reader.acknowledge_sample(samples[1][1], response)
+    else:
+        reader.acknowledge_sample(samples[1][1])
+
+    writer._wait_for_sample_acknowledgment(
+        samples[1][1].original_publication_virtual_sample_identity,
+        dds.Duration(10, 0))
+    wait.until_equal(1, lambda: callback_count)
+    assert received_ack_info is not None
+    assert received_ack_info.subscription_handle == reader.instance_handle
+    assert received_ack_info.sample_identity == samples[
+        1][1].original_publication_virtual_sample_identity
+    assert received_ack_info.cookie == dds.Cookie()
+    assert received_ack_info.valid_response_data
+    if ack_response_data:
+        received_ack_info.response_data == response
+
+    assert writer.is_sample_app_acknowledged(
+        samples[1][1].original_publication_virtual_sample_identity)
+    callback_count = 0
+    if ack_response_data:
+        reader.acknowledge_sample(samples[1][1], response)
+        response.value.append(1)
+        response.value.append(2)
+        response.value.append(6)
+        response.value.append(7)
+        reader.acknowledge_all(response)
+    else:
+        reader.acknowledge_all()
+    wait.until_equal(2, lambda: callback_count)
+    assert received_ack_info is not None
+    assert received_ack_info.subscription_handle == reader.instance_handle
+    assert received_ack_info.sample_identity == samples[
+        2][1].original_publication_virtual_sample_identity
+    assert received_ack_info.valid_response_data
+    if ack_response_data:
+        assert received_ack_info.response_data.value == response.value
+
+
+def test_wait_for_async_publisher(shared_participant):
+    topic = dds.Topic(shared_participant, "TestTopic", String)
+    reader = dds.DataReader(dds.Subscriber(shared_participant), topic)
+    writer = dds.DataWriter(dds.Publisher(shared_participant), topic)
+    wait.for_discovery(reader, writer)
+
+    writer.write(String("Hello World"))
+    writer.wait_for_asynchronous_publishing(dds.Duration(10))
+    wait.for_data(reader, 1)
+    assert reader.read_data() == [String("Hello World")]
+
+
 def test_writer_cast(shared_participant):
     fixture = PubSubFixture(shared_participant, PointIDL, create_reader=False)
     writer = fixture.writer
     any_writer = dds.AnyDataWriter(writer)
     assert writer == dds.DataWriter(any_writer)
+
+
+def test_writer_exit(shared_participant):
+    fixture = PubSubFixture(shared_participant, PointIDL,
+                            create_reader=False, create_writer=False)
+    with dds.DataWriter(fixture.publisher, fixture.topic) as writer:
+        assert writer is not None
+        assert not writer.closed
+        # By using a with statement we can ensure writer.__exit__ is called
+    assert writer.closed

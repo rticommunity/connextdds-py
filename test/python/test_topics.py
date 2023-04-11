@@ -13,6 +13,7 @@ import pytest
 from test_utils.fixtures import *
 import rti.idl as idl
 import rti.connextdds as dds
+from rti.types.builtin import String
 
 
 @idl.struct
@@ -58,7 +59,7 @@ def test_topic_listener_can_be_set(shared_participant):
     # Test set_listener fn
     topic.set_listener(listener, dds.StatusMask.ALL)
     assert topic.listener == listener
-    
+
     # Test it can be set to none
     topic.listener = None
     assert topic.listener is None
@@ -77,3 +78,67 @@ def test_inconsistent_topic(shared_participant):
 	r = dds.DataReader(shared_participant.implicit_subscriber, point_topic)
 
 	wait.until(lambda: PointListener.listener_called)
+
+
+def test_close_topic(shared_participant):
+    topic = dds.Topic(shared_participant, "StringTopic", String)
+    assert "StringTopic" == shared_participant.find_topics()[0].name
+    topic.close()
+    assert len(shared_participant.find_topics()) == 0
+
+
+def test_topic_qos_getter_setter(shared_participant):
+    topic = dds.Topic(shared_participant, "StringTopic", String)
+    qos = topic.qos
+    assert qos == dds.TopicQos()
+    qos.deadline.period = dds.Duration(1, 2)
+    topic.qos = qos
+    assert topic.qos == qos
+    assert topic.qos.deadline.period == dds.Duration(1, 2)
+
+
+def test_topic_type_name(shared_participant):
+    topic = dds.Topic(shared_participant, "StringTopic", String)
+    assert topic.type_name == "String"
+
+
+def test_topic_comparison(shared_participant):
+    topic1 = dds.Topic(shared_participant, "StringTopic", String)
+    topic2 = topic1
+    topic3 = dds.Topic(shared_participant, "OtherTopic", String)
+    sc = dds.StatusCondition(topic1)
+    topic4 = dds.Topic(sc.entity)
+    assert topic1 == topic2
+    assert topic1 == topic4
+    assert topic1 != topic3
+
+
+def test_topic_inconsistent_topic_status(shared_participant):
+    topic = dds.Topic(shared_participant, "StringTopic", String)
+    status = topic.inconsistent_topic_status
+    assert status.total_count == 0
+    assert status.total_count_change == 0
+
+
+def test_dd_topic_functions(shared_participant):
+    dd_type = dds.StructType("DD_Type")
+    t1 = dds.DynamicData.Topic(shared_participant, "DD_Topic1", dd_type)
+    t2 = dds.DynamicData.Topic(
+        shared_participant, "DD_Topic2", "DD_Type", dds.TopicQos())
+    t3 = dds.DynamicData.Topic(t1)
+    t4 = dds.DynamicData.Topic(
+        shared_participant, "DD_Topic4", dd_type, dds.TopicQos())
+    sc = dds.StatusCondition(t1)
+    assert dds.DynamicData.Topic(sc.entity) == t1
+    status = t1.inconsistent_topic_status
+    assert status.total_count == 0
+    assert status.total_count_change == 0
+    assert t1 == t3
+    assert t1 != t2
+    assert t1.type_name == "DD_Type"
+    qos = t1.qos
+    assert qos == dds.TopicQos()
+    qos.deadline.period.sec = 1
+    t1.qos = qos
+    assert t1.qos == qos
+    assert t1 == t3

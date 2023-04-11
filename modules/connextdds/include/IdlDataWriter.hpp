@@ -23,4 +23,12 @@ using IdlDataWriterPyClass = PyDataWriterClass<rti::topic::cdr::CSampleWrapper>;
 template<>
 void init_dds_typed_datawriter_template(IdlDataWriterPyClass& cls);
 
+IdlDataWriter create_idl_py_writer(
+        const PyPublisher& publisher,
+        const PyTopic<rti::topic::cdr::CSampleWrapper>& topic,
+        const dds::pub::qos::DataWriterQos* qos = nullptr,
+        PyDataWriterListenerPtr<rti::topic::cdr::CSampleWrapper>* listener = nullptr,
+        dds::core::status::StatusMask mask =
+                dds::core::status::StatusMask::none());
+
 }  // namespace pyrti

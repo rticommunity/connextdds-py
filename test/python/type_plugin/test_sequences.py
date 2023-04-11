@@ -124,6 +124,20 @@ def test_sequence_plugin():
     assert ts.is_unbounded
 
 
+def test_native_sequence_initialization(sequence_sample):
+    ts = idl.get_type_support(SequenceTest)
+    c_sample = ts.c_type()
+
+    # The initialize function sets the correct absolute maximum
+    ts._plugin_dynamic_type.initialize_sample(c_sample)
+    try:
+        assert c_sample.vertices._absolute_maximum == idl.annotations.UNBOUNDED
+        assert c_sample.prices._absolute_maximum == 4
+        assert len(c_sample.vertices) == 0
+        assert len(c_sample.prices) == 0
+    finally:
+        ts._plugin_dynamic_type.finalize_sample(c_sample)
+
 def test_sequence_serialization(sequence_sample):
     ts = idl.get_type_support(SequenceTest)
     buffer = ts.serialize(sequence_sample)

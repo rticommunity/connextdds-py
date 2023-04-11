@@ -33,6 +33,15 @@ void init_class_defs(py::class_<SystemResourceLimits>& cls)
                             & SystemResourceLimits::max_objects_per_thread,
                     "The maximum number of objects that can be stored per "
                     "thread.")
+            .def_property(
+                    "initial_objects_per_thread",
+                    (int32_t(SystemResourceLimits::*)() const)
+                            & SystemResourceLimits::initial_objects_per_thread,
+                    (SystemResourceLimits & (SystemResourceLimits::*) (int32_t))
+                            & SystemResourceLimits::initial_objects_per_thread,
+                    "The number of objects per thread for a "
+                    "DomainParticipantFactory for which infrastructure will "
+                    "initially be allocated.")
             .def(py::self == py::self, "Test for equality.")
             .def(py::self != py::self, "Test for inequality.");
 }

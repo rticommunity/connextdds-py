@@ -28,4 +28,15 @@ using IdlDataReaderPyClass = py::class_<
 template<>
 void init_dds_typed_datareader_template(IdlDataReaderPyClass& cls);
 
+PyIdlDataReader create_idl_py_reader(
+        const PySubscriber& subscriber,
+        const PyTopic<rti::topic::cdr::CSampleWrapper>& topic,
+        const PyContentFilteredTopic<rti::topic::cdr::CSampleWrapper>& cft =
+                dds::core::null,
+        const dds::sub::qos::DataReaderQos* qos = nullptr,
+        PyDataReaderListenerPtr<rti::topic::cdr::CSampleWrapper>* listener =
+                nullptr,
+        const dds::core::status::StatusMask& mask =
+                dds::core::status::StatusMask::none());
+
 }  // namespace pyrti
